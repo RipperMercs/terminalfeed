@@ -476,6 +476,57 @@
   font-weight: 600;
 }
 
+/* ── GitHub Trending ── */
+.ghStars {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  min-width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ghRepoName {
+  font-size: 10px;
+  color: var(--blue);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ghRepoDesc {
+  font-size: 9px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.ghLang {
+  font-size: 8px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+/* ── Reddit ── */
+.redditScore {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--amber);
+  min-width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.redditSub {
+  font-size: 8px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
 /* ── Support Panel ── */
 .adPlaceholder {
   border: 1px dashed var(--border);
