@@ -236,12 +236,13 @@ export function useLayoutManager(): LayoutManager {
     // Save current layout so user can undo
     setPreRandomOrder([...panelOrder]);
     // Shuffle using Fisher-Yates, but keep 'support' pinned at end
-    const movable = panelOrder.filter(id => id !== 'support');
+    const movable = panelOrder.filter(id => id !== 'support' && id !== 'bitcoin');
     for (let i = movable.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [movable[i], movable[j]] = [movable[j], movable[i]];
     }
-    const shuffled = panelOrder.includes('support') ? [...movable, 'support'] : movable;
+    // Keep bitcoin first, support last, shuffle everything else
+    const shuffled = ['bitcoin', ...movable, ...(panelOrder.includes('support') ? ['support'] : [])];
     setPanelOrderState(shuffled);
     showToast('Layout randomized! Undo available in Settings');
   }, [panelOrder, showToast]);
