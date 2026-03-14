@@ -13,7 +13,7 @@ export interface HNStory {
 const TOP_URL = 'https://hacker-news.firebaseio.com/v0/topstories.json';
 const ITEM_URL = 'https://hacker-news.firebaseio.com/v0/item';
 const POLL_MS = 5 * 60_000;
-const MAX_STORIES = 15;
+const MAX_STORIES = 20;
 
 // Filter for tech/AI/crypto keywords
 const KEYWORDS = /\b(ai|gpt|llm|claude|openai|anthropic|bitcoin|btc|crypto|gpu|nvidia|amd|mining|blockchain|transformer|deep.?learning|machine.?learning|neural|model|agent|agi|gemini|mistral)\b/i;
