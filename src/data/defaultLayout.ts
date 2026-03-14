@@ -1,0 +1,36 @@
+// Default curated layout — what new visitors see
+// To update: type "admin-save-layout" on the live site,
+// paste the JSON output here, commit and deploy.
+
+export const DEFAULT_LAYOUT = {
+  panelOrder: [
+    'bitcoin',
+    'markets',
+    'crypto',
+    'crypto-global',
+    'btc-network',
+    'market-hours',
+    'news',
+    'reddit',
+    'github',
+    'dev-status',
+    'stackoverflow',
+    'scores',
+    'predictions',
+    'podcasts',
+    'seismic',
+    'weather',
+    'launches',
+    'steam',
+    'ai-leaderboard',
+    'bluesky',
+    'internet-pulse',
+    'uap',
+    'recipe',
+    'daily-learn',
+    'ai-image',
+    'support',
+  ],
+  hiddenPanels: [] as string[],
+  collapsedPanels: [] as string[],
+};

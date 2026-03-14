@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { DEFAULT_LAYOUT } from '../data/defaultLayout';
 
 // All panel IDs in default order
 // Default order: curated like a newspaper front page
@@ -113,12 +114,18 @@ export interface LayoutManager {
 }
 
 export function useLayoutManager(): LayoutManager {
-  const [hiddenPanels, setHiddenPanels] = useState<Set<string>>(() => new Set(loadArray(LS_HIDDEN)));
-  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(() => new Set(loadArray(LS_COLLAPSED)));
+  const [hiddenPanels, setHiddenPanels] = useState<Set<string>>(() => {
+    const saved = loadArray(LS_HIDDEN);
+    return saved.length > 0 ? new Set(saved) : new Set(DEFAULT_LAYOUT.hiddenPanels);
+  });
+  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(() => {
+    const saved = loadArray(LS_COLLAPSED);
+    return saved.length > 0 ? new Set(saved) : new Set(DEFAULT_LAYOUT.collapsedPanels);
+  });
   const [panelOrder, setPanelOrderState] = useState<string[]>(() => {
     const saved = loadArray(LS_ORDER);
     if (saved.length > 0) return saved;
-    return ALL_PANELS.map(p => p.id);
+    return DEFAULT_LAYOUT.panelOrder;
   });
   const [isOrganizing, setIsOrganizing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -227,13 +234,13 @@ export function useLayoutManager(): LayoutManager {
   }, [preRandomOrder, showToast]);
 
   const resetLayout = useCallback(() => {
-    setHiddenPanels(new Set());
-    setCollapsedPanels(new Set());
-    setPanelOrderState(ALL_PANELS.map(p => p.id));
+    setHiddenPanels(new Set(DEFAULT_LAYOUT.hiddenPanels));
+    setCollapsedPanels(new Set(DEFAULT_LAYOUT.collapsedPanels));
+    setPanelOrderState(DEFAULT_LAYOUT.panelOrder);
     localStorage.removeItem(LS_HIDDEN);
     localStorage.removeItem(LS_COLLAPSED);
     localStorage.removeItem(LS_ORDER);
-    showToast('Layout reset');
+    showToast('Layout reset to default');
   }, [showToast]);
 
   const applyPreset = useCallback((presetKey: string) => {

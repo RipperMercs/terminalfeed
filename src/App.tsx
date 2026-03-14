@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
 import { useBlockStream } from './hooks/useBlockStream';
 import { useFearGreed } from './hooks/useFearGreed';
@@ -30,6 +30,7 @@ import { PanelHead } from './components/PanelHead';
 import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { useInternetPulse } from './hooks/useInternetPulse';
+import { useTerminalsOnline } from './hooks/useTerminalsOnline';
 import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { usePodcasts } from './hooks/usePodcasts';
 import { uapSightings, getShapeStats } from './data/uapSightings';
@@ -70,6 +71,7 @@ function App() {
   const soQuestions = useStackOverflow();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
+  const terminalsOnline = useTerminalsOnline();
   const predictionMarkets = usePredictionMarkets();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
@@ -101,6 +103,7 @@ function App() {
   }, [newsFilter]);
 
   // Keyboard shortcuts
+  const adminBuffer = useRef('');
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -117,6 +120,21 @@ function App() {
           setLegalModal(null);
         }
       }
+
+      // Admin: type "admin-save-layout" to export current layout as default
+      adminBuffer.current += e.key.toLowerCase();
+      if (adminBuffer.current.includes('admin-save-layout')) {
+        const exportData = {
+          panelOrder: layout.panelOrder,
+          hiddenPanels: Array.from(layout.hiddenPanels),
+          collapsedPanels: Array.from(layout.collapsedPanels),
+        };
+        const json = JSON.stringify(exportData, null, 2);
+        navigator.clipboard.writeText(json).catch(() => {});
+        console.log('DEFAULT LAYOUT:', json);
+        adminBuffer.current = '';
+      }
+      clearTimeout(window.setTimeout(() => { adminBuffer.current = ''; }, 3000));
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -591,6 +609,8 @@ function App() {
           <a href="mailto:advertise@terminalfeed.io" className="footerLink">Advertise</a>
         </div>
         <div className="bottomBarStatus">
+          <span className="terminalsOnline">&gt;_ {terminalsOnline} terminal{terminalsOnline !== 1 ? 's' : ''} online</span>
+          <span className="bottomBarDivider">&middot;</span>
           <span className="bottomBarDot" style={{
             background: (priceConnected || blockConnected) ? 'var(--green)' : 'var(--red)',
           }} />
