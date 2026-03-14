@@ -148,7 +148,7 @@ function App() {
             </div>
           </div>
           {fearGreed ? (
-            <div style={{ padding: '8px 0' }}>
+            <div style={{ padding: '2px 0' }}>
               <div className="fgValue" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.value}</div>
               <div className="fgLabel" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.label}</div>
               <div className="fgBar">

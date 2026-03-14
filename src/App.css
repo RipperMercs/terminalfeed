@@ -356,23 +356,23 @@
 
 /* ── Fear & Greed ── */
 .fgValue {
-  font-size: 42px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1;
   text-align: center;
 }
 
 .fgLabel {
-  font-size: 11px;
-  margin-top: 6px;
+  font-size: 9px;
+  margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   text-align: center;
 }
 
 .fgBar {
-  margin-top: 10px;
-  height: 4px;
+  margin-top: 8px;
+  height: 3px;
   border-radius: 2px;
   overflow: hidden;
   background: linear-gradient(90deg, var(--red), var(--amber), var(--green));
