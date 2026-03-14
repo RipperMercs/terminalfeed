@@ -1,25 +1,25 @@
 /* ═══════════════════════════════════════════
    TERMINALFEED.IO — Global Styles
-   DOS era meets modern data feeds
+   Terminal aesthetic, command center energy
    ═══════════════════════════════════════════ */
 
 :root {
-  --bg:          #0A0A0C;
-  --bg-panel:    #101014;
-  --bg-hover:    #16161C;
-  --border:      #1E1E26;
-  --border-glow: #2A2A36;
-  --text:        #D4D2CB;
-  --text-mid:    #8A887F;
-  --text-dim:    #4E4D48;
-  --green:       #5DCAA5;
-  --green-dim:   #1D9E75;
-  --red:         #F09595;
-  --red-dim:     #A32D2D;
+  --bg:          #080808;
+  --bg-panel:    #0D0D0F;
+  --bg-hover:    #131318;
+  --border:      #1A1A22;
+  --border-glow: #252530;
+  --text:        #C8C8C0;
+  --text-mid:    #7A7A72;
+  --text-dim:    #3E3E3A;
+  --green:       #4ADE80;
+  --green-dim:   #166534;
+  --red:         #F87171;
+  --red-dim:     #991B1B;
   --amber:       #EF9F27;
   --gold:        #F9CB42;
-  --blue:        #5B9FE4;
-  --purple:      #9B7FE6;
+  --blue:        #60A5FA;
+  --purple:      #A78BFA;
   --cyan:        #4FD1C5;
   --mono:        'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
@@ -42,12 +42,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+::selection {
+  background: rgba(74, 222, 128, 0.2);
+  color: var(--green);
+}
+
 /* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
 
-/* ── CRT Scanline Overlay ── */
+/* ── CRT Scanlines ── */
 #root::after {
   content: '';
   position: fixed;
@@ -56,22 +61,23 @@ body {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.06) 2px,
-    rgba(0, 0, 0, 0.06) 4px
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
   );
   pointer-events: none;
   z-index: 9999;
 }
 
-/* ── Subtle vignette ── */
+/* ── Subtle screen glow ── */
 #root::before {
   content: '';
   position: fixed;
   inset: 0;
   background: radial-gradient(
     ellipse at center,
-    transparent 60%,
-    rgba(0, 0, 0, 0.35) 100%
+    rgba(74, 222, 128, 0.015) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.3) 100%
   );
   pointer-events: none;
   z-index: 9998;
@@ -93,17 +99,12 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes priceFlash {
-  0% { background: rgba(93, 202, 165, 0.15); }
+  0% { background: rgba(74, 222, 128, 0.12); }
   100% { background: transparent; }
 }
 
 @keyframes priceFlashRed {
-  0% { background: rgba(240, 149, 149, 0.15); }
+  0% { background: rgba(248, 113, 113, 0.12); }
   100% { background: transparent; }
 }

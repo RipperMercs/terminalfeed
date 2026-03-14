@@ -62,6 +62,7 @@ function App() {
           <span className="logoIcon">{'>'}_</span>
           <span className="logoText">TERMINALFEED</span>
           <span className="logoDot">.io</span>
+          <span className="logoCursor" />
         </div>
         <div className="topBarRight">
           <span className="topBarDate">{dateStr}</span>
@@ -388,7 +389,7 @@ function App() {
             <div className="adSize">300x250</div>
           </div>
           <div className="donateLabel">Donate BTC</div>
-          <div className="donateAddr">bc1q...your_btc_address</div>
+          <div className="donateAddr">3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</div>
           <div className="donateNote">Lightning / on-chain accepted</div>
         </div>
 

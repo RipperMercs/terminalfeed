@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   TERMINALFEED — Layout
+   TERMINALFEED — Terminal Command Center
    ═══════════════════════════════════════════ */
 
 .app {
@@ -11,100 +11,106 @@
   overflow-x: hidden;
 }
 
-::selection {
-  background: rgba(93, 202, 165, 0.25);
-  color: var(--text);
-}
-
-/* ── Top Bar ── */
+/* ── Top Bar — terminal prompt style ── */
 .topBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 6px 16px;
   border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
   position: relative;
   z-index: 10;
-  flex-shrink: 0;
 }
 
 .topBarLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .logoIcon {
   color: var(--green);
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .logoText {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text);
-  letter-spacing: 1px;
+  color: var(--green);
+  letter-spacing: 2px;
 }
 
 .logoDot {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+.logoCursor {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--green);
+  margin-left: 3px;
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
 }
 
 .topBarRight {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .topBarDate {
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text-dim);
 }
 
 .topBarTime {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--green);
   letter-spacing: 2px;
 }
 
 /* ── Ticker Bar ── */
 .tickerBar {
   border-bottom: 1px solid var(--border);
-  padding: 6px 0;
+  padding: 4px 0;
   overflow: hidden;
   white-space: nowrap;
-  flex-shrink: 0;
+  background: rgba(74, 222, 128, 0.02);
 }
 
 .tickerTrack {
   display: inline-flex;
-  gap: 32px;
-  animation: ticker 40s linear infinite;
-  padding-left: 24px;
+  gap: 28px;
+  animation: ticker 45s linear infinite;
+  padding-left: 16px;
 }
 
 .tickerItem {
-  font-size: 12px;
+  font-size: 11px;
   display: inline-flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 
 .tickerSymbol {
-  color: var(--text-mid);
+  color: var(--text-dim);
   font-weight: 600;
+  font-size: 10px;
 }
 
 .tickerPrice {
   color: var(--text);
-}
-
-.tickerChange {
   font-size: 11px;
 }
 
+.tickerChange { font-size: 10px; }
 .tickerUp { color: var(--green); }
 .tickerDown { color: var(--red); }
 
@@ -117,23 +123,20 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  padding: 16px;
-  max-width: 1400px;
-  margin: 0 auto;
+  gap: 1px;
+  padding: 0;
+  background: var(--border);
+  max-width: 100%;
   width: 100%;
-  flex: 1;
 }
 
 .spanCol2 { grid-column: span 2; }
 .spanCol3 { grid-column: span 3; }
 
-/* ── Panel Base ── */
+/* ── Panel — terminal window style ── */
 .panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--bg);
+  padding: 12px 14px;
   overflow: hidden;
 }
 
@@ -141,7 +144,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
 }
 
 .panelHeaderLeft {
@@ -151,40 +156,49 @@
 }
 
 .panelTitle {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--text-mid);
+  color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
 }
 
 .panelTag {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--green);
-  background: rgba(93, 202, 165, 0.08);
-  padding: 2px 6px;
-  border-radius: 3px;
+  background: rgba(74, 222, 128, 0.06);
+  padding: 1px 5px;
+  border-radius: 2px;
   letter-spacing: 0.5px;
+  border: 1px solid rgba(74, 222, 128, 0.1);
+}
+
+.panelTagDim {
+  font-size: 7px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .panelLive {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .liveDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 6px rgba(93, 202, 165, 0.35);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
   animation: pulse 2s infinite;
 }
 
 .liveText {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-dim);
+  letter-spacing: 1px;
 }
 
 /* ── Price Panel ── */
@@ -192,11 +206,11 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .priceValue {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -1px;
@@ -204,24 +218,26 @@
 }
 
 .priceChange {
-  font-size: 14px;
-  margin-top: 6px;
+  font-size: 13px;
+  margin-top: 4px;
 }
 
 .priceRange {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 2px;
 }
 
 .priceRangeLabel {
-  font-size: 11px;
+  font-size: 9px;
   color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .priceRangeValue {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-mid);
 }
 
@@ -229,29 +245,29 @@
 .statsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 10px 14px;
 }
 
 .statLabel {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 4px;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
 }
 
 .statValue {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .statValueSm {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-mid);
 }
 
 .statSuffix {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-dim);
 }
 
@@ -264,28 +280,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .listRowSymbol {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text);
 }
 
 .listRowName {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-dim);
   margin-left: 6px;
 }
 
 .listRowPrice {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text);
 }
 
 .listRowChange {
-  font-size: 11px;
+  font-size: 10px;
   margin-left: 8px;
 }
 
@@ -293,11 +309,11 @@
 .newsRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  padding: 5px 2px;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 2px;
   transition: background 0.15s;
   text-decoration: none;
   color: inherit;
@@ -312,11 +328,11 @@
 }
 
 .newsTag {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 3px;
-  min-width: 48px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  min-width: 42px;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -324,7 +340,7 @@
 }
 
 .newsTitle {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text);
   flex: 1;
   overflow: hidden;
@@ -333,42 +349,42 @@
 }
 
 .newsMeta {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-dim);
   flex-shrink: 0;
 }
 
 /* ── Fear & Greed ── */
 .fgValue {
-  font-size: 48px;
+  font-size: 42px;
   font-weight: 700;
   line-height: 1;
   text-align: center;
 }
 
 .fgLabel {
-  font-size: 13px;
-  margin-top: 8px;
+  font-size: 11px;
+  margin-top: 6px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-align: center;
 }
 
 .fgBar {
-  margin-top: 12px;
-  height: 6px;
-  border-radius: 3px;
+  margin-top: 10px;
+  height: 4px;
+  border-radius: 2px;
   overflow: hidden;
   background: linear-gradient(90deg, var(--red), var(--amber), var(--green));
   position: relative;
 }
 
 .fgIndicator {
-  width: 3px;
+  width: 2px;
   height: 100%;
   background: var(--text);
-  border-radius: 2px;
-  box-shadow: 0 0 6px var(--text);
+  border-radius: 1px;
+  box-shadow: 0 0 4px var(--text);
   position: absolute;
   top: 0;
   transition: left 1s ease;
@@ -378,73 +394,27 @@
 .netRow {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .netLabel {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-dim);
 }
 
 .netValue {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-mid);
   font-weight: 500;
-}
-
-/* ── Support Panel ── */
-.adPlaceholder {
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  padding: 16px;
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.adLabel {
-  font-size: 10px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-
-.adSize {
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
-.donateLabel {
-  font-size: 11px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-}
-
-.donateAddr {
-  background: var(--bg);
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 10px;
-  color: var(--amber);
-  word-break: break-all;
-  line-height: 1.5;
-  border: 1px solid var(--border);
-}
-
-.donateNote {
-  font-size: 10px;
-  color: var(--text-dim);
-  margin-top: 8px;
-  text-align: center;
 }
 
 /* ── Sports Scores ── */
 .scoreRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 4px;
-  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
 }
 
 .scoreRow:last-child {
@@ -452,35 +422,35 @@
 }
 
 .scoreLeague {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
   color: var(--text-dim);
-  min-width: 30px;
+  min-width: 28px;
   letter-spacing: 0.5px;
 }
 
 .scoreTeams {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
 .scoreTeam {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .scoreAbbr {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text);
-  min-width: 32px;
+  min-width: 30px;
 }
 
 .scoreVal {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-mid);
 }
@@ -490,14 +460,14 @@
 }
 
 .scoreAt {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-dim);
 }
 
 .scoreStatus {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-dim);
-  min-width: 60px;
+  min-width: 55px;
   text-align: right;
 }
 
@@ -506,12 +476,50 @@
   font-weight: 600;
 }
 
-/* ── Panel tag dim ── */
-.panelTagDim {
-  font-size: 8px;
+/* ── Support Panel ── */
+.adPlaceholder {
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+  padding: 14px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.adLabel {
+  font-size: 9px;
   color: var(--text-dim);
-  letter-spacing: 0.5px;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.adSize {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.donateLabel {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.donateAddr {
+  background: var(--bg-panel);
+  border-radius: 3px;
+  padding: 6px 8px;
+  font-size: 9px;
+  color: var(--amber);
+  word-break: break-all;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+}
+
+.donateNote {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  text-align: center;
 }
 
 /* ── Bottom Bar ── */
@@ -519,23 +527,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 24px;
+  padding: 6px 16px;
   border-top: 1px solid var(--border);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-dim);
-  flex-shrink: 0;
+  background: var(--bg-panel);
 }
 
 .bottomBarLeft {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.bottomBarStatus {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  gap: 12px;
 }
 
 .bottomBarDivider {
@@ -547,10 +549,9 @@
   border: none;
   color: var(--text-dim);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 9px;
   cursor: pointer;
   padding: 0;
-  text-decoration: none;
   transition: color 0.15s;
 }
 
@@ -558,9 +559,15 @@
   color: var(--green);
 }
 
+.bottomBarStatus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .bottomBarDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--green);
   display: inline-block;
@@ -579,7 +586,6 @@
     grid-template-columns: 1fr;
   }
   .spanCol2, .spanCol3 { grid-column: span 1; }
-  .topBar { padding: 10px 16px; }
-  .grid { padding: 12px; }
-  .priceValue { font-size: 28px; }
+  .topBar { padding: 6px 12px; }
+  .priceValue { font-size: 24px; }
 }
