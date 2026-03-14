@@ -8,7 +8,7 @@ interface Props {
 }
 
 // Panels that are permanently locked (can't be moved, hidden, or collapsed)
-const LOCKED_PANELS = ['bitcoin', 'support'];
+const LOCKED_PANELS = ['bitcoin', 'weather', 'news', 'dev-status', 'support'];
 
 export function PanelHead({ panelId, layout, getGridCols, children }: Props) {
   const isLocked = LOCKED_PANELS.includes(panelId);

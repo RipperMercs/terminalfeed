@@ -604,14 +604,21 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* BTC Price — ALWAYS first, never moves */}
-        {panelRegistry['bitcoin'] && (
-          <div className="panel spanCol2">
-            {panelRegistry['bitcoin']}
-          </div>
+        {/* Top row — pinned: Weather, Bitcoin (wide), News, Dev Status */}
+        {panelRegistry['weather'] && (
+          <div className="panel">{panelRegistry['weather']}</div>
         )}
-        {/* Render remaining panels in order (skip bitcoin + support) */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && id !== 'bitcoin').map(id => {
+        {panelRegistry['bitcoin'] && (
+          <div className="panel spanCol2">{panelRegistry['bitcoin']}</div>
+        )}
+        {panelRegistry['news'] && (
+          <div className="panel">{panelRegistry['news']}</div>
+        )}
+        {panelRegistry['dev-status'] && (
+          <div className="panel">{panelRegistry['dev-status']}</div>
+        )}
+        {/* Remaining panels in order (skip pinned + support) */}
+        {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'news', 'dev-status'].includes(id)).map(id => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';

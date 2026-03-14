@@ -46,7 +46,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '5'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '6'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -245,13 +245,14 @@ export function useLayoutManager(): LayoutManager {
     // Save current layout so user can undo
     setPreRandomOrder([...panelOrder]);
     // Shuffle using Fisher-Yates, but keep 'support' pinned at end
-    const movable = panelOrder.filter(id => id !== 'support' && id !== 'bitcoin');
+    const pinned = ['bitcoin', 'weather', 'news', 'dev-status', 'support'];
+    const movable = panelOrder.filter(id => !pinned.includes(id));
     for (let i = movable.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [movable[i], movable[j]] = [movable[j], movable[i]];
     }
-    // Keep bitcoin first, support last, shuffle everything else
-    const shuffled = ['bitcoin', ...movable, ...(panelOrder.includes('support') ? ['support'] : [])];
+    // Pinned panels stay in place, shuffle everything else
+    const shuffled = [...movable, ...(panelOrder.includes('support') ? ['support'] : [])];
     setPanelOrderState(shuffled);
     showToast('Layout randomized! Undo available in Settings');
   }, [panelOrder, showToast]);
