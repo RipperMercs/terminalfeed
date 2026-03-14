@@ -169,13 +169,6 @@
 .panel {
   background: var(--bg);
   padding: 12px 14px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-/* Wide panels (TradingView chart, BTC Network) need more height */
-.panel.spanCol2 {
-  max-height: none;
 }
 
 .panelHeader {
