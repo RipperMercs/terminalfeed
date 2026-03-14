@@ -56,6 +56,23 @@ export interface LayoutExport {
   panelOrder: string[];
 }
 
+// Preset layouts
+export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
+  everything: { label: 'Everything', hidden: [] },
+  trader: {
+    label: 'Trader',
+    hidden: ['steam', 'stackoverflow', 'nasa', 'recipe', 'daily-learn', 'reddit', 'github'],
+  },
+  developer: {
+    label: 'Developer',
+    hidden: ['scores', 'recipe', 'seismic', 'launches', 'steam', 'nasa', 'quick-stats'],
+  },
+  crypto: {
+    label: 'Crypto',
+    hidden: ['scores', 'steam', 'stackoverflow', 'nasa', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches'],
+  },
+};
+
 export interface LayoutManager {
   hiddenPanels: Set<string>;
   collapsedPanels: Set<string>;
@@ -66,9 +83,11 @@ export interface LayoutManager {
   toggleCollapse: (id: string) => void;
   setPanelOrder: (order: string[]) => void;
   resetLayout: () => void;
+  applyPreset: (presetKey: string) => void;
   exportLayout: () => string;
   importLayout: (data: string) => boolean;
   downloadLayout: () => void;
+  shareLayout: () => void;
   toastMessage: string;
 }
 
@@ -145,6 +164,15 @@ export function useLayoutManager(): LayoutManager {
     showToast('Layout reset');
   }, [showToast]);
 
+  const applyPreset = useCallback((presetKey: string) => {
+    const preset = PRESETS[presetKey];
+    if (!preset) return;
+    setHiddenPanels(new Set(preset.hidden));
+    setCollapsedPanels(new Set());
+    setPanelOrderState(ALL_PANELS.map(p => p.id));
+    showToast(`${preset.label} preset applied`);
+  }, [showToast]);
+
   const exportLayout = useCallback((): string => {
     const data: LayoutExport = {
       version: 1,
@@ -192,6 +220,52 @@ export function useLayoutManager(): LayoutManager {
     }
   }, [showToast]);
 
+  const shareLayout = useCallback(() => {
+    const data: LayoutExport = {
+      version: 1,
+      exported: new Date().toISOString(),
+      hiddenPanels: Array.from(hiddenPanels),
+      collapsedPanels: Array.from(collapsedPanels),
+      panelOrder,
+    };
+    const encoded = btoa(JSON.stringify(data));
+    const url = `${window.location.origin}${window.location.pathname}?layout=${encoded}`;
+
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Layout link copied!');
+    }).catch(() => {
+      showToast('Share URL ready');
+    });
+  }, [hiddenPanels, collapsedPanels, panelOrder, showToast]);
+
+  // Handle ?layout= URL parameter on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const layoutParam = params.get('layout');
+    if (!layoutParam) return;
+
+    // Check for preset shorthand
+    if (PRESETS[layoutParam]) {
+      applyPreset(layoutParam);
+    } else {
+      // Try base64 decode
+      try {
+        const data: LayoutExport = JSON.parse(atob(layoutParam));
+        if (data.version === 1 && Array.isArray(data.hiddenPanels)) {
+          setHiddenPanels(new Set(data.hiddenPanels));
+          setCollapsedPanels(new Set(data.collapsedPanels ?? []));
+          if (data.panelOrder?.length > 0) setPanelOrderState(data.panelOrder);
+          showToast('Shared layout applied');
+        }
+      } catch {}
+    }
+
+    // Strip the layout param from URL
+    const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+    window.history.replaceState({}, '', cleanUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const downloadLayout = useCallback(() => {
     const data: LayoutExport = {
       version: 1,
@@ -221,9 +295,11 @@ export function useLayoutManager(): LayoutManager {
     toggleCollapse,
     setPanelOrder,
     resetLayout,
+    applyPreset,
     exportLayout,
     importLayout,
     downloadLayout,
+    shareLayout,
     toastMessage,
   };
 }

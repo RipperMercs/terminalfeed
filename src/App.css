@@ -1489,6 +1489,41 @@
   padding: 8px 16px;
 }
 
+.pmPresets {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.pmPresetsLabel {
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  margin-right: 4px;
+}
+
+.pmPresetBtn {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pmPresetBtn:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(79, 209, 197, 0.06);
+}
+
 .pmHint {
   font-size: 9px;
   color: var(--text-dim);

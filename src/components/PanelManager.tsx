@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ALL_PANELS, type LayoutManager } from '../hooks/useLayoutManager';
+import { ALL_PANELS, PRESETS, type LayoutManager } from '../hooks/useLayoutManager';
 
 interface Props {
   layout: LayoutManager;
@@ -75,6 +75,20 @@ export function PanelManager({ layout, onClose }: Props) {
         </div>
 
         <div className="pmBody">
+          {/* Presets */}
+          <div className="pmPresets">
+            <span className="pmPresetsLabel">PRESETS</span>
+            {Object.entries(PRESETS).map(([key, preset]) => (
+              <button
+                key={key}
+                className="pmPresetBtn"
+                onClick={() => layout.applyPreset(key)}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
           <div className="pmHint">Toggle panels on/off. Reorder with arrows.</div>
 
           <div className="pmList">
@@ -122,6 +136,7 @@ export function PanelManager({ layout, onClose }: Props) {
               <button className="pmBtn" onClick={() => layout.exportLayout()}>Export</button>
               <button className="pmBtn" onClick={() => setImportMode(true)}>Import</button>
               <button className="pmBtn" onClick={() => layout.downloadLayout()}>Download</button>
+              <button className="pmBtn" onClick={() => layout.shareLayout()}>Share Link</button>
             </div>
             <div className="pmFooterRow">
               <button className="pmBtn pmBtnDanger" onClick={layout.resetLayout}>Reset Default</button>
