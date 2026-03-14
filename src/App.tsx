@@ -3,11 +3,8 @@ import { useBlockStream } from './hooks/useBlockStream';
 import { useFearGreed } from './hooks/useFearGreed';
 import { useHackerNews } from './hooks/useHackerNews';
 import { useTime } from './hooks/useTime';
-import { PricePanel } from './components/PricePanel';
-import { BlockPanel } from './components/BlockPanel';
-import { FearGreedPanel } from './components/FearGreedPanel';
-import { NewsPanel } from './components/NewsPanel';
-import { ClockPanel } from './components/ClockPanel';
+import { useSimStocks } from './hooks/useSimStocks';
+import { useSimCrypto } from './hooks/useSimCrypto';
 import './App.css';
 
 function App() {
@@ -16,105 +13,417 @@ function App() {
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
+  const stocks = useSimStocks();
+  const crypto = useSimCrypto();
 
-  const uptime = now.toLocaleTimeString('en-US', { hour12: false });
+  const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  const btcPrice = priceData?.price ?? 0;
+  const btcChange = priceData?.changePercent24h ?? 0;
+  const isUp = btcChange >= 0;
+
+  // Sparkline from price history
+  const sparkData = priceHistory.map((t) => t.price);
+
+  // Ticker items: BTC + stocks
+  const tickerItems = [
+    { symbol: 'BTC', price: btcPrice, change: btcChange },
+    ...stocks,
+    ...crypto,
+  ];
+
+  // Tag colors for news
+  const tagColors: Record<string, string> = {
+    AI: 'var(--purple)',
+    BTC: 'var(--amber)',
+    Markets: 'var(--blue)',
+    Tech: 'var(--cyan)',
+    Dev: 'var(--green)',
+  };
 
   return (
     <div className="app">
-      {/* ── Header ── */}
-      <header className="header">
-        <div className="headerLeft">
-          <span className="logo">
-            terminal<span className="logoAccent">feed</span>
-            <span className="cursor" />
-          </span>
-          <span className="tagline">live command center</span>
+      {/* ── Top Bar ── */}
+      <div className="topBar">
+        <div className="topBarLeft">
+          <span className="logoIcon">{'>'}_</span>
+          <span className="logoText">TERMINALFEED</span>
+          <span className="logoDot">.io</span>
         </div>
-        <div className="headerRight">
-          {priceData && (
-            <span className="headerStat">
-              BTC{' '}
-              <span className="headerStatValue">
-                ${priceData.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </span>
-            </span>
-          )}
-          {latestBlock && (
-            <span className="headerStat">
-              BLK{' '}
-              <span className="headerStatValue">
-                #{latestBlock.height.toLocaleString()}
-              </span>
-            </span>
-          )}
-          <span className="headerStat">
-            <span className="headerStatValue">{uptime}</span>
-          </span>
+        <div className="topBarRight">
+          <span className="topBarDate">{dateStr}</span>
+          <span className="topBarTime">{timeStr}</span>
         </div>
-      </header>
+      </div>
 
-      {/* ── Grid ── */}
-      <div className="grid">
-        {/* BTC Price — big panel */}
-        <div className="spanCol2 spanRow2" style={{ background: 'var(--bg)' }}>
-          {priceData ? (
-            <PricePanel
-              price={priceData.price}
-              prevPrice={priceData.prevPrice}
-              change24h={priceData.change24h}
-              changePercent24h={priceData.changePercent24h}
-              high24h={priceData.high24h}
-              low24h={priceData.low24h}
-              volume24h={priceData.volume24h}
-              marketCap={priceData.marketCap}
-              connected={priceConnected}
-              priceHistory={priceHistory}
-            />
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <span style={{ color: 'var(--text-dim)', fontSize: '10px', letterSpacing: '2px' }}>
-                CONNECTING...
+      {/* ── Ticker Bar ── */}
+      <div className="tickerBar">
+        <div className="tickerTrack">
+          {[...tickerItems, ...tickerItems].map((s, i) => (
+            <span key={i} className="tickerItem">
+              <span className="tickerSymbol">{s.symbol}</span>
+              <span className="tickerPrice">
+                ${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
+              <span className={`tickerChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Main Grid ── */}
+      <div className="grid">
+
+        {/* BTC Price — large */}
+        <div className="panel spanCol2">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Bitcoin</span>
+              <span className="panelTag">BTC/USD</span>
+            </div>
+            <div className="panelLive">
+              <span className={`liveDot`} style={{ background: priceConnected ? 'var(--green)' : 'var(--red)' }} />
+              <span className="liveText">{priceConnected ? 'LIVE' : 'CONNECTING'}</span>
+            </div>
+          </div>
+          <div className="priceMain">
+            <div>
+              <div className="priceValue">
+                ${btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="priceChange" style={{ color: isUp ? 'var(--green)' : 'var(--red)' }}>
+                {isUp ? '\u25B2' : '\u25BC'} {Math.abs(btcChange).toFixed(2)}% today
+              </div>
+            </div>
+            {priceData && (
+              <div className="priceRange">
+                <span className="priceRangeLabel">24h range</span>
+                <span className="priceRangeValue">
+                  ${priceData.low24h.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${priceData.high24h.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            )}
+          </div>
+          <MiniChart data={sparkData} color={isUp ? 'var(--green)' : 'var(--red)'} height={60} />
+        </div>
+
+        {/* Fear & Greed */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Fear & Greed</span>
+              <span className="panelTag">INDEX</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          {fearGreed ? (
+            <div style={{ padding: '8px 0' }}>
+              <div className="fgValue" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.value}</div>
+              <div className="fgLabel" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.label}</div>
+              <div className="fgBar">
+                <div className="fgIndicator" style={{ left: `${fearGreed.value}%` }} />
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>
+              loading...
             </div>
           )}
         </div>
 
-        {/* Clock + Market Hours */}
-        <div style={{ background: 'var(--bg)' }}>
-          <ClockPanel />
+        {/* Mining Stats */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Solo Mining</span>
+              <span className="panelTag">CKPOOL</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          <div className="statsGrid">
+            <div>
+              <div className="statLabel">Hashrate</div>
+              <div className="statValue" style={{ color: 'var(--green)' }}>-- TH/s</div>
+            </div>
+            <div>
+              <div className="statLabel">Workers</div>
+              <div className="statValue" style={{ color: 'var(--text)' }}>
+                --<span className="statSuffix">/--</span>
+              </div>
+            </div>
+            <div>
+              <div className="statLabel">Shares</div>
+              <div className="statValueSm">--</div>
+            </div>
+            <div>
+              <div className="statLabel">Blocks Found</div>
+              <div className="statValueSm" style={{ color: 'var(--amber)' }}>0</div>
+            </div>
+            <div className="statFullWidth">
+              <div className="statLabel">Status</div>
+              <div className="statValueSm">Connect your address to monitor</div>
+            </div>
+          </div>
         </div>
 
-        {/* Fear & Greed */}
-        <div style={{ background: 'var(--bg)' }}>
-          <FearGreedPanel data={fearGreed} />
+        {/* Stock Markets */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Markets</span>
+              <span className="panelTag">US</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {stocks.map((s) => (
+              <div key={s.symbol} className="listRow">
+                <div>
+                  <span className="listRowSymbol">{s.symbol}</span>
+                  <span className="listRowName">{s.name}</span>
+                </div>
+                <div>
+                  <span className="listRowPrice">
+                    ${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Bitcoin Network */}
-        <div style={{ background: 'var(--bg)' }}>
-          <BlockPanel
-            latestBlock={latestBlock}
-            mempoolSize={mempoolSize}
-            feeRate={feeRate}
-            connected={blockConnected}
-          />
+        {/* News Feed */}
+        <div className="panel spanCol2">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Feed</span>
+              <span className="panelTag">LIVE</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          <div>
+            {stories.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>
+                loading headlines...
+              </div>
+            )}
+            {stories.map((story) => {
+              const tag = getTag(story.title);
+              const tagColor = tagColors[tag] || 'var(--text-mid)';
+              return (
+                <a
+                  key={story.id}
+                  href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="newsRow"
+                >
+                  <span
+                    className="newsTag"
+                    style={{ color: tagColor, background: `${tagColor}15` }}
+                  >
+                    {tag}
+                  </span>
+                  <span className="newsTitle">{story.title}</span>
+                  <span className="newsMeta">{story.by}</span>
+                  <span className="newsMeta">{timeAgo(story.time)}</span>
+                </a>
+              );
+            })}
+          </div>
         </div>
 
-        {/* HN / Tech Feed — fills remaining space */}
-        <div className="spanCol3" style={{ background: 'var(--bg)' }}>
-          <NewsPanel stories={stories} />
+        {/* BTC Network */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">BTC Network</span>
+            </div>
+            {blockConnected && (
+              <div className="panelLive">
+                <span className="liveDot" />
+                <span className="liveText">LIVE</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="netRow">
+              <span className="netLabel">Block height</span>
+              <span className="netValue">{latestBlock ? `#${latestBlock.height.toLocaleString()}` : '--'}</span>
+            </div>
+            <div className="netRow">
+              <span className="netLabel">Fee rate</span>
+              <span className="netValue">{feeRate ? `${feeRate} sat/vB` : '--'}</span>
+            </div>
+            <div className="netRow">
+              <span className="netLabel">Mempool</span>
+              <span className="netValue">{mempoolSize !== null ? `${formatCount(mempoolSize)} txs` : '--'}</span>
+            </div>
+            {latestBlock?.pool && (
+              <div className="netRow">
+                <span className="netLabel">Last mined by</span>
+                <span className="netValue">{latestBlock.pool}</span>
+              </div>
+            )}
+            {latestBlock && (
+              <div className="netRow">
+                <span className="netLabel">Block size</span>
+                <span className="netValue">{(latestBlock.size / 1e6).toFixed(2)} MB</span>
+              </div>
+            )}
+            {latestBlock && (
+              <div className="netRow">
+                <span className="netLabel">Transactions</span>
+                <span className="netValue">{latestBlock.txCount.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Crypto */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Crypto</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {crypto.map((c) => (
+              <div key={c.symbol} className="listRow">
+                <span className="listRowSymbol">{c.symbol}</span>
+                <div>
+                  <span className="listRowPrice">
+                    ${c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Support / Ad */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Support</span>
+            </div>
+          </div>
+          <div className="adPlaceholder">
+            <div className="adLabel">Ad space</div>
+            <div className="adSize">300x250</div>
+          </div>
+          <div className="donateLabel">Donate BTC</div>
+          <div className="donateAddr">bc1q...your_btc_address</div>
+          <div className="donateNote">Lightning / on-chain accepted</div>
         </div>
       </div>
 
-      {/* ── Footer ── */}
-      <footer className="footer">
-        <span className="footerText">terminalfeed.io</span>
-        <span className="footerText footerLive">
-          {priceConnected || blockConnected ? '● live' : '○ connecting'}
-        </span>
-        <span className="footerText">all data refreshes automatically</span>
-      </footer>
+      {/* ── Bottom Bar ── */}
+      <div className="bottomBar">
+        <div className="bottomBarLeft">
+          <span>terminalfeed.io</span>
+          <span>All data for informational purposes only</span>
+        </div>
+        <div className="bottomBarStatus">
+          <span className="bottomBarDot" style={{
+            background: (priceConnected || blockConnected) ? 'var(--green)' : 'var(--red)',
+          }} />
+          <span>{(priceConnected || blockConnected) ? 'All systems operational' : 'Connecting...'}</span>
+        </div>
+      </div>
     </div>
   );
+}
+
+/* ── Inline helpers ── */
+
+function MiniChart({ data, color, height = 40 }: { data: number[]; color: string; height?: number }) {
+  if (data.length < 2) {
+    return (
+      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 10, color: 'var(--text-dim)', letterSpacing: 1 }}>
+        awaiting price data...
+      </div>
+    );
+  }
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const w = 200;
+
+  const points = data
+    .map((v, i) => `${(i / (data.length - 1)) * w},${height - ((v - min) / range) * (height - 4)}`)
+    .join(' ');
+
+  const areaPoints = `${points} ${w},${height} 0,${height}`;
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.15" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill="url(#chartFill)" />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function fgColor(value: number): string {
+  if (value <= 25) return 'var(--red)';
+  if (value <= 45) return 'var(--amber)';
+  if (value <= 55) return 'var(--gold)';
+  if (value <= 75) return 'var(--green)';
+  return 'var(--cyan)';
+}
+
+function getTag(title: string): string {
+  if (/\b(ai|gpt|llm|claude|openai|anthropic|gemini|mistral|transformer|neural|agi|deep.?learn|machine.?learn)\b/i.test(title)) return 'AI';
+  if (/\b(bitcoin|btc|crypto|blockchain|mining|satoshi|lightning)\b/i.test(title)) return 'BTC';
+  if (/\b(stock|market|fed|rate|earnings|s&p|nasdaq|dow|etf)\b/i.test(title)) return 'Markets';
+  if (/\b(gpu|nvidia|amd|chip|hardware|cpu)\b/i.test(title)) return 'Tech';
+  return 'Dev';
+}
+
+function timeAgo(ts: number): string {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function formatCount(n: number): string {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toString();
 }
 
 export default App;
