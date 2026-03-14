@@ -31,7 +31,7 @@ const COINGECKO_URL =
 const WS_RECONNECT_MS = 3000;
 const WS_MAX_RECONNECT_MS = 30000;
 const STATS_POLL_MS = 60_000;
-const MAX_TICKS = 300;
+const MAX_TICKS = 600; // ~10 min of live data
 const FALLBACK_DELAY_MS = 8000; // switch to fallback after 8s of no data
 
 export function useBtcPrice() {
