@@ -48,6 +48,8 @@ const LS_HIDDEN = 'tf_hidden_panels';
 const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
+const LS_VERSION = 'tf_layout_version';
+const CURRENT_VERSION = '2'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -117,6 +119,16 @@ export interface LayoutManager {
 }
 
 export function useLayoutManager(): LayoutManager {
+  // Version check: clear stale layouts when panel lineup changes
+  const savedVersion = localStorage.getItem(LS_VERSION);
+  if (savedVersion !== CURRENT_VERSION) {
+    localStorage.removeItem(LS_ORDER);
+    localStorage.removeItem(LS_HIDDEN);
+    localStorage.removeItem(LS_COLLAPSED);
+    localStorage.removeItem(LS_CUSTOM);
+    localStorage.setItem(LS_VERSION, CURRENT_VERSION);
+  }
+
   const [hiddenPanels, setHiddenPanels] = useState<Set<string>>(() => {
     const saved = loadArray(LS_HIDDEN);
     return saved.length > 0 ? new Set(saved) : new Set(DEFAULT_LAYOUT.hiddenPanels);
