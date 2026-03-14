@@ -32,6 +32,7 @@ import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { DiceRoll } from './components/DiceRoll';
 import { useInternetPulse } from './hooks/useInternetPulse';
+import { useISSPosition } from './hooks/useISSPosition';
 import { useBluesky } from './hooks/useBluesky';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
@@ -70,6 +71,7 @@ function App() {
   const nasaApod = useNasaApod();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
+  const { position: issPos, crewCount: issCrew } = useISSPosition();
   const bskyPosts = useBluesky();
   const todayInTech = getTodayInTech();
   const todayTerm = getTodayTerm();
@@ -369,6 +371,36 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div><div className="dailySectionTitle">On This Day</div>{todayInTech.map((evt, i) => <div key={i} className="historyRow"><span className="historyYear">{evt.year}</span><span className="historyEvent">{evt.event}</span></div>)}</div>
         <div><div className="dailySectionTitle">Term of the Day</div><div className="termWord">{todayTerm.term}</div><div className="termDef">{todayTerm.definition}</div></div>
+      </div>
+    </>),
+    'iss-live': (<>
+      <PanelHead panelId="iss-live" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">ISS Live</span><span className="panelTag">EARTH FROM SPACE</span></div>
+        <div className="panelLive"><span className="liveDot" style={{ background: 'var(--red)' }} /><span className="liveText">LIVE</span></div>
+      </PanelHead>
+      <div className="issContent">
+        <div className="issVideo">
+          <iframe
+            src="https://www.youtube.com/embed/xRPjKQtRXR8?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0"
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title="ISS Live Feed"
+            style={{ border: 'none', borderRadius: '3px' }}
+          />
+        </div>
+        <div className="issStats">
+          {issPos ? (
+            <>
+              <span className="issStat">{issPos.latitude.toFixed(1)}°{issPos.latitude >= 0 ? 'N' : 'S'}, {issPos.longitude.toFixed(1)}°{issPos.longitude >= 0 ? 'E' : 'W'}</span>
+              <span className="issStatDim">over {issPos.location}</span>
+            </>
+          ) : <span className="issStatDim">tracking...</span>}
+          <span className="issStatDim">alt: 408 km · speed: 27,600 km/h · orbit: 92 min</span>
+          {issCrew > 0 && <span className="issStatDim">{issCrew} humans in space right now</span>}
+        </div>
       </div>
     </>),
     'ai-leaderboard': (<>
