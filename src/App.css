@@ -846,34 +846,33 @@
 
 /* ── Weather ── */
 .weatherContent {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.weatherOverlay {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 0;
-}
-
-.weatherMain {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.weatherIcon {
-  font-size: 28px;
-  line-height: 1;
+  gap: 4px;
+  padding: 8px 0 10px;
 }
 
 .weatherTemp {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
 }
 
 .weatherDesc {
   font-size: 11px;
   color: var(--text-mid);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 
 .weatherDetails {
@@ -881,6 +880,188 @@
   gap: 16px;
   font-size: 10px;
   color: var(--text-dim);
+}
+
+/* ── Weather Scene (animated backgrounds) ── */
+.wxScene {
+  position: relative;
+  height: 90px;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+/* Clear sky — warm gradient with animated sun */
+.wxScene--clear {
+  background: linear-gradient(180deg, #1a1040 0%, #2d1b69 40%, #4a2080 100%);
+}
+
+.wxSun {
+  position: absolute;
+  top: 12px;
+  right: 20%;
+  width: 36px;
+  height: 36px;
+}
+
+.wxSunCore {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 20px rgba(249, 203, 66, 0.6), 0 0 40px rgba(249, 203, 66, 0.3);
+  animation: sunPulse 4s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 203, 66, 0.6), 0 0 40px rgba(249, 203, 66, 0.3); }
+  50% { box-shadow: 0 0 28px rgba(249, 203, 66, 0.8), 0 0 56px rgba(249, 203, 66, 0.4); }
+}
+
+.wxSunRay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 36px;
+  margin-top: -18px;
+  margin-left: -1px;
+  background: linear-gradient(180deg, transparent 0%, rgba(249, 203, 66, 0.3) 30%, transparent 100%);
+  transform-origin: center center;
+  animation: sunSpin 20s linear infinite;
+}
+
+@keyframes sunSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Cloudy */
+.wxScene--cloudy { background: linear-gradient(180deg, #15151a 0%, #1e1e28 100%); }
+.wxScene--rain { background: linear-gradient(180deg, #0f0f18 0%, #1a1a28 100%); }
+.wxScene--heavyRain { background: linear-gradient(180deg, #0a0a14 0%, #141422 100%); }
+.wxScene--drizzle { background: linear-gradient(180deg, #12121c 0%, #1c1c2a 100%); }
+.wxScene--snow { background: linear-gradient(180deg, #141420 0%, #1e1e30 100%); }
+.wxScene--fog { background: linear-gradient(180deg, #16161e 0%, #1e1e28 100%); }
+.wxScene--thunder { background: linear-gradient(180deg, #080810 0%, #10101c 100%); }
+
+/* Clouds */
+.wxClouds { position: absolute; inset: 0; }
+
+.wxCloud {
+  position: absolute;
+  background: rgba(100, 100, 120, 0.25);
+  border-radius: 50px;
+  filter: blur(4px);
+}
+
+.wxCloud1 {
+  width: 80px; height: 24px;
+  top: 10px; left: 10%;
+  animation: cloudDrift 25s linear infinite;
+}
+
+.wxCloud2 {
+  width: 100px; height: 20px;
+  top: 20px; left: 50%;
+  animation: cloudDrift 30s linear infinite reverse;
+  opacity: 0.7;
+}
+
+.wxCloud3 {
+  width: 60px; height: 18px;
+  top: 30px; left: 30%;
+  animation: cloudDrift 20s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes cloudDrift {
+  0% { transform: translateX(-20px); }
+  50% { transform: translateX(20px); }
+  100% { transform: translateX(-20px); }
+}
+
+/* Rain drops */
+.wxRain {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.wxDrop {
+  position: absolute;
+  top: -10px;
+  width: 1.5px;
+  height: 12px;
+  background: linear-gradient(180deg, transparent, rgba(96, 165, 250, 0.5));
+  border-radius: 0 0 2px 2px;
+  animation: rainFall 0.7s linear infinite;
+}
+
+.wxDropLight {
+  height: 6px;
+  opacity: 0.4;
+}
+
+@keyframes rainFall {
+  from { transform: translateY(0); }
+  to { transform: translateY(100px); }
+}
+
+/* Snow */
+.wxSnow { position: absolute; inset: 0; overflow: hidden; }
+
+.wxFlake {
+  position: absolute;
+  top: -8px;
+  color: rgba(200, 200, 220, 0.6);
+  animation: snowFall 3s linear infinite;
+}
+
+.wxFlake::after {
+  content: '•';
+}
+
+@keyframes snowFall {
+  0% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(25px) translateX(4px); }
+  50% { transform: translateY(50px) translateX(-2px); }
+  75% { transform: translateY(75px) translateX(3px); }
+  100% { transform: translateY(100px) translateX(-1px); }
+}
+
+/* Fog */
+.wxFog { position: absolute; inset: 0; overflow: hidden; }
+
+.wxFogLayer {
+  position: absolute;
+  width: 200%;
+  height: 30px;
+  background: linear-gradient(90deg, transparent 0%, rgba(100, 100, 120, 0.15) 30%, rgba(100, 100, 120, 0.1) 70%, transparent 100%);
+  border-radius: 50px;
+}
+
+.wxFogLayer1 { top: 15px; animation: fogDrift 12s ease-in-out infinite; }
+.wxFogLayer2 { top: 35px; animation: fogDrift 16s ease-in-out infinite reverse; opacity: 0.7; }
+.wxFogLayer3 { top: 55px; animation: fogDrift 10s ease-in-out infinite; opacity: 0.5; }
+
+@keyframes fogDrift {
+  0% { transform: translateX(-30%); }
+  50% { transform: translateX(-10%); }
+  100% { transform: translateX(-30%); }
+}
+
+/* Lightning */
+.wxLightning {
+  position: absolute;
+  inset: 0;
+  background: rgba(200, 200, 255, 0.03);
+  animation: lightningFlash 4s infinite;
+}
+
+@keyframes lightningFlash {
+  0%, 89%, 91%, 93%, 100% { background: transparent; }
+  90% { background: rgba(200, 200, 255, 0.15); }
+  92% { background: rgba(200, 200, 255, 0.08); }
 }
 
 /* ── Earthquake Monitor ── */
