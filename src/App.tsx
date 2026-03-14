@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
 import { useBlockStream } from './hooks/useBlockStream';
 import { useFearGreed } from './hooks/useFearGreed';
@@ -10,12 +10,14 @@ import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
 import { LiveChart } from './components/LiveChart';
+import { BootSequence, shouldShowBoot } from './components/BootSequence';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import './App.css';
 
 function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
+  const [booting, setBooting] = useState(() => shouldShowBoot());
   const { data: priceData, connected: priceConnected, priceHistory } = useBtcPrice();
   const { latestBlock, mempoolSize, feeRate, connected: blockConnected } = useBlockStream();
   const fearGreed = useFearGreed();
@@ -34,6 +36,14 @@ function App() {
   const btcPrice = priceData?.price ?? 0;
   const btcChange = priceData?.changePercent24h ?? 0;
   const isUp = btcChange >= 0;
+
+  // Dynamic tab title with live BTC price
+  useEffect(() => {
+    if (btcPrice > 0) {
+      const arrow = isUp ? '\u25B2' : '\u25BC';
+      document.title = `$${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${arrow} | TerminalFeed`;
+    }
+  }, [btcPrice, isUp]);
 
   // Ticker items: BTC + metals + stocks + crypto
   const tickerItems = [
@@ -56,6 +66,10 @@ function App() {
   // Live and recent games (limit to 8)
   const displayGames = games.slice(0, 8);
   const liveCount = games.filter((g) => g.status === 'in').length;
+
+  if (booting) {
+    return <BootSequence onComplete={() => setBooting(false)} />;
+  }
 
   return (
     <div className="app">

@@ -1,0 +1,53 @@
+.bootOverlay {
+  position: fixed;
+  inset: 0;
+  background: #080808;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+}
+
+.bootFadeOut {
+  opacity: 0;
+}
+
+.bootContent {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--green);
+  max-width: 560px;
+  padding: 24px;
+}
+
+.bootLine {
+  opacity: 0;
+  animation: bootReveal 0.15s ease forwards;
+}
+
+.bootOk {
+  color: var(--green);
+}
+
+.bootOnline {
+  color: var(--green);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.bootWelcome {
+  color: var(--text-mid);
+  margin-top: 4px;
+}
+
+.bootCursor {
+  animation: blink 0.8s step-end infinite;
+  color: var(--green);
+}
+
+@keyframes bootReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
