@@ -157,40 +157,18 @@ function App() {
           />
         </div>
 
-        {/* Fear & Greed */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="panelHeaderLeft">
-              <span className="panelTitle">Fear & Greed</span>
-              <span className="panelTag">INDEX</span>
-            </div>
-            <div className="panelLive">
-              <span className="liveDot" />
-              <span className="liveText">LIVE</span>
-            </div>
-          </div>
-          {fearGreed ? (
-            <div style={{ padding: '2px 0' }}>
-              <div className="fgValue" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.value}</div>
-              <div className="fgLabel" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.label}</div>
-              <div className="fgBar">
-                <div className="fgIndicator" style={{ left: `${fearGreed.value}%` }} />
-              </div>
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>
-              loading...
-            </div>
-          )}
-        </div>
-
-        {/* Market Hours */}
+        {/* Market Hours — top right */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Market Hours</span>
               <span className="panelTag">GLOBAL</span>
             </div>
+            {fearGreed && (
+              <span style={{ fontSize: 9, color: fgColor(fearGreed.value) }}>
+                F&G {fearGreed.value}
+              </span>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {marketHours.map((mkt) => {
