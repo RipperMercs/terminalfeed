@@ -464,6 +464,26 @@
   gap: 4px;
 }
 
+.bottomBarDivider {
+  color: var(--border-glow);
+}
+
+.footerLink {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footerLink:hover {
+  color: var(--green);
+}
+
 .bottomBarDot {
   width: 6px;
   height: 6px;
