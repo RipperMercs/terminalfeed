@@ -35,6 +35,7 @@ import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { usePodcasts } from './hooks/usePodcasts';
 import { uapSightings, getShapeStats } from './data/uapSightings';
 import { useBluesky } from './hooks/useBluesky';
+import { usePanelHeat } from './hooks/usePanelHeat';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
@@ -204,6 +205,21 @@ function App() {
     setCustomCrypto(updated);
     localStorage.setItem('tf_watchlist_crypto', JSON.stringify(updated));
   }, [customCrypto]);
+
+  // Smart auto-curation: calculate panel heat scores for new visitors
+  const panelHeat = usePanelHeat({
+    btcChangeAbs: Math.abs(btcChange),
+    liveGamesCount: liveCount,
+    devStatusIssues: devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown').length,
+    earthquakeMag5: earthquakes.some(q => q.magnitude >= 5),
+    fearGreedValue: fearGreed?.value ?? 50,
+  });
+
+  // Apply heat ordering for new visitors (won't touch saved layouts)
+  useEffect(() => {
+    if (panelHeat.length > 0) layout.applyHeatOrder(panelHeat);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelHeat.length > 0]);
 
   // Default stock symbols (can't be removed)
   const defaultStockSymbols = ['SPY', 'QQQ', 'DIA', 'NVDA', 'MSFT', 'AAPL', 'TSLA', 'GOOGL', 'AMD', 'COIN', 'PLTR'];

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { DEFAULT_LAYOUT } from '../data/defaultLayout';
+import type { PanelHeat } from './usePanelHeat';
 
 // All panel IDs in default order
 // Default order: curated like a newspaper front page
@@ -106,6 +107,7 @@ export interface LayoutManager {
   undoRandomize: () => void;
   canUndoRandomize: boolean;
   applyPreset: (presetKey: string) => void;
+  applyHeatOrder: (heat: PanelHeat[]) => void;
   exportLayout: () => string;
   importLayout: (data: string) => boolean;
   downloadLayout: () => void;
@@ -124,12 +126,20 @@ export function useLayoutManager(): LayoutManager {
   });
   const [panelOrder, setPanelOrderState] = useState<string[]>(() => {
     const saved = loadArray(LS_ORDER);
-    if (saved.length > 0) return saved;
+    if (saved.length > 0) {
+      // Merge: keep saved order, append any NEW panels that were added in updates
+      const allIds: string[] = ALL_PANELS.map(p => p.id);
+      const missing = allIds.filter(id => !saved.includes(id));
+      // Remove any panels that no longer exist
+      const cleaned = saved.filter(id => allIds.includes(id));
+      return [...cleaned, ...missing];
+    }
     return DEFAULT_LAYOUT.panelOrder;
   });
   const [isOrganizing, setIsOrganizing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialRender = useRef(true);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -137,20 +147,26 @@ export function useLayoutManager(): LayoutManager {
     toastTimer.current = setTimeout(() => setToastMessage(''), 1500);
   }, []);
 
-  // Auto-save hidden panels
+  // Auto-save — skip initial render to prevent overwriting saved data
   useEffect(() => {
+    if (initialRender.current) return;
     saveArray(LS_HIDDEN, Array.from(hiddenPanels));
   }, [hiddenPanels]);
 
-  // Auto-save collapsed panels
   useEffect(() => {
+    if (initialRender.current) return;
     saveArray(LS_COLLAPSED, Array.from(collapsedPanels));
   }, [collapsedPanels]);
 
-  // Auto-save panel order
   useEffect(() => {
+    if (initialRender.current) return;
     saveArray(LS_ORDER, panelOrder);
   }, [panelOrder]);
+
+  // Mark initial render complete after mount
+  useEffect(() => {
+    initialRender.current = false;
+  }, []);
 
   const isVisible = useCallback((id: string) => !hiddenPanels.has(id), [hiddenPanels]);
   const isCollapsed = useCallback((id: string) => collapsedPanels.has(id), [collapsedPanels]);
@@ -242,6 +258,17 @@ export function useLayoutManager(): LayoutManager {
     localStorage.removeItem(LS_ORDER);
     showToast('Layout reset to default');
   }, [showToast]);
+
+  const applyHeatOrder = useCallback((heat: PanelHeat[]) => {
+    // Only apply heat ordering if user has NOT customized (no saved order)
+    const hasSaved = localStorage.getItem(LS_ORDER);
+    if (hasSaved) return; // respect user's custom order
+    const heatOrder = heat.map(h => h.id).filter(id => ALL_PANELS.some(p => p.id === id));
+    // Add any panels not in heat scores at the end
+    const allIds = ALL_PANELS.map(p => p.id);
+    const missing = allIds.filter(id => !heatOrder.includes(id));
+    setPanelOrderState([...heatOrder, ...missing]);
+  }, []);
 
   const applyPreset = useCallback((presetKey: string) => {
     const preset = PRESETS[presetKey];
@@ -381,6 +408,7 @@ export function useLayoutManager(): LayoutManager {
     undoRandomize,
     canUndoRandomize: preRandomOrder !== null,
     applyPreset,
+    applyHeatOrder,
     exportLayout,
     importLayout,
     downloadLayout,
