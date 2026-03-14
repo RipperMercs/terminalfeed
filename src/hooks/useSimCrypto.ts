@@ -7,7 +7,7 @@ interface CryptoItem {
 }
 
 // Real-time prices via CoinCap WebSocket
-const ASSETS = 'ethereum,solana,dogecoin,ripple,cardano,polkadot,avalanche-2,chainlink,litecoin';
+const ASSETS = 'ethereum,solana,dogecoin,ripple,cardano,polkadot,avalanche-2,chainlink,litecoin,hyperliquid,hedera-hashgraph';
 const COINCAP_WS = `wss://ws.coincap.io/prices?assets=${ASSETS.replace(/-2/g, '')}`;
 const RECONNECT_MS = 5000;
 
@@ -26,6 +26,8 @@ const GECKO_TO_SYMBOL: Record<string, string> = {
   'avalanche-2': 'AVAX',
   chainlink: 'LINK',
   litecoin: 'LTC',
+  hyperliquid: 'HYPE',
+  'hedera-hashgraph': 'HBAR',
 };
 
 // CoinCap uses slightly different names
@@ -39,9 +41,11 @@ const COINCAP_TO_SYMBOL: Record<string, string> = {
   avalanche: 'AVAX',
   chainlink: 'LINK',
   litecoin: 'LTC',
+  hyperliquid: 'HYPE',
+  hedera: 'HBAR',
 };
 
-const INITIAL_ORDER = ['ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'LTC'];
+const INITIAL_ORDER = ['ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'LTC', 'HYPE', 'HBAR'];
 
 export function useSimCrypto(customSymbols: string[] = []) {
   // Merge custom symbols (uppercased) with defaults, no dupes
