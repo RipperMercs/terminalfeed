@@ -19,7 +19,7 @@ function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const [booting, setBooting] = useState(() => shouldShowBoot());
   const { data: priceData, connected: priceConnected, priceHistory } = useBtcPrice();
-  const { latestBlock, mempoolSize, feeRate, connected: blockConnected } = useBlockStream();
+  const { connected: blockConnected } = useBlockStream();
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
@@ -256,41 +256,6 @@ function App() {
           </div>
         </div>
 
-        {/* GitHub Trending */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="panelHeaderLeft">
-              <span className="panelTitle">GitHub Trending</span>
-              <span className="panelTag">7D</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {trendingRepos.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
-                loading repos...
-              </div>
-            )}
-            {trendingRepos.map((repo) => (
-              <a
-                key={repo.fullName}
-                href={repo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="newsRow"
-              >
-                <span className="ghStars">{formatStars(repo.stars)}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="ghRepoName">{repo.fullName}</div>
-                  <div className="ghRepoDesc">{repo.description}</div>
-                </div>
-                {repo.language && (
-                  <span className="ghLang">{repo.language}</span>
-                )}
-              </a>
-            ))}
-          </div>
-        </div>
-
         {/* Tech / AI News Feed */}
         <div className="panel">
           <div className="panelHeader">
@@ -366,50 +331,38 @@ function App() {
           </div>
         </div>
 
-        {/* BTC Network */}
+        {/* GitHub Trending */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
-              <span className="panelTitle">BTC Network</span>
+              <span className="panelTitle">GitHub Trending</span>
+              <span className="panelTag">7D</span>
             </div>
-            {blockConnected && (
-              <div className="panelLive">
-                <span className="liveDot" />
-                <span className="liveText">LIVE</span>
-              </div>
-            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="netRow">
-              <span className="netLabel">Block height</span>
-              <span className="netValue">{latestBlock ? `#${latestBlock.height.toLocaleString()}` : '--'}</span>
-            </div>
-            <div className="netRow">
-              <span className="netLabel">Fee rate</span>
-              <span className="netValue">{feeRate ? `${feeRate} sat/vB` : '--'}</span>
-            </div>
-            <div className="netRow">
-              <span className="netLabel">Mempool</span>
-              <span className="netValue">{mempoolSize !== null ? `${formatCount(mempoolSize)} txs` : '--'}</span>
-            </div>
-            {latestBlock?.pool && (
-              <div className="netRow">
-                <span className="netLabel">Last mined by</span>
-                <span className="netValue">{latestBlock.pool}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {trendingRepos.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
+                loading repos...
               </div>
             )}
-            {latestBlock && (
-              <div className="netRow">
-                <span className="netLabel">Block size</span>
-                <span className="netValue">{(latestBlock.size / 1e6).toFixed(2)} MB</span>
-              </div>
-            )}
-            {latestBlock && (
-              <div className="netRow">
-                <span className="netLabel">Transactions</span>
-                <span className="netValue">{latestBlock.txCount.toLocaleString()}</span>
-              </div>
-            )}
+            {trendingRepos.map((repo) => (
+              <a
+                key={repo.fullName}
+                href={repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="newsRow"
+              >
+                <span className="ghStars">{formatStars(repo.stars)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="ghRepoName">{repo.fullName}</div>
+                  <div className="ghRepoDesc">{repo.description}</div>
+                </div>
+                {repo.language && (
+                  <span className="ghLang">{repo.language}</span>
+                )}
+              </a>
+            ))}
           </div>
         </div>
 
@@ -527,12 +480,6 @@ function timeAgo(ts: number): string {
 
 function formatStars(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return n.toString();
-}
-
-function formatCount(n: number): string {
-  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
   return n.toString();
 }
 
