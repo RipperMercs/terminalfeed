@@ -31,6 +31,9 @@ import { PanelHead } from './components/PanelHead';
 import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { DiceRoll } from './components/DiceRoll';
+import { useInternetPulse } from './hooks/useInternetPulse';
+import { useBluesky } from './hooks/useBluesky';
+import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import './App.css';
@@ -66,6 +69,8 @@ function App() {
   const soQuestions = useStackOverflow();
   const nasaApod = useNasaApod();
   const btcNet = useBtcNetwork();
+  const internetPulse = useInternetPulse();
+  const bskyPosts = useBluesky();
   const todayInTech = getTodayInTech();
   const todayTerm = getTodayTerm();
 
@@ -366,6 +371,53 @@ function App() {
         <div><div className="dailySectionTitle">Term of the Day</div><div className="termWord">{todayTerm.term}</div><div className="termDef">{todayTerm.definition}</div></div>
       </div>
     </>),
+    'ai-leaderboard': (<>
+      <PanelHead panelId="ai-leaderboard" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Leaderboard</span><span className="panelTag">ELO</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {aiLeaderboard.map((m) => (
+          <div key={m.rank} className="listRow">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: m.rank <= 3 ? 'var(--gold)' : 'var(--text-dim)', fontWeight: 700, minWidth: 16 }}>#{m.rank}</span>
+              <div>
+                <span className="listRowSymbol">{m.name}</span>
+                <span className="listRowName">{m.company}</span>
+              </div>
+            </div>
+            <span style={{ fontSize: 11, color: 'var(--cyan)', fontWeight: 600 }}>{m.elo}</span>
+          </div>
+        ))}
+      </div>
+    </>),
+    'bluesky': (<>
+      <PanelHead panelId="bluesky" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Bluesky</span><span className="panelTag">LIVE</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {bskyPosts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading posts...</div>}
+        {bskyPosts.map((p, i) => (
+          <div key={i} className="newsRow" style={{ cursor: 'default' }}>
+            <span className="bskyAuthor">@{p.handle.split('.')[0]}</span>
+            <span className="newsTitle">{p.text}</span>
+            <span className="newsMeta">{p.createdAt ? timeAgo(Math.floor(new Date(p.createdAt).getTime() / 1000)) : ''}</span>
+          </div>
+        ))}
+      </div>
+    </>),
+    'internet-pulse': (<>
+      <PanelHead panelId="internet-pulse" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Internet Pulse</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {internetPulse.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>pinging...</div>}
+        {internetPulse.map((p) => {
+          const color = p.latency < 0 ? 'var(--red)' : p.latency < 50 ? 'var(--green)' : p.latency < 150 ? 'var(--amber)' : 'var(--red)';
+          const pct = p.latency < 0 ? 0 : Math.min(100, (p.latency / 200) * 100);
+          return (
+            <div key={p.name} className="pulseRow">
+              <span className="pulseName">{p.name}</span>
+              <div className="pulseBar"><div className="pulseFill" style={{ width: `${pct}%`, background: color }} /></div>
+              <span className="pulseMs" style={{ color }}>{p.latency < 0 ? 'FAIL' : `${p.latency}ms`}</span>
+            </div>
+          );
+        })}
+      </div>
+    </>),
     'ai-image': (<><PanelHead panelId="ai-image" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Image Lab</span><span className="panelTag">FLUX</span></div></PanelHead><AIImageLab /></>),
     'dice': (<><PanelHead panelId="dice" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Dice Roll</span></div></PanelHead><DiceRoll /></>),
     'support': (<>
@@ -400,6 +452,11 @@ function App() {
           <button className="customizeBtn" onClick={() => setShowPanelManager(true)}>Settings</button>
           {layout.isOrganizing && (
             <span className="organizeHint">arrows to rearrange · E to lock</span>
+          )}
+          {fearGreed && (
+            <span className={`moodIndicator ${fearGreed.value >= 55 ? 'moodBull' : fearGreed.value <= 35 ? 'moodBear' : 'moodNeutral'}`}>
+              {fearGreed.value >= 55 ? 'Bullish' : fearGreed.value <= 35 ? 'Bearish' : 'Neutral'}
+            </span>
           )}
           <span className="topBarDate">{dateStr}</span>
           <span className="topBarTime">{timeStr}</span>
