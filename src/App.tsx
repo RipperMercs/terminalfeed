@@ -15,6 +15,7 @@ import { AddTicker } from './components/AddTicker';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useWatchlist } from './hooks/useWatchlist';
+import { useMarketHours } from './hooks/useMarketHours';
 import type { SortMode } from './hooks/useWatchlist';
 import './App.css';
 
@@ -31,6 +32,7 @@ function App() {
   const stocks = useSimStocks(stockWatchlist.custom);
   const crypto = useSimCrypto(cryptoWatchlist.custom);
   const metals = useMetals();
+  const marketHours = useMarketHours();
   const games = useSportsScores();
   const trendingRepos = useGithubTrending();
   const redditPosts = useRedditTech();
@@ -179,6 +181,34 @@ function App() {
               loading...
             </div>
           )}
+        </div>
+
+        {/* Market Hours */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Market Hours</span>
+              <span className="panelTag">GLOBAL</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {marketHours.map((mkt) => (
+              <div key={mkt.abbr} className="marketHoursRow">
+                <div className="marketHoursLeft">
+                  <span className={`marketDot ${mkt.isOpen ? 'marketOpen' : 'marketClosed'}`} />
+                  <span className="marketAbbr">{mkt.abbr}</span>
+                  <span className="marketName">{mkt.name}</span>
+                </div>
+                <div className="marketHoursRight">
+                  {mkt.localTime && <span className="marketTime">{mkt.localTime}</span>}
+                  <span className={`marketEvent ${mkt.isOpen ? 'marketEventOpen' : 'marketEventClosed'}`}>
+                    {mkt.isOpen ? 'OPEN' : 'CLOSED'}
+                  </span>
+                  <span className="marketCountdown">{mkt.nextEvent}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Crypto */}
