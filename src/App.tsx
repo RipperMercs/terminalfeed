@@ -18,7 +18,6 @@ import { useCryptoGlobal } from './hooks/useCryptoGlobal';
 import { useEarthquakes } from './hooks/useEarthquakes';
 import { useWeather, weatherDescription } from './hooks/useWeather';
 import { useSpaceLaunches } from './hooks/useSpaceLaunches';
-import { useSteamGames } from './hooks/useSteamGames';
 import { useRecipe } from './hooks/useRecipe';
 import { useDevJoke } from './hooks/useDevJoke';
 import { useStackOverflow } from './hooks/useStackOverflow';
@@ -30,7 +29,6 @@ import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { useInternetPulse } from './hooks/useInternetPulse';
 import { useTerminalsOnline } from './hooks/useTerminalsOnline';
-import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { usePodcasts } from './hooks/usePodcasts';
 import { uapSightings, getShapeStats } from './data/uapSightings';
 import { useBluesky } from './hooks/useBluesky';
@@ -72,14 +70,12 @@ function App() {
   const earthquakes = useEarthquakes();
   const weather = useWeather();
   const spaceLaunches = useSpaceLaunches();
-  const steamGames = useSteamGames();
   const recipes = useRecipe();
   const devJoke = useDevJoke();
   const soQuestions = useStackOverflow();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
   const terminalsOnline = useTerminalsOnline();
-  const predictionMarkets = usePredictionMarkets();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
   const bskyPosts = useBluesky();
@@ -426,13 +422,6 @@ function App() {
         {spaceLaunches.map((l) => { const isToday = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 && l.dateTs > Date.now(); const isSoon = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 * 3 && l.dateTs > Date.now(); const dc = isToday ? 'var(--green)' : isSoon ? 'var(--amber)' : 'var(--text-dim)'; return (<div key={l.id} className="launchRow"><div className="launchInfo"><span className="launchProvider">{l.provider}</span><span className="launchName">{l.name}</span></div><div className="launchMeta"><span className="launchDate" style={{ color: dc }}>{l.date}</span><span className="launchLoc">{l.location}</span></div></div>); })}
       </div>
     </>),
-    'steam': (<>
-      <PanelHead panelId="steam" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Steam</span><span className="panelTag">LIVE</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {steamGames.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading games...</div>}
-        {steamGames.map((g) => (<div key={g.appId} className="steamRow"><span className="steamName">{g.name}</span><span className="steamPlayers">{formatPlayerCount(g.playerCount)} playing</span></div>))}
-      </div>
-    </>),
     'stackoverflow': (<>
       <PanelHead panelId="stackoverflow" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Stack Overflow</span><span className="panelTag">HOT</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -449,21 +438,6 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div><div className="dailySectionTitle">On This Day</div>{todayInTech.map((evt, i) => <div key={i} className="historyRow"><span className="historyYear">{evt.year}</span><span className="historyEvent">{evt.event}</span></div>)}</div>
         <div><div className="dailySectionTitle">Term of the Day</div><div className="termWord">{todayTerm.term}</div><div className="termDef">{todayTerm.definition}</div></div>
-      </div>
-    </>),
-    'predictions': (<>
-      <PanelHead panelId="predictions" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Predictions</span><span className="panelTag">MARKETS</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {predictionMarkets.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading markets...</div>}
-        {predictionMarkets.map((m) => (
-          <div key={m.id} className="predRow">
-            <span className="predTitle">{m.title}</span>
-            <div className="predRight">
-              <span className="predProb" style={{ color: m.probability >= 70 ? 'var(--green)' : m.probability <= 30 ? 'var(--red)' : 'var(--amber)' }}>{m.probability}%</span>
-              <span className="predSource">{m.source}</span>
-            </div>
-          </div>
-        ))}
       </div>
     </>),
     'podcasts': (<>
@@ -786,10 +760,5 @@ function formatHashrate(h: number): string {
   return `${(h / 1e9).toFixed(1)} GH/s`;
 }
 
-function formatPlayerCount(n: number): string {
-  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`;
-  return n.toLocaleString();
-}
 
 export default App;
