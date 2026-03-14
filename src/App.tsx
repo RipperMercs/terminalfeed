@@ -194,7 +194,7 @@ function App() {
             </div>
             <div className="panelLive">
               <span className="liveDot" />
-              <span className="liveText">SIM</span>
+              <span className="liveText">LIVE</span>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
