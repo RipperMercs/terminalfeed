@@ -23,19 +23,16 @@ import { useSteamGames } from './hooks/useSteamGames';
 import { useRecipe } from './hooks/useRecipe';
 import { useDevJoke } from './hooks/useDevJoke';
 import { useStackOverflow } from './hooks/useStackOverflow';
-import { useNasaApod } from './hooks/useNasaApod';
 import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
 import { PanelManager } from './components/PanelManager';
 import { PanelHead } from './components/PanelHead';
 import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
-import { DiceRoll } from './components/DiceRoll';
 import { useInternetPulse } from './hooks/useInternetPulse';
 import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { usePodcasts } from './hooks/usePodcasts';
 import { uapSightings, getShapeStats } from './data/uapSightings';
-import { useISSPosition } from './hooks/useISSPosition';
 import { useBluesky } from './hooks/useBluesky';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
@@ -71,13 +68,11 @@ function App() {
   const recipes = useRecipe();
   const devJoke = useDevJoke();
   const soQuestions = useStackOverflow();
-  const nasaApod = useNasaApod();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
   const predictionMarkets = usePredictionMarkets();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
-  const { position: issPos, crewCount: issCrew } = useISSPosition();
   const bskyPosts = useBluesky();
   const todayInTech = getTodayInTech();
   const todayTerm = getTodayTerm();
@@ -355,10 +350,6 @@ function App() {
         {soQuestions.map((q) => (<a key={q.id} href={q.link} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="soScore">{q.score}</span><div style={{ flex: 1, minWidth: 0 }}><div className="newsTitle">{q.title}</div><div className="soTags">{q.tags.join(' · ')}</div></div><span className="soAnswers">{q.answerCount}A</span></a>))}
       </div>
     </>),
-    'nasa': (<>
-      <PanelHead panelId="nasa" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">NASA</span><span className="panelTag">APOD</span></div></PanelHead>
-      {nasaApod ? (<div className="apodContent">{nasaApod.mediaType === 'image' && <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer"><img src={nasaApod.url} alt={nasaApod.title} className="apodImage" loading="lazy" /></a>}<div className="apodTitle">{nasaApod.title}</div>{nasaApod.copyright && <div className="apodCopy">{nasaApod.copyright}</div>}<div className="apodDesc">{nasaApod.explanation.slice(0, 120)}...</div></div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
-    </>),
     'recipe': (<>
       <PanelHead panelId="recipe" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Tonight</span><span className="panelTag">RECIPES OF THE DAY</span></div></PanelHead>
       {recipes.length > 0 ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recipes.map((r, i) => (<a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent"><img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" /><div className="recipeInfo"><div className="recipeName">{r.name}</div><div className="recipeMeta">{r.area} · {r.category}</div></div></a>))}</div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>}
@@ -419,36 +410,6 @@ function App() {
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
       </div>
     </>),
-    'iss-live': (<>
-      <PanelHead panelId="iss-live" layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">ISS Live</span><span className="panelTag">EARTH FROM SPACE</span></div>
-        <div className="panelLive"><span className="liveDot" style={{ background: 'var(--red)' }} /><span className="liveText">LIVE</span></div>
-      </PanelHead>
-      <div className="issContent">
-        <div className="issVideo">
-          <iframe
-            src="https://www.youtube.com/embed/xRPjKQtRXR8?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            title="ISS Live Feed"
-            style={{ border: 'none', borderRadius: '3px' }}
-          />
-        </div>
-        <div className="issStats">
-          {issPos ? (
-            <>
-              <span className="issStat">{issPos.latitude.toFixed(1)}°{issPos.latitude >= 0 ? 'N' : 'S'}, {issPos.longitude.toFixed(1)}°{issPos.longitude >= 0 ? 'E' : 'W'}</span>
-              <span className="issStatDim">over {issPos.location}</span>
-            </>
-          ) : <span className="issStatDim">tracking...</span>}
-          <span className="issStatDim">alt: 408 km · speed: 27,600 km/h · orbit: 92 min</span>
-          {issCrew > 0 && <span className="issStatDim">{issCrew} humans in space right now</span>}
-        </div>
-      </div>
-    </>),
     'ai-leaderboard': (<>
       <PanelHead panelId="ai-leaderboard" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Leaderboard</span><span className="panelTag">ELO</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -497,7 +458,6 @@ function App() {
       </div>
     </>),
     'ai-image': (<><PanelHead panelId="ai-image" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Image Lab</span><span className="panelTag">FLUX</span></div></PanelHead><AIImageLab /></>),
-    'dice': (<><PanelHead panelId="dice" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Dice Roll</span></div></PanelHead><DiceRoll /></>),
     'support': (<>
       <PanelHead panelId="support" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Support</span></div></PanelHead>
       <div className="adPlaceholder"><div className="adLabel">Ad space</div><div className="adSize">300x250</div></div>
