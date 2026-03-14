@@ -2410,43 +2410,73 @@
   height: auto;
   display: block;
   border-radius: 3px;
-  transition: opacity 0.5s ease;
+  opacity: 0;
 }
 
-.aiImgLoading {
-  position: absolute;
-  inset: 0;
+.aiImgFadeIn {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.aiImgSpinner {
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 16px;
-  gap: 4px;
+  height: 180px;
+  gap: 10px;
 }
 
-.aiImgLoadLine {
+.aiImgSpinnerRing {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.aiImgSpinnerText {
+  font-size: 11px;
+  color: var(--cyan);
+  animation: blink 1s ease infinite;
+}
+
+.aiImgSpinnerHint {
   font-size: 9px;
-  color: var(--green);
-  animation: fadeIn 0.3s ease;
+  color: var(--text-dim);
 }
 
-.aiImgLoadBar {
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 6px;
+.aiImgError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--red);
 }
 
-.aiImgLoadFill {
-  height: 100%;
-  background: var(--green);
-  border-radius: 2px;
-  animation: loadProgress 4s ease-out forwards;
+.aiImgRetry {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-@keyframes loadProgress {
-  from { width: 0; }
-  to { width: 90%; }
+.aiImgRetry:hover {
+  color: var(--text);
+  border-color: var(--border-glow);
 }
 
 .aiImgPromptShow {
@@ -2699,9 +2729,22 @@
   .organizeHint { display: none; }
   .topBarDate { display: none; }
 
-  /* Bottom bar wrap */
-  .bottomBar { flex-wrap: wrap; gap: 4px; }
-  .bottomBarLeft { flex-wrap: wrap; gap: 6px; }
+  /* Footer: stack vertically on mobile */
+  .bottomBar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 16px 12px;
+  }
+  .bottomBarLeft {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .bottomBarStatus {
+    justify-content: center;
+  }
 
   /* Price panel */
   .priceValue { font-size: 24px; }
