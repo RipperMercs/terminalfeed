@@ -28,6 +28,7 @@ import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
 import { PanelManager } from './components/PanelManager';
 import { PanelHead } from './components/PanelHead';
+import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { DiceRoll } from './components/DiceRoll';
 import { getTodayInTech } from './data/techHistory';
@@ -60,7 +61,7 @@ function App() {
   const weather = useWeather();
   const spaceLaunches = useSpaceLaunches();
   const steamGames = useSteamGames();
-  const recipe = useRecipe();
+  const recipes = useRecipe();
   const devJoke = useDevJoke();
   const soQuestions = useStackOverflow();
   const nasaApod = useNasaApod();
@@ -708,14 +709,14 @@ function App() {
           </PanelHead>
           {weather ? (
             <div className="weatherContent">
-              <div className="weatherMain">
-                <span className="weatherIcon">{weatherDescription(weather.weatherCode).icon}</span>
-                <span className="weatherTemp">{weather.temperature}°F</span>
-              </div>
-              <div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div>
-              <div className="weatherDetails">
-                <span>Wind: {weather.windSpeed} mph</span>
-                <span>Humidity: {weather.humidity}%</span>
+              <WeatherScene weatherCode={weather.weatherCode} />
+              <div className="weatherOverlay">
+                <div className="weatherTemp">{weather.temperature}°F</div>
+                <div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div>
+                <div className="weatherDetails">
+                  <span>Wind: {weather.windSpeed} mph</span>
+                  <span>Humidity: {weather.humidity}%</span>
+                </div>
               </div>
             </div>
           ) : (
@@ -908,24 +909,28 @@ function App() {
           </div>
         </div>
 
-        {/* Tonight's Recipe */}
+        {/* Tonight's Recipes */}
         <div className="panel" style={{ display: layout.isVisible('recipe') ? undefined : 'none' }}>
           <PanelHead panelId="recipe" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Tonight</span>
-              <span className="panelTag">RECIPE</span>
+              <span className="panelTag">RECIPES OF THE DAY</span>
             </div>
           </PanelHead>
-          {recipe ? (
-            <a href={recipe.url} target="_blank" rel="noopener noreferrer" className="recipeContent">
-              <img src={recipe.thumbnail} alt={recipe.name} className="recipeThumbnail" loading="lazy" />
-              <div className="recipeInfo">
-                <div className="recipeName">{recipe.name}</div>
-                <div className="recipeMeta">{recipe.area} · {recipe.category}</div>
-              </div>
-            </a>
+          {recipes.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {recipes.map((r, i) => (
+                <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent">
+                  <img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" />
+                  <div className="recipeInfo">
+                    <div className="recipeName">{r.name}</div>
+                    <div className="recipeMeta">{r.area} · {r.category}</div>
+                  </div>
+                </a>
+              ))}
+            </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipe...</div>
+            <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>
           )}
         </div>
 
