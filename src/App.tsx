@@ -19,6 +19,13 @@ import { useCryptoGlobal } from './hooks/useCryptoGlobal';
 import { useEarthquakes } from './hooks/useEarthquakes';
 import { useWeather, weatherDescription } from './hooks/useWeather';
 import { useSpaceLaunches } from './hooks/useSpaceLaunches';
+import { useSteamGames } from './hooks/useSteamGames';
+import { useRecipe } from './hooks/useRecipe';
+import { useDevJoke } from './hooks/useDevJoke';
+import { useStackOverflow } from './hooks/useStackOverflow';
+import { useNasaApod } from './hooks/useNasaApod';
+import { getTodayInTech } from './data/techHistory';
+import { getTodayTerm } from './data/techTerms';
 import './App.css';
 
 function App() {
@@ -42,6 +49,13 @@ function App() {
   const earthquakes = useEarthquakes();
   const weather = useWeather();
   const spaceLaunches = useSpaceLaunches();
+  const steamGames = useSteamGames();
+  const recipe = useRecipe();
+  const devJoke = useDevJoke();
+  const soQuestions = useStackOverflow();
+  const nasaApod = useNasaApod();
+  const todayInTech = getTodayInTech();
+  const todayTerm = getTodayTerm();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -617,7 +631,175 @@ function App() {
           </div>
         </div>
 
-        {/* Support / Ad — bottom right */}
+        {/* Steam Top Games */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Steam</span>
+              <span className="panelTag">LIVE</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {steamGames.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading games...</div>
+            )}
+            {steamGames.map((g) => (
+              <div key={g.appId} className="steamRow">
+                <span className="steamName">{g.name}</span>
+                <span className="steamPlayers">{formatPlayerCount(g.playerCount)} playing</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Stack Overflow Hot */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Stack Overflow</span>
+              <span className="panelTag">HOT</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {soQuestions.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading questions...</div>
+            )}
+            {soQuestions.map((q) => (
+              <a
+                key={q.id}
+                href={q.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="newsRow"
+              >
+                <span className="soScore">{q.score}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="newsTitle">{q.title}</div>
+                  <div className="soTags">{q.tags.join(' · ')}</div>
+                </div>
+                <span className="soAnswers">{q.answerCount}A</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* NASA APOD */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">NASA</span>
+              <span className="panelTag">APOD</span>
+            </div>
+          </div>
+          {nasaApod ? (
+            <div className="apodContent">
+              {nasaApod.mediaType === 'image' && (
+                <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer">
+                  <img src={nasaApod.url} alt={nasaApod.title} className="apodImage" loading="lazy" />
+                </a>
+              )}
+              <div className="apodTitle">{nasaApod.title}</div>
+              {nasaApod.copyright && <div className="apodCopy">{nasaApod.copyright}</div>}
+              <div className="apodDesc">{nasaApod.explanation.slice(0, 120)}...</div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>
+          )}
+        </div>
+
+        {/* Quick Stats — combo panel */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Quick Stats</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {fearGreed && (
+              <div className="qsRow">
+                <span className="qsLabel">Fear & Greed</span>
+                <span className="qsValue" style={{ color: fgColor(fearGreed.value) }}>
+                  {fearGreed.value} {fearGreed.label}
+                </span>
+              </div>
+            )}
+            {cryptoGlobal && (
+              <>
+                <div className="qsRow">
+                  <span className="qsLabel">BTC Dominance</span>
+                  <span className="qsValue">{cryptoGlobal.btcDominance.toFixed(1)}%</span>
+                </div>
+                <div className="qsRow">
+                  <span className="qsLabel">Crypto Cap</span>
+                  <span className="qsValue">${formatCompact(cryptoGlobal.totalMarketCap)}</span>
+                </div>
+              </>
+            )}
+            {metals.filter(m => m.price > 0).map(m => (
+              <div key={m.symbol} className="qsRow">
+                <span className="qsLabel" style={{ color: 'var(--gold)' }}>{m.symbol}</span>
+                <span className="qsValue" style={{ color: 'var(--gold)' }}>${m.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+            ))}
+            {weather && (
+              <div className="qsRow">
+                <span className="qsLabel">Weather</span>
+                <span className="qsValue">{weather.temperature}°F {weatherDescription(weather.weatherCode).icon} {weather.city}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tonight's Recipe */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Tonight</span>
+              <span className="panelTag">RECIPE</span>
+            </div>
+          </div>
+          {recipe ? (
+            <a href={recipe.url} target="_blank" rel="noopener noreferrer" className="recipeContent">
+              <img src={recipe.thumbnail} alt={recipe.name} className="recipeThumbnail" loading="lazy" />
+              <div className="recipeInfo">
+                <div className="recipeName">{recipe.name}</div>
+                <div className="recipeMeta">{recipe.area} · {recipe.category}</div>
+              </div>
+            </a>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipe...</div>
+          )}
+        </div>
+
+        {/* This Day in Tech + Term of the Day — combo */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Daily</span>
+              <span className="panelTag">LEARN</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* On This Day */}
+            <div>
+              <div className="dailySectionTitle">On This Day</div>
+              {todayInTech.map((evt, i) => (
+                <div key={i} className="historyRow">
+                  <span className="historyYear">{evt.year}</span>
+                  <span className="historyEvent">{evt.event}</span>
+                </div>
+              ))}
+            </div>
+            {/* Term of the Day */}
+            <div>
+              <div className="dailySectionTitle">Term of the Day</div>
+              <div className="termWord">{todayTerm.term}</div>
+              <div className="termDef">{todayTerm.definition}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Support / Ad + Donate */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
@@ -635,9 +817,20 @@ function App() {
 
       </div>
 
+      {/* ── Dev Joke Strip ── */}
+      {devJoke && (
+        <div className="jokeStrip">
+          <span className="jokePrefix">&gt;</span>
+          <span className="jokeText">{devJoke}</span>
+        </div>
+      )}
+
       {/* ── Bottom Bar ── */}
       <div className="bottomBar">
         <div className="bottomBarLeft">
+          <img src="/images/ripper.png" alt="Ripper" className="ripperLogo" />
+          <span className="ripperCredit">built by RipperMercs</span>
+          <span className="bottomBarDivider">&middot;</span>
           <span>terminalfeed.io</span>
           <span className="bottomBarDivider">&middot;</span>
           <span>Not financial advice</span>
@@ -696,6 +889,12 @@ function formatCompact(n: number): string {
   if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  return n.toLocaleString();
+}
+
+function formatPlayerCount(n: number): string {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`;
   return n.toLocaleString();
 }
 

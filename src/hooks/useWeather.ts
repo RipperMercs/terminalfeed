@@ -64,21 +64,6 @@ function saveLocation(loc: SavedLocation): void {
   } catch {}
 }
 
-async function reverseGeocode(lat: number, lon: number): Promise<string> {
-  try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&timezone=auto`,
-      { signal: AbortSignal.timeout(3000) }
-    );
-    const json = await res.json();
-    // Open-Meteo returns timezone like "America/Los_Angeles" — extract city part
-    const tz = json.timezone ?? '';
-    const city = tz.split('/').pop()?.replace(/_/g, ' ') ?? 'Unknown';
-    return city;
-  } catch {
-    return 'Unknown';
-  }
-}
 
 export function useWeather(): WeatherData | null {
   const [data, setData] = useState<WeatherData | null>(() => {
@@ -119,19 +104,30 @@ export function useWeather(): WeatherData | null {
       let loc = getSavedLocation();
 
       if (!loc) {
-        // Try browser geolocation
-        try {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 5000,
-              maximumAge: 600000,
-            });
-          });
-          const city = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-          loc = { lat: pos.coords.latitude, lon: pos.coords.longitude, city };
-          saveLocation(loc);
-        } catch {
-          // Default to Los Angeles
+        // IP-based geolocation — no browser prompt needed
+        const ipApis = [
+          'https://ipapi.co/json/',
+          'https://ip-api.com/json/',
+        ];
+        for (const url of ipApis) {
+          try {
+            const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+            if (!res.ok) continue;
+            const json = await res.json();
+            const lat = json.latitude ?? json.lat;
+            const lon = json.longitude ?? json.lon;
+            const city = json.city ?? 'Unknown';
+            if (lat && lon) {
+              loc = { lat, lon, city };
+              saveLocation(loc);
+              break;
+            }
+          } catch {
+            continue;
+          }
+        }
+        // Final fallback — Los Angeles
+        if (!loc) {
           loc = { lat: 34.05, lon: -118.24, city: 'Los Angeles' };
           saveLocation(loc);
         }

@@ -146,7 +146,7 @@
 /* ── Main Grid ── */
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1px;
   padding: 0;
   background: var(--border);
@@ -979,6 +979,247 @@
   white-space: nowrap;
 }
 
+/* ── Steam Games ── */
+.steamRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
+}
+
+.steamRow:last-child { border-bottom: none; }
+
+.steamName {
+  font-size: 10px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.steamPlayers {
+  font-size: 10px;
+  color: var(--green);
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* ── Stack Overflow ── */
+.soScore {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--amber);
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.soTags {
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.soAnswers {
+  font-size: 9px;
+  color: var(--green);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── NASA APOD ── */
+.apodContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apodImage {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.apodTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.apodCopy {
+  font-size: 8px;
+  color: var(--text-dim);
+}
+
+.apodDesc {
+  font-size: 9px;
+  color: var(--text-mid);
+  line-height: 1.4;
+}
+
+/* ── Quick Stats ── */
+.qsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.3);
+}
+
+.qsRow:last-child { border-bottom: none; }
+
+.qsLabel {
+  font-size: 9px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.qsValue {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ── Recipe ── */
+.recipeContent {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 4px 0;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.recipeContent:hover {
+  background: var(--bg-hover);
+}
+
+.recipeThumbnail {
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.recipeInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipeName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.recipeMeta {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+/* ── Daily Learn (History + Term) ── */
+.dailySectionTitle {
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.historyRow {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.historyYear {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cyan);
+  flex-shrink: 0;
+  min-width: 32px;
+}
+
+.historyEvent {
+  font-size: 10px;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.termWord {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--purple);
+  margin-bottom: 3px;
+}
+
+.termDef {
+  font-size: 10px;
+  color: var(--text-mid);
+  line-height: 1.4;
+}
+
+/* ── Dev Joke Strip ── */
+.jokeStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(167, 139, 250, 0.02);
+  overflow: hidden;
+}
+
+.jokePrefix {
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.jokeText {
+  font-size: 9px;
+  color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+/* ── Ripper Footer Branding ── */
+.ripperLogo {
+  height: 20px;
+  width: auto;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+  border-radius: 2px;
+}
+
+.ripperLogo:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.ripperCredit {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .grid {
@@ -994,4 +1235,5 @@
   .spanCol2, .spanCol3 { grid-column: span 1; }
   .topBar { padding: 6px 12px; }
   .priceValue { font-size: 24px; }
+  .bottomBarLeft { flex-wrap: wrap; }
 }
