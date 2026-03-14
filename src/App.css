@@ -9,8 +9,6 @@
   color: var(--text);
   position: relative;
   overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 ::selection {
