@@ -516,7 +516,8 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {layout.panelOrder.filter(id => layout.isVisible(id)).map(id => {
+        {/* Render all panels in order except support (pinned last) */}
+        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support').map(id => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
@@ -528,6 +529,12 @@ function App() {
             </div>
           );
         })}
+        {/* Support panel always last */}
+        {layout.isVisible('support') && panelRegistry['support'] && (
+          <div className="panel">
+            {panelRegistry['support']}
+          </div>
+        )}
       </div>
 
       {/* ── Hidden Panels Shelf (Organize Mode Only) ── */}

@@ -209,12 +209,13 @@ export function useLayoutManager(): LayoutManager {
   const randomizeLayout = useCallback(() => {
     // Save current layout so user can undo
     setPreRandomOrder([...panelOrder]);
-    // Shuffle using Fisher-Yates
-    const shuffled = [...panelOrder];
-    for (let i = shuffled.length - 1; i > 0; i--) {
+    // Shuffle using Fisher-Yates, but keep 'support' pinned at end
+    const movable = panelOrder.filter(id => id !== 'support');
+    for (let i = movable.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      [movable[i], movable[j]] = [movable[j], movable[i]];
     }
+    const shuffled = panelOrder.includes('support') ? [...movable, 'support'] : movable;
     setPanelOrderState(shuffled);
     showToast('Layout randomized! Undo available in Settings');
   }, [panelOrder, showToast]);
