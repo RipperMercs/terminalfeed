@@ -47,6 +47,7 @@ export type PanelId = typeof ALL_PANELS[number]['id'];
 const LS_HIDDEN = 'tf_hidden_panels';
 const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
+const LS_CUSTOM = 'tf_has_custom_layout';
 
 function loadArray(key: string): string[] {
   try {
@@ -148,9 +149,11 @@ export function useLayoutManager(): LayoutManager {
   }, []);
 
   // Auto-save — skip initial render to prevent overwriting saved data
+  // Set custom flag so heat system doesn't override user's choices
   useEffect(() => {
     if (initialRender.current) return;
     saveArray(LS_HIDDEN, Array.from(hiddenPanels));
+    try { localStorage.setItem(LS_CUSTOM, 'true'); } catch {}
   }, [hiddenPanels]);
 
   useEffect(() => {
@@ -161,6 +164,7 @@ export function useLayoutManager(): LayoutManager {
   useEffect(() => {
     if (initialRender.current) return;
     saveArray(LS_ORDER, panelOrder);
+    try { localStorage.setItem(LS_CUSTOM, 'true'); } catch {}
   }, [panelOrder]);
 
   // Mark initial render complete after mount
@@ -256,13 +260,14 @@ export function useLayoutManager(): LayoutManager {
     localStorage.removeItem(LS_HIDDEN);
     localStorage.removeItem(LS_COLLAPSED);
     localStorage.removeItem(LS_ORDER);
+    localStorage.removeItem(LS_CUSTOM);
     showToast('Layout reset to default');
   }, [showToast]);
 
   const applyHeatOrder = useCallback((heat: PanelHeat[]) => {
-    // Only apply heat ordering if user has NOT customized (no saved order)
-    const hasSaved = localStorage.getItem(LS_ORDER);
-    if (hasSaved) return; // respect user's custom order
+    // Only apply heat ordering if user has NOT customized
+    const hasCustom = localStorage.getItem(LS_CUSTOM) === 'true';
+    if (hasCustom) return; // respect user's custom order
     const heatOrder = heat.map(h => h.id).filter(id => ALL_PANELS.some(p => p.id === id));
     // Add any panels not in heat scores at the end
     const allIds = ALL_PANELS.map(p => p.id);
