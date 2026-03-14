@@ -329,6 +329,39 @@
   margin-left: 8px;
 }
 
+/* ── News Filter Pills ── */
+.newsFilters {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.newsPill {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 2px 6px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+
+.newsPill:hover {
+  color: var(--text-mid);
+  border-color: var(--border-glow);
+}
+
+.newsPillActive {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(74, 222, 128, 0.06);
+}
+
 /* ── News Feed ── */
 .newsRow {
   display: flex;
@@ -573,6 +606,16 @@
   color: var(--red);
   background: rgba(248, 113, 113, 0.06);
   opacity: 0.7;
+}
+
+.marketExtended {
+  background: var(--amber);
+  box-shadow: 0 0 4px rgba(239, 159, 39, 0.3);
+}
+
+.marketEventExtended {
+  color: var(--amber);
+  background: rgba(239, 159, 39, 0.08);
 }
 
 .marketCountdown {

@@ -22,6 +22,7 @@ import './App.css';
 function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const [booting, setBooting] = useState(() => shouldShowBoot());
+  const [newsFilter, setNewsFilter] = useState<string | null>(null);
   const { data: priceData, connected: priceConnected, priceHistory } = useBtcPrice();
   const { connected: blockConnected } = useBlockStream();
   const fearGreed = useFearGreed();
@@ -192,22 +193,30 @@ function App() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {marketHours.map((mkt) => (
-              <div key={mkt.abbr} className="marketHoursRow">
-                <div className="marketHoursLeft">
-                  <span className={`marketDot ${mkt.isOpen ? 'marketOpen' : 'marketClosed'}`} />
-                  <span className="marketAbbr">{mkt.abbr}</span>
-                  <span className="marketName">{mkt.name}</span>
+            {marketHours.map((mkt) => {
+              const dotClass = mkt.isOpen
+                ? mkt.isExtended ? 'marketExtended' : 'marketOpen'
+                : 'marketClosed';
+              const eventClass = mkt.isOpen
+                ? mkt.isExtended ? 'marketEventExtended' : 'marketEventOpen'
+                : 'marketEventClosed';
+              const label = mkt.isOpen
+                ? mkt.isExtended ? 'EXT' : 'OPEN'
+                : mkt.abbr === 'BTC' ? '24/7' : 'CLOSED';
+              return (
+                <div key={mkt.abbr} className="marketHoursRow">
+                  <div className="marketHoursLeft">
+                    <span className={`marketDot ${dotClass}`} />
+                    <span className="marketAbbr">{mkt.abbr}</span>
+                  </div>
+                  <div className="marketHoursRight">
+                    {mkt.localTime && <span className="marketTime">{mkt.localTime}</span>}
+                    <span className={`marketEvent ${eventClass}`}>{label}</span>
+                    <span className="marketCountdown">{mkt.nextEvent}</span>
+                  </div>
                 </div>
-                <div className="marketHoursRight">
-                  {mkt.localTime && <span className="marketTime">{mkt.localTime}</span>}
-                  <span className={`marketEvent ${mkt.isOpen ? 'marketEventOpen' : 'marketEventClosed'}`}>
-                    {mkt.isOpen ? 'OPEN' : 'CLOSED'}
-                  </span>
-                  <span className="marketCountdown">{mkt.nextEvent}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -317,34 +326,48 @@ function App() {
               <span className="liveText">LIVE</span>
             </div>
           </div>
+          {/* Filter pills */}
+          <div className="newsFilters">
+            {['ALL', 'AI', 'BTC', 'Markets', 'Tech', 'Dev'].map((f) => (
+              <button
+                key={f}
+                className={`newsPill ${(f === 'ALL' && !newsFilter) || newsFilter === f ? 'newsPillActive' : ''}`}
+                onClick={() => setNewsFilter(f === 'ALL' ? null : f)}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
           <div>
             {stories.length === 0 && (
               <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>
                 loading headlines...
               </div>
             )}
-            {stories.map((story) => {
-              const tag = getTag(story.title);
-              const tagColor = tagColors[tag] || 'var(--text-mid)';
-              return (
-                <a
-                  key={story.id}
-                  href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="newsRow"
-                >
-                  <span
-                    className="newsTag"
-                    style={{ color: tagColor, background: `${tagColor}15` }}
+            {stories
+              .filter((story) => !newsFilter || getTag(story.title) === newsFilter)
+              .map((story) => {
+                const tag = getTag(story.title);
+                const tagColor = tagColors[tag] || 'var(--text-mid)';
+                return (
+                  <a
+                    key={story.id}
+                    href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="newsRow"
                   >
-                    {tag}
-                  </span>
-                  <span className="newsTitle">{story.title}</span>
-                  <span className="newsMeta">{timeAgo(story.time)}</span>
-                </a>
-              );
-            })}
+                    <span
+                      className="newsTag"
+                      style={{ color: tagColor, background: `${tagColor}15` }}
+                    >
+                      {tag}
+                    </span>
+                    <span className="newsTitle">{story.title}</span>
+                    <span className="newsMeta">{timeAgo(story.time)}</span>
+                  </a>
+                );
+              })}
           </div>
         </div>
 
