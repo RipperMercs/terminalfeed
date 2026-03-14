@@ -282,7 +282,15 @@ function App() {
       </PanelHead>
       <div>
         {displayGames.length === 0 && <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>loading scores...</div>}
-        {displayGames.map((game) => (<div key={game.id} className="scoreRow"><span className="scoreLeague">{game.league}</span><div className="scoreTeams"><span className="scoreTeam"><span className="scoreAbbr">{game.awayAbbr}</span><span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.awayScore}</span></span><span className="scoreAt">@</span><span className="scoreTeam"><span className="scoreAbbr">{game.homeAbbr}</span><span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.homeScore}</span></span></div><span className={`scoreStatus ${game.status === 'in' ? 'scoreStatusLive' : ''}`}>{game.statusDetail}</span></div>))}
+        {displayGames.map((game) => (<div key={game.id} className={`scoreRow ${game.status === 'in' ? 'scoreRowLive' : ''}`}>
+          <span className="scoreLeague">{game.league}</span>
+          <div className="scoreTeams"><span className="scoreTeam"><span className="scoreAbbr">{game.awayAbbr}</span><span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.awayScore}</span></span><span className="scoreAt">@</span><span className="scoreTeam"><span className="scoreAbbr">{game.homeAbbr}</span><span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.homeScore}</span></span></div>
+          <div className="scoreRight">
+            <span className={`scoreStatus ${game.status === 'in' ? 'scoreStatusLive' : ''}`}>{game.statusDetail}</span>
+            {game.status === 'in' && game.situation && <div className="scoreSituation">{game.situation}</div>}
+            {game.status === 'in' && game.lastPlay && <div className="scoreLastPlay">{game.lastPlay}</div>}
+          </div>
+        </div>))}
       </div>
     </>),
     'dev-status': (<>
