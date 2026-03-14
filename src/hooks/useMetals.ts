@@ -22,7 +22,7 @@ export function useMetals() {
     const fetchPrices = async () => {
       if (!mountedRef.current) return;
 
-      // Try CoinGecko for gold (PAX Gold is a 1:1 gold-backed token)
+      // PAX Gold (1:1 gold-backed token) for gold price
       try {
         const res = await fetch(
           'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=pax-gold&sparkline=false',
@@ -30,38 +30,28 @@ export function useMetals() {
         if (res.ok) {
           const [gold] = await res.json();
           if (gold && mountedRef.current) {
-            setMetals((prev) => prev.map((m) => {
-              if (m.symbol === 'XAU') {
-                return {
-                  ...m,
-                  price: gold.current_price,
-                  change: gold.price_change_percentage_24h ?? 0,
-                };
-              }
-              return m;
-            }));
+            setMetals((prev) => prev.map((m) =>
+              m.symbol === 'XAU'
+                ? { ...m, price: gold.current_price, change: gold.price_change_percentage_24h ?? 0 }
+                : m,
+            ));
           }
         }
       } catch {}
 
-      // Silver via CoinGecko (Silver token or fallback)
+      // Silver via Lode Silver token
       try {
         const res = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=silver-token&sparkline=false',
+          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=lode-silver&sparkline=false',
         );
         if (res.ok) {
           const data = await res.json();
           if (data.length > 0 && mountedRef.current) {
-            setMetals((prev) => prev.map((m) => {
-              if (m.symbol === 'XAG') {
-                return {
-                  ...m,
-                  price: data[0].current_price,
-                  change: data[0].price_change_percentage_24h ?? 0,
-                };
-              }
-              return m;
-            }));
+            setMetals((prev) => prev.map((m) =>
+              m.symbol === 'XAG'
+                ? { ...m, price: data[0].current_price, change: data[0].price_change_percentage_24h ?? 0 }
+                : m,
+            ));
           }
         }
       } catch {}
