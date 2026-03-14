@@ -773,6 +773,212 @@
   display: inline-block;
 }
 
+/* ── Dev/Ops Status ── */
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.statusLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusName {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.statusDesc {
+  font-size: 9px;
+  letter-spacing: 0.3px;
+}
+
+/* ── Crypto Market Overview ── */
+.cryptoGlobalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+
+.cryptoGlobalLabel {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cryptoGlobalValue {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.domBar {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.domSegment {
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.domBtc { background: var(--amber); }
+.domEth { background: var(--blue); }
+.domOther { background: var(--text-dim); opacity: 0.3; }
+
+/* ── Weather ── */
+.weatherContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.weatherMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weatherIcon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.weatherTemp {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.weatherDesc {
+  font-size: 11px;
+  color: var(--text-mid);
+}
+
+.weatherDetails {
+  display: flex;
+  gap: 16px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ── Earthquake Monitor ── */
+.quakeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
+  text-decoration: none;
+  color: inherit;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+
+.quakeRow:last-child { border-bottom: none; }
+.quakeRow:hover { background: var(--bg-hover); }
+
+.quakeMag {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.quakePlace {
+  font-size: 10px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quakeTime {
+  font-size: 9px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* ── Space Launches ── */
+.launchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 2px;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
+  gap: 8px;
+}
+
+.launchRow:last-child { border-bottom: none; }
+
+.launchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.launchProvider {
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.launchName {
+  font-size: 10px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launchMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.launchDate {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.launchLoc {
+  font-size: 8px;
+  color: var(--text-dim);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .grid {

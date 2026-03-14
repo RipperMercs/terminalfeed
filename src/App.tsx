@@ -14,6 +14,11 @@ import { BootSequence, shouldShowBoot } from './components/BootSequence';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
+import { useDevStatus } from './hooks/useDevStatus';
+import { useCryptoGlobal } from './hooks/useCryptoGlobal';
+import { useEarthquakes } from './hooks/useEarthquakes';
+import { useWeather, weatherDescription } from './hooks/useWeather';
+import { useSpaceLaunches } from './hooks/useSpaceLaunches';
 import './App.css';
 
 function App() {
@@ -32,6 +37,11 @@ function App() {
   const games = useSportsScores();
   const trendingRepos = useGithubTrending();
   const redditPosts = useRedditTech();
+  const devStatuses = useDevStatus();
+  const cryptoGlobal = useCryptoGlobal();
+  const earthquakes = useEarthquakes();
+  const weather = useWeather();
+  const spaceLaunches = useSpaceLaunches();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -437,6 +447,176 @@ function App() {
           </div>
         </div>
 
+        {/* Dev/Ops Status Board */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Status</span>
+              <span className="panelTag">DEV/OPS</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {devStatuses.map((svc) => {
+              const color = svc.indicator === 'none' ? 'var(--green)'
+                : svc.indicator === 'minor' ? 'var(--amber)'
+                : svc.indicator === 'major' ? 'var(--amber)'
+                : svc.indicator === 'critical' ? 'var(--red)'
+                : 'var(--text-dim)';
+              return (
+                <div key={svc.name} className="statusRow">
+                  <div className="statusLeft">
+                    <span className="statusDot" style={{ background: color, boxShadow: `0 0 4px ${color}` }} />
+                    <span className="statusName">{svc.name}</span>
+                  </div>
+                  <span className="statusDesc" style={{ color }}>
+                    {svc.indicator === 'none' ? 'Operational'
+                      : svc.indicator === 'unknown' ? 'Checking...'
+                      : svc.description}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Crypto Market Overview */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Crypto Market</span>
+              <span className="panelTag">GLOBAL</span>
+            </div>
+          </div>
+          {cryptoGlobal ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="cryptoGlobalRow">
+                <span className="cryptoGlobalLabel">Total Cap</span>
+                <div>
+                  <span className="cryptoGlobalValue">${formatCompact(cryptoGlobal.totalMarketCap)}</span>
+                  <span className={`listRowChange ${cryptoGlobal.marketCapChange24h >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {cryptoGlobal.marketCapChange24h >= 0 ? '+' : ''}{cryptoGlobal.marketCapChange24h.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <div className="cryptoGlobalRow">
+                <span className="cryptoGlobalLabel">BTC Dom</span>
+                <span className="cryptoGlobalValue">{cryptoGlobal.btcDominance.toFixed(1)}%</span>
+              </div>
+              <div className="cryptoGlobalRow">
+                <span className="cryptoGlobalLabel">ETH Dom</span>
+                <span className="cryptoGlobalValue">{cryptoGlobal.ethDominance.toFixed(1)}%</span>
+              </div>
+              <div className="cryptoGlobalRow">
+                <span className="cryptoGlobalLabel">24h Vol</span>
+                <span className="cryptoGlobalValue">${formatCompact(cryptoGlobal.totalVolume24h)}</span>
+              </div>
+              <div className="cryptoGlobalRow">
+                <span className="cryptoGlobalLabel">Active Coins</span>
+                <span className="cryptoGlobalValue">{cryptoGlobal.activeCryptos.toLocaleString()}</span>
+              </div>
+              {/* Dominance bar */}
+              <div className="domBar">
+                <div className="domSegment domBtc" style={{ width: `${cryptoGlobal.btcDominance}%` }}>BTC</div>
+                <div className="domSegment domEth" style={{ width: `${cryptoGlobal.ethDominance}%` }}>ETH</div>
+                <div className="domSegment domOther" style={{ width: `${Math.max(0, 100 - cryptoGlobal.btcDominance - cryptoGlobal.ethDominance)}%` }}>Other</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>
+          )}
+        </div>
+
+        {/* Weather */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Weather</span>
+              {weather && <span className="panelTag">{weather.city.toUpperCase()}</span>}
+            </div>
+          </div>
+          {weather ? (
+            <div className="weatherContent">
+              <div className="weatherMain">
+                <span className="weatherIcon">{weatherDescription(weather.weatherCode).icon}</span>
+                <span className="weatherTemp">{weather.temperature}°F</span>
+              </div>
+              <div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div>
+              <div className="weatherDetails">
+                <span>Wind: {weather.windSpeed} mph</span>
+                <span>Humidity: {weather.humidity}%</span>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>detecting location...</div>
+          )}
+        </div>
+
+        {/* Earthquake Monitor */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Seismic</span>
+              <span className="panelTag">24H</span>
+            </div>
+            <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>USGS M2.5+</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {earthquakes.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading quakes...</div>
+            )}
+            {earthquakes.map((q) => {
+              const magColor = q.magnitude >= 5 ? 'var(--red)'
+                : q.magnitude >= 4 ? 'var(--amber)'
+                : 'var(--text-mid)';
+              return (
+                <a
+                  key={q.id}
+                  href={q.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="quakeRow"
+                >
+                  <span className="quakeMag" style={{ color: magColor }}>{q.magnitude.toFixed(1)}</span>
+                  <span className="quakePlace">{q.place}</span>
+                  <span className="quakeTime">{timeAgo(Math.floor(q.time / 1000))}</span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Space Launches */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Launches</span>
+              <span className="panelTag">SPACE</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {spaceLaunches.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading launches...</div>
+            )}
+            {spaceLaunches.map((l) => {
+              const isToday = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 && l.dateTs > Date.now();
+              const isSoon = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 * 3 && l.dateTs > Date.now();
+              const dateColor = isToday ? 'var(--green)' : isSoon ? 'var(--amber)' : 'var(--text-dim)';
+              return (
+                <div key={l.id} className="launchRow">
+                  <div className="launchInfo">
+                    <span className="launchProvider">{l.provider}</span>
+                    <span className="launchName">{l.name}</span>
+                  </div>
+                  <div className="launchMeta">
+                    <span className="launchDate" style={{ color: dateColor }}>{l.date}</span>
+                    <span className="launchLoc">{l.location}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Support / Ad — bottom right */}
         <div className="panel">
           <div className="panelHeader">
@@ -510,6 +690,13 @@ function timeAgo(ts: number): string {
 function formatStars(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
   return n.toString();
+}
+
+function formatCompact(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  return n.toLocaleString();
 }
 
 export default App;
