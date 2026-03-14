@@ -209,6 +209,14 @@ function App() {
   const defaultStockSymbols = ['SPY', 'QQQ', 'DIA', 'NVDA', 'MSFT', 'AAPL', 'TSLA', 'GOOGL', 'AMD', 'COIN', 'PLTR'];
   const defaultCryptoSymbols = ['ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'LTC', 'HYPE', 'HBAR'];
 
+  // Scroll to top button visibility
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  useEffect(() => {
+    const handler = () => setShowScrollTop(window.scrollY > 500);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+
   // Get current column count from window width
   const getGridCols = useCallback(() => {
     const w = window.innerWidth;
@@ -687,6 +695,15 @@ function App() {
           <span>{(priceConnected || blockConnected) ? 'All systems operational' : 'Connecting...'}</span>
         </div>
       </div>
+
+      {/* Scroll to Top */}
+      <button
+        className={`scrollTop ${showScrollTop ? 'scrollTopVisible' : ''}`}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        title="Scroll to top"
+      >
+        &uarr;
+      </button>
 
       {/* Layout Toast */}
       {layout.toastMessage && (

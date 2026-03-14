@@ -5,7 +5,7 @@ interface Props {
   height?: number;
 }
 
-export function TradingViewChart({ symbol = 'BITSTAMP:BTCUSD', height = 220 }: Props) {
+export function TradingViewChart({ symbol = 'BITSTAMP:BTCUSD', height = 300 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scriptLoaded = useRef(false);
 

@@ -2628,6 +2628,40 @@
 }
 
 /* ── Responsive ── */
+/* ── Scroll to Top Button ── */
+.scrollTop {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(13, 13, 15, 0.9);
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  font-family: var(--mono);
+}
+
+.scrollTopVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scrollTop:hover {
+  background: rgba(13, 13, 15, 1);
+  border-color: var(--cyan);
+}
+
+/* ── Responsive ── */
 @media (max-width: 1100px) {
   .grid {
     grid-template-columns: 1fr 1fr;
@@ -2635,12 +2669,62 @@
   .spanCol3 { grid-column: span 2; }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .grid {
     grid-template-columns: 1fr;
   }
   .spanCol2, .spanCol3 { grid-column: span 1; }
-  .topBar { padding: 6px 12px; }
+
+  /* TradingView chart needs more height on mobile */
+  .tradingview-widget-container {
+    min-height: 460px !important;
+    height: 460px !important;
+  }
+
+  /* Larger tap targets */
+  .newsRow { min-height: 40px; padding: 7px 4px; }
+  .listRow { min-height: 36px; }
+  .scoreRow { min-height: 40px; }
+
+  /* Organize arrows bigger on mobile */
+  .orgArrow { width: 32px; height: 32px; font-size: 12px; }
+  .orgHide { width: 32px; height: 32px; font-size: 14px; }
+
+  /* Ticker bar tweaks */
+  .tickerBar { font-size: 10px; }
+  .tickerItem { font-size: 10px; }
+
+  /* Top bar compact */
+  .topBar { padding: 6px 10px; }
+  .organizeHint { display: none; }
+  .topBarDate { display: none; }
+
+  /* Bottom bar wrap */
+  .bottomBar { flex-wrap: wrap; gap: 4px; }
+  .bottomBarLeft { flex-wrap: wrap; gap: 6px; }
+
+  /* Price panel */
   .priceValue { font-size: 24px; }
-  .bottomBarLeft { flex-wrap: wrap; }
+  .priceMain { flex-direction: column; gap: 6px; }
+  .priceRange { align-items: flex-start; }
+
+  /* BTC Network stats */
+  .btcNetStats { grid-template-columns: 1fr 1fr; }
+  .feeBar { flex-wrap: wrap; }
+  .feeItem { min-width: 48px; }
+
+  /* Weather scene shorter */
+  .wxScene { height: 70px; }
+  .weatherTemp { font-size: 26px; }
+}
+
+@media (max-width: 500px) {
+  .topBarLeft { gap: 4px; }
+  .logoText { font-size: 11px; letter-spacing: 1px; }
+  .logoDot { display: none; }
+  .lockBtn { font-size: 8px; padding: 2px 6px; }
+  .customizeBtn { font-size: 8px; padding: 2px 6px; }
+  .moodIndicator { display: none; }
+  .ripperLogo { display: none; }
+  .ripperCredit { display: none; }
 }
