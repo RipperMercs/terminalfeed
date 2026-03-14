@@ -25,6 +25,8 @@ import { useDevJoke } from './hooks/useDevJoke';
 import { useStackOverflow } from './hooks/useStackOverflow';
 import { useNasaApod } from './hooks/useNasaApod';
 import { useBtcNetwork } from './hooks/useBtcNetwork';
+import { useLayoutManager } from './hooks/useLayoutManager';
+import { PanelManager } from './components/PanelManager';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import './App.css';
@@ -33,6 +35,8 @@ function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const [booting, setBooting] = useState(() => shouldShowBoot());
   const [newsFilter, setNewsFilter] = useState<string | null>(null);
+  const [showPanelManager, setShowPanelManager] = useState(false);
+  const layout = useLayoutManager();
   const { data: priceData, connected: priceConnected, priceHistory } = useBtcPrice();
   const { connected: blockConnected } = useBlockStream();
   const fearGreed = useFearGreed();
@@ -111,6 +115,7 @@ function App() {
           <span className="logoCursor" />
         </div>
         <div className="topBarRight">
+          <button className="customizeBtn" onClick={() => setShowPanelManager(true)}>Customize</button>
           <span className="topBarDate">{dateStr}</span>
           <span className="topBarTime">{timeStr}</span>
         </div>
@@ -139,7 +144,7 @@ function App() {
       <div className="grid">
 
         {/* BTC Price — large */}
-        <div className="panel spanCol2">
+        <div className="panel spanCol2" style={{ display: layout.isVisible('bitcoin') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Bitcoin</span>
@@ -179,7 +184,7 @@ function App() {
         </div>
 
         {/* Crypto — top right next to BTC */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('crypto') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Crypto</span>
@@ -209,7 +214,7 @@ function App() {
         </div>
 
         {/* BTC Network — rich mempool.space panel */}
-        <div className="panel spanCol2">
+        <div className="panel spanCol2" style={{ display: layout.isVisible('btc-network') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">BTC Network</span>
@@ -311,7 +316,7 @@ function App() {
         </div>
 
         {/* Tech / AI News Feed */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('news') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Tech / AI Feed</span>
@@ -368,7 +373,7 @@ function App() {
         </div>
 
         {/* Reddit Tech */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('reddit') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Reddit</span>
@@ -400,7 +405,7 @@ function App() {
         </div>
 
         {/* GitHub Trending */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('github') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">GitHub Trending</span>
@@ -435,7 +440,7 @@ function App() {
         </div>
 
         {/* Market Hours */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('market-hours') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Market Hours</span>
@@ -476,7 +481,7 @@ function App() {
         </div>
 
         {/* Stock Markets + Gold */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('markets') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Markets</span>
@@ -524,7 +529,7 @@ function App() {
         </div>
 
         {/* Sports Scores */}
-        <div className="panel spanCol2">
+        <div className="panel spanCol2" style={{ display: layout.isVisible('scores') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Scores</span>
@@ -566,7 +571,7 @@ function App() {
         </div>
 
         {/* Dev/Ops Status Board */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('dev-status') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Status</span>
@@ -598,7 +603,7 @@ function App() {
         </div>
 
         {/* Crypto Market Overview */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('crypto-global') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Crypto Market</span>
@@ -645,7 +650,7 @@ function App() {
         </div>
 
         {/* Weather */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('weather') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Weather</span>
@@ -670,7 +675,7 @@ function App() {
         </div>
 
         {/* Earthquake Monitor */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('seismic') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Seismic</span>
@@ -704,7 +709,7 @@ function App() {
         </div>
 
         {/* Space Launches */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('launches') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Launches</span>
@@ -736,7 +741,7 @@ function App() {
         </div>
 
         {/* Steam Top Games */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('steam') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Steam</span>
@@ -757,7 +762,7 @@ function App() {
         </div>
 
         {/* Stack Overflow Hot */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('stackoverflow') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Stack Overflow</span>
@@ -788,7 +793,7 @@ function App() {
         </div>
 
         {/* NASA APOD */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('nasa') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">NASA</span>
@@ -812,7 +817,7 @@ function App() {
         </div>
 
         {/* Quick Stats — combo panel */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('quick-stats') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Quick Stats</span>
@@ -855,7 +860,7 @@ function App() {
         </div>
 
         {/* Tonight's Recipe */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('recipe') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Tonight</span>
@@ -876,7 +881,7 @@ function App() {
         </div>
 
         {/* This Day in Tech + Term of the Day — combo */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('daily-learn') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Daily</span>
@@ -904,7 +909,7 @@ function App() {
         </div>
 
         {/* Support / Ad + Donate */}
-        <div className="panel">
+        <div className="panel" style={{ display: layout.isVisible('support') ? undefined : 'none' }}>
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Support</span>
@@ -949,6 +954,16 @@ function App() {
           <span>{(priceConnected || blockConnected) ? 'All systems operational' : 'Connecting...'}</span>
         </div>
       </div>
+
+      {/* Layout Toast */}
+      {layout.toastMessage && (
+        <div className="layoutToast">{layout.toastMessage}</div>
+      )}
+
+      {/* Panel Manager */}
+      {showPanelManager && (
+        <PanelManager layout={layout} onClose={() => setShowPanelManager(false)} />
+      )}
 
       {/* Legal Modals */}
       {legalModal && (
