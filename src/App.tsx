@@ -9,6 +9,7 @@ import { useSimCrypto } from './hooks/useSimCrypto';
 import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
+import { LiveChart } from './components/LiveChart';
 import './App.css';
 
 function App() {
@@ -29,8 +30,6 @@ function App() {
   const btcPrice = priceData?.price ?? 0;
   const btcChange = priceData?.changePercent24h ?? 0;
   const isUp = btcChange >= 0;
-
-  const sparkData = priceHistory.map((t) => t.price);
 
   // Ticker items: BTC + metals + stocks + crypto
   const tickerItems = [
@@ -125,7 +124,11 @@ function App() {
               </div>
             )}
           </div>
-          <MiniChart data={sparkData} color={isUp ? 'var(--green)' : 'var(--red)'} height={60} />
+          <LiveChart
+            ticks={priceHistory}
+            color={isUp ? '#4ADE80' : '#F87171'}
+            height={160}
+          />
         </div>
 
         {/* Fear & Greed */}
@@ -422,40 +425,6 @@ function App() {
 }
 
 /* ── Inline helpers ── */
-
-function MiniChart({ data, color, height = 40 }: { data: number[]; color: string; height?: number }) {
-  if (data.length < 2) {
-    return (
-      <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 10, color: 'var(--text-dim)', letterSpacing: 1 }}>
-        awaiting price data...
-      </div>
-    );
-  }
-
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const w = 200;
-
-  const points = data
-    .map((v, i) => `${(i / (data.length - 1)) * w},${height - ((v - min) / range) * (height - 4)}`)
-    .join(' ');
-
-  const areaPoints = `${points} ${w},${height} 0,${height}`;
-
-  return (
-    <svg width="100%" viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-      <defs>
-        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.15" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
-      <polygon points={areaPoints} fill="url(#chartFill)" />
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function fgColor(value: number): string {
   if (value <= 25) return 'var(--red)';
