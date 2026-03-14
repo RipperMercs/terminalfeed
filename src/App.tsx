@@ -629,8 +629,14 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* Render all panels in order except support (pinned last) */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support').map(id => {
+        {/* BTC Price — ALWAYS first, never moves */}
+        {panelRegistry['bitcoin'] && (
+          <div className="panel spanCol2">
+            {panelRegistry['bitcoin']}
+          </div>
+        )}
+        {/* Render remaining panels in order (skip bitcoin + support) */}
+        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && id !== 'bitcoin').map(id => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
