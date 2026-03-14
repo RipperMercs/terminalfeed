@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
 import { useBlockStream } from './hooks/useBlockStream';
 import { useFearGreed } from './hooks/useFearGreed';
@@ -5,9 +6,11 @@ import { useHackerNews } from './hooks/useHackerNews';
 import { useTime } from './hooks/useTime';
 import { useSimStocks } from './hooks/useSimStocks';
 import { useSimCrypto } from './hooks/useSimCrypto';
+import { LegalModal } from './components/LegalModal';
 import './App.css';
 
 function App() {
+  const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const { data: priceData, connected: priceConnected, priceHistory } = useBtcPrice();
   const { latestBlock, mempoolSize, feeRate, connected: blockConnected } = useBlockStream();
   const fearGreed = useFearGreed();
@@ -347,7 +350,11 @@ function App() {
       <div className="bottomBar">
         <div className="bottomBarLeft">
           <span>terminalfeed.io</span>
-          <span>All data for informational purposes only</span>
+          <span className="bottomBarDivider">·</span>
+          <span>Not financial advice</span>
+          <span className="bottomBarDivider">·</span>
+          <button className="footerLink" onClick={() => setLegalModal('privacy')}>Privacy</button>
+          <button className="footerLink" onClick={() => setLegalModal('terms')}>Terms</button>
         </div>
         <div className="bottomBarStatus">
           <span className="bottomBarDot" style={{
@@ -356,6 +363,11 @@ function App() {
           <span>{(priceConnected || blockConnected) ? 'All systems operational' : 'Connecting...'}</span>
         </div>
       </div>
+
+      {/* Legal Modals */}
+      {legalModal && (
+        <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
+      )}
     </div>
   );
 }

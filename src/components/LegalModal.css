@@ -1,0 +1,111 @@
+.legalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.legalModal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 680px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.legalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.legalTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.legalClose {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.legalClose:hover {
+  color: var(--text);
+  border-color: var(--border-glow);
+}
+
+.legalBody {
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-mid);
+}
+
+.legalBody h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 20px 0 8px;
+}
+
+.legalBody h3:first-of-type {
+  margin-top: 8px;
+}
+
+.legalBody p {
+  margin-bottom: 10px;
+}
+
+.legalBody ul {
+  margin: 0 0 10px 20px;
+}
+
+.legalBody li {
+  margin-bottom: 4px;
+}
+
+.legalBody a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+.legalBody a:hover {
+  text-decoration: underline;
+}
+
+.legalBody strong {
+  color: var(--text);
+}
+
+.legalDate {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
