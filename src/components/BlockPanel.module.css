@@ -1,0 +1,29 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.value {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 400;
+}
+
+.highlight {
+  color: var(--amber);
+  font-weight: 600;
+}

@@ -1,0 +1,62 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.time {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.date {
+  font-size: 11px;
+  color: var(--text-mid);
+}
+
+.utc {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.markets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.marketRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.marketLabel {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.marketStatus {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.open {
+  color: var(--green);
+  background: rgba(93, 202, 165, 0.1);
+}
+
+.closed {
+  color: var(--text-dim);
+  background: rgba(78, 77, 72, 0.15);
+}
