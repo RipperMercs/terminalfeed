@@ -21,6 +21,9 @@ const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: 'AAPL', name: 'Apple' },
   { symbol: 'TSLA', name: 'Tesla' },
   { symbol: 'GOOGL', name: 'Google' },
+  { symbol: 'AMD', name: 'AMD' },
+  { symbol: 'COIN', name: 'Coinbase' },
+  { symbol: 'PLTR', name: 'Palantir' },
 ];
 
 export function useSimStocks(customSymbols: string[] = []) {
