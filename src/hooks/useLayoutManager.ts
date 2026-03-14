@@ -29,8 +29,11 @@ export const ALL_PANELS = [
   { id: 'steam', label: 'Steam Games', defaultSpan: 1 },
   { id: 'nasa', label: 'NASA APOD', defaultSpan: 1 },
   { id: 'daily-learn', label: 'Daily Learn', defaultSpan: 1 },
-  // Row 7: Eye candy + unique feeds
+  // Row 7: Unique feeds
+  { id: 'predictions', label: 'Prediction Markets', defaultSpan: 1 },
+  { id: 'podcasts', label: 'Podcasts', defaultSpan: 1 },
   { id: 'iss-live', label: 'ISS Live', defaultSpan: 2 },
+  { id: 'uap', label: 'UAP Sightings', defaultSpan: 1 },
   { id: 'ai-leaderboard', label: 'AI Leaderboard', defaultSpan: 1 },
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
   { id: 'internet-pulse', label: 'Internet Pulse', defaultSpan: 1 },
