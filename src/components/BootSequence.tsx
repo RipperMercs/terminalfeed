@@ -3,15 +3,13 @@ import './BootSequence.css';
 
 const LINES = [
   { text: '> initializing terminalfeed.io...', delay: 0 },
-  { text: '> connecting to live feeds.............. [OK]', delay: 400 },
-  { text: '> loading market data................... [OK]', delay: 700 },
-  { text: '> syncing crypto prices................. [OK]', delay: 1000 },
-  { text: '> establishing news feeds............... [OK]', delay: 1300 },
-  { text: '> rendering command center.............. [OK]', delay: 1600 },
-  { text: '', delay: 1900 },
-  { text: '> SYSTEM ONLINE — all feeds operational', delay: 2000 },
-  { text: '', delay: 2200 },
-  { text: '> welcome to the terminal.', delay: 2300 },
+  { text: '> connecting to live feeds.............. [OK]', delay: 200 },
+  { text: '> loading market data................... [OK]', delay: 400 },
+  { text: '> syncing crypto prices................. [OK]', delay: 600 },
+  { text: '> establishing news feeds............... [OK]', delay: 800 },
+  { text: '> rendering command center.............. [OK]', delay: 1000 },
+  { text: '> SYSTEM ONLINE — all feeds operational', delay: 1300 },
+  { text: '> welcome to the terminal.', delay: 1500 },
 ];
 
 const BOOT_KEY = 'tf_last_boot';
@@ -48,8 +46,8 @@ export function BootSequence({ onComplete }: BootSequenceProps) {
     for (let i = 0; i < LINES.length; i++) {
       timers.push(setTimeout(() => setVisibleLines(i + 1), LINES[i].delay));
     }
-    // Auto-finish after last line
-    timers.push(setTimeout(finish, 3000));
+    // Auto-finish right after last line
+    timers.push(setTimeout(finish, 2000));
     return () => timers.forEach(clearTimeout);
   }, [finish]);
 
