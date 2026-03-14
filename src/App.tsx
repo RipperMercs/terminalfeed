@@ -359,15 +359,6 @@ function App() {
       <PanelHead panelId="nasa" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">NASA</span><span className="panelTag">APOD</span></div></PanelHead>
       {nasaApod ? (<div className="apodContent">{nasaApod.mediaType === 'image' && <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer"><img src={nasaApod.url} alt={nasaApod.title} className="apodImage" loading="lazy" /></a>}<div className="apodTitle">{nasaApod.title}</div>{nasaApod.copyright && <div className="apodCopy">{nasaApod.copyright}</div>}<div className="apodDesc">{nasaApod.explanation.slice(0, 120)}...</div></div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
     </>),
-    'quick-stats': (<>
-      <PanelHead panelId="quick-stats" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Quick Stats</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {fearGreed && <div className="qsRow"><span className="qsLabel">Fear & Greed</span><span className="qsValue" style={{ color: fgColor(fearGreed.value) }}>{fearGreed.value} {fearGreed.label}</span></div>}
-        {cryptoGlobal && <><div className="qsRow"><span className="qsLabel">BTC Dominance</span><span className="qsValue">{cryptoGlobal.btcDominance.toFixed(1)}%</span></div><div className="qsRow"><span className="qsLabel">Crypto Cap</span><span className="qsValue">${formatCompact(cryptoGlobal.totalMarketCap)}</span></div></>}
-        {metals.filter(m => m.price > 0).map(m => <div key={m.symbol} className="qsRow"><span className="qsLabel" style={{ color: 'var(--gold)' }}>{m.symbol}</span><span className="qsValue" style={{ color: 'var(--gold)' }}>${m.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>)}
-        {weather && <div className="qsRow"><span className="qsLabel">Weather</span><span className="qsValue">{weather.temperature}°F {weatherDescription(weather.weatherCode).icon} {weather.city}</span></div>}
-      </div>
-    </>),
     'recipe': (<>
       <PanelHead panelId="recipe" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Tonight</span><span className="panelTag">RECIPES OF THE DAY</span></div></PanelHead>
       {recipes.length > 0 ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recipes.map((r, i) => (<a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent"><img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" /><div className="recipeInfo"><div className="recipeName">{r.name}</div><div className="recipeMeta">{r.area} · {r.category}</div></div></a>))}</div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>}

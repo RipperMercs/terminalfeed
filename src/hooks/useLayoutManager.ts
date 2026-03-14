@@ -6,7 +6,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 export const ALL_PANELS = [
   // Row 1: The glance zone
   { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 2 },
-  { id: 'quick-stats', label: 'Quick Stats', defaultSpan: 1 },
   // Row 2: Money
   { id: 'markets', label: 'Markets (US)', defaultSpan: 1 },
   { id: 'crypto', label: 'Crypto', defaultSpan: 1 },
