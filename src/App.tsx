@@ -24,6 +24,7 @@ import { useRecipe } from './hooks/useRecipe';
 import { useDevJoke } from './hooks/useDevJoke';
 import { useStackOverflow } from './hooks/useStackOverflow';
 import { useNasaApod } from './hooks/useNasaApod';
+import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import './App.css';
@@ -54,6 +55,7 @@ function App() {
   const devJoke = useDevJoke();
   const soQuestions = useStackOverflow();
   const nasaApod = useNasaApod();
+  const btcNet = useBtcNetwork();
   const todayInTech = getTodayInTech();
   const todayTerm = getTodayTerm();
 
@@ -204,6 +206,108 @@ function App() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* BTC Network — rich mempool.space panel */}
+        <div className="panel spanCol2">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">BTC Network</span>
+              <span className="panelTag">MEMPOOL</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" style={{ background: btcNet.connected ? 'var(--green)' : 'var(--red)' }} />
+              <span className="liveText">{btcNet.connected ? 'LIVE' : 'CONNECTING'}</span>
+            </div>
+          </div>
+
+          {/* Top stats row */}
+          <div className="btcNetStats">
+            <div className="btcNetStat">
+              <span className="btcNetLabel">Block Height</span>
+              <span className="btcNetValue" style={{ color: 'var(--amber)' }}>
+                {btcNet.blockHeight > 0 ? btcNet.blockHeight.toLocaleString() : '...'}
+              </span>
+            </div>
+            <div className="btcNetStat">
+              <span className="btcNetLabel">Mempool</span>
+              <span className="btcNetValue">
+                {btcNet.mempoolCount > 0 ? formatCompact(btcNet.mempoolCount) + ' tx' : '...'}
+              </span>
+            </div>
+            <div className="btcNetStat">
+              <span className="btcNetLabel">Hashrate</span>
+              <span className="btcNetValue">
+                {btcNet.hashrate > 0 ? formatHashrate(btcNet.hashrate) : '...'}
+              </span>
+            </div>
+            <div className="btcNetStat">
+              <span className="btcNetLabel">Difficulty Adj</span>
+              <span className="btcNetValue" style={{ color: btcNet.diffChange >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {btcNet.diffProgress > 0 ? `${btcNet.diffProgress.toFixed(1)}%` : '...'}
+                {btcNet.diffChange !== 0 && (
+                  <span style={{ fontSize: 9, marginLeft: 4 }}>
+                    ({btcNet.diffChange >= 0 ? '+' : ''}{btcNet.diffChange.toFixed(1)}%)
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* Fee estimates */}
+          <div className="feeBar">
+            <div className="feeItem">
+              <span className="feeLabel">High</span>
+              <span className="feeValue" style={{ color: 'var(--red)' }}>{btcNet.feeFastest || '...'}</span>
+              <span className="feeSuffix">sat/vB</span>
+            </div>
+            <div className="feeItem">
+              <span className="feeLabel">Med</span>
+              <span className="feeValue" style={{ color: 'var(--amber)' }}>{btcNet.feeHalfHour || '...'}</span>
+              <span className="feeSuffix">sat/vB</span>
+            </div>
+            <div className="feeItem">
+              <span className="feeLabel">Low</span>
+              <span className="feeValue" style={{ color: 'var(--green)' }}>{btcNet.feeHour || '...'}</span>
+              <span className="feeSuffix">sat/vB</span>
+            </div>
+            <div className="feeItem">
+              <span className="feeLabel">Econ</span>
+              <span className="feeValue" style={{ color: 'var(--text-dim)' }}>{btcNet.feeEconomy || '...'}</span>
+              <span className="feeSuffix">sat/vB</span>
+            </div>
+          </div>
+
+          {/* Difficulty progress bar */}
+          {btcNet.diffProgress > 0 && (
+            <div className="diffBarWrap">
+              <div className="diffBarLabel">
+                <span>Epoch Progress</span>
+                <span>{btcNet.diffRemainingBlocks} blocks remain</span>
+              </div>
+              <div className="diffBar">
+                <div className="diffBarFill" style={{ width: `${btcNet.diffProgress}%` }} />
+              </div>
+            </div>
+          )}
+
+          {/* Recent blocks */}
+          {btcNet.recentBlocks.length > 0 && (
+            <div className="recentBlocksWrap">
+              <div className="recentBlocksTitle">Recent Blocks</div>
+              <div className="recentBlocksList">
+                {btcNet.recentBlocks.map((b) => (
+                  <div key={b.height} className="recentBlockRow">
+                    <span className="rbHeight">{b.height.toLocaleString()}</span>
+                    <span className="rbPool">{b.pool}</span>
+                    <span className="rbTxCount">{b.txCount} tx</span>
+                    <span className="rbSize">{(b.size / 1e6).toFixed(2)} MB</span>
+                    <span className="rbTime">{timeAgo(b.timestamp)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tech / AI News Feed */}
@@ -890,6 +994,13 @@ function formatCompact(n: number): string {
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   return n.toLocaleString();
+}
+
+function formatHashrate(h: number): string {
+  if (h >= 1e18) return `${(h / 1e18).toFixed(1)} EH/s`;
+  if (h >= 1e15) return `${(h / 1e15).toFixed(1)} PH/s`;
+  if (h >= 1e12) return `${(h / 1e12).toFixed(1)} TH/s`;
+  return `${(h / 1e9).toFixed(1)} GH/s`;
 }
 
 function formatPlayerCount(n: number): string {

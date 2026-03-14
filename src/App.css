@@ -979,6 +979,170 @@
   white-space: nowrap;
 }
 
+/* ── BTC Network Panel ── */
+.btcNetStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.btcNetStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btcNetLabel {
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btcNetValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.feeBar {
+  display: flex;
+  gap: 1px;
+  margin-bottom: 10px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.feeItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: var(--bg);
+}
+
+.feeLabel {
+  font-size: 7px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feeValue {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.feeSuffix {
+  font-size: 7px;
+  color: var(--text-dim);
+}
+
+.diffBarWrap {
+  margin-bottom: 10px;
+}
+
+.diffBarLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.diffBar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.diffBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--amber));
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+
+.recentBlocksWrap {
+  margin-top: 4px;
+}
+
+.recentBlocksTitle {
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.recentBlocksList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.recentBlockRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
+  font-size: 10px;
+}
+
+.recentBlockRow:last-child { border-bottom: none; }
+
+.rbHeight {
+  color: var(--amber);
+  font-weight: 600;
+  min-width: 64px;
+}
+
+.rbPool {
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rbTxCount {
+  color: var(--text-mid);
+  min-width: 42px;
+  text-align: right;
+}
+
+.rbSize {
+  color: var(--text-dim);
+  min-width: 48px;
+  text-align: right;
+}
+
+.rbTime {
+  color: var(--text-dim);
+  min-width: 28px;
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .btcNetStats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .feeBar {
+    flex-wrap: wrap;
+  }
+  .feeItem {
+    min-width: 48px;
+  }
+}
+
 /* ── Steam Games ── */
 .steamRow {
   display: flex;
