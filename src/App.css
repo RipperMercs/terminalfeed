@@ -153,6 +153,8 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-auto-rows: min-content;
+  align-items: start;
   gap: 1px;
   padding: 0;
   background: var(--border);
@@ -167,7 +169,13 @@
 .panel {
   background: var(--bg);
   padding: 12px 14px;
-  overflow: hidden;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* Wide panels (TradingView chart, BTC Network) need more height */
+.panel.spanCol2 {
+  max-height: none;
 }
 
 .panelHeader {
