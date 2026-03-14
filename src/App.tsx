@@ -28,6 +28,8 @@ import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
 import { PanelManager } from './components/PanelManager';
 import { PanelHead } from './components/PanelHead';
+import { AIImageLab } from './components/AIImageLab';
+import { DiceRoll } from './components/DiceRoll';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import './App.css';
@@ -953,6 +955,27 @@ function App() {
               <div className="termDef">{todayTerm.definition}</div>
             </div>
           </div>
+        </div>
+
+        {/* AI Image Lab */}
+        <div className="panel" style={{ display: layout.isVisible('ai-image') ? undefined : 'none' }}>
+          <PanelHead panelId="ai-image" layout={layout} getGridCols={getGridCols}>
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">AI Image Lab</span>
+              <span className="panelTag">FLUX</span>
+            </div>
+          </PanelHead>
+          <AIImageLab />
+        </div>
+
+        {/* Dice Roll */}
+        <div className="panel" style={{ display: layout.isVisible('dice') ? undefined : 'none' }}>
+          <PanelHead panelId="dice" layout={layout} getGridCols={getGridCols}>
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Dice Roll</span>
+            </div>
+          </PanelHead>
+          <DiceRoll />
         </div>
 
         {/* Support / Ad + Donate */}

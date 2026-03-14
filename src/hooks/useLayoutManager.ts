@@ -1,27 +1,38 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 // All panel IDs in default order
+// Default order: curated like a newspaper front page
+// Top = most valuable data, bottom = niche/fun
 export const ALL_PANELS = [
+  // Row 1: The glance zone
   { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 2 },
+  { id: 'quick-stats', label: 'Quick Stats', defaultSpan: 1 },
+  // Row 2: Money
+  { id: 'markets', label: 'Markets (US)', defaultSpan: 1 },
   { id: 'crypto', label: 'Crypto', defaultSpan: 1 },
+  { id: 'crypto-global', label: 'Crypto Market', defaultSpan: 1 },
+  // Row 3: BTC deep dive
   { id: 'btc-network', label: 'BTC Network', defaultSpan: 2 },
+  { id: 'market-hours', label: 'Market Hours', defaultSpan: 1 },
+  // Row 4: Information
   { id: 'news', label: 'Tech / AI Feed', defaultSpan: 1 },
   { id: 'reddit', label: 'Reddit', defaultSpan: 1 },
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
-  { id: 'market-hours', label: 'Market Hours', defaultSpan: 1 },
-  { id: 'markets', label: 'Markets (US)', defaultSpan: 1 },
-  { id: 'scores', label: 'Sports Scores', defaultSpan: 2 },
+  // Row 5: Dev/nerd
   { id: 'dev-status', label: 'Dev/Ops Status', defaultSpan: 1 },
-  { id: 'crypto-global', label: 'Crypto Market', defaultSpan: 1 },
-  { id: 'weather', label: 'Weather', defaultSpan: 1 },
+  { id: 'stackoverflow', label: 'Stack Overflow', defaultSpan: 1 },
+  { id: 'scores', label: 'Sports Scores', defaultSpan: 2 },
+  // Row 6+: Supplementary
   { id: 'seismic', label: 'Earthquakes', defaultSpan: 1 },
+  { id: 'weather', label: 'Weather', defaultSpan: 1 },
   { id: 'launches', label: 'Space Launches', defaultSpan: 1 },
   { id: 'steam', label: 'Steam Games', defaultSpan: 1 },
-  { id: 'stackoverflow', label: 'Stack Overflow', defaultSpan: 1 },
   { id: 'nasa', label: 'NASA APOD', defaultSpan: 1 },
-  { id: 'quick-stats', label: 'Quick Stats', defaultSpan: 1 },
-  { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
   { id: 'daily-learn', label: 'Daily Learn', defaultSpan: 1 },
+  // Bottom: Fun/lifestyle
+  { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
+  { id: 'ai-image', label: 'AI Image Lab', defaultSpan: 1 },
+  { id: 'dice', label: 'Dice Roll', defaultSpan: 1 },
   { id: 'support', label: 'Support / Donate', defaultSpan: 1 },
 ] as const;
 
