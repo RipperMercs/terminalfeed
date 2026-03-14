@@ -165,8 +165,6 @@ function App() {
     Sports: 'var(--red)',
   };
 
-  // Live and recent games (limit to 8)
-  const displayGames = games.slice(0, 8);
   const liveCount = games.filter((g) => g.status === 'in').length;
 
   // Custom watchlist management
@@ -393,24 +391,6 @@ function App() {
         </div>
       </div>
     </>),
-    'scores': (<>
-      <PanelHead panelId="scores" layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Scores</span><span className="panelTag">ESPN</span></div>
-        {liveCount > 0 && <div className="panelLive"><span className="liveDot" style={{ background: 'var(--red)' }} /><span className="liveText">{liveCount} LIVE</span></div>}
-      </PanelHead>
-      <div>
-        {displayGames.length === 0 && <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>loading scores...</div>}
-        {displayGames.map((game) => (<div key={game.id} className={`scoreRow ${game.status === 'in' ? 'scoreRowLive' : ''}`}>
-          <span className="scoreLeague">{game.league}</span>
-          <div className="scoreTeams"><span className="scoreTeam"><span className="scoreAbbr">{game.awayAbbr}</span><span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.awayScore}</span></span><span className="scoreAt">@</span><span className="scoreTeam"><span className="scoreAbbr">{game.homeAbbr}</span><span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.homeScore}</span></span></div>
-          <div className="scoreRight">
-            <span className={`scoreStatus ${game.status === 'in' ? 'scoreStatusLive' : ''}`}>{game.statusDetail}</span>
-            {game.status === 'in' && game.situation && <div className="scoreSituation">{game.situation}</div>}
-            {game.status === 'in' && game.lastPlay && <div className="scoreLastPlay">{game.lastPlay}</div>}
-          </div>
-        </div>))}
-      </div>
-    </>),
     'dev-status': (<>
       <PanelHead panelId="dev-status" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Status</span><span className="panelTag">DEV/OPS</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -608,7 +588,7 @@ function App() {
         </div>
       </div>
 
-      {/* ── Ticker Bar ── */}
+      {/* ── Price Ticker (scrolls LEFT) ── */}
       <div className="tickerBar">
         <div className="tickerTrack">
           {[...tickerItems, ...tickerItems].map((s, i) => (
@@ -626,6 +606,27 @@ function App() {
           ))}
         </div>
       </div>
+
+      {/* ── Sports Ticker (scrolls RIGHT) ── */}
+      {games.length > 0 && (
+        <div className="sportsTicker">
+          <div className="sportsTickerTrack">
+            {[...games, ...games].map((game, i) => (
+              <span key={i} className={`sportsTickerItem ${game.status === 'in' ? 'sportsLive' : game.status === 'post' ? '' : 'sportsUpcoming'}`}>
+                {game.status === 'in' && <span className="sportsLiveDot" />}
+                <span className="sportsTeam">{game.awayAbbr}</span>
+                <span className="sportsScore">{game.awayScore}</span>
+                <span className="sportsTeam">{game.homeAbbr}</span>
+                <span className="sportsScore">{game.homeScore}</span>
+                <span className={`sportsStatus ${game.status === 'in' ? 'sportsStatusLive' : ''}`}>
+                  {game.statusDetail}
+                </span>
+                <span className="sportsLeague">{game.league}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
