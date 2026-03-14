@@ -1384,6 +1384,149 @@
   color: var(--text-dim);
 }
 
+/* ── Lock / Organize Toggle ── */
+.lockBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+
+.lockBtn:hover {
+  color: var(--text-mid);
+  border-color: var(--border-glow);
+}
+
+.lockBtnActive {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(79, 209, 197, 0.08);
+  animation: pulse 2s infinite;
+}
+
+.organizeHint {
+  font-size: 8px;
+  color: var(--cyan);
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+}
+
+/* ── Grid Organize Mode ── */
+.gridOrganizing {
+  outline: 1px solid rgba(79, 209, 197, 0.15);
+  outline-offset: -1px;
+  animation: orgPulse 3s infinite;
+}
+
+@keyframes orgPulse {
+  0%, 100% { outline-color: rgba(79, 209, 197, 0.1); }
+  50% { outline-color: rgba(79, 209, 197, 0.25); }
+}
+
+/* ── Panel Organize Controls ── */
+.orgControls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.orgArrow {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 9px;
+  cursor: pointer;
+  font-family: var(--mono);
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.orgArrow:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(79, 209, 197, 0.06);
+}
+
+.orgArrow:active {
+  background: rgba(79, 209, 197, 0.12);
+  transform: scale(0.95);
+}
+
+.orgHide {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.orgHide:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.06);
+}
+
+/* ── Hidden Panels Shelf ── */
+.hiddenShelf {
+  padding: 8px 16px;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  background: rgba(79, 209, 197, 0.02);
+}
+
+.hiddenShelfLabel {
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hiddenShelfItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hiddenShelfItem {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: none;
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hiddenShelfItem:hover {
+  border-color: var(--cyan);
+  background: rgba(79, 209, 197, 0.08);
+}
+
 /* ── Customize Button ── */
 .customizeBtn {
   background: none;

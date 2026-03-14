@@ -77,11 +77,14 @@ export interface LayoutManager {
   hiddenPanels: Set<string>;
   collapsedPanels: Set<string>;
   panelOrder: string[];
+  isOrganizing: boolean;
+  setIsOrganizing: (v: boolean) => void;
   isVisible: (id: string) => boolean;
   isCollapsed: (id: string) => boolean;
   toggleHidden: (id: string) => void;
   toggleCollapse: (id: string) => void;
   setPanelOrder: (order: string[]) => void;
+  swapPanels: (panelId: string, direction: 'left' | 'right' | 'up' | 'down', cols: number) => void;
   resetLayout: () => void;
   applyPreset: (presetKey: string) => void;
   exportLayout: () => string;
@@ -99,6 +102,7 @@ export function useLayoutManager(): LayoutManager {
     if (saved.length > 0) return saved;
     return ALL_PANELS.map(p => p.id);
   });
+  const [isOrganizing, setIsOrganizing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -153,6 +157,33 @@ export function useLayoutManager(): LayoutManager {
     setPanelOrderState(order);
     showToast('Layout saved');
   }, [showToast]);
+
+  const swapPanels = useCallback((panelId: string, direction: 'left' | 'right' | 'up' | 'down', cols: number) => {
+    setPanelOrderState(prev => {
+      // Work with visible panels only for position calculation
+      const visible = prev.filter(id => !hiddenPanels.has(id));
+      const currentIdx = visible.indexOf(panelId);
+      if (currentIdx === -1) return prev;
+
+      let targetIdx: number;
+      switch (direction) {
+        case 'left': targetIdx = currentIdx - 1; break;
+        case 'right': targetIdx = currentIdx + 1; break;
+        case 'up': targetIdx = currentIdx - cols; break;
+        case 'down': targetIdx = currentIdx + cols; break;
+      }
+
+      if (targetIdx < 0 || targetIdx >= visible.length) return prev;
+
+      // Find actual indices in the full array
+      const fullIdxA = prev.indexOf(visible[currentIdx]);
+      const fullIdxB = prev.indexOf(visible[targetIdx]);
+      const next = [...prev];
+      [next[fullIdxA], next[fullIdxB]] = [next[fullIdxB], next[fullIdxA]];
+      return next;
+    });
+    showToast('Layout saved');
+  }, [hiddenPanels, showToast]);
 
   const resetLayout = useCallback(() => {
     setHiddenPanels(new Set());
@@ -289,11 +320,14 @@ export function useLayoutManager(): LayoutManager {
     hiddenPanels,
     collapsedPanels,
     panelOrder,
+    isOrganizing,
+    setIsOrganizing,
     isVisible,
     isCollapsed,
     toggleHidden,
     toggleCollapse,
     setPanelOrder,
+    swapPanels,
     resetLayout,
     applyPreset,
     exportLayout,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
 import { useBlockStream } from './hooks/useBlockStream';
 import { useFearGreed } from './hooks/useFearGreed';
@@ -25,8 +25,9 @@ import { useDevJoke } from './hooks/useDevJoke';
 import { useStackOverflow } from './hooks/useStackOverflow';
 import { useNasaApod } from './hooks/useNasaApod';
 import { useBtcNetwork } from './hooks/useBtcNetwork';
-import { useLayoutManager } from './hooks/useLayoutManager';
+import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
 import { PanelManager } from './components/PanelManager';
+import { PanelHead } from './components/PanelHead';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import './App.css';
@@ -91,19 +92,24 @@ function App() {
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Don't trigger on inputs/textareas
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'e' || e.key === 'E') {
+        layout.setIsOrganizing(!layout.isOrganizing);
+      }
       if (e.key === 'c' || e.key === 'C') {
         setShowPanelManager(prev => !prev);
       }
       if (e.key === 'Escape') {
-        setShowPanelManager(false);
-        setLegalModal(null);
+        if (layout.isOrganizing) layout.setIsOrganizing(false);
+        else {
+          setShowPanelManager(false);
+          setLegalModal(null);
+        }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [layout]);
 
   // Ticker items: BTC + metals + stocks + crypto
   const tickerItems = [
@@ -127,6 +133,14 @@ function App() {
   const displayGames = games.slice(0, 8);
   const liveCount = games.filter((g) => g.status === 'in').length;
 
+  // Get current column count from window width
+  const getGridCols = useCallback(() => {
+    const w = window.innerWidth;
+    if (w <= 700) return 1;
+    if (w <= 1100) return 2;
+    return Math.max(1, Math.floor(w / 320));
+  }, []);
+
   if (booting) {
     return <BootSequence onComplete={() => setBooting(false)} />;
   }
@@ -142,7 +156,17 @@ function App() {
           <span className="logoCursor" />
         </div>
         <div className="topBarRight">
-          <button className="customizeBtn" onClick={() => setShowPanelManager(true)}>Customize</button>
+          <button
+            className={`lockBtn ${layout.isOrganizing ? 'lockBtnActive' : ''}`}
+            onClick={() => layout.setIsOrganizing(!layout.isOrganizing)}
+            title={layout.isOrganizing ? 'Lock layout (E)' : 'Organize panels (E)'}
+          >
+            {layout.isOrganizing ? 'Organize' : 'Locked'}
+          </button>
+          <button className="customizeBtn" onClick={() => setShowPanelManager(true)}>Settings</button>
+          {layout.isOrganizing && (
+            <span className="organizeHint">arrows to rearrange · E to lock</span>
+          )}
           <span className="topBarDate">{dateStr}</span>
           <span className="topBarTime">{timeStr}</span>
         </div>
@@ -168,11 +192,11 @@ function App() {
       </div>
 
       {/* ── Main Grid ── */}
-      <div className="grid">
+      <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
 
         {/* BTC Price — large */}
         <div className="panel spanCol2" style={{ display: layout.isVisible('bitcoin') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="bitcoin" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Bitcoin</span>
               <span className="panelTag">BTC/USD</span>
@@ -184,7 +208,7 @@ function App() {
               <span className="liveDot" style={{ background: priceConnected ? 'var(--green)' : 'var(--red)' }} />
               <span className="liveText">{priceConnected ? 'LIVE' : 'CONNECTING'}</span>
             </div>
-          </div>
+          </PanelHead>
           <div className="priceMain">
             <div>
               <div className="priceValue">
@@ -208,7 +232,7 @@ function App() {
 
         {/* Crypto — top right next to BTC */}
         <div className="panel" style={{ display: layout.isVisible('crypto') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="crypto" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Crypto</span>
             </div>
@@ -216,7 +240,7 @@ function App() {
               <span className="liveDot" />
               <span className="liveText">LIVE</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {crypto.map((c) => (
               <div key={c.symbol} className="listRow">
@@ -238,7 +262,7 @@ function App() {
 
         {/* BTC Network — rich mempool.space panel */}
         <div className="panel spanCol2" style={{ display: layout.isVisible('btc-network') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="btc-network" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">BTC Network</span>
               <span className="panelTag">MEMPOOL</span>
@@ -247,7 +271,7 @@ function App() {
               <span className="liveDot" style={{ background: btcNet.connected ? 'var(--green)' : 'var(--red)' }} />
               <span className="liveText">{btcNet.connected ? 'LIVE' : 'CONNECTING'}</span>
             </div>
-          </div>
+          </PanelHead>
 
           {/* Top stats row */}
           <div className="btcNetStats">
@@ -340,7 +364,7 @@ function App() {
 
         {/* Tech / AI News Feed */}
         <div className="panel" style={{ display: layout.isVisible('news') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="news" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Tech / AI Feed</span>
               <span className="panelTag">HN</span>
@@ -349,7 +373,7 @@ function App() {
               <span className="liveDot" />
               <span className="liveText">LIVE</span>
             </div>
-          </div>
+          </PanelHead>
           {/* Filter pills */}
           <div className="newsFilters">
             {['ALL', 'AI', 'BTC', 'Markets', 'Tech', 'Dev'].map((f) => (
@@ -397,12 +421,12 @@ function App() {
 
         {/* Reddit Tech */}
         <div className="panel" style={{ display: layout.isVisible('reddit') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="reddit" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Reddit</span>
               <span className="panelTag">TECH</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {redditPosts.length === 0 && (
               <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
@@ -429,12 +453,12 @@ function App() {
 
         {/* GitHub Trending */}
         <div className="panel" style={{ display: layout.isVisible('github') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="github" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">GitHub Trending</span>
               <span className="panelTag">7D</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {trendingRepos.length === 0 && (
               <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
@@ -464,7 +488,7 @@ function App() {
 
         {/* Market Hours */}
         <div className="panel" style={{ display: layout.isVisible('market-hours') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="market-hours" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Market Hours</span>
               <span className="panelTag">GLOBAL</span>
@@ -474,7 +498,7 @@ function App() {
                 F&G {fearGreed.value}
               </span>
             )}
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {marketHours.map((mkt) => {
               const dotClass = mkt.isOpen
@@ -505,7 +529,7 @@ function App() {
 
         {/* Stock Markets + Gold */}
         <div className="panel" style={{ display: layout.isVisible('markets') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="markets" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Markets</span>
               <span className="panelTag">US</span>
@@ -514,7 +538,7 @@ function App() {
               <span className="liveDot" />
               <span className="liveText">LIVE</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {metals.filter((m) => m.price > 0).map((m) => (
               <div key={m.symbol} className="listRow" style={{ paddingBottom: 6, marginBottom: 4, borderBottom: '1px solid var(--border)' }}>
@@ -553,7 +577,7 @@ function App() {
 
         {/* Sports Scores */}
         <div className="panel spanCol2" style={{ display: layout.isVisible('scores') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="scores" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Scores</span>
               <span className="panelTag">ESPN</span>
@@ -564,7 +588,7 @@ function App() {
                 <span className="liveText">{liveCount} LIVE</span>
               </div>
             )}
-          </div>
+          </PanelHead>
           <div>
             {displayGames.length === 0 && (
               <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>
@@ -595,12 +619,12 @@ function App() {
 
         {/* Dev/Ops Status Board */}
         <div className="panel" style={{ display: layout.isVisible('dev-status') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="dev-status" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Status</span>
               <span className="panelTag">DEV/OPS</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {devStatuses.map((svc) => {
               const color = svc.indicator === 'none' ? 'var(--green)'
@@ -627,12 +651,12 @@ function App() {
 
         {/* Crypto Market Overview */}
         <div className="panel" style={{ display: layout.isVisible('crypto-global') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="crypto-global" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Crypto Market</span>
               <span className="panelTag">GLOBAL</span>
             </div>
-          </div>
+          </PanelHead>
           {cryptoGlobal ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div className="cryptoGlobalRow">
@@ -674,12 +698,12 @@ function App() {
 
         {/* Weather */}
         <div className="panel" style={{ display: layout.isVisible('weather') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="weather" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Weather</span>
               {weather && <span className="panelTag">{weather.city.toUpperCase()}</span>}
             </div>
-          </div>
+          </PanelHead>
           {weather ? (
             <div className="weatherContent">
               <div className="weatherMain">
@@ -699,13 +723,13 @@ function App() {
 
         {/* Earthquake Monitor */}
         <div className="panel" style={{ display: layout.isVisible('seismic') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="seismic" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Seismic</span>
               <span className="panelTag">24H</span>
             </div>
             <span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>USGS M2.5+</span>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {earthquakes.length === 0 && (
               <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading quakes...</div>
@@ -733,12 +757,12 @@ function App() {
 
         {/* Space Launches */}
         <div className="panel" style={{ display: layout.isVisible('launches') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="launches" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Launches</span>
               <span className="panelTag">SPACE</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {spaceLaunches.length === 0 && (
               <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading launches...</div>
@@ -765,12 +789,12 @@ function App() {
 
         {/* Steam Top Games */}
         <div className="panel" style={{ display: layout.isVisible('steam') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="steam" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Steam</span>
               <span className="panelTag">LIVE</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {steamGames.length === 0 && (
               <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading games...</div>
@@ -786,12 +810,12 @@ function App() {
 
         {/* Stack Overflow Hot */}
         <div className="panel" style={{ display: layout.isVisible('stackoverflow') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="stackoverflow" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Stack Overflow</span>
               <span className="panelTag">HOT</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {soQuestions.length === 0 && (
               <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading questions...</div>
@@ -817,12 +841,12 @@ function App() {
 
         {/* NASA APOD */}
         <div className="panel" style={{ display: layout.isVisible('nasa') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="nasa" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">NASA</span>
               <span className="panelTag">APOD</span>
             </div>
-          </div>
+          </PanelHead>
           {nasaApod ? (
             <div className="apodContent">
               {nasaApod.mediaType === 'image' && (
@@ -841,11 +865,11 @@ function App() {
 
         {/* Quick Stats — combo panel */}
         <div className="panel" style={{ display: layout.isVisible('quick-stats') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="quick-stats" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Quick Stats</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {fearGreed && (
               <div className="qsRow">
@@ -884,12 +908,12 @@ function App() {
 
         {/* Tonight's Recipe */}
         <div className="panel" style={{ display: layout.isVisible('recipe') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="recipe" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Tonight</span>
               <span className="panelTag">RECIPE</span>
             </div>
-          </div>
+          </PanelHead>
           {recipe ? (
             <a href={recipe.url} target="_blank" rel="noopener noreferrer" className="recipeContent">
               <img src={recipe.thumbnail} alt={recipe.name} className="recipeThumbnail" loading="lazy" />
@@ -905,12 +929,12 @@ function App() {
 
         {/* This Day in Tech + Term of the Day — combo */}
         <div className="panel" style={{ display: layout.isVisible('daily-learn') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="daily-learn" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Daily</span>
               <span className="panelTag">LEARN</span>
             </div>
-          </div>
+          </PanelHead>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {/* On This Day */}
             <div>
@@ -933,11 +957,11 @@ function App() {
 
         {/* Support / Ad + Donate */}
         <div className="panel" style={{ display: layout.isVisible('support') ? undefined : 'none' }}>
-          <div className="panelHeader">
+          <PanelHead panelId="support" layout={layout} getGridCols={getGridCols}>
             <div className="panelHeaderLeft">
               <span className="panelTitle">Support</span>
             </div>
-          </div>
+          </PanelHead>
           <div className="adPlaceholder">
             <div className="adLabel">Ad space</div>
             <div className="adSize">300x250</div>
@@ -948,6 +972,28 @@ function App() {
         </div>
 
       </div>
+
+      {/* ── Hidden Panels Shelf (Organize Mode Only) ── */}
+      {layout.isOrganizing && layout.hiddenPanels.size > 0 && (
+        <div className="hiddenShelf">
+          <span className="hiddenShelfLabel">HIDDEN PANELS</span>
+          <div className="hiddenShelfItems">
+            {Array.from(layout.hiddenPanels).map(id => {
+              const panel = ALL_PANELS.find(p => p.id === id);
+              if (!panel) return null;
+              return (
+                <button
+                  key={id}
+                  className="hiddenShelfItem"
+                  onClick={() => layout.toggleHidden(id)}
+                >
+                  + {panel.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Dev Joke Strip ── */}
       {devJoke && (
