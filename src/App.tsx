@@ -32,6 +32,9 @@ import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { DiceRoll } from './components/DiceRoll';
 import { useInternetPulse } from './hooks/useInternetPulse';
+import { usePredictionMarkets } from './hooks/usePredictionMarkets';
+import { usePodcasts } from './hooks/usePodcasts';
+import { uapSightings, getShapeStats } from './data/uapSightings';
 import { useISSPosition } from './hooks/useISSPosition';
 import { useBluesky } from './hooks/useBluesky';
 import { aiLeaderboard } from './data/aiLeaderboard';
@@ -71,6 +74,9 @@ function App() {
   const nasaApod = useNasaApod();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
+  const predictionMarkets = usePredictionMarkets();
+  const podcastEpisodes = usePodcasts();
+  const uapShapeStats = getShapeStats();
   const { position: issPos, crewCount: issCrew } = useISSPosition();
   const bskyPosts = useBluesky();
   const todayInTech = getTodayInTech();
@@ -371,6 +377,55 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div><div className="dailySectionTitle">On This Day</div>{todayInTech.map((evt, i) => <div key={i} className="historyRow"><span className="historyYear">{evt.year}</span><span className="historyEvent">{evt.event}</span></div>)}</div>
         <div><div className="dailySectionTitle">Term of the Day</div><div className="termWord">{todayTerm.term}</div><div className="termDef">{todayTerm.definition}</div></div>
+      </div>
+    </>),
+    'predictions': (<>
+      <PanelHead panelId="predictions" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Predictions</span><span className="panelTag">MARKETS</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {predictionMarkets.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading markets...</div>}
+        {predictionMarkets.map((m) => (
+          <div key={m.id} className="predRow">
+            <span className="predTitle">{m.title}</span>
+            <div className="predRight">
+              <span className="predProb" style={{ color: m.probability >= 70 ? 'var(--green)' : m.probability <= 30 ? 'var(--red)' : 'var(--amber)' }}>{m.probability}%</span>
+              <span className="predSource">{m.source}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>),
+    'podcasts': (<>
+      <PanelHead panelId="podcasts" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Podcasts</span><span className="panelTag">LATEST</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {podcastEpisodes.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading episodes...</div>}
+        {podcastEpisodes.map((ep, i) => (
+          <a key={i} href={ep.link} target="_blank" rel="noopener noreferrer" className="newsRow">
+            <span className="podShow">{ep.show}</span>
+            <span className="newsTitle">{ep.title}</span>
+            <span className="newsMeta">{ep.pubDate ? timeAgo(Math.floor(new Date(ep.pubDate).getTime() / 1000)) : ''}</span>
+          </a>
+        ))}
+      </div>
+    </>),
+    'uap': (<>
+      <PanelHead panelId="uap" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">UAP Sightings</span><span className="panelTag">NUFORC</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {uapSightings.slice(0, 6).map((s, i) => (
+          <div key={i} className="uapRow">
+            <div className="uapTop">
+              <span className="uapShape">{s.shape}</span>
+              <span className="uapLoc">{s.city}, {s.state}</span>
+              <span className="newsMeta">{timeAgo(Math.floor(new Date(s.date).getTime() / 1000))}</span>
+            </div>
+            <div className="uapDesc">{s.summary}</div>
+          </div>
+        ))}
+        <div className="uapStats">
+          {uapShapeStats.map(s => (
+            <span key={s.shape} className="uapStatItem">{s.shape} {s.pct}%</span>
+          ))}
+        </div>
+        <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
       </div>
     </>),
     'iss-live': (<>
