@@ -10,6 +10,8 @@ import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
 import { LiveChart } from './components/LiveChart';
+import { useGithubTrending } from './hooks/useGithubTrending';
+import { useRedditTech } from './hooks/useRedditTech';
 import './App.css';
 
 function App() {
@@ -23,6 +25,8 @@ function App() {
   const crypto = useSimCrypto();
   const metals = useMetals();
   const games = useSportsScores();
+  const trendingRepos = useGithubTrending();
+  const redditPosts = useRedditTech();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -282,6 +286,73 @@ function App() {
           </div>
         </div>
 
+        {/* GitHub Trending */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">GitHub Trending</span>
+              <span className="panelTag">7D</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {trendingRepos.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
+                loading repos...
+              </div>
+            )}
+            {trendingRepos.map((repo) => (
+              <a
+                key={repo.fullName}
+                href={repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="newsRow"
+              >
+                <span className="ghStars">{formatStars(repo.stars)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="ghRepoName">{repo.fullName}</div>
+                  <div className="ghRepoDesc">{repo.description}</div>
+                </div>
+                {repo.language && (
+                  <span className="ghLang">{repo.language}</span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Reddit Tech */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Reddit</span>
+              <span className="panelTag">TECH</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {redditPosts.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
+                loading posts...
+              </div>
+            )}
+            {redditPosts.map((post) => (
+              <a
+                key={post.id}
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="newsRow"
+              >
+                <span className="redditScore">{formatStars(post.score)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span className="newsTitle">{post.title}</span>
+                </div>
+                <span className="redditSub">r/{post.subreddit}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* BTC Network */}
         <div className="panel">
           <div className="panelHeader">
@@ -439,6 +510,11 @@ function timeAgo(ts: number): string {
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   return `${Math.floor(diff / 86400)}d`;
+}
+
+function formatStars(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return n.toString();
 }
 
 function formatCount(n: number): string {
