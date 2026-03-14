@@ -1,0 +1,68 @@
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.title {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.live {
+  color: var(--green);
+}
+.live .dot {
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+
+.polling {
+  color: var(--amber);
+}
+.polling .dot {
+  background: var(--amber);
+}
+
+.offline {
+  color: var(--red);
+}
+.offline .dot {
+  background: var(--red);
+}
+
+.body {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+}
