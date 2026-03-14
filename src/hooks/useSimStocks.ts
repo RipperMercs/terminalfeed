@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { setCache, getCache } from '../services/cache';
+import { STATIC_FALLBACKS } from '../data/staticFallbacks';
 
 interface StockItem {
   symbol: string;
@@ -33,9 +35,14 @@ export function useSimStocks(customSymbols: string[] = []) {
       .filter((s) => !DEFAULT_SYMBOLS.some((d) => d.symbol === s))
       .map((s) => ({ symbol: s, name: '' })),
   ];
-  const [stocks, setStocks] = useState<StockItem[]>(
-    SYMBOLS.map((s) => ({ ...s, price: 0, change: 0 })),
-  );
+  const [stocks, setStocks] = useState<StockItem[]>(() => {
+    const cached = getCache<StockItem[]>('stock_prices');
+    if (cached) return cached.data;
+    return SYMBOLS.map((s) => {
+      const fb = STATIC_FALLBACKS.stocks.find((f) => f.symbol === s.symbol);
+      return fb ? { ...fb } : { ...s, price: 0, change: 0 };
+    });
+  });
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,13 +70,15 @@ export function useSimStocks(customSymbols: string[] = []) {
 
           const change = data.pc > 0 ? ((data.c - data.pc) / data.pc) * 100 : 0;
 
-          setStocks((prev) =>
-            prev.map((s) =>
+          setStocks((prev) => {
+            const next = prev.map((s) =>
               s.symbol === symbol
                 ? { ...s, price: data.c, change }
                 : s,
-            ),
-          );
+            );
+            setCache('stock_prices', next, 'finnhub');
+            return next;
+          });
         }
       } catch {}
     }

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { setCache, getCache } from '../services/cache';
+import { STATIC_FALLBACKS } from '../data/staticFallbacks';
 
 interface CryptoItem {
   symbol: string;
@@ -54,9 +56,15 @@ export function useSimCrypto(customSymbols: string[] = []) {
     ...customSymbols.map((s) => s.toUpperCase()).filter((s) => !INITIAL_ORDER.includes(s)),
   ];
 
-  const [crypto, setCrypto] = useState<CryptoItem[]>(
-    allSymbols.map((sym) => ({ symbol: sym, price: 0, change: 0 })),
-  );
+  const [crypto, setCrypto] = useState<CryptoItem[]>(() => {
+    // Seed from cache or static fallbacks
+    const cached = getCache<CryptoItem[]>('crypto_prices');
+    if (cached) return cached.data;
+    return allSymbols.map((sym) => {
+      const fallback = STATIC_FALLBACKS.crypto_prices.find((c) => c.symbol === sym);
+      return fallback || { symbol: sym, price: 0, change: 0 };
+    });
+  });
 
   const mountedRef = useRef(true);
   const wsRef = useRef<WebSocket | null>(null);
@@ -108,8 +116,8 @@ export function useSimCrypto(customSymbols: string[] = []) {
         if (!mountedRef.current) return;
         try {
           const msg = JSON.parse(event.data);
-          setCrypto((prev) =>
-            prev.map((c) => {
+          setCrypto((prev) => {
+            const next = prev.map((c) => {
               const assetKey = Object.keys(COINCAP_TO_SYMBOL).find(
                 (k) => COINCAP_TO_SYMBOL[k] === c.symbol,
               );
@@ -121,8 +129,10 @@ export function useSimCrypto(customSymbols: string[] = []) {
                 price,
                 change: changeRef.current[c.symbol] ?? c.change,
               };
-            }),
-          );
+            });
+            setCache('crypto_prices', next, 'coincap');
+            return next;
+          });
         } catch {}
       };
 
