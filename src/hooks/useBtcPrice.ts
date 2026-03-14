@@ -27,6 +27,8 @@ const BINANCE_WS = 'wss://stream.binance.com:9443/ws/btcusdt@ticker';
 // ── Last resort: CoinGecko REST ──
 const COINGECKO_URL =
   'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin&sparkline=false';
+const COINGECKO_CHART_URL =
+  'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1';
 
 const WS_RECONNECT_MS = 3000;
 const WS_MAX_RECONNECT_MS = 30000;
@@ -106,6 +108,30 @@ export function useBtcPrice() {
     } catch {}
   }, []);
 
+  // ── Seed chart with 24h historical data ──
+  const seedChart = useCallback(async () => {
+    if (!mountedRef.current) return;
+    try {
+      const res = await fetch(COINGECKO_CHART_URL);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!mountedRef.current || !data.prices) return;
+
+      // Only seed if we don't have WS ticks yet
+      setPriceHistory((prev) => {
+        if (prev.length > 10) return prev; // WS already delivering
+        // Sample ~200 points from the 24h data
+        const prices: PriceTick[] = data.prices.map((p: [number, number]) => ({
+          time: p[0],
+          price: p[1],
+        }));
+        // Take every Nth point to get ~200 data points
+        const step = Math.max(1, Math.floor(prices.length / 200));
+        return prices.filter((_: PriceTick, i: number) => i % step === 0);
+      });
+    } catch {}
+  }, []);
+
   // ── Primary: CoinCap WS ──
   const connectPrimary = useCallback(() => {
     if (!mountedRef.current) return;
@@ -181,6 +207,9 @@ export function useBtcPrice() {
   useEffect(() => {
     mountedRef.current = true;
 
+    // Seed chart with historical data immediately
+    seedChart();
+
     // Start primary
     connectPrimary();
 
@@ -204,7 +233,7 @@ export function useBtcPrice() {
       if (primaryWsRef.current) { primaryWsRef.current.onclose = null; primaryWsRef.current.close(); }
       if (fallbackWsRef.current) { fallbackWsRef.current.onclose = null; fallbackWsRef.current.close(); }
     };
-  }, [connectPrimary, connectFallback, fetchStats]);
+  }, [connectPrimary, connectFallback, fetchStats, seedChart]);
 
   return { data, connected, priceHistory };
 }
