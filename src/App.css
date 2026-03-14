@@ -1384,6 +1384,286 @@
   color: var(--text-dim);
 }
 
+/* ── Customize Button ── */
+.customizeBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+
+.customizeBtn:hover {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+/* ── Layout Toast ── */
+.layoutToast {
+  position: fixed;
+  bottom: 40px;
+  left: 16px;
+  font-size: 10px;
+  color: var(--green);
+  background: var(--bg-panel);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 3px;
+  padding: 4px 10px;
+  z-index: 10000;
+  animation: toastFade 1.5s ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes toastFade {
+  0% { opacity: 0; transform: translateY(4px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Panel Manager Modal ── */
+.pmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pmModal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 420px;
+  max-width: 95vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pmHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pmTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.pmClose {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pmClose:hover {
+  color: var(--text);
+  border-color: var(--border-glow);
+}
+
+.pmBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px;
+}
+
+.pmHint {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.pmList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pmItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 3px;
+  transition: background 0.1s;
+}
+
+.pmItem:hover {
+  background: var(--bg-hover);
+}
+
+.pmItemHidden {
+  opacity: 0.4;
+}
+
+.pmToggle {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid;
+  cursor: pointer;
+  min-width: 32px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+
+.pmToggleOn {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.pmToggleOff {
+  color: var(--red);
+  border-color: var(--border);
+  background: none;
+}
+
+.pmLabel {
+  font-size: 11px;
+  color: var(--text);
+  flex: 1;
+}
+
+.pmArrows {
+  display: flex;
+  gap: 2px;
+}
+
+.pmArrow {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  width: 22px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.pmArrow:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--border-glow);
+}
+
+.pmArrow:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+
+.pmFooter {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pmFooterRow {
+  display: flex;
+  gap: 6px;
+}
+
+.pmBtn {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+  flex: 1;
+}
+
+.pmBtn:hover {
+  color: var(--text);
+  border-color: var(--border-glow);
+}
+
+.pmBtnPrimary {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.pmBtnDanger {
+  color: var(--red);
+}
+
+.pmBtnDanger:hover {
+  border-color: var(--red);
+}
+
+.pmBtnDim {
+  opacity: 0.6;
+}
+
+.pmImportArea {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pmImportInput {
+  font-family: var(--mono);
+  font-size: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  padding: 8px;
+  resize: none;
+}
+
+.pmImportInput::placeholder {
+  color: var(--text-dim);
+}
+
+.pmError {
+  font-size: 9px;
+  color: var(--red);
+}
+
+.pmImportActions {
+  display: flex;
+  gap: 6px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .grid {
