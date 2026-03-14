@@ -26,12 +26,10 @@ export const ALL_PANELS = [
   { id: 'weather', label: 'Weather', defaultSpan: 1 },
   { id: 'launches', label: 'Space Launches', defaultSpan: 1 },
   { id: 'steam', label: 'Steam Games', defaultSpan: 1 },
-  { id: 'nasa', label: 'NASA APOD', defaultSpan: 1 },
   { id: 'daily-learn', label: 'Daily Learn', defaultSpan: 1 },
   // Row 7: Unique feeds
   { id: 'predictions', label: 'Prediction Markets', defaultSpan: 1 },
   { id: 'podcasts', label: 'Podcasts', defaultSpan: 1 },
-  { id: 'iss-live', label: 'ISS Live', defaultSpan: 2 },
   { id: 'uap', label: 'UAP Sightings', defaultSpan: 1 },
   { id: 'ai-leaderboard', label: 'AI Leaderboard', defaultSpan: 1 },
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
@@ -39,7 +37,6 @@ export const ALL_PANELS = [
   // Bottom: Fun/lifestyle
   { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
   { id: 'ai-image', label: 'AI Image Lab', defaultSpan: 1 },
-  { id: 'dice', label: 'Dice Roll', defaultSpan: 1 },
   { id: 'support', label: 'Support / Donate', defaultSpan: 1 },
 ] as const;
 
@@ -79,15 +76,15 @@ export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
   everything: { label: 'Everything', hidden: [] },
   trader: {
     label: 'Trader',
-    hidden: ['steam', 'stackoverflow', 'nasa', 'recipe', 'daily-learn', 'reddit', 'github'],
+    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github'],
   },
   developer: {
     label: 'Developer',
-    hidden: ['scores', 'recipe', 'seismic', 'launches', 'steam', 'nasa', 'quick-stats'],
+    hidden: ['scores', 'recipe', 'seismic', 'launches', 'steam', 'quick-stats'],
   },
   crypto: {
     label: 'Crypto',
-    hidden: ['scores', 'steam', 'stackoverflow', 'nasa', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches'],
+    hidden: ['scores', 'steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches'],
   },
 };
 
