@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { setCache, getCache } from '../services/cache';
+import { STATIC_FALLBACKS } from '../data/staticFallbacks';
 
 export interface PriceTick {
   time: number;
@@ -37,7 +39,12 @@ const MAX_TICKS = 600; // ~10 min of live data
 const FALLBACK_DELAY_MS = 8000; // switch to fallback after 8s of no data
 
 export function useBtcPrice() {
-  const [data, setData] = useState<BtcPriceData | null>(null);
+  // Initialize from cache or static fallback — never show $0.00
+  const [data, setData] = useState<BtcPriceData | null>(() => {
+    const cached = getCache<BtcPriceData>('btc_price');
+    if (cached) return cached.data;
+    return STATIC_FALLBACKS.btc_price as BtcPriceData;
+  });
   const [connected, setConnected] = useState(false);
   const [priceHistory, setPriceHistory] = useState<PriceTick[]>([]);
 
@@ -63,13 +70,18 @@ export function useBtcPrice() {
   const pushPrice = useCallback((price: number, source: string) => {
     if (!mountedRef.current) return;
     const now = Date.now();
-    setData((prev) => ({
+    const newData = {
       price,
-      prevPrice: prev?.price ?? price,
+      prevPrice: 0,
       ...statsRef.current,
       lastUpdate: now,
       source,
-    }));
+    };
+    setData((prev) => {
+      newData.prevPrice = prev?.price ?? price;
+      setCache('btc_price', { ...newData, prevPrice: newData.prevPrice }, source);
+      return { ...newData, prevPrice: newData.prevPrice };
+    });
     setPriceHistory((prev) => {
       const next = [...prev, { time: now, price }];
       return next.length > MAX_TICKS ? next.slice(-MAX_TICKS) : next;
