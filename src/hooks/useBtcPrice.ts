@@ -106,17 +106,47 @@ export function useBtcPrice() {
         marketCap: coin.market_cap ?? 0,
       };
 
-      // Seed price if no WS data yet
+      // Always update price from CoinGecko — it's accurate and has 24h stats
+      const newPrice = coin.current_price;
+      if (newPrice && newPrice > 0) {
+        setData((prev) => {
+          const updated = {
+            price: newPrice,
+            prevPrice: prev?.price ?? newPrice,
+            ...statsRef.current,
+            lastUpdate: Date.now(),
+            source: 'coingecko',
+          };
+          setCache('btc_price', updated, 'coingecko');
+          return updated;
+        });
+        setConnected(true);
+      }
+    } catch {}
+
+    // If CoinGecko failed, try blockchain.info as backup
+    if (!mountedRef.current) return;
+    try {
+      const res = await fetch('https://blockchain.info/ticker', { signal: AbortSignal.timeout(3000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      const btcUsd = data?.USD?.last;
+      if (!btcUsd || !mountedRef.current) return;
+
+      // Only use if we don't have fresh CoinGecko data
       setData((prev) => {
-        if (prev) return prev;
-        return {
-          price: coin.current_price,
-          prevPrice: coin.current_price,
+        if (prev && prev.source === 'coingecko' && Date.now() - prev.lastUpdate < 120_000) return prev;
+        const updated = {
+          price: btcUsd,
+          prevPrice: prev?.price ?? btcUsd,
           ...statsRef.current,
           lastUpdate: Date.now(),
-          source: 'coingecko',
+          source: 'blockchain.info',
         };
+        setCache('btc_price', updated, 'blockchain.info');
+        return updated;
       });
+      setConnected(true);
     } catch {}
   }, []);
 
