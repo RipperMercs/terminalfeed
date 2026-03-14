@@ -139,6 +139,10 @@ export function PanelManager({ layout, onClose }: Props) {
               <button className="pmBtn" onClick={() => layout.shareLayout()}>Share Link</button>
             </div>
             <div className="pmFooterRow">
+              <button className="pmBtn pmBtnRandom" onClick={layout.randomizeLayout}>Randomize</button>
+              {layout.canUndoRandomize && (
+                <button className="pmBtn pmBtnUndo" onClick={layout.undoRandomize}>Undo Randomize</button>
+              )}
               <button className="pmBtn pmBtnDanger" onClick={layout.resetLayout}>Reset Default</button>
               <button className="pmBtn pmBtnPrimary" onClick={onClose}>Done</button>
             </div>
