@@ -438,6 +438,82 @@
   text-align: center;
 }
 
+/* ── Sports Scores ── */
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scoreRow:last-child {
+  border-bottom: none;
+}
+
+.scoreLeague {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-dim);
+  min-width: 30px;
+  letter-spacing: 0.5px;
+}
+
+.scoreTeams {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.scoreTeam {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoreAbbr {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 32px;
+}
+
+.scoreVal {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-mid);
+}
+
+.scoreLive {
+  color: var(--text) !important;
+}
+
+.scoreAt {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.scoreStatus {
+  font-size: 9px;
+  color: var(--text-dim);
+  min-width: 60px;
+  text-align: right;
+}
+
+.scoreStatusLive {
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* ── Panel tag dim ── */
+.panelTagDim {
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 /* ── Bottom Bar ── */
 .bottomBar {
   display: flex;

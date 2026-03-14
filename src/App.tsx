@@ -6,6 +6,8 @@ import { useHackerNews } from './hooks/useHackerNews';
 import { useTime } from './hooks/useTime';
 import { useSimStocks } from './hooks/useSimStocks';
 import { useSimCrypto } from './hooks/useSimCrypto';
+import { useMetals } from './hooks/useMetals';
+import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
 import './App.css';
 
@@ -18,6 +20,8 @@ function App() {
   const now = useTime();
   const stocks = useSimStocks();
   const crypto = useSimCrypto();
+  const metals = useMetals();
+  const games = useSportsScores();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -26,14 +30,14 @@ function App() {
   const btcChange = priceData?.changePercent24h ?? 0;
   const isUp = btcChange >= 0;
 
-  // Sparkline from price history
   const sparkData = priceHistory.map((t) => t.price);
 
-  // Ticker items: BTC + stocks
+  // Ticker items: BTC + metals + stocks + crypto
   const tickerItems = [
     { symbol: 'BTC', price: btcPrice, change: btcChange },
+    ...metals.filter((m) => m.price > 0).map((m) => ({ symbol: m.symbol, price: m.price, change: m.change })),
     ...stocks,
-    ...crypto,
+    ...crypto.filter((c) => c.price > 0),
   ];
 
   // Tag colors for news
@@ -43,7 +47,12 @@ function App() {
     Markets: 'var(--blue)',
     Tech: 'var(--cyan)',
     Dev: 'var(--green)',
+    Sports: 'var(--red)',
   };
+
+  // Live and recent games (limit to 8)
+  const displayGames = games.slice(0, 8);
+  const liveCount = games.filter((g) => g.status === 'in').length;
 
   return (
     <div className="app">
@@ -67,7 +76,9 @@ function App() {
             <span key={i} className="tickerItem">
               <span className="tickerSymbol">{s.symbol}</span>
               <span className="tickerPrice">
-                ${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${s.price < 1
+                  ? s.price.toFixed(4)
+                  : s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <span className={`tickerChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
                 {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
@@ -86,9 +97,12 @@ function App() {
             <div className="panelHeaderLeft">
               <span className="panelTitle">Bitcoin</span>
               <span className="panelTag">BTC/USD</span>
+              {priceData?.source && (
+                <span className="panelTagDim">{priceData.source}</span>
+              )}
             </div>
             <div className="panelLive">
-              <span className={`liveDot`} style={{ background: priceConnected ? 'var(--green)' : 'var(--red)' }} />
+              <span className="liveDot" style={{ background: priceConnected ? 'var(--green)' : 'var(--red)' }} />
               <span className="liveText">{priceConnected ? 'LIVE' : 'CONNECTING'}</span>
             </div>
           </div>
@@ -140,41 +154,33 @@ function App() {
           )}
         </div>
 
-        {/* Mining Stats */}
+        {/* Crypto */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
-              <span className="panelTitle">Solo Mining</span>
-              <span className="panelTag">CKPOOL</span>
+              <span className="panelTitle">Crypto</span>
             </div>
             <div className="panelLive">
               <span className="liveDot" />
               <span className="liveText">LIVE</span>
             </div>
           </div>
-          <div className="statsGrid">
-            <div>
-              <div className="statLabel">Hashrate</div>
-              <div className="statValue" style={{ color: 'var(--green)' }}>-- TH/s</div>
-            </div>
-            <div>
-              <div className="statLabel">Workers</div>
-              <div className="statValue" style={{ color: 'var(--text)' }}>
-                --<span className="statSuffix">/--</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {crypto.map((c) => (
+              <div key={c.symbol} className="listRow">
+                <span className="listRowSymbol">{c.symbol}</span>
+                <div>
+                  <span className="listRowPrice">
+                    ${c.price < 1
+                      ? c.price.toFixed(4)
+                      : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
+                  </span>
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="statLabel">Shares</div>
-              <div className="statValueSm">--</div>
-            </div>
-            <div>
-              <div className="statLabel">Blocks Found</div>
-              <div className="statValueSm" style={{ color: 'var(--amber)' }}>0</div>
-            </div>
-            <div className="statFullWidth">
-              <div className="statLabel">Status</div>
-              <div className="statValueSm">Connect your address to monitor</div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -187,7 +193,7 @@ function App() {
             </div>
             <div className="panelLive">
               <span className="liveDot" />
-              <span className="liveText">LIVE</span>
+              <span className="liveText">SIM</span>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -210,12 +216,39 @@ function App() {
           </div>
         </div>
 
+        {/* Metals */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Metals</span>
+              <span className="panelTag">SPOT</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {metals.map((m) => (
+              <div key={m.symbol}>
+                <div className="statLabel">{m.name}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                  <span className="statValue" style={{ fontSize: 22, color: m.symbol === 'XAU' ? 'var(--gold)' : 'var(--text-mid)' }}>
+                    {m.price > 0 ? `$${m.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '--'}
+                  </span>
+                  {m.price > 0 && (
+                    <span className={m.change >= 0 ? 'tickerUp' : 'tickerDown'} style={{ fontSize: 12 }}>
+                      {m.change >= 0 ? '+' : ''}{m.change.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* News Feed */}
         <div className="panel spanCol2">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
-              <span className="panelTitle">Feed</span>
-              <span className="panelTag">LIVE</span>
+              <span className="panelTitle">Tech / AI Feed</span>
+              <span className="panelTag">HN</span>
             </div>
             <div className="panelLive">
               <span className="liveDot" />
@@ -301,29 +334,43 @@ function App() {
           </div>
         </div>
 
-        {/* Crypto */}
-        <div className="panel">
+        {/* Sports Scores */}
+        <div className="panel spanCol2">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
-              <span className="panelTitle">Crypto</span>
+              <span className="panelTitle">Scores</span>
+              <span className="panelTag">ESPN</span>
             </div>
-            <div className="panelLive">
-              <span className="liveDot" />
-              <span className="liveText">LIVE</span>
-            </div>
+            {liveCount > 0 && (
+              <div className="panelLive">
+                <span className="liveDot" style={{ background: 'var(--red)' }} />
+                <span className="liveText">{liveCount} LIVE</span>
+              </div>
+            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {crypto.map((c) => (
-              <div key={c.symbol} className="listRow">
-                <span className="listRowSymbol">{c.symbol}</span>
-                <div>
-                  <span className="listRowPrice">
-                    ${c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div>
+            {displayGames.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>
+                loading scores...
+              </div>
+            )}
+            {displayGames.map((game) => (
+              <div key={game.id} className="scoreRow">
+                <span className="scoreLeague">{game.league}</span>
+                <div className="scoreTeams">
+                  <span className="scoreTeam">
+                    <span className="scoreAbbr">{game.awayAbbr}</span>
+                    <span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.awayScore}</span>
                   </span>
-                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
-                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
+                  <span className="scoreAt">@</span>
+                  <span className="scoreTeam">
+                    <span className="scoreAbbr">{game.homeAbbr}</span>
+                    <span className={`scoreVal ${game.status === 'in' ? 'scoreLive' : ''}`}>{game.homeScore}</span>
                   </span>
                 </div>
+                <span className={`scoreStatus ${game.status === 'in' ? 'scoreStatusLive' : ''}`}>
+                  {game.statusDetail}
+                </span>
               </div>
             ))}
           </div>
@@ -344,15 +391,49 @@ function App() {
           <div className="donateAddr">bc1q...your_btc_address</div>
           <div className="donateNote">Lightning / on-chain accepted</div>
         </div>
+
+        {/* Mining Stats */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Solo Mining</span>
+              <span className="panelTag">CKPOOL</span>
+            </div>
+          </div>
+          <div className="statsGrid">
+            <div>
+              <div className="statLabel">Hashrate</div>
+              <div className="statValue" style={{ color: 'var(--green)' }}>-- TH/s</div>
+            </div>
+            <div>
+              <div className="statLabel">Workers</div>
+              <div className="statValue" style={{ color: 'var(--text)' }}>
+                --<span className="statSuffix">/--</span>
+              </div>
+            </div>
+            <div>
+              <div className="statLabel">Shares</div>
+              <div className="statValueSm">--</div>
+            </div>
+            <div>
+              <div className="statLabel">Blocks Found</div>
+              <div className="statValueSm" style={{ color: 'var(--amber)' }}>0</div>
+            </div>
+            <div className="statFullWidth">
+              <div className="statLabel">Status</div>
+              <div className="statValueSm">Connect your address to monitor</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Bottom Bar ── */}
       <div className="bottomBar">
         <div className="bottomBarLeft">
           <span>terminalfeed.io</span>
-          <span className="bottomBarDivider">·</span>
+          <span className="bottomBarDivider">&middot;</span>
           <span>Not financial advice</span>
-          <span className="bottomBarDivider">·</span>
+          <span className="bottomBarDivider">&middot;</span>
           <button className="footerLink" onClick={() => setLegalModal('privacy')}>Privacy</button>
           <button className="footerLink" onClick={() => setLegalModal('terms')}>Terms</button>
         </div>
