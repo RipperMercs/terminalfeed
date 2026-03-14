@@ -9,7 +9,7 @@ import { useSimCrypto } from './hooks/useSimCrypto';
 import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
-import { LiveChart } from './components/LiveChart';
+import { TradingViewChart } from './components/TradingViewChart';
 import { BootSequence, shouldShowBoot } from './components/BootSequence';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
@@ -37,7 +37,7 @@ function App() {
   const [newsFilter, setNewsFilter] = useState<string | null>(null);
   const [showPanelManager, setShowPanelManager] = useState(false);
   const layout = useLayoutManager();
-  const { data: priceData, connected: priceConnected, priceHistory } = useBtcPrice();
+  const { data: priceData, connected: priceConnected } = useBtcPrice();
   const { connected: blockConnected } = useBlockStream();
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
@@ -176,11 +176,7 @@ function App() {
               </div>
             )}
           </div>
-          <LiveChart
-            ticks={priceHistory}
-            color={isUp ? '#4ADE80' : '#F87171'}
-            height={160}
-          />
+          <TradingViewChart symbol="BITSTAMP:BTCUSD" height={220} />
         </div>
 
         {/* Crypto — top right next to BTC */}
