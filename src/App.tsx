@@ -152,48 +152,37 @@ function App() {
           />
         </div>
 
-        {/* Market Hours — top right */}
+        {/* Crypto — top right next to BTC */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
-              <span className="panelTitle">Market Hours</span>
-              <span className="panelTag">GLOBAL</span>
+              <span className="panelTitle">Crypto</span>
             </div>
-            {fearGreed && (
-              <span style={{ fontSize: 9, color: fgColor(fearGreed.value) }}>
-                F&G {fearGreed.value}
-              </span>
-            )}
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {marketHours.map((mkt) => {
-              const dotClass = mkt.isOpen
-                ? mkt.isExtended ? 'marketExtended' : 'marketOpen'
-                : 'marketClosed';
-              const eventClass = mkt.isOpen
-                ? mkt.isExtended ? 'marketEventExtended' : 'marketEventOpen'
-                : 'marketEventClosed';
-              const label = mkt.isOpen
-                ? mkt.isExtended ? 'EXT' : 'OPEN'
-                : mkt.abbr === 'BTC' ? '24/7' : 'CLOSED';
-              return (
-                <div key={mkt.abbr} className="marketHoursRow">
-                  <div className="marketHoursLeft">
-                    <span className={`marketDot ${dotClass}`} />
-                    <span className="marketAbbr">{mkt.abbr}</span>
-                  </div>
-                  <div className="marketHoursRight">
-                    {mkt.localTime && <span className="marketTime">{mkt.localTime}</span>}
-                    <span className={`marketEvent ${eventClass}`}>{label}</span>
-                    <span className="marketCountdown">{mkt.nextEvent}</span>
-                  </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {crypto.map((c) => (
+              <div key={c.symbol} className="listRow">
+                <span className="listRowSymbol">{c.symbol}</span>
+                <div>
+                  <span className="listRowPrice">
+                    ${c.price < 1
+                      ? c.price.toFixed(4)
+                      : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
+                  </span>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Tech / AI News Feed — right under BTC */}
+        {/* Tech / AI News Feed */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
@@ -317,33 +306,44 @@ function App() {
           </div>
         </div>
 
-        {/* Crypto */}
+        {/* Market Hours */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
-              <span className="panelTitle">Crypto</span>
+              <span className="panelTitle">Market Hours</span>
+              <span className="panelTag">GLOBAL</span>
             </div>
-            <div className="panelLive">
-              <span className="liveDot" />
-              <span className="liveText">LIVE</span>
-            </div>
+            {fearGreed && (
+              <span style={{ fontSize: 9, color: fgColor(fearGreed.value) }}>
+                F&G {fearGreed.value}
+              </span>
+            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {crypto.map((c) => (
-              <div key={c.symbol} className="listRow">
-                <span className="listRowSymbol">{c.symbol}</span>
-                <div>
-                  <span className="listRowPrice">
-                    ${c.price < 1
-                      ? c.price.toFixed(4)
-                      : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
-                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
-                  </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {marketHours.map((mkt) => {
+              const dotClass = mkt.isOpen
+                ? mkt.isExtended ? 'marketExtended' : 'marketOpen'
+                : 'marketClosed';
+              const eventClass = mkt.isOpen
+                ? mkt.isExtended ? 'marketEventExtended' : 'marketEventOpen'
+                : 'marketEventClosed';
+              const label = mkt.isOpen
+                ? mkt.isExtended ? 'EXT' : 'OPEN'
+                : mkt.abbr === 'BTC' ? '24/7' : 'CLOSED';
+              return (
+                <div key={mkt.abbr} className="marketHoursRow">
+                  <div className="marketHoursLeft">
+                    <span className={`marketDot ${dotClass}`} />
+                    <span className="marketAbbr">{mkt.abbr}</span>
+                  </div>
+                  <div className="marketHoursRight">
+                    {mkt.localTime && <span className="marketTime">{mkt.localTime}</span>}
+                    <span className={`marketEvent ${eventClass}`}>{label}</span>
+                    <span className="marketCountdown">{mkt.nextEvent}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
