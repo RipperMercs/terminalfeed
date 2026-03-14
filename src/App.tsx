@@ -11,12 +11,9 @@ import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
 import { LiveChart } from './components/LiveChart';
 import { BootSequence, shouldShowBoot } from './components/BootSequence';
-import { AddTicker } from './components/AddTicker';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
-import { useWatchlist } from './hooks/useWatchlist';
 import { useMarketHours } from './hooks/useMarketHours';
-import type { SortMode } from './hooks/useWatchlist';
 import './App.css';
 
 function App() {
@@ -28,10 +25,8 @@ function App() {
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
-  const stockWatchlist = useWatchlist('stocks');
-  const cryptoWatchlist = useWatchlist('crypto');
-  const stocks = useSimStocks(stockWatchlist.custom);
-  const crypto = useSimCrypto(cryptoWatchlist.custom);
+  const stocks = useSimStocks();
+  const crypto = useSimCrypto();
   const metals = useMetals();
   const marketHours = useMarketHours();
   const games = useSportsScores();
@@ -203,9 +198,6 @@ function App() {
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Crypto</span>
-              <button className="sortBtn" onClick={cryptoWatchlist.cycleSortMode}>
-                {cryptoWatchlist.sortMode === 'default' ? 'sort' : cryptoWatchlist.sortMode}
-              </button>
             </div>
             <div className="panelLive">
               <span className="liveDot" />
@@ -213,10 +205,10 @@ function App() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {sortItems(crypto, cryptoWatchlist.sortMode).map((c) => (
+            {crypto.map((c) => (
               <div key={c.symbol} className="listRow">
                 <span className="listRowSymbol">{c.symbol}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div>
                   <span className="listRowPrice">
                     ${c.price < 1
                       ? c.price.toFixed(4)
@@ -225,14 +217,10 @@ function App() {
                   <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
                     {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
                   </span>
-                  {cryptoWatchlist.custom.includes(c.symbol) && (
-                    <button className="removeTicker" onClick={() => cryptoWatchlist.removeSymbol(c.symbol)}>✕</button>
-                  )}
                 </div>
               </div>
             ))}
           </div>
-          <AddTicker onAdd={cryptoWatchlist.addSymbol} placeholder="Add coin (e.g. BNB)" />
         </div>
 
         {/* Stock Markets + Gold */}
@@ -241,9 +229,6 @@ function App() {
             <div className="panelHeaderLeft">
               <span className="panelTitle">Markets</span>
               <span className="panelTag">US</span>
-              <button className="sortBtn" onClick={stockWatchlist.cycleSortMode}>
-                {stockWatchlist.sortMode === 'default' ? 'sort' : stockWatchlist.sortMode}
-              </button>
             </div>
             <div className="panelLive">
               <span className="liveDot" />
@@ -269,27 +254,23 @@ function App() {
               </div>
             ))}
             {/* Stocks */}
-            {sortItems(stocks, stockWatchlist.sortMode).map((s) => (
+            {stocks.map((s) => (
               <div key={s.symbol} className="listRow">
                 <div>
                   <span className="listRowSymbol">{s.symbol}</span>
-                  {'name' in s && <span className="listRowName">{(s as any).name}</span>}
+                  <span className="listRowName">{s.name}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div>
                   <span className="listRowPrice">
                     ${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
                     {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
                   </span>
-                  {stockWatchlist.custom.includes(s.symbol) && (
-                    <button className="removeTicker" onClick={() => stockWatchlist.removeSymbol(s.symbol)}>✕</button>
-                  )}
                 </div>
               </div>
             ))}
           </div>
-          <AddTicker onAdd={stockWatchlist.addSymbol} placeholder="Add ticker (e.g. AMD)" />
         </div>
 
         {/* Tech / AI News Feed */}
@@ -503,26 +484,6 @@ function App() {
 }
 
 /* ── Inline helpers ── */
-
-function sortItems<T extends { symbol: string; price: number; change: number }>(
-  items: T[],
-  mode: SortMode,
-): T[] {
-  if (mode === 'default') return items;
-  const sorted = [...items];
-  switch (mode) {
-    case 'change':
-      sorted.sort((a, b) => b.change - a.change);
-      break;
-    case 'price':
-      sorted.sort((a, b) => b.price - a.price);
-      break;
-    case 'name':
-      sorted.sort((a, b) => a.symbol.localeCompare(b.symbol));
-      break;
-  }
-  return sorted;
-}
 
 function fgColor(value: number): string {
   if (value <= 25) return 'var(--red)';
