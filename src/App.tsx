@@ -34,7 +34,9 @@ import './App.css';
 function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const [booting, setBooting] = useState(() => shouldShowBoot());
-  const [newsFilter, setNewsFilter] = useState<string | null>(null);
+  const [newsFilter, setNewsFilter] = useState<string | null>(() => {
+    try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
+  });
   const [showPanelManager, setShowPanelManager] = useState(false);
   const layout = useLayoutManager();
   const { data: priceData, connected: priceConnected } = useBtcPrice();
@@ -77,6 +79,31 @@ function App() {
       document.title = `$${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${arrow} | TerminalFeed`;
     }
   }, [btcPrice, isUp]);
+
+  // Persist news filter
+  useEffect(() => {
+    try {
+      if (newsFilter) localStorage.setItem('tf_news_filter', newsFilter);
+      else localStorage.removeItem('tf_news_filter');
+    } catch {}
+  }, [newsFilter]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't trigger on inputs/textareas
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'c' || e.key === 'C') {
+        setShowPanelManager(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        setShowPanelManager(false);
+        setLegalModal(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Ticker items: BTC + metals + stocks + crypto
   const tickerItems = [
