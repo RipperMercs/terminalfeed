@@ -796,6 +796,12 @@
   gap: 4px;
 }
 
+.terminalsOnline {
+  color: var(--cyan);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 .bottomBarDot {
   width: 5px;
   height: 5px;
