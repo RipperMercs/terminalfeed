@@ -193,87 +193,7 @@ function App() {
           </div>
         </div>
 
-        {/* Crypto */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="panelHeaderLeft">
-              <span className="panelTitle">Crypto</span>
-            </div>
-            <div className="panelLive">
-              <span className="liveDot" />
-              <span className="liveText">LIVE</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {crypto.map((c) => (
-              <div key={c.symbol} className="listRow">
-                <span className="listRowSymbol">{c.symbol}</span>
-                <div>
-                  <span className="listRowPrice">
-                    ${c.price < 1
-                      ? c.price.toFixed(4)
-                      : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
-                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Stock Markets + Gold */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="panelHeaderLeft">
-              <span className="panelTitle">Markets</span>
-              <span className="panelTag">US</span>
-            </div>
-            <div className="panelLive">
-              <span className="liveDot" />
-              <span className="liveText">LIVE</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {/* Gold at top */}
-            {metals.filter((m) => m.price > 0).map((m) => (
-              <div key={m.symbol} className="listRow" style={{ paddingBottom: 6, marginBottom: 4, borderBottom: '1px solid var(--border)' }}>
-                <div>
-                  <span className="listRowSymbol" style={{ color: 'var(--gold)' }}>{m.symbol}</span>
-                  <span className="listRowName">{m.name}</span>
-                </div>
-                <div>
-                  <span className="listRowPrice" style={{ color: 'var(--gold)' }}>
-                    ${m.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                  </span>
-                  <span className={`listRowChange ${m.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
-                    {m.change >= 0 ? '+' : ''}{m.change.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-            {/* Stocks */}
-            {stocks.map((s) => (
-              <div key={s.symbol} className="listRow">
-                <div>
-                  <span className="listRowSymbol">{s.symbol}</span>
-                  <span className="listRowName">{s.name}</span>
-                </div>
-                <div>
-                  <span className="listRowPrice">
-                    ${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                  <span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
-                    {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tech / AI News Feed */}
+        {/* Tech / AI News Feed — right under BTC */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
@@ -393,6 +313,84 @@ function App() {
                   <span className="ghLang">{repo.language}</span>
                 )}
               </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Crypto */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Crypto</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {crypto.map((c) => (
+              <div key={c.symbol} className="listRow">
+                <span className="listRowSymbol">{c.symbol}</span>
+                <div>
+                  <span className="listRowPrice">
+                    ${c.price < 1
+                      ? c.price.toFixed(4)
+                      : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Stock Markets + Gold */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">Markets</span>
+              <span className="panelTag">US</span>
+            </div>
+            <div className="panelLive">
+              <span className="liveDot" />
+              <span className="liveText">LIVE</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {metals.filter((m) => m.price > 0).map((m) => (
+              <div key={m.symbol} className="listRow" style={{ paddingBottom: 6, marginBottom: 4, borderBottom: '1px solid var(--border)' }}>
+                <div>
+                  <span className="listRowSymbol" style={{ color: 'var(--gold)' }}>{m.symbol}</span>
+                  <span className="listRowName">{m.name}</span>
+                </div>
+                <div>
+                  <span className="listRowPrice" style={{ color: 'var(--gold)' }}>
+                    ${m.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${m.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {m.change >= 0 ? '+' : ''}{m.change.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+            {stocks.map((s) => (
+              <div key={s.symbol} className="listRow">
+                <div>
+                  <span className="listRowSymbol">{s.symbol}</span>
+                  <span className="listRowName">{s.name}</span>
+                </div>
+                <div>
+                  <span className="listRowPrice">
+                    ${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                    {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
