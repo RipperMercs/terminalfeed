@@ -12,7 +12,7 @@ const FINNHUB_WS = `wss://ws.finnhub.io?token=${FINNHUB_KEY}`;
 const FINNHUB_REST = 'https://finnhub.io/api/v1/quote';
 const RECONNECT_MS = 5000;
 
-const SYMBOLS: { symbol: string; name: string }[] = [
+const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: 'SPY', name: 'S&P 500' },
   { symbol: 'QQQ', name: 'NASDAQ' },
   { symbol: 'DIA', name: 'DOW' },
@@ -23,7 +23,13 @@ const SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: 'GOOGL', name: 'Google' },
 ];
 
-export function useSimStocks() {
+export function useSimStocks(customSymbols: string[] = []) {
+  const SYMBOLS = [
+    ...DEFAULT_SYMBOLS,
+    ...customSymbols
+      .filter((s) => !DEFAULT_SYMBOLS.some((d) => d.symbol === s))
+      .map((s) => ({ symbol: s, name: '' })),
+  ];
   const [stocks, setStocks] = useState<StockItem[]>(
     SYMBOLS.map((s) => ({ ...s, price: 0, change: 0 })),
   );
