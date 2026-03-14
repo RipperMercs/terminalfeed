@@ -242,8 +242,43 @@ function App() {
           </div>
         </div>
 
-        {/* News Feed — full width */}
-        <div className="panel spanCol3">
+        {/* GitHub Trending */}
+        <div className="panel">
+          <div className="panelHeader">
+            <div className="panelHeaderLeft">
+              <span className="panelTitle">GitHub Trending</span>
+              <span className="panelTag">7D</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {trendingRepos.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
+                loading repos...
+              </div>
+            )}
+            {trendingRepos.map((repo) => (
+              <a
+                key={repo.fullName}
+                href={repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="newsRow"
+              >
+                <span className="ghStars">{formatStars(repo.stars)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="ghRepoName">{repo.fullName}</div>
+                  <div className="ghRepoDesc">{repo.description}</div>
+                </div>
+                {repo.language && (
+                  <span className="ghLang">{repo.language}</span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Tech / AI News Feed */}
+        <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Tech / AI Feed</span>
@@ -278,46 +313,10 @@ function App() {
                     {tag}
                   </span>
                   <span className="newsTitle">{story.title}</span>
-                  <span className="newsMeta">{story.by}</span>
                   <span className="newsMeta">{timeAgo(story.time)}</span>
                 </a>
               );
             })}
-          </div>
-        </div>
-
-        {/* GitHub Trending */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="panelHeaderLeft">
-              <span className="panelTitle">GitHub Trending</span>
-              <span className="panelTag">7D</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {trendingRepos.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
-                loading repos...
-              </div>
-            )}
-            {trendingRepos.map((repo) => (
-              <a
-                key={repo.fullName}
-                href={repo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="newsRow"
-              >
-                <span className="ghStars">{formatStars(repo.stars)}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="ghRepoName">{repo.fullName}</div>
-                  <div className="ghRepoDesc">{repo.description}</div>
-                </div>
-                {repo.language && (
-                  <span className="ghLang">{repo.language}</span>
-                )}
-              </a>
-            ))}
           </div>
         </div>
 
