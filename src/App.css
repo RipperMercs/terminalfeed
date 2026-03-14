@@ -94,7 +94,7 @@
 .tickerTrack {
   display: inline-flex;
   gap: 28px;
-  animation: ticker 45s linear infinite;
+  animation: ticker 110s linear infinite;
   padding-left: 16px;
 }
 
@@ -132,13 +132,8 @@
 .sportsTickerTrack {
   display: inline-flex;
   gap: 32px;
-  animation: tickerRight 60s linear infinite;
+  animation: ticker 110s linear infinite;
   padding-left: 16px;
-}
-
-@keyframes tickerRight {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
 }
 
 .sportsTickerItem {
