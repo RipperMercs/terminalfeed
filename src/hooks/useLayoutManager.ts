@@ -26,10 +26,8 @@ export const ALL_PANELS = [
   { id: 'seismic', label: 'Earthquakes', defaultSpan: 1 },
   { id: 'weather', label: 'Weather', defaultSpan: 1 },
   { id: 'launches', label: 'Space Launches', defaultSpan: 1 },
-  { id: 'steam', label: 'Steam Games', defaultSpan: 1 },
   { id: 'daily-learn', label: 'Daily Learn', defaultSpan: 1 },
   // Row 7: Unique feeds
-  { id: 'predictions', label: 'Prediction Markets', defaultSpan: 1 },
   { id: 'podcasts', label: 'Podcasts', defaultSpan: 1 },
   { id: 'uap', label: 'UAP Sightings', defaultSpan: 1 },
   { id: 'ai-leaderboard', label: 'AI Leaderboard', defaultSpan: 1 },
@@ -48,7 +46,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '4'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '5'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {

@@ -22,12 +22,10 @@ const BASE_PRIORITY: Record<string, number> = {
   'github': 50,         // Dev content
   'dev-status': 65,     // Infra status — spikes when something is down
   'stackoverflow': 45,  // Dev questions
-  'predictions': 55,    // Markets
   'podcasts': 35,       // Entertainment
   'seismic': 40,        // Earthquakes
   'weather': 45,        // Universal
   'launches': 35,       // Space
-  'steam': 30,          // Gaming
   'ai-leaderboard': 50, // AI rankings
   'bluesky': 35,        // Social
   'internet-pulse': 30, // Network health
@@ -75,7 +73,7 @@ export function calculateHeatScores(inputs: HeatInputs): PanelHeat[] {
 
     // Fear & Greed extreme — fear/greed panels more relevant at extremes
     if ((inputs.fearGreedValue < 20 || inputs.fearGreedValue > 80)) {
-      if (['bitcoin', 'crypto', 'markets', 'predictions'].includes(id)) {
+      if (['bitcoin', 'crypto', 'markets'].includes(id)) {
         score += 10;
       }
     }
