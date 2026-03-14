@@ -417,7 +417,7 @@ function App() {
         </div>
 
         {/* Sports Scores */}
-        <div className="panel">
+        <div className="panel spanCol2">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
               <span className="panelTitle">Scores</span>
@@ -458,7 +458,7 @@ function App() {
           </div>
         </div>
 
-        {/* Support / Ad */}
+        {/* Support / Ad — bottom right */}
         <div className="panel">
           <div className="panelHeader">
             <div className="panelHeaderLeft">
