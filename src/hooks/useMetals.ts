@@ -7,12 +7,15 @@ export interface MetalPrice {
   change: number;
 }
 
+// Commodity-backed tokens on CoinGecko that track real spot prices
+const COINGECKO_URL =
+  'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=pax-gold,tether-gold&sparkline=false';
+
 const POLL_MS = 60_000;
 
 export function useMetals() {
   const [metals, setMetals] = useState<MetalPrice[]>([
     { symbol: 'XAU', name: 'Gold', price: 0, change: 0 },
-    { symbol: 'XAG', name: 'Silver', price: 0, change: 0 },
   ]);
   const mountedRef = useRef(true);
 
@@ -22,37 +25,25 @@ export function useMetals() {
     const fetchPrices = async () => {
       if (!mountedRef.current) return;
 
-      // PAX Gold (1:1 gold-backed token) for gold price
       try {
-        const res = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=pax-gold&sparkline=false',
-        );
-        if (res.ok) {
-          const [gold] = await res.json();
-          if (gold && mountedRef.current) {
-            setMetals((prev) => prev.map((m) =>
-              m.symbol === 'XAU'
-                ? { ...m, price: gold.current_price, change: gold.price_change_percentage_24h ?? 0 }
-                : m,
-            ));
-          }
-        }
-      } catch {}
+        const res = await fetch(COINGECKO_URL);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mountedRef.current) return;
 
-      // Silver via Lode Silver token
-      try {
-        const res = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=lode-silver&sparkline=false',
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data.length > 0 && mountedRef.current) {
-            setMetals((prev) => prev.map((m) =>
-              m.symbol === 'XAG'
-                ? { ...m, price: data[0].current_price, change: data[0].price_change_percentage_24h ?? 0 }
-                : m,
-            ));
-          }
+        // Use pax-gold as primary, tether-gold as fallback
+        const gold = data.find((c: any) => c.id === 'pax-gold') ||
+                     data.find((c: any) => c.id === 'tether-gold');
+
+        if (gold) {
+          setMetals([
+            {
+              symbol: 'XAU',
+              name: 'Gold',
+              price: gold.current_price,
+              change: gold.price_change_percentage_24h ?? 0,
+            },
+          ]);
         }
       } catch {}
     };

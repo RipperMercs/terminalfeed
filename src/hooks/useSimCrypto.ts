@@ -7,38 +7,46 @@ interface CryptoItem {
 }
 
 // Real-time prices via CoinCap WebSocket
-const COINCAP_WS = 'wss://ws.coincap.io/prices?assets=ethereum,solana,dogecoin,ripple,cardano';
+const ASSETS = 'ethereum,solana,dogecoin,ripple,cardano,polkadot,avalanche-2,chainlink,litecoin';
+const COINCAP_WS = `wss://ws.coincap.io/prices?assets=${ASSETS.replace(/-2/g, '')}`;
 const RECONNECT_MS = 5000;
 
-// 24h stats from CoinGecko
+// 24h stats from CoinGecko (includes more tokens)
 const COINGECKO_URL =
-  'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum,solana,dogecoin,ripple,cardano&sparkline=false';
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ASSETS}&sparkline=false&order=market_cap_desc`;
 const STATS_POLL_MS = 60_000;
 
-const ASSET_MAP: Record<string, string> = {
+const GECKO_TO_SYMBOL: Record<string, string> = {
   ethereum: 'ETH',
   solana: 'SOL',
   dogecoin: 'DOGE',
   ripple: 'XRP',
   cardano: 'ADA',
+  polkadot: 'DOT',
+  'avalanche-2': 'AVAX',
+  chainlink: 'LINK',
+  litecoin: 'LTC',
 };
 
-const ID_MAP: Record<string, string> = {
+// CoinCap uses slightly different names
+const COINCAP_TO_SYMBOL: Record<string, string> = {
   ethereum: 'ETH',
   solana: 'SOL',
   dogecoin: 'DOGE',
   ripple: 'XRP',
   cardano: 'ADA',
+  polkadot: 'DOT',
+  avalanche: 'AVAX',
+  chainlink: 'LINK',
+  litecoin: 'LTC',
 };
+
+const INITIAL_ORDER = ['ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'LTC'];
 
 export function useSimCrypto() {
-  const [crypto, setCrypto] = useState<CryptoItem[]>([
-    { symbol: 'ETH', price: 0, change: 0 },
-    { symbol: 'SOL', price: 0, change: 0 },
-    { symbol: 'DOGE', price: 0, change: 0 },
-    { symbol: 'XRP', price: 0, change: 0 },
-    { symbol: 'ADA', price: 0, change: 0 },
-  ]);
+  const [crypto, setCrypto] = useState<CryptoItem[]>(
+    INITIAL_ORDER.map((sym) => ({ symbol: sym, price: 0, change: 0 })),
+  );
 
   const mountedRef = useRef(true);
   const wsRef = useRef<WebSocket | null>(null);
@@ -46,7 +54,6 @@ export function useSimCrypto() {
   const statsTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const changeRef = useRef<Record<string, number>>({});
 
-  // Fetch 24h change from CoinGecko
   const fetchStats = useCallback(async () => {
     if (!mountedRef.current) return;
     try {
@@ -56,18 +63,18 @@ export function useSimCrypto() {
       if (!mountedRef.current) return;
 
       for (const coin of coins) {
-        const sym = ID_MAP[coin.id];
+        const sym = GECKO_TO_SYMBOL[coin.id];
         if (sym) {
           changeRef.current[sym] = coin.price_change_percentage_24h ?? 0;
         }
       }
 
-      // Seed prices if we haven't gotten WS data yet
+      // Seed prices if WS hasn't delivered yet
       setCrypto((prev) => {
         const hasData = prev.some((c) => c.price > 0);
         if (hasData) return prev;
         return prev.map((c) => {
-          const coin = coins.find((gc: any) => ID_MAP[gc.id] === c.symbol);
+          const coin = coins.find((gc: any) => GECKO_TO_SYMBOL[gc.id] === c.symbol);
           if (!coin) return c;
           return {
             ...c,
@@ -79,7 +86,6 @@ export function useSimCrypto() {
     } catch {}
   }, []);
 
-  // Real-time WS
   const connectWs = useCallback(() => {
     if (!mountedRef.current) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -94,7 +100,9 @@ export function useSimCrypto() {
           const msg = JSON.parse(event.data);
           setCrypto((prev) =>
             prev.map((c) => {
-              const assetKey = Object.keys(ASSET_MAP).find((k) => ASSET_MAP[k] === c.symbol);
+              const assetKey = Object.keys(COINCAP_TO_SYMBOL).find(
+                (k) => COINCAP_TO_SYMBOL[k] === c.symbol,
+              );
               if (!assetKey || !msg[assetKey]) return c;
               const price = parseFloat(msg[assetKey]);
               if (!price || isNaN(price)) return c;
