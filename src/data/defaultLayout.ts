@@ -15,7 +15,6 @@ export const DEFAULT_LAYOUT = {
     'github',
     'dev-status',
     'stackoverflow',
-    'scores',
     'predictions',
     'podcasts',
     'seismic',

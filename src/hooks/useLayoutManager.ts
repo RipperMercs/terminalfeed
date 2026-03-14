@@ -22,7 +22,6 @@ export const ALL_PANELS = [
   // Row 5: Dev/nerd
   { id: 'dev-status', label: 'Dev/Ops Status', defaultSpan: 1 },
   { id: 'stackoverflow', label: 'Stack Overflow', defaultSpan: 1 },
-  { id: 'scores', label: 'Sports Scores', defaultSpan: 2 },
   // Row 6+: Supplementary
   { id: 'seismic', label: 'Earthquakes', defaultSpan: 1 },
   { id: 'weather', label: 'Weather', defaultSpan: 1 },
@@ -49,7 +48,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '2'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '3'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -85,11 +84,11 @@ export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
   },
   developer: {
     label: 'Developer',
-    hidden: ['scores', 'recipe', 'seismic', 'launches', 'steam', 'quick-stats'],
+    hidden: ['recipe', 'seismic', 'launches', 'steam', 'quick-stats'],
   },
   crypto: {
     label: 'Crypto',
-    hidden: ['scores', 'steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches'],
+    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches'],
   },
 };
 

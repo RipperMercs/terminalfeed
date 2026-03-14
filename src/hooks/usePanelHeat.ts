@@ -22,7 +22,6 @@ const BASE_PRIORITY: Record<string, number> = {
   'github': 50,         // Dev content
   'dev-status': 65,     // Infra status — spikes when something is down
   'stackoverflow': 45,  // Dev questions
-  'scores': 50,         // Sports — spikes during games
   'predictions': 55,    // Markets
   'podcasts': 35,       // Entertainment
   'seismic': 40,        // Earthquakes
@@ -62,11 +61,6 @@ export function calculateHeatScores(inputs: HeatInputs): PanelHeat[] {
       if (['bitcoin', 'btc-network', 'crypto'].includes(id)) {
         score += 8;
       }
-    }
-
-    // Live games boost — sports panel jumps up when games are happening
-    if (inputs.liveGamesCount > 0 && id === 'scores') {
-      score += 20 + Math.min(inputs.liveGamesCount * 5, 20);
     }
 
     // Dev status boost — if anything is down, this becomes critical
