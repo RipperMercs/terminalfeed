@@ -10,7 +10,6 @@ import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
 import { TradingViewChart } from './components/TradingViewChart';
-import { BootSequence, shouldShowBoot } from './components/BootSequence';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -43,7 +42,6 @@ import './App.css';
 
 function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
-  const [booting, setBooting] = useState(() => shouldShowBoot());
   const [newsFilter, setNewsFilter] = useState<string | null>(() => {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
@@ -577,9 +575,6 @@ function App() {
     </>),
   };
 
-  if (booting) {
-    return <BootSequence onComplete={() => setBooting(false)} />;
-  }
 
   return (
     <div className="app">
