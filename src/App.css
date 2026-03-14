@@ -132,8 +132,13 @@
 .sportsTickerTrack {
   display: inline-flex;
   gap: 32px;
-  animation: ticker 110s linear infinite;
+  animation: tickerReverse 120s linear infinite;
   padding-left: 16px;
+}
+
+@keyframes tickerReverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
 }
 
 .sportsTickerItem {
