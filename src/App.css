@@ -2054,6 +2054,89 @@
   gap: 6px;
 }
 
+/* ── Market Mood Indicator ── */
+.moodIndicator {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.moodBull {
+  color: var(--green);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.moodBear {
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.moodNeutral {
+  color: var(--amber);
+  background: rgba(239, 159, 39, 0.08);
+}
+
+/* ── Bluesky ── */
+.bskyAuthor {
+  font-size: 9px;
+  color: var(--blue);
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+/* ── Internet Pulse ── */
+.pulseRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.pulseName {
+  font-size: 10px;
+  color: var(--text);
+  min-width: 60px;
+  font-weight: 500;
+}
+
+.pulseBar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pulseFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.pulseMs {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 42px;
+  text-align: right;
+}
+
+/* ── Panel Loading Shimmer ── */
+.panelShimmer {
+  background: linear-gradient(90deg, var(--bg) 25%, var(--bg-hover) 50%, var(--bg) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite;
+  min-height: 60px;
+  border-radius: 3px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
 /* ── AI Image Lab ── */
 .aiImgDisplay {
   position: relative;
