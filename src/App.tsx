@@ -393,39 +393,6 @@ function App() {
           <div className="donateNote">Lightning / on-chain accepted</div>
         </div>
 
-        {/* Mining Stats */}
-        <div className="panel">
-          <div className="panelHeader">
-            <div className="panelHeaderLeft">
-              <span className="panelTitle">Solo Mining</span>
-              <span className="panelTag">CKPOOL</span>
-            </div>
-          </div>
-          <div className="statsGrid">
-            <div>
-              <div className="statLabel">Hashrate</div>
-              <div className="statValue" style={{ color: 'var(--green)' }}>-- TH/s</div>
-            </div>
-            <div>
-              <div className="statLabel">Workers</div>
-              <div className="statValue" style={{ color: 'var(--text)' }}>
-                --<span className="statSuffix">/--</span>
-              </div>
-            </div>
-            <div>
-              <div className="statLabel">Shares</div>
-              <div className="statValueSm">--</div>
-            </div>
-            <div>
-              <div className="statLabel">Blocks Found</div>
-              <div className="statValueSm" style={{ color: 'var(--amber)' }}>0</div>
-            </div>
-            <div className="statFullWidth">
-              <div className="statLabel">Status</div>
-              <div className="statValueSm">Connect your address to monitor</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── Bottom Bar ── */}
