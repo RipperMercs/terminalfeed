@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TerminalFeed — Offline</title>
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 24px;
+    }
+    .prompt { color: #4ADE80; font-size: 32px; margin-bottom: 24px; }
+    .msg { font-size: 14px; color: #8A8880; line-height: 1.8; }
+    .status { color: #EF9F27; margin-top: 16px; font-size: 12px; }
+    .retry {
+      margin-top: 24px;
+      padding: 10px 24px;
+      background: transparent;
+      border: 1px solid #1E1E24;
+      color: #8A8880;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .retry:hover { border-color: #4ADE80; color: #4ADE80; }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="prompt">>_ OFFLINE</div>
+    <div class="msg">
+      No connection detected.<br>
+      Cached data will display when available.<br>
+      Live feeds will resume when you're back online.
+    </div>
+    <div class="status">Waiting for connection...</div>
+    <button class="retry" onclick="window.location.reload()">retry connection</button>
+  </div>
+  <script>
+    window.addEventListener('online', () => window.location.reload());
+  </script>
+</body>
+</html>
