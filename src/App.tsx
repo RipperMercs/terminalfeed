@@ -540,6 +540,10 @@ function App() {
           <span className="bottomBarDivider">&middot;</span>
           <button className="footerLink" onClick={() => setLegalModal('privacy')}>Privacy</button>
           <button className="footerLink" onClick={() => setLegalModal('terms')}>Terms</button>
+          <span className="bottomBarDivider">&middot;</span>
+          <a href="mailto:hello@terminalfeed.io" className="footerLink">Contact</a>
+          <a href="mailto:feedback@terminalfeed.io" className="footerLink">Feedback</a>
+          <a href="mailto:advertise@terminalfeed.io" className="footerLink">Advertise</a>
         </div>
         <div className="bottomBarStatus">
           <span className="bottomBarDot" style={{
