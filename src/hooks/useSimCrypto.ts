@@ -43,9 +43,15 @@ const COINCAP_TO_SYMBOL: Record<string, string> = {
 
 const INITIAL_ORDER = ['ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'LTC'];
 
-export function useSimCrypto() {
+export function useSimCrypto(customSymbols: string[] = []) {
+  // Merge custom symbols (uppercased) with defaults, no dupes
+  const allSymbols = [
+    ...INITIAL_ORDER,
+    ...customSymbols.map((s) => s.toUpperCase()).filter((s) => !INITIAL_ORDER.includes(s)),
+  ];
+
   const [crypto, setCrypto] = useState<CryptoItem[]>(
-    INITIAL_ORDER.map((sym) => ({ symbol: sym, price: 0, change: 0 })),
+    allSymbols.map((sym) => ({ symbol: sym, price: 0, change: 0 })),
   );
 
   const mountedRef = useRef(true);

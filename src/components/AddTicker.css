@@ -1,0 +1,108 @@
+.addTickerBtn {
+  width: 100%;
+  padding: 4px 0;
+  margin-top: 4px;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.5px;
+}
+
+.addTickerBtn:hover {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.addTickerRow {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.addTickerInput {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border-glow);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text);
+  outline: none;
+  text-transform: uppercase;
+}
+
+.addTickerInput:focus {
+  border-color: var(--green);
+}
+
+.addTickerInput::placeholder {
+  color: var(--text-dim);
+  text-transform: none;
+}
+
+.addTickerGo {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 3px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 8px;
+}
+
+.addTickerCancel {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.removeTicker {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.listRow:hover .removeTicker {
+  opacity: 1;
+}
+
+.removeTicker:hover {
+  color: var(--red);
+}
+
+.sortBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 7px;
+  cursor: pointer;
+  padding: 1px 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sortBtn:hover {
+  color: var(--green);
+  border-color: var(--green);
+}
