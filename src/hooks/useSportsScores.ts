@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { getCache, setCache } from '../services/cache';
 
 export interface GameScore {
   id: string;
+  eventId: string;
   league: string;
+  sport: string;
+  leaguePath: string;
   status: string; // "in", "pre", "post"
   statusDetail: string;
   homeTeam: string;
@@ -11,52 +15,117 @@ export interface GameScore {
   awayTeam: string;
   awayAbbr: string;
   awayScore: string;
+  // Live play-by-play (only for in-progress games)
+  lastPlay: string;
+  situation: string; // "Top 7th", "Q4 2:14", "2nd & 7", etc
 }
 
-// ESPN public scoreboard endpoints — no auth needed
 const LEAGUES = [
-  { key: 'nba', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' },
-  { key: 'nfl', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' },
-  { key: 'mlb', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' },
-  { key: 'nhl', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' },
+  { key: 'nba', sport: 'basketball', league: 'nba', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' },
+  { key: 'nfl', sport: 'football', league: 'nfl', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' },
+  { key: 'mlb', sport: 'baseball', league: 'mlb', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' },
+  { key: 'nhl', sport: 'hockey', league: 'nhl', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' },
 ];
 
-const POLL_MS = 30_000; // 30s — scores update frequently during games
+const SUMMARY_POLL_MS = 15_000; // 15s — fast enough for live play-by-play
+const CACHE_KEY = 'sports_scores';
+
+// Fetch play-by-play summary for a live game
+async function fetchGameSummary(sport: string, league: string, eventId: string): Promise<{ lastPlay: string; situation: string }> {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/summary?event=${eventId}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return { lastPlay: '', situation: '' };
+    const data = await res.json();
+
+    let lastPlay = '';
+    let situation = '';
+
+    // Extract situation based on sport
+    const sit = data.situation || data.drives?.current || {};
+    const header = data.header?.competitions?.[0];
+
+    if (league === 'mlb') {
+      // Baseball: inning, count, runners
+      const s = sit;
+      if (s.batter?.athlete?.shortName) {
+        const count = s.balls != null ? `${s.balls}-${s.strikes}` : '';
+        const outs = s.outs != null ? `${s.outs} out` : '';
+        situation = [s.isTopInning ? 'Top' : 'Bot', s.inning ? `${s.inning}th` : '', count, outs].filter(Boolean).join(' · ');
+        lastPlay = `AB: ${s.batter.athlete.shortName}`;
+      }
+    } else if (league === 'nfl') {
+      // Football: down, distance, possession
+      if (sit.downDistanceText) {
+        situation = sit.downDistanceText;
+        if (sit.possessionText) situation += ` · ${sit.possessionText}`;
+      }
+    } else if (league === 'nba') {
+      // Basketball: last play
+      if (header?.status?.displayClock) {
+        situation = `${header.status.period}Q ${header.status.displayClock}`;
+      }
+    } else if (league === 'nhl') {
+      // Hockey: period, time
+      if (header?.status?.displayClock) {
+        situation = `P${header.status.period} ${header.status.displayClock}`;
+      }
+    }
+
+    // Last play from plays array
+    const plays = data.plays || data.drives?.previous?.[0]?.plays;
+    if (Array.isArray(plays) && plays.length > 0) {
+      const last = plays[plays.length - 1];
+      lastPlay = last.text || last.description || lastPlay;
+      if (lastPlay.length > 80) lastPlay = lastPlay.slice(0, 77) + '...';
+    }
+
+    return { lastPlay, situation };
+  } catch {
+    return { lastPlay: '', situation: '' };
+  }
+}
 
 export function useSportsScores() {
-  const [games, setGames] = useState<GameScore[]>([]);
+  const [games, setGames] = useState<GameScore[]>(() => {
+    return getCache<GameScore[]>(CACHE_KEY)?.data ?? [];
+  });
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    const fetchAll = async () => {
+    const fetchScoreboard = async () => {
       if (!mountedRef.current) return;
 
       const allGames: GameScore[] = [];
 
       await Promise.all(
-        LEAGUES.map(async ({ key, url }) => {
+        LEAGUES.map(async ({ key, sport, league, url }) => {
           try {
-            const res = await fetch(url);
+            const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
             if (!res.ok) return;
             const data = await res.json();
             const events = data.events || [];
 
             for (const event of events) {
-              const competition = event.competitions?.[0];
-              if (!competition) continue;
+              const comp = event.competitions?.[0];
+              if (!comp) continue;
 
-              const home = competition.competitors?.find((c: any) => c.homeAway === 'home');
-              const away = competition.competitors?.find((c: any) => c.homeAway === 'away');
+              const home = comp.competitors?.find((c: { homeAway: string }) => c.homeAway === 'home');
+              const away = comp.competitors?.find((c: { homeAway: string }) => c.homeAway === 'away');
               if (!home || !away) continue;
 
-              const status = competition.status || event.status;
+              const status = comp.status || event.status;
+              const state = status?.type?.state || 'pre';
 
               allGames.push({
                 id: `${key}-${event.id}`,
+                eventId: event.id,
                 league: key.toUpperCase(),
-                status: status?.type?.state || 'pre',
+                sport,
+                leaguePath: league,
+                status: state,
                 statusDetail: status?.type?.shortDetail || status?.type?.detail || '',
                 homeTeam: home.team?.shortDisplayName || home.team?.displayName || '',
                 homeAbbr: home.team?.abbreviation || '',
@@ -64,22 +133,40 @@ export function useSportsScores() {
                 awayTeam: away.team?.shortDisplayName || away.team?.displayName || '',
                 awayAbbr: away.team?.abbreviation || '',
                 awayScore: away.score || '0',
+                lastPlay: '',
+                situation: '',
               });
             }
           } catch {}
         }),
       );
 
-      if (mountedRef.current) {
-        // Sort: live games first, then upcoming, then finished
-        const order = { in: 0, pre: 1, post: 2 };
-        allGames.sort((a, b) => (order[a.status as keyof typeof order] ?? 1) - (order[b.status as keyof typeof order] ?? 1));
-        setGames(allGames);
+      if (!mountedRef.current) return;
+
+      // Fetch play-by-play for live games
+      const liveGames = allGames.filter(g => g.status === 'in');
+      if (liveGames.length > 0) {
+        const summaries = await Promise.allSettled(
+          liveGames.map(g => fetchGameSummary(g.sport, g.leaguePath, g.eventId))
+        );
+        liveGames.forEach((g, i) => {
+          if (summaries[i].status === 'fulfilled') {
+            g.lastPlay = summaries[i].value.lastPlay;
+            g.situation = summaries[i].value.situation;
+          }
+        });
       }
+
+      // Sort: live first, then upcoming, then finished
+      const order = { in: 0, pre: 1, post: 2 };
+      allGames.sort((a, b) => (order[a.status as keyof typeof order] ?? 1) - (order[b.status as keyof typeof order] ?? 1));
+      setGames(allGames);
+      setCache(CACHE_KEY, allGames, 'espn');
     };
 
-    fetchAll();
-    const id = setInterval(fetchAll, POLL_MS);
+    fetchScoreboard();
+    // Use faster polling when there are live games
+    const id = setInterval(fetchScoreboard, SUMMARY_POLL_MS);
     return () => { mountedRef.current = false; clearInterval(id); };
   }, []);
 
