@@ -42,6 +42,11 @@ const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: 'SOFI', name: 'SoFi' },
   { symbol: 'MARA', name: 'Marathon Digital' },
   { symbol: 'RIOT', name: 'Riot Platforms' },
+  { symbol: 'UBER', name: 'Uber' },
+  { symbol: 'ARM', name: 'ARM Holdings' },
+  { symbol: 'SNOW', name: 'Snowflake' },
+  { symbol: 'RBLX', name: 'Roblox' },
+  { symbol: 'RIVN', name: 'Rivian' },
 ];
 
 export const INDICES = ['SPY', 'QQQ', 'DIA', 'IWM'];
