@@ -47,6 +47,9 @@ export const ALL_PANELS = [
   { id: 'ai-leaderboard', label: 'AI Leaderboard', defaultSpan: 1 },
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
   { id: 'internet-pulse', label: 'Internet Pulse', defaultSpan: 1 },
+  { id: 'nasa-apod', label: 'NASA Photo', defaultSpan: 1 },
+  { id: 'good-news', label: 'Good News', defaultSpan: 1 },
+  { id: 'trending-movies', label: 'Trending Movies', defaultSpan: 1 },
   // Bottom: Fun/lifestyle
   { id: 'npm-trends', label: 'NPM Trends', defaultSpan: 1 },
   { id: 'fitness', label: 'Fitness', defaultSpan: 1 },
@@ -63,7 +66,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '25'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '26'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
