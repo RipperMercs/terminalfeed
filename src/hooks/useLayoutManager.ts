@@ -30,6 +30,10 @@ export const ALL_PANELS = [
   // Row 7: Unique feeds
   { id: 'podcasts', label: 'Podcasts', defaultSpan: 1 },
   { id: 'uap', label: 'UAP Sightings', defaultSpan: 1 },
+  { id: 'wiki-live', label: 'Wikipedia Live', defaultSpan: 1 },
+  { id: 'disasters', label: 'Global Alerts', defaultSpan: 1 },
+  { id: 'gh-events', label: 'GitHub Live', defaultSpan: 1 },
+  { id: 'books', label: 'Trending Books', defaultSpan: 1 },
   { id: 'forex', label: 'Forex Heatmap', defaultSpan: 1 },
   { id: 'hn-community', label: 'Show/Ask HN', defaultSpan: 1 },
   { id: 'wikipedia', label: 'Wikipedia', defaultSpan: 1 },
@@ -52,7 +56,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '8'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '9'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {

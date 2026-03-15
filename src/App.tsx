@@ -40,6 +40,10 @@ import { useWikipedia } from './hooks/useWikipedia';
 import { useSolarWeather } from './hooks/useSolarWeather';
 import { useProductHunt } from './hooks/useProductHunt';
 import { useFunFact } from './hooks/useFunFact';
+import { useWikipediaLive } from './hooks/useWikipediaLive';
+import { useGDACS } from './hooks/useGDACS';
+import { useGithubEvents } from './hooks/useGithubEvents';
+import { useTrendingBooks } from './hooks/useTrendingBooks';
 import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
@@ -84,6 +88,10 @@ function App() {
   const solarWeather = useSolarWeather();
   const phProducts = useProductHunt();
   const funFact = useFunFact();
+  const { edits: wikiEdits, editsPerMin: wikiEPM } = useWikipediaLive();
+  const disasterAlerts = useGDACS();
+  const ghEvents = useGithubEvents();
+  const trendingBooks = useTrendingBooks();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
   const bskyPosts = useBluesky();
@@ -440,6 +448,66 @@ function App() {
           ))}
         </div>
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
+      </div>
+    </>),
+    'wiki-live': (<>
+      <PanelHead panelId="wiki-live" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Wikipedia</span><span className="panelTag">LIVE EDITS</span></div>
+        <span style={{ fontSize: 9, color: 'var(--cyan)' }}>{wikiEPM > 0 ? `${wikiEPM}/min` : ''}</span>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {wikiEdits.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>connecting to stream...</div>}
+        {wikiEdits.map((e, i) => (
+          <a key={`${e.title}-${i}`} href={e.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ animationDelay: `${i * 0.05}s` }}>
+            <span style={{ fontSize: 8, color: e.type === 'new' ? 'var(--cyan)' : 'var(--text-dim)', fontWeight: 600, minWidth: 28, flexShrink: 0 }}>{e.type === 'new' ? 'NEW' : 'EDIT'}</span>
+            <span className="newsTitle">{e.title}</span>
+            <span style={{ fontSize: 9, color: e.sizeDiff >= 0 ? 'var(--green)' : 'var(--red)', flexShrink: 0, fontWeight: 500 }}>{e.sizeDiff >= 0 ? '+' : ''}{e.sizeDiff}B</span>
+          </a>
+        ))}
+      </div>
+    </>),
+    'disasters': (<>
+      <PanelHead panelId="disasters" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Global Alerts</span><span className="panelTag">GDACS</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {disasterAlerts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--green)' }}>No active alerts</div>}
+        {disasterAlerts.map((a, i) => {
+          const color = a.alertLevel === 'Red' ? 'var(--red)' : a.alertLevel === 'Orange' ? 'var(--amber)' : 'var(--text-dim)';
+          return (
+            <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" className="newsRow">
+              <span style={{ fontSize: 8, color, fontWeight: 700, background: `${color}15`, padding: '1px 4px', borderRadius: 2, flexShrink: 0 }}>{a.alertLevel.toUpperCase()}</span>
+              <span className="newsTitle">{a.title}</span>
+              <span className="newsMeta">{a.date ? timeAgo(Math.floor(new Date(a.date).getTime() / 1000)) : ''}</span>
+            </a>
+          );
+        })}
+      </div>
+    </>),
+    'gh-events': (<>
+      <PanelHead panelId="gh-events" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">GitHub</span><span className="panelTag">LIVE</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {ghEvents.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {ghEvents.map((e) => (
+          <div key={e.id} className="newsRow" style={{ cursor: 'default' }}>
+            <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 55, flexShrink: 0 }}>{e.action}</span>
+            <span className="newsTitle" style={{ color: 'var(--blue)' }}>{e.repo}</span>
+            <span className="newsMeta">{e.time ? timeAgo(Math.floor(new Date(e.time).getTime() / 1000)) : ''}</span>
+          </div>
+        ))}
+      </div>
+    </>),
+    'books': (<>
+      <PanelHead panelId="books" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Books</span><span className="panelTag">TRENDING</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {trendingBooks.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {trendingBooks.map((b, i) => (
+          <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" className="newsRow">
+            <span style={{ fontSize: 10, color: 'var(--text-dim)', minWidth: 14, flexShrink: 0 }}>{i + 1}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="newsTitle">{b.title}</div>
+              <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>{b.author}</div>
+            </div>
+          </a>
+        ))}
       </div>
     </>),
     'forex': (<>
