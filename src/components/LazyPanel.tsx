@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 
-interface Props {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
 }
 
-export function LazyPanel({ children, className = '' }: Props) {
+export function LazyPanel({ children, className = '', ...rest }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -28,7 +28,7 @@ export function LazyPanel({ children, className = '' }: Props) {
   }, []);
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={className} {...rest}>
       {isVisible ? children : (
         <div style={{
           minHeight: 40,
