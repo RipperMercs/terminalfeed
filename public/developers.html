@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free API — TerminalFeed Developer Docs</title>
+  <meta name="description" content="Free real-time data API. No auth, no API key. Bitcoin price, stocks, crypto, earthquakes, news, weather, space launches, and more. JSON with CORS enabled.">
+  <link rel="canonical" href="https://terminalfeed.io/developers">
+  <meta property="og:title" content="Free API — TerminalFeed Developer Docs">
+  <meta property="og:description" content="Free real-time data API with 20+ endpoints. No auth required. Bitcoin, stocks, earthquakes, news, weather, and more.">
+  <meta property="og:url" content="https://terminalfeed.io/developers">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 860px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 20px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 40px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #C8C8C0; font-size: 13px; margin: 28px 0 8px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 24px; }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 16px; }
+    .badge-green { background: #14532d; color: #4ADE80; }
+    .badge-blue { background: #1e3a5f; color: #60A5FA; }
+    .badge-amber { background: #422006; color: #FBBF24; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .inline-code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    .endpoint { margin-bottom: 32px; }
+    .endpoint-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .method { font-size: 11px; font-weight: 700; color: #4ADE80; background: #14532d; padding: 2px 8px; border-radius: 3px; }
+    .path { font-size: 13px; color: #60A5FA; }
+    .cache { font-size: 10px; color: #4E4D49; }
+    .param { font-size: 12px; color: #7A7A72; margin: 4px 0; }
+    .param strong { color: #C8C8C0; }
+    .json-key { color: #60A5FA; }
+    .json-string { color: #4ADE80; }
+    .json-number { color: #FBBF24; }
+    .json-null { color: #6B7280; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 12px; }
+    th { text-align: left; color: #5DCAA5; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1A1A22; }
+    td { color: #8A8880; padding: 6px 12px; border-bottom: 1px solid #0D0D12; }
+    td:first-child { color: #60A5FA; }
+    .footer { margin-top: 48px; font-size: 10px; color: #3E3E3A; }
+  </style>
+</head>
+<body>
+  <a href="/" class="back">&larr; back to terminal</a>
+  <h1>>_ TerminalFeed API</h1>
+  <p class="subtitle">Free real-time data API. No auth. No API key. No signup. Just fetch.</p>
+
+  <span class="badge badge-green">FREE</span>
+  <span class="badge badge-blue">CORS ENABLED</span>
+  <span class="badge badge-amber">100K REQUESTS/DAY</span>
+
+  <p>Base URL: <span class="inline-code">https://terminalfeed.io/api</span></p>
+  <p>All responses are JSON. CORS is enabled — call from any domain, any app, any AI agent. Please keep individual endpoint calls to 1 per 30 seconds.</p>
+
+  <h2>Quick Start</h2>
+
+  <p>Fetch a world briefing in one call:</p>
+  <pre><code><span class="json-key">fetch</span>(<span class="json-string">'https://terminalfeed.io/api/briefing'</span>)
+  .<span class="json-key">then</span>(res =&gt; res.json())
+  .<span class="json-key">then</span>(data =&gt; console.log(data));</code></pre>
+
+  <p>That's it. No signup, no key, no auth headers.</p>
+
+  <h2>Endpoints</h2>
+
+  <table>
+    <tr><th>Endpoint</th><th>Description</th><th>Cache</th></tr>
+    <tr><td>/api/briefing</td><td>One-call world snapshot — crypto, stocks, quakes, news, status</td><td>60s</td></tr>
+    <tr><td>/api/btc-price</td><td>Bitcoin price with 24h stats</td><td>30s</td></tr>
+    <tr><td>/api/stocks</td><td>Top US stocks — gainers, losers, indices</td><td>15s</td></tr>
+    <tr><td>/api/crypto-movers</td><td>Top 15 cryptos by 24h movement</td><td>30s</td></tr>
+    <tr><td>/api/fear-greed</td><td>Crypto Fear &amp; Greed Index (0-100)</td><td>5m</td></tr>
+    <tr><td>/api/forex</td><td>Currency exchange rates (USD base)</td><td>5m</td></tr>
+    <tr><td>/api/earthquake</td><td>Recent global earthquakes M2.5+</td><td>2m</td></tr>
+    <tr><td>/api/disaster-alerts</td><td>GDACS global disaster alerts</td><td>5m</td></tr>
+    <tr><td>/api/hackernews</td><td>Trending Hacker News stories</td><td>60s</td></tr>
+    <tr><td>/api/predictions</td><td>Polymarket prediction markets</td><td>60s</td></tr>
+    <tr><td>/api/service-status</td><td>GitHub, Cloudflare, OpenAI, etc. status</td><td>60s</td></tr>
+    <tr><td>/api/weather</td><td>Weather by coordinates (?lat=&amp;lon=)</td><td>10m</td></tr>
+    <tr><td>/api/launches</td><td>Upcoming space launches</td><td>10m</td></tr>
+    <tr><td>/api/humans-in-space</td><td>People currently in orbit</td><td>1h</td></tr>
+    <tr><td>/api/github-trending</td><td>Trending GitHub repositories</td><td>5m</td></tr>
+    <tr><td>/api/cyber-threats</td><td>Malware URLs &amp; threat intel</td><td>60s</td></tr>
+    <tr><td>/api/economic-data</td><td>Fed rates, CPI, unemployment, treasury yields</td><td>1h</td></tr>
+    <tr><td>/api/steam</td><td>Top Steam games by concurrent players</td><td>10m</td></tr>
+    <tr><td>/api/ai-stats</td><td>TerminalFeed API usage statistics</td><td>30s</td></tr>
+  </table>
+
+  <h2>Endpoint Details</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/briefing</span>
+    </div>
+    <p>The one-call world snapshot. Returns a human-readable summary plus structured data across crypto, stocks, earthquakes, predictions, news, and service status. Best endpoint for AI agents.</p>
+    <p class="cache">Cache: 60 seconds</p>
+    <pre><code>{
+  <span class="json-key">"source"</span>: <span class="json-string">"terminalfeed.io"</span>,
+  <span class="json-key">"generated_at"</span>: <span class="json-string">"2026-03-15T09:34:42.362Z"</span>,
+  <span class="json-key">"summary"</span>: <span class="json-string">"BTC at $71,828 (+1.8% 24h). Fear &amp; Greed: 15 (Extreme Fear). 4 recent earthquakes, largest M4.8 near Guatemala. All major services operational."</span>,
+  <span class="json-key">"sections"</span>: {
+    <span class="json-key">"crypto"</span>: { ... },
+    <span class="json-key">"fear_greed"</span>: { ... },
+    <span class="json-key">"earthquakes"</span>: { ... },
+    <span class="json-key">"predictions"</span>: [ ... ],
+    <span class="json-key">"news"</span>: [ ... ],
+    <span class="json-key">"services"</span>: [ ... ]
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/btc-price</span>
+    </div>
+    <p>Current Bitcoin price with 24-hour high, low, volume, and percentage change.</p>
+    <p class="cache">Cache: 30 seconds</p>
+    <pre><code>{
+  <span class="json-key">"source"</span>: <span class="json-string">"terminalfeed.io"</span>,
+  <span class="json-key">"endpoint"</span>: <span class="json-string">"btc-price"</span>,
+  <span class="json-key">"updated_at"</span>: <span class="json-string">"2026-03-15T09:34:42.362Z"</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"price_usd"</span>: <span class="json-number">71828</span>,
+    <span class="json-key">"change_24h_percent"</span>: <span class="json-number">1.765</span>,
+    <span class="json-key">"high_24h"</span>: <span class="json-number">71940.49</span>,
+    <span class="json-key">"low_24h"</span>: <span class="json-number">70389.08</span>,
+    <span class="json-key">"volume_24h_usd"</span>: <span class="json-number">836157337.95</span>
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/stocks</span>
+    </div>
+    <p>Top US stocks sorted by daily price movement. Returns biggest gainers, losers, and major indices (SPY, QQQ, DIA).</p>
+    <p class="cache">Cache: 15 seconds</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"gainers"</span>: [
+      { <span class="json-key">"symbol"</span>: <span class="json-string">"NVDA"</span>, <span class="json-key">"price"</span>: <span class="json-number">180.25</span>, <span class="json-key">"change_percent"</span>: <span class="json-number">4.32</span> }
+    ],
+    <span class="json-key">"losers"</span>: [
+      { <span class="json-key">"symbol"</span>: <span class="json-string">"TSLA"</span>, <span class="json-key">"price"</span>: <span class="json-number">391.20</span>, <span class="json-key">"change_percent"</span>: <span class="json-number">-3.15</span> }
+    ],
+    <span class="json-key">"indices"</span>: [
+      { <span class="json-key">"symbol"</span>: <span class="json-string">"SPY"</span>, <span class="json-key">"price"</span>: <span class="json-number">662.29</span>, <span class="json-key">"change_percent"</span>: <span class="json-number">0.67</span> }
+    ]
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/crypto-movers</span>
+    </div>
+    <p>Top 15 cryptocurrencies by market cap, sorted by biggest 24-hour price movements. Includes symbol, name, price, and change percentage.</p>
+    <p class="cache">Cache: 30 seconds</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/fear-greed</span>
+    </div>
+    <p>Crypto Fear &amp; Greed Index. 0 = Extreme Fear, 100 = Extreme Greed.</p>
+    <p class="cache">Cache: 5 minutes</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"value"</span>: <span class="json-number">15</span>,
+    <span class="json-key">"label"</span>: <span class="json-string">"Extreme Fear"</span>
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/forex</span>
+    </div>
+    <p>Currency exchange rates with USD as base. Covers EUR, GBP, JPY, CAD, AUD, CHF, and more.</p>
+    <p class="cache">Cache: 5 minutes</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"base"</span>: <span class="json-string">"USD"</span>,
+    <span class="json-key">"date"</span>: <span class="json-string">"2026-03-14"</span>,
+    <span class="json-key">"rates"</span>: {
+      <span class="json-key">"EUR"</span>: <span class="json-number">0.9158</span>,
+      <span class="json-key">"GBP"</span>: <span class="json-number">0.7731</span>,
+      <span class="json-key">"JPY"</span>: <span class="json-number">148.52</span>
+    }
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/earthquake</span>
+    </div>
+    <p>Recent global earthquakes magnitude 2.5 and above from USGS. Includes magnitude, location, depth, and time.</p>
+    <p class="cache">Cache: 2 minutes</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"count"</span>: <span class="json-number">15</span>,
+    <span class="json-key">"earthquakes"</span>: [
+      {
+        <span class="json-key">"magnitude"</span>: <span class="json-number">4.8</span>,
+        <span class="json-key">"location"</span>: <span class="json-string">"1 km SW of Colotenango, Guatemala"</span>,
+        <span class="json-key">"time"</span>: <span class="json-string">"2026-03-15T08:12:00.000Z"</span>,
+        <span class="json-key">"depth_km"</span>: <span class="json-number">35.2</span>
+      }
+    ]
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/weather?lat=34.0&amp;lon=-118.2</span>
+    </div>
+    <p>Weather for any coordinates on Earth. Returns temperature (Fahrenheit), weather code, wind speed (mph), and humidity.</p>
+    <p class="param"><strong>lat</strong> (required) — latitude</p>
+    <p class="param"><strong>lon</strong> (required) — longitude</p>
+    <p class="cache">Cache: 10 minutes per location</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/predictions</span>
+    </div>
+    <p>Top Polymarket prediction markets with current yes/no probabilities and trading volume in USD.</p>
+    <p class="cache">Cache: 60 seconds</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: [
+    {
+      <span class="json-key">"question"</span>: <span class="json-string">"Will the Fed cut rates in June 2026?"</span>,
+      <span class="json-key">"yes_percent"</span>: <span class="json-number">62</span>,
+      <span class="json-key">"no_percent"</span>: <span class="json-number">38</span>,
+      <span class="json-key">"volume_usd"</span>: <span class="json-number">4500000</span>
+    }
+  ]
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/hackernews</span>
+    </div>
+    <p>Trending Hacker News stories with scores, comment counts, and URLs.</p>
+    <p class="cache">Cache: 60 seconds</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/service-status</span>
+    </div>
+    <p>Operational status of major tech services — GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian.</p>
+    <p class="cache">Cache: 60 seconds</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: [
+    { <span class="json-key">"name"</span>: <span class="json-string">"GitHub"</span>, <span class="json-key">"status"</span>: <span class="json-string">"operational"</span>, <span class="json-key">"description"</span>: <span class="json-string">"All Systems Operational"</span> },
+    { <span class="json-key">"name"</span>: <span class="json-string">"OpenAI"</span>, <span class="json-key">"status"</span>: <span class="json-string">"minor"</span>, <span class="json-key">"description"</span>: <span class="json-string">"Minor Service Outage"</span> }
+  ]
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/launches</span>
+    </div>
+    <p>Upcoming space launches with name, provider, status, and scheduled time.</p>
+    <p class="cache">Cache: 10 minutes</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/humans-in-space</span>
+    </div>
+    <p>Every human currently in orbit — names and spacecraft.</p>
+    <p class="cache">Cache: 1 hour</p>
+    <pre><code>{
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"count"</span>: <span class="json-number">7</span>,
+    <span class="json-key">"people"</span>: [
+      { <span class="json-key">"name"</span>: <span class="json-string">"Oleg Kononenko"</span>, <span class="json-key">"craft"</span>: <span class="json-string">"ISS"</span> }
+    ]
+  }
+}</code></pre>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/cyber-threats</span>
+    </div>
+    <p>Recent malware URLs, indicators of compromise, and threat intelligence from abuse.ch and ThreatFox.</p>
+    <p class="cache">Cache: 60 seconds</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/disaster-alerts</span>
+    </div>
+    <p>Global disaster alerts from GDACS (UN/EU) — cyclones, floods, earthquakes, wildfires, volcanoes.</p>
+    <p class="cache">Cache: 5 minutes</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/github-trending</span>
+    </div>
+    <p>Trending GitHub repositories by recent star activity.</p>
+    <p class="cache">Cache: 5 minutes</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/economic-data</span>
+    </div>
+    <p>US Federal Reserve economic indicators — fed funds rate, CPI inflation, unemployment, 10-year treasury yield, 30-year mortgage rate.</p>
+    <p class="cache">Cache: 1 hour</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/steam</span>
+    </div>
+    <p>Top Steam games by current concurrent players with today's peak.</p>
+    <p class="cache">Cache: 10 minutes</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/ai-stats</span>
+    </div>
+    <p>TerminalFeed API usage statistics — total hits, unique AI agents, recent API calls.</p>
+    <p class="cache">Cache: 30 seconds</p>
+  </div>
+
+  <h2>Response Format</h2>
+
+  <p>Every endpoint returns a consistent JSON structure:</p>
+  <pre><code>{
+  <span class="json-key">"source"</span>: <span class="json-string">"terminalfeed.io"</span>,
+  <span class="json-key">"endpoint"</span>: <span class="json-string">"endpoint-name"</span>,
+  <span class="json-key">"updated_at"</span>: <span class="json-string">"ISO-8601 timestamp"</span>,
+  <span class="json-key">"data"</span>: { ... }
+}</code></pre>
+
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>source</td><td>Always "terminalfeed.io" for attribution</td></tr>
+    <tr><td>endpoint</td><td>Which endpoint was called</td></tr>
+    <tr><td>updated_at</td><td>When data was last refreshed from the upstream source</td></tr>
+    <tr><td>data</td><td>The actual payload (structure varies per endpoint)</td></tr>
+  </table>
+
+  <h2>Code Examples</h2>
+
+  <h3>JavaScript (Browser or Node.js)</h3>
+  <pre><code><span class="json-key">// Get BTC price</span>
+<span class="json-key">const</span> btc = <span class="json-key">await</span> fetch(<span class="json-string">'https://terminalfeed.io/api/btc-price'</span>).then(r =&gt; r.json());
+console.log(<span class="json-string">`Bitcoin: $${btc.data.price_usd}`</span>);
+
+<span class="json-key">// Get Fear &amp; Greed</span>
+<span class="json-key">const</span> fg = <span class="json-key">await</span> fetch(<span class="json-string">'https://terminalfeed.io/api/fear-greed'</span>).then(r =&gt; r.json());
+console.log(<span class="json-string">`Fear &amp; Greed: ${fg.data.value} (${fg.data.label})`</span>);
+
+<span class="json-key">// Get everything at once</span>
+<span class="json-key">const</span> briefing = <span class="json-key">await</span> fetch(<span class="json-string">'https://terminalfeed.io/api/briefing'</span>).then(r =&gt; r.json());
+console.log(briefing.summary);</code></pre>
+
+  <h3>Python</h3>
+  <pre><code><span class="json-key">import</span> requests
+
+<span class="json-key"># Get BTC price</span>
+btc = requests.get(<span class="json-string">'https://terminalfeed.io/api/btc-price'</span>).json()
+print(<span class="json-string">f"Bitcoin: ${btc['data']['price_usd']:,.2f}"</span>)
+
+<span class="json-key"># Get earthquakes</span>
+quakes = requests.get(<span class="json-string">'https://terminalfeed.io/api/earthquake'</span>).json()
+<span class="json-key">for</span> q <span class="json-key">in</span> quakes[<span class="json-string">'data'</span>][<span class="json-string">'earthquakes'</span>][:5]:
+    print(<span class="json-string">f"M{q['magnitude']} - {q['location']}"</span>)
+
+<span class="json-key"># Get the full world briefing</span>
+briefing = requests.get(<span class="json-string">'https://terminalfeed.io/api/briefing'</span>).json()
+print(briefing[<span class="json-string">'summary'</span>])</code></pre>
+
+  <h3>cURL</h3>
+  <pre><code>curl https://terminalfeed.io/api/btc-price
+curl https://terminalfeed.io/api/briefing
+curl "https://terminalfeed.io/api/weather?lat=34.0&amp;lon=-118.2"</code></pre>
+
+  <h3>React Component</h3>
+  <pre><code><span class="json-key">import</span> { useState, useEffect } <span class="json-key">from</span> <span class="json-string">'react'</span>;
+
+<span class="json-key">const</span> BtcPrice = () =&gt; {
+  <span class="json-key">const</span> [price, setPrice] = useState(<span class="json-null">null</span>);
+
+  useEffect(() =&gt; {
+    <span class="json-key">const</span> fetchPrice = <span class="json-key">async</span> () =&gt; {
+      <span class="json-key">const</span> res = <span class="json-key">await</span> fetch(<span class="json-string">'https://terminalfeed.io/api/btc-price'</span>);
+      <span class="json-key">const</span> data = <span class="json-key">await</span> res.json();
+      setPrice(data.data.price_usd);
+    };
+    fetchPrice();
+    <span class="json-key">const</span> interval = setInterval(fetchPrice, <span class="json-number">30000</span>);
+    <span class="json-key">return</span> () =&gt; clearInterval(interval);
+  }, []);
+
+  <span class="json-key">return</span> &lt;div&gt;BTC: ${price?.toLocaleString()}&lt;/div&gt;;
+};</code></pre>
+
+  <h2>For AI Agents</h2>
+
+  <p>Discovery file: <span class="inline-code">https://terminalfeed.io/llms.txt</span></p>
+  <p>OpenAPI spec: <span class="inline-code">https://terminalfeed.io/openapi.json</span></p>
+  <p>Best endpoint for AI: <span class="inline-code">/api/briefing</span> — one call, complete world snapshot with a pre-formatted summary string.</p>
+
+  <h2>Rate Limits</h2>
+
+  <p>100,000 requests per day across all endpoints. Keep individual endpoint calls to a maximum of 1 request per 30 seconds. If you exceed limits, you'll receive a 429 status code. There is no penalty — just back off and retry.</p>
+
+  <p>Data is cached server-side at the intervals listed above. Calling more frequently than the cache interval will return the same data, so there's no benefit to polling faster.</p>
+
+  <h2>Contact</h2>
+
+  <p>Questions, bugs, or feature requests: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a></p>
+  <p>Built by Ripper. <a href="https://terminalfeed.io">terminalfeed.io</a></p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper</p>
+    <p><a href="/">Home</a> &middot; <a href="/about">About</a> &middot; <a href="/features">Features</a> &middot; <a href="/developers">API Docs</a> &middot; <a href="/changelog">Changelog</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
+  </div>
+</body>
+</html>
