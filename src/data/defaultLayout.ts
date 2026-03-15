@@ -39,6 +39,7 @@ export const DEFAULT_LAYOUT = {
     'bluesky',
     'internet-pulse',
     'uap',
+    'fitness',
     'in-space',
     'museum-art',
     'daily-paws',
