@@ -60,25 +60,6 @@ function App() {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
-  // Warp speed background event — every 10 min (testing), skip mobile
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if (isMobile) return;
-
-    // TESTING: fire 5s after load, then every 30s so you can see it
-    let timer: ReturnType<typeof setTimeout>;
-    const fireWarp = () => {
-      if (!document.hidden) {
-        document.body.classList.add('warp-active');
-        setTimeout(() => document.body.classList.remove('warp-active'), 6000);
-      }
-    };
-    timer = setTimeout(() => {
-      fireWarp();
-      timer = setInterval(fireWarp, 30000) as unknown as ReturnType<typeof setTimeout>;
-    }, 5000);
-    return () => { clearTimeout(timer); clearInterval(timer as unknown as ReturnType<typeof setInterval>); };
-  }, []);
 
   // Full screen mode
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -872,10 +853,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Warp speed background — invisible until warp-active class on body */}
-      <div className="warpLayer">
-        {Array.from({ length: 20 }, (_, i) => <div key={i} className="warpStreak" />)}
-      </div>
       {/* ── Top Bar ── */}
       <div className="topBar">
         <div className="topBarLeft">
