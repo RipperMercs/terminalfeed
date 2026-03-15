@@ -49,6 +49,7 @@ import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import { useWire } from './hooks/useWire';
 import { useRSSNews } from './hooks/useRSSNews';
+import { useDailyPaws } from './hooks/useDailyPaws';
 import './App.css';
 
 function App() {
@@ -115,6 +116,7 @@ function App() {
   const trendingBooks = useTrendingBooks();
   const wire = useWire();
   const rssNews = useRSSNews();
+  const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
   const podcastEpisodes = usePodcasts();
@@ -483,6 +485,31 @@ function App() {
         {soQuestions.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading questions...</div>}
         {soQuestions.map((q) => (<a key={q.id} href={q.link} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="soScore">{q.score}</span><div style={{ flex: 1, minWidth: 0 }}><div className="newsTitle">{q.title}</div><div className="soTags">{q.tags.join(' · ')}</div></div><span className="soAnswers">{q.answerCount}A</span></a>))}
       </div>
+    </>),
+    'daily-paws': (<>
+      <PanelHead panelId="daily-paws" isStale={panelHealth.isStale('daily-paws')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft">
+          <span className="panelTitle">Daily Paws</span>
+          <span className="panelTag">{paw?.type === 'cat' ? 'CAT' : paw?.type === 'dog' ? 'DOG' : 'PAWS'}</span>
+        </div>
+        <button className="pawNextBtn" onClick={fetchNewPaw} title="New friend">next</button>
+      </PanelHead>
+      <div style={{ position: 'relative', width: '100%', overflow: 'hidden', background: 'var(--bg)' }}>
+        {!paw && <div style={{ padding: 20, textAlign: 'center', fontSize: 10, color: 'var(--text-dim)' }}>finding a friend...</div>}
+        {paw?.url && (
+          <img
+            src={paw.url}
+            alt={paw.type === 'cat' ? 'Random cat' : 'Random dog'}
+            style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block', borderRadius: 3, opacity: pawFading ? 0 : 1, transition: 'opacity 0.4s ease' }}
+            loading="lazy"
+          />
+        )}
+      </div>
+      {paw && (
+        <div style={{ padding: '6px 0 0', fontSize: 9, color: 'var(--text-dim)', textTransform: 'capitalize' }}>
+          {paw.breed || (paw.type === 'cat' ? 'a very good cat' : 'a very good dog')}
+        </div>
+      )}
     </>),
     'recipe': (<>
       <PanelHead panelId="recipe" isStale={panelHealth.isStale('recipe')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Tonight</span><span className="panelTag">RECIPES OF THE DAY</span></div></PanelHead>

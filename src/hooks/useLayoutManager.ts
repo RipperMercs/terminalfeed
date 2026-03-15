@@ -45,6 +45,7 @@ export const ALL_PANELS = [
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
   { id: 'internet-pulse', label: 'Internet Pulse', defaultSpan: 1 },
   // Bottom: Fun/lifestyle
+  { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
   { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
   { id: 'support', label: 'Support / Donate', defaultSpan: 1 },
 ] as const;
@@ -56,7 +57,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '18'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '19'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
