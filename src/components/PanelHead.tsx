@@ -10,15 +10,7 @@ interface Props {
 
 const LOCKED_PANELS = ['support'];
 
-function getColumnJumpSize(totalPanels: number): number {
-  const width = window.innerWidth;
-  if (width >= 1400) return Math.ceil(totalPanels / 4);
-  if (width >= 1100) return Math.ceil(totalPanels / 3);
-  if (width >= 900) return Math.ceil(totalPanels / 2);
-  return 1; // mobile — left/right same as up/down
-}
-
-export function PanelHead({ panelId, layout, isStale, children }: Props) {
+export function PanelHead({ panelId, layout, getGridCols, isStale, children }: Props) {
   const isLocked = LOCKED_PANELS.includes(panelId);
 
   const move = (direction: 'up' | 'down' | 'left' | 'right') => {
@@ -27,14 +19,16 @@ export function PanelHead({ panelId, layout, isStale, children }: Props) {
     const idx = visible.indexOf(panelId);
     if (idx < 0) return;
 
-    const jump = getColumnJumpSize(visible.length);
+    const cols = getGridCols();
 
     let targetIdx: number;
     switch (direction) {
-      case 'up': targetIdx = idx - 1; break;
-      case 'down': targetIdx = idx + 1; break;
-      case 'left': targetIdx = idx - jump; break;
-      case 'right': targetIdx = idx + jump; break;
+      // Left/right: swap with adjacent panel (±1 position)
+      case 'left': targetIdx = idx - 1; break;
+      case 'right': targetIdx = idx + 1; break;
+      // Up/down: jump by column count to stay in same column
+      case 'up': targetIdx = idx - cols; break;
+      case 'down': targetIdx = idx + cols; break;
     }
 
     if (targetIdx < 0 || targetIdx >= visible.length) return;
