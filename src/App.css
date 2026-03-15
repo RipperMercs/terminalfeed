@@ -426,6 +426,8 @@
   break-inside: avoid;
   margin-bottom: 4px;
   transition: border-color 0.15s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 150px;
 }
 
 .panel:hover {
@@ -3104,6 +3106,11 @@
 @media (max-width: 900px) {
   .grid { column-count: 1; }
   .spanCol2, .spanCol3 { column-span: none; }
+
+  /* Reduce animations on mobile to save battery */
+  .liveDot { animation: none !important; opacity: 1; }
+  .wxSunRay { animation: none !important; }
+  .wxStar { animation: none !important; opacity: 0.5; }
 
   /* TradingView chart needs more height on mobile */
   .tradingview-widget-container {

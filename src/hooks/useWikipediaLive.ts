@@ -13,13 +13,16 @@ export interface WikiEdit {
 }
 
 const STREAM_URL = 'https://stream.wikimedia.org/v2/stream/recentchange';
-const MAX_EDITS = 15;
+const IS_MOBILE = typeof window !== 'undefined' && window.innerWidth < 768;
+const MAX_EDITS = IS_MOBILE ? 8 : 15;
+const THROTTLE_MS = IS_MOBILE ? 3000 : 1000;
 
 export function useWikipediaLive(): { edits: WikiEdit[]; editsPerMin: number } {
   const [edits, setEdits] = useState<WikiEdit[]>([]);
   const [editsPerMin, setEditsPerMin] = useState(0);
   const countRef = useRef(0);
   const mountedRef = useRef(true);
+  const lastAddRef = useRef(0);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -31,6 +34,9 @@ export function useWikipediaLive(): { edits: WikiEdit[]; editsPerMin: number } {
 
       source.onmessage = (event) => {
         if (!mountedRef.current) return;
+        // Throttle processing
+        const now = Date.now();
+        if (now - lastAddRef.current < THROTTLE_MS) return;
         try {
           const data = JSON.parse(event.data);
 
@@ -51,6 +57,7 @@ export function useWikipediaLive(): { edits: WikiEdit[]; editsPerMin: number } {
               url: `https://en.wikipedia.org/wiki/${encodeURIComponent(data.title)}`,
             };
 
+            lastAddRef.current = Date.now();
             setEdits(prev => [edit, ...prev].slice(0, MAX_EDITS));
           }
         } catch {}
