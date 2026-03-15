@@ -8,7 +8,7 @@ import { useSimCrypto } from './hooks/useSimCrypto';
 import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
-import { TradingViewChart } from './components/TradingViewChart';
+import { BtcMiniChart } from './components/BtcMiniChart';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -69,7 +69,7 @@ function App() {
     return () => document.removeEventListener('visibilitychange', handler);
   }, []);
   const layout = useLayoutManager();
-  const { data: priceData } = useBtcPrice();
+  const { data: priceData, priceHistory } = useBtcPrice();
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
@@ -277,7 +277,7 @@ function App() {
           </div>
         )}
       </div>
-      <TradingViewChart symbol="BITSTAMP:BTCUSD" height={220} />
+      <BtcMiniChart ticks={priceHistory} height={120} />
     </>),
     'crypto': (() => {
       const btcEth = crypto.filter(c => ['BTC', 'ETH'].includes(c.symbol));
