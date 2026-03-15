@@ -35,8 +35,9 @@ const COINGECKO_CHART_URL =
 const WS_RECONNECT_MS = 3000;
 const WS_MAX_RECONNECT_MS = 30000;
 const STATS_POLL_MS = 60_000;
-const MAX_TICKS = 600; // ~10 min of live data
-const FALLBACK_DELAY_MS = 8000; // switch to fallback after 8s of no data
+const MAX_TICKS = 600;
+const FALLBACK_DELAY_MS = 8000;
+const PRICE_THROTTLE_MS = 1000; // update display max once per second
 
 export function useBtcPrice() {
   // Initialize from cache or static fallback — never show $0.00
@@ -67,9 +68,14 @@ export function useBtcPrice() {
     marketCap: 0,
   });
 
+  const lastPushRef = useRef(0);
+
   const pushPrice = useCallback((price: number, source: string) => {
     if (!mountedRef.current) return;
     const now = Date.now();
+    // Throttle display updates to 1 per second (WebSocket fires many times/sec)
+    if (now - lastPushRef.current < PRICE_THROTTLE_MS) return;
+    lastPushRef.current = now;
     const newData = {
       price,
       prevPrice: 0,
@@ -174,13 +180,13 @@ export function useBtcPrice() {
     } catch {}
   }, []);
 
-  // ── Primary: CoinCap WS ──
+  // ── Primary: Binance WS (fires every trade — real-time) ──
   const connectPrimary = useCallback(() => {
     if (!mountedRef.current) return;
     if (primaryWsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(COINCAP_WS);
+      const ws = new WebSocket(BINANCE_WS);
       primaryWsRef.current = ws;
 
       ws.onopen = () => {
@@ -194,10 +200,10 @@ export function useBtcPrice() {
         if (!mountedRef.current) return;
         try {
           const msg = JSON.parse(event.data);
-          const price = parseFloat(msg.bitcoin);
+          const price = parseFloat(msg.c); // current price from Binance ticker
           if (!price || isNaN(price)) return;
           primaryAlive.current = true;
-          pushPrice(price, 'coincap');
+          pushPrice(price, 'binance');
         } catch {}
       };
 
@@ -215,25 +221,24 @@ export function useBtcPrice() {
     } catch {}
   }, [pushPrice]);
 
-  // ── Fallback: Binance WS ──
+  // ── Fallback: CoinCap WS ──
   const connectFallback = useCallback(() => {
     if (!mountedRef.current) return;
     if (fallbackWsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(BINANCE_WS);
+      const ws = new WebSocket(COINCAP_WS);
       fallbackWsRef.current = ws;
 
       ws.onmessage = (event) => {
         if (!mountedRef.current) return;
-        // Only use fallback data if primary is dead
         if (primaryAlive.current) return;
         try {
           const msg = JSON.parse(event.data);
-          const price = parseFloat(msg.c);
+          const price = parseFloat(msg.bitcoin);
           if (!price || isNaN(price)) return;
           setConnected(true);
-          pushPrice(price, 'binance');
+          pushPrice(price, 'coincap');
         } catch {}
       };
 
