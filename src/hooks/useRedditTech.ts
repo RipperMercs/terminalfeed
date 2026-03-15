@@ -15,7 +15,7 @@ export interface RedditPost {
 // RSS feeds are WAY more reliable than Reddit's JSON API
 const SUBREDDITS = ['technology', 'programming', 'artificial', 'MachineLearning', 'bitcoin'];
 const RSS2JSON_BASE = 'https://api.rss2json.com/v1/api.json?rss_url=';
-const POLL_MS = 10 * 60_000; // 10 min — cache aggressively
+const POLL_MS = 3 * 60_000; // 3 min
 const MAX_POSTS = 12;
 const CACHE_KEY = 'reddit_tech';
 

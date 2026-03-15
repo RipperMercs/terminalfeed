@@ -11,7 +11,7 @@ export interface Earthquake {
 
 const API_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
 const CACHE_KEY = 'earthquakes';
-const POLL_MS = 5 * 60_000; // 5 min
+const POLL_MS = 2 * 60_000; // 2 min
 
 export function useEarthquakes(): Earthquake[] {
   const [quakes, setQuakes] = useState<Earthquake[]>(() => {
