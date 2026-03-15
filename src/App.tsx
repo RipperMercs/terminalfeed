@@ -18,7 +18,6 @@ import { useEarthquakes } from './hooks/useEarthquakes';
 import { useWeather, weatherDescription } from './hooks/useWeather';
 import { useSpaceLaunches } from './hooks/useSpaceLaunches';
 import { useRecipe } from './hooks/useRecipe';
-import { useDevJoke } from './hooks/useDevJoke';
 import { useStackOverflow } from './hooks/useStackOverflow';
 import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
@@ -38,7 +37,6 @@ import { useForexHeatmap } from './hooks/useForexHeatmap';
 import { useWikipedia } from './hooks/useWikipedia';
 import { useSolarWeather } from './hooks/useSolarWeather';
 import { useProductHunt } from './hooks/useProductHunt';
-import { useFunFact } from './hooks/useFunFact';
 import { useWikipediaLive } from './hooks/useWikipediaLive';
 import { useGDACS } from './hooks/useGDACS';
 import { useGithubEvents } from './hooks/useGithubEvents';
@@ -49,7 +47,6 @@ import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
-import { getRandomWireQuote } from './data/wireQuotes';
 import { useWire } from './hooks/useWire';
 import { useRSSNews } from './hooks/useRSSNews';
 import './App.css';
@@ -91,7 +88,6 @@ function App() {
   const weather = useWeather();
   const spaceLaunches = useSpaceLaunches();
   const recipes = useRecipe();
-  const devJoke = useDevJoke();
   const soQuestions = useStackOverflow();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
@@ -103,7 +99,6 @@ function App() {
   const wikiArticle = useWikipedia();
   const solarWeather = useSolarWeather();
   const phProducts = useProductHunt();
-  const funFact = useFunFact();
   const { edits: wikiEdits, editsPerMin: wikiEPM } = useWikipediaLive();
   const disasterAlerts = useGDACS();
   const ghEvents = useGithubEvents();
@@ -961,11 +956,6 @@ function App() {
         </div>
       </div>
 
-      {/* ── Culture Strip — rotates fun facts, dev jokes, 2600 quotes ── */}
-      <div className="jokeStrip">
-        <span className="jokePrefix">&gt;</span>
-        <span className="jokeText">{funFact || devJoke || getRandomWireQuote()}</span>
-      </div>
 
       {/* ── Bottom Bar ── */}
       <div className="bottomBar">
