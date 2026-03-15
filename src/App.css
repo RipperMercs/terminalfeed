@@ -339,54 +339,25 @@
   to { transform: translate3d(-50%, 0, 0); }
 }
 
-/* ── World Clocks Bar ── */
-.clocksBar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  padding: 4px 16px;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  white-space: nowrap;
-  font-size: 10px;
-}
-
-.clockItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.clockCity {
-  color: var(--text-dim);
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.clockCity.clockActive {
-  color: var(--green);
-}
-
-.clockTime {
-  color: var(--text-mid);
-}
-
-.clockTime.clockTimeActive {
-  color: var(--text);
-  font-weight: 600;
-}
-
-/* ── What's Happening Now Summary ── */
+/* ── What's Happening + Clocks (combined bar) ── */
 .nowSummary {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
+  padding: 5px 16px;
   background: rgba(79, 209, 197, 0.03);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
   white-space: nowrap;
+  gap: 16px;
+}
+
+.nowLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .nowPrefix {
@@ -402,6 +373,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.nowClocks {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.nowClock {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  color: var(--text-dim);
 }
 
 /* ── Main Grid — CSS columns for masonry-like packing ── */
