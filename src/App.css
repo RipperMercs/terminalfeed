@@ -2344,18 +2344,36 @@
   transform: scale(0.95);
 }
 
+.orgDragHandle {
+  font-size: 16px;
+  color: var(--text-dim);
+  cursor: grab;
+  user-select: none;
+  padding: 0 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.orgDragHandle:hover {
+  opacity: 1;
+  color: var(--cyan);
+}
+
 .panelDragging {
-  opacity: 0.4;
-  outline: 1px dashed var(--green);
+  opacity: 0.35;
+  outline: 2px dashed var(--green);
+  transform: scale(0.98);
 }
 
 .panelDragOver {
-  outline: 2px solid var(--green);
+  outline: 2px solid var(--cyan);
   outline-offset: -2px;
+  box-shadow: 0 0 12px rgba(93, 202, 165, 0.12);
 }
 
 .gridOrganizing .panel {
   cursor: grab;
+  transition: opacity 0.2s, transform 0.2s, outline-color 0.2s, box-shadow 0.2s;
 }
 
 .gridOrganizing .panel:active {
@@ -3346,9 +3364,11 @@
   .listRow { min-height: 36px; }
   .scoreRow { min-height: 40px; }
 
-  /* Organize arrows bigger on mobile */
+  /* Organize controls on mobile — no drag, bigger tap targets */
   .orgArrow { width: 32px; height: 32px; font-size: 12px; }
   .orgHide { width: 32px; height: 32px; font-size: 14px; }
+  .orgDragHandle { display: none; }
+  .gridOrganizing .panel { cursor: default; }
 
   /* Ticker bar tweaks */
   .tickerBar { font-size: 10px; }
