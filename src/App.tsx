@@ -754,21 +754,27 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* Top row — pinned: Weather, Bitcoin (wide), Wiki Live, News */}
+        {/* Top row — pinned: Weather, Bitcoin (wide), Tech News, Markets, Wiki Live, Dev Status */}
         {panelRegistry['weather'] && (
           <div className="panel">{panelRegistry['weather']}</div>
         )}
         {panelRegistry['bitcoin'] && (
           <div className="panel spanCol2">{panelRegistry['bitcoin']}</div>
         )}
-        {panelRegistry['wiki-live'] && (
-          <div className="panel">{panelRegistry['wiki-live']}</div>
-        )}
         {panelRegistry['news'] && (
           <div className="panel">{panelRegistry['news']}</div>
         )}
+        {panelRegistry['markets'] && (
+          <div className="panel">{panelRegistry['markets']}</div>
+        )}
+        {panelRegistry['wiki-live'] && (
+          <div className="panel">{panelRegistry['wiki-live']}</div>
+        )}
+        {panelRegistry['dev-status'] && (
+          <div className="panel">{panelRegistry['dev-status']}</div>
+        )}
         {/* Remaining panels in order (skip pinned + support + unhealthy) */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'wiki-live', 'news'].includes(id) && panelHealth.isHealthy(id)).map(id => {
+        {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'news', 'markets', 'wiki-live', 'dev-status'].includes(id) && panelHealth.isHealthy(id)).map(id => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
