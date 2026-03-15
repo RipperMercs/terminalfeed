@@ -35,7 +35,6 @@ export const DEFAULT_LAYOUT = {
     'podcasts',
     'wikipedia',
     'producthunt',
-    'world-clocks',
     'ai-leaderboard',
     'bluesky',
     'internet-pulse',
