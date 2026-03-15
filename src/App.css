@@ -100,18 +100,18 @@
 }
 
 .tickerTrack {
-  display: inline-flex;
+  display: flex;
   gap: 28px;
+  width: max-content;
   animation: ticker 200s linear infinite;
   animation-play-state: var(--anim-state, running);
   padding-left: 16px;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
-  image-rendering: auto;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -125,6 +125,10 @@
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .tickerSymbol {
@@ -152,18 +156,18 @@
 }
 
 .sportsTickerTrack {
-  display: inline-flex;
+  display: flex;
   gap: 32px;
+  width: max-content;
   animation: tickerReverse 220s linear infinite;
   animation-play-state: var(--anim-state, running);
   padding-left: 16px;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
-  image-rendering: auto;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes tickerReverse {
@@ -176,6 +180,10 @@
   display: inline-flex;
   gap: 5px;
   align-items: center;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .sportsLiveDot {
@@ -296,18 +304,18 @@
 }
 
 .activityTrack {
-  display: inline-flex;
+  display: flex;
   gap: 20px;
+  width: max-content;
   animation: ticker 180s linear infinite;
   animation-play-state: var(--anim-state, running);
   padding-left: 16px;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
-  image-rendering: auto;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .activityItem {
