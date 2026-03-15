@@ -828,32 +828,21 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* Top row — WEATHER | TECH | BTC PRICE | MARKETS | WIKI | DEV STATUS */}
-        {panelRegistry['weather'] && (
-          <div className="panel">{panelRegistry['weather']}</div>
-        )}
-        {panelRegistry['news'] && (
-          <div className="panel">{panelRegistry['news']}</div>
-        )}
-        {panelRegistry['bitcoin'] && (
-          <div className="panel spanCol2">{panelRegistry['bitcoin']}</div>
-        )}
-        {panelRegistry['markets'] && (
-          <div className="panel">{panelRegistry['markets']}</div>
-        )}
-        {panelRegistry['wiki-live'] && (
-          <div className="panel">{panelRegistry['wiki-live']}</div>
-        )}
-        {panelRegistry['dev-status'] && (
-          <div className="panel">{panelRegistry['dev-status']}</div>
-        )}
-        {/* Remaining panels — lazy loaded for performance */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'news', 'markets', 'wiki-live', 'dev-status'].includes(id) && panelHealth.isHealthy(id)).map(id => {
+        {/* All panels rendered from panelOrder — top row is just the default order */}
+        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id)).map((id, idx) => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
           const content = panelRegistry[id as keyof typeof panelRegistry];
           if (!content) return null;
+          // First 6 panels load immediately, rest are lazy
+          if (idx < 6) {
+            return (
+              <div key={id} className={`panel ${span}`}>
+                {content}
+              </div>
+            );
+          }
           return (
             <LazyPanel key={id} className={`panel ${span}`}>
               {content}

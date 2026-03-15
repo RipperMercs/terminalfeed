@@ -256,7 +256,7 @@ export function useLayoutManager(): LayoutManager {
     // Save current layout so user can undo
     setPreRandomOrder([...panelOrder]);
     // Shuffle using Fisher-Yates, but keep 'support' pinned at end
-    const pinned = ['bitcoin', 'weather', 'news', 'dev-status', 'support'];
+    const pinned = ['support'];
     const movable = panelOrder.filter(id => !pinned.includes(id));
     for (let i = movable.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
