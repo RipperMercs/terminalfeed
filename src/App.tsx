@@ -895,6 +895,8 @@ function App() {
           <a href="mailto:hello@terminalfeed.io" className="footerLink">Contact</a>
           <a href="mailto:feedback@terminalfeed.io" className="footerLink">Feedback</a>
           <a href="mailto:advertise@terminalfeed.io" className="footerLink">Advertise</a>
+          <span className="bottomBarDivider">&middot;</span>
+          <a href="https://x.com/terminalfeed" target="_blank" rel="noopener noreferrer" className="footerLink">@terminalfeed</a>
         </div>
         <div className="bottomBarStatus">
           <span className="terminalsOnline">&gt;_ {terminalsOnline} terminal{terminalsOnline !== 1 ? 's' : ''} online</span>
