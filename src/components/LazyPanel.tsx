@@ -31,7 +31,7 @@ export function LazyPanel({ children, className = '' }: Props) {
     <div ref={ref} className={className}>
       {isVisible ? children : (
         <div style={{
-          minHeight: 80,
+          minHeight: 40,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

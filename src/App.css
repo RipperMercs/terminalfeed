@@ -332,12 +332,7 @@
 }
 
 /* ── Panel Hover ── */
-.panel {
-  transition: border-color 0.15s ease;
-}
-.panel:hover {
-  border-color: var(--border-glow);
-}
+/* Panel hover is handled below */
 
 @keyframes ticker {
   from { transform: translate3d(0, 0, 0); }
@@ -419,16 +414,6 @@
   width: 100%;
 }
 
-/* Panels never split across columns */
-.panel {
-  break-inside: avoid;
-  margin-bottom: 6px;
-}
-
-/* Wide panels break out to full width above the columns */
-.spanCol2 { column-span: all; }
-.spanCol3 { column-span: all; }
-
 /* ── Panel — terminal window style ── */
 .panel {
   background: var(--bg-panel);
@@ -438,7 +423,18 @@
   height: auto;
   min-height: 0;
   overflow: hidden;
+  break-inside: avoid;
+  margin-bottom: 6px;
+  transition: border-color 0.15s ease;
 }
+
+.panel:hover {
+  border-color: var(--border-glow);
+}
+
+/* Wide panels break out to full width above the columns */
+.spanCol2 { column-span: all; }
+.spanCol3 { column-span: all; }
 
 .panelHeader {
   display: flex;
