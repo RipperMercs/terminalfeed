@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About TerminalFeed — Free Real-Time Dashboard</title>
+  <meta name="description" content="TerminalFeed is a free real-time command center dashboard with 30+ live data feeds. Built by Ripper. No login, no paywall, no tracking. The internet's second monitor.">
+  <link rel="canonical" href="https://terminalfeed.io/about">
+  <meta property="og:title" content="About TerminalFeed">
+  <meta property="og:description" content="Free real-time dashboard with 30+ live feeds. The Bloomberg Terminal alternative for everyone.">
+  <meta property="og:url" content="https://terminalfeed.io/about">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 800px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 20px; margin-bottom: 24px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 32px 0 12px; text-transform: uppercase; letter-spacing: 2px; }
+    p { font-size: 13px; margin-bottom: 16px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; }
+    ul { list-style: none; padding: 0; }
+    li { font-size: 12px; color: #7A7A72; padding: 4px 0; }
+    li::before { content: ">_ "; color: #4ADE80; }
+    .footer { margin-top: 48px; font-size: 10px; color: #3E3E3A; }
+  </style>
+</head>
+<body>
+  <a href="/" class="back">&larr; back to terminal</a>
+  <h1>>_ About TerminalFeed</h1>
+
+  <p>TerminalFeed.io is a free, real-time command center dashboard. Think of it as a Bloomberg Terminal for the rest of us — live crypto prices, stock market data, breaking news, earthquake monitoring, Wikipedia edits streaming in real-time, and 30+ more data feeds. All on one dark, terminal-themed page.</p>
+
+  <p>No login. No paywall. No tracking. Just data.</p>
+
+  <p>The site was built for people who want a second monitor dashboard that actually stays useful. Traders watching BTC and stocks. Developers monitoring GitHub trending and service status. Nerds who want to see earthquakes and space launches alongside their market data. Everyone who wants the internet's most interesting data streams in one place.</p>
+
+  <h2>Live Data Feeds</h2>
+  <ul>
+    <li>Bitcoin price with TradingView chart (real-time via WebSocket)</li>
+    <li>Stock market movers — top gainers and losers from 25+ tickers</li>
+    <li>Cryptocurrency top 30 by market cap with biggest movers</li>
+    <li>BTC Network — block height, mempool, hashrate, fee estimates</li>
+    <li>Whale Watch — large BTC transactions flowing through mempool</li>
+    <li>Crypto Market overview — total cap, BTC/ETH dominance</li>
+    <li>Fear & Greed Index</li>
+    <li>Forex heatmap — 15 currency pairs vs USD</li>
+    <li>Tech / AI news feed from Hacker News</li>
+    <li>Reddit tech posts from top subreddits</li>
+    <li>GitHub trending repositories</li>
+    <li>GitHub live events — watching the world code in real-time</li>
+    <li>Show HN / Ask HN community posts</li>
+    <li>Stack Overflow hot questions</li>
+    <li>Wikipedia live edit stream (Server-Sent Events)</li>
+    <li>Wikipedia featured article of the day</li>
+    <li>Dev/Ops status — GitHub, Cloudflare, OpenAI, Anthropic, npm, Discord</li>
+    <li>Earthquake monitor — USGS M2.5+ events</li>
+    <li>Global disaster alerts from GDACS (UN/EU)</li>
+    <li>Weather with animated visuals</li>
+    <li>Space launches from rocketlaunch.live</li>
+    <li>Solar weather — NASA DONKI solar flares and geomagnetic storms</li>
+    <li>Sports scores scrolling ticker (ESPN — NBA, NFL, MLB, NHL)</li>
+    <li>Prediction markets (when available)</li>
+    <li>Podcast episodes from top tech shows</li>
+    <li>Product Hunt trending products</li>
+    <li>Bluesky trending posts</li>
+    <li>AI model leaderboard — top LLMs by ELO rating</li>
+    <li>World clocks — 8 major cities with business hours indicator</li>
+    <li>Trending books from Open Library</li>
+    <li>UAP/UFO sightings from NUFORC</li>
+    <li>Internet latency pulse — global endpoint ping test</li>
+    <li>Daily recipes from TheMealDB</li>
+    <li>This Day in Tech history + term of the day</li>
+  </ul>
+
+  <h2>Built By</h2>
+  <p>TerminalFeed is built by Ripper — an independent developer who wanted a better second monitor. The site is a personal project, not a corporation. It's free because the best tools should be accessible to everyone.</p>
+
+  <h2>The Tech</h2>
+  <p>Built with React + Vite + TypeScript. Deployed on Cloudflare Pages. Uses 10+ WebSocket and Server-Sent Event connections for true real-time data. Self-healing API system automatically hides panels when feeds fail and restores them when they recover.</p>
+
+  <p>No backend required. Every data feed runs client-side with localStorage caching and static fallbacks. The site loads in under 2 seconds and stays stable for 8+ hours.</p>
+
+  <h2>Contact</h2>
+  <p>
+    General: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a><br>
+    Feedback: <a href="mailto:feedback@terminalfeed.io">feedback@terminalfeed.io</a><br>
+    Advertising: <a href="mailto:advertise@terminalfeed.io">advertise@terminalfeed.io</a><br>
+    Security: <a href="mailto:security@terminalfeed.io">security@terminalfeed.io</a>
+  </p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io · Built by Ripper · Not financial advice</p>
+    <p><a href="/">Home</a> · <a href="/about">About</a> · <a href="/features">Features</a> · <a href="/changelog">Changelog</a></p>
+  </div>
+</body>
+</html>
