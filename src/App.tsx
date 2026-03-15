@@ -942,7 +942,7 @@ function App() {
         <div className="nowClocks">
           {worldClocks.slice(0, 6).map(c => (
             <span key={c.city} className="nowClock">
-              <span style={{ fontSize: 10 }}>{c.isBusinessHours ? '☀️' : '🌙'}</span>
+              <span style={{ fontSize: 11, color: c.isBusinessHours ? 'var(--gold)' : 'var(--blue)' }}>{c.isBusinessHours ? '●' : '◗'}</span>
               <span style={{ color: c.isBusinessHours ? 'var(--text)' : 'var(--text-dim)' }}>{c.city.slice(0, 3).toUpperCase()}</span>
               <span style={{ color: c.isBusinessHours ? 'var(--text)' : 'var(--text-mid)' }}>{c.time.toLowerCase().replace(' ', '')}</span>
             </span>
