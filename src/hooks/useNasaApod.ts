@@ -1,27 +1,24 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 
 export interface ApodData {
   title: string;
-  explanation: string;
   url: string;
   hdurl: string;
+  explanation: string;
   date: string;
-  mediaType: string;
-  copyright: string;
+  media_type: string;
+  copyright?: string;
 }
 
 const API_URL = 'https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY';
 const CACHE_KEY = 'nasa_apod';
+const REFRESH_MS = 60 * 60_000; // 1 hour
 
-function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function useNasaApod(): ApodData | null {
-  const [data, setData] = useState<ApodData | null>(() => {
+export function useNasaApod() {
+  const [apod, setApod] = useState<ApodData | null>(() => {
     const cached = getCache<ApodData>(CACHE_KEY);
-    if (cached?.data && cached.data.date === todayKey()) return cached.data;
+    if (cached?.data && cached.age < REFRESH_MS) return cached.data;
     return null;
   });
   const mountedRef = useRef(true);
@@ -29,33 +26,36 @@ export function useNasaApod(): ApodData | null {
   useEffect(() => {
     mountedRef.current = true;
 
-    if (data?.date === todayKey()) return;
-
-    const fetch_ = async () => {
+    const fetchApod = async () => {
       try {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(8000) });
         if (!res.ok) return;
-        const json = await res.json();
-        if (!json.title || !mountedRef.current) return;
-
-        const result: ApodData = {
-          title: json.title,
-          explanation: json.explanation ?? '',
-          url: json.url ?? '',
-          hdurl: json.hdurl ?? json.url ?? '',
-          date: json.date ?? todayKey(),
-          mediaType: json.media_type ?? 'image',
-          copyright: json.copyright ?? '',
+        const data = await res.json();
+        if (!mountedRef.current) return;
+        const item: ApodData = {
+          title: data.title ?? '',
+          url: data.url ?? '',
+          hdurl: data.hdurl ?? data.url ?? '',
+          explanation: data.explanation ?? '',
+          date: data.date ?? '',
+          media_type: data.media_type ?? 'image',
+          copyright: data.copyright,
         };
-
-        setData(result);
-        setCache(CACHE_KEY, result, 'nasa');
+        setApod(item);
+        setCache(CACHE_KEY, item, 'nasa-apod');
       } catch {}
     };
 
-    fetch_();
-    return () => { mountedRef.current = false; };
-  }, [data]);
+    const cached = getCache<ApodData>(CACHE_KEY);
+    if (!cached?.data || cached.age >= REFRESH_MS) {
+      const timer = setTimeout(fetchApod, 3000);
+      const id = setInterval(fetchApod, REFRESH_MS);
+      return () => { mountedRef.current = false; clearTimeout(timer); clearInterval(id); };
+    }
 
-  return data;
+    const id = setInterval(fetchApod, REFRESH_MS);
+    return () => { mountedRef.current = false; clearInterval(id); };
+  }, []);
+
+  return apod;
 }

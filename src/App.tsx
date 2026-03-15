@@ -55,6 +55,9 @@ import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { useSteamGames } from './hooks/useSteamGames';
 import { useDailyPaws } from './hooks/useDailyPaws';
 import { useMuseumArt } from './hooks/useMuseumArt';
+import { useNasaApod } from './hooks/useNasaApod';
+import { useGoodNews } from './hooks/useGoodNews';
+import { useTrendingMovies } from './hooks/useTrendingMovies';
 import { AdminTerminal } from './components/AdminTerminal';
 import './App.css';
 
@@ -131,6 +134,9 @@ function App() {
   const steamGames = useSteamGames();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const museumArt = useMuseumArt();
+  const nasaApod = useNasaApod();
+  const goodNews = useGoodNews();
+  const trendingMovies = useTrendingMovies();
   const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
   const podcastEpisodes = usePodcasts();
@@ -908,6 +914,74 @@ function App() {
             </div>
           );
         })}
+      </div>
+    </>),
+    'nasa-apod': (<>
+      <PanelHead panelId="nasa-apod" isStale={panelHealth.isStale('nasa-apod')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft">
+          <span className="panelTitle">Space</span>
+          <span className="panelTag">NASA APOD</span>
+        </div>
+      </PanelHead>
+      {nasaApod ? (
+        <div>
+          {nasaApod.media_type === 'image' ? (
+            <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer">
+              <img src={nasaApod.url} alt={nasaApod.title} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
+            </a>
+          ) : (
+            <iframe src={nasaApod.url} title={nasaApod.title} style={{ width: '100%', height: 200, border: 'none', borderRadius: 3 }} allow="autoplay; encrypted-media" />
+          )}
+          <div style={{ padding: '6px 0 0' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)' }}>{nasaApod.title}</div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', lineHeight: 1.5, marginTop: 4, maxHeight: 54, overflow: 'hidden' }}>{nasaApod.explanation.slice(0, 200)}{nasaApod.explanation.length > 200 ? '...' : ''}</div>
+            <div style={{ fontSize: 8, color: 'var(--text-dim)', marginTop: 4 }}>{nasaApod.date}{nasaApod.copyright ? ` · © ${nasaApod.copyright}` : ''}</div>
+          </div>
+        </div>
+      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading photo...</div>}
+    </>),
+    'good-news': (<>
+      <PanelHead panelId="good-news" isStale={panelHealth.isStale('good-news')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft">
+          <span className="panelTitle">Good News</span>
+          <span className="panelTag">UPLIFTING</span>
+        </div>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {goodNews.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading good news...</div>}
+        {goodNews.map((post) => (
+          <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" className="newsRow">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span className="newsTitle">{post.title}</span>
+            </div>
+            <span className="redditSub">r/{post.subreddit}</span>
+          </a>
+        ))}
+      </div>
+    </>),
+    'trending-movies': (<>
+      <PanelHead panelId="trending-movies" isStale={panelHealth.isStale('trending-movies')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft">
+          <span className="panelTitle">Trending</span>
+          <span className="panelTag">MOVIES & TV</span>
+        </div>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {trendingMovies.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading movies...</div>}
+        {trendingMovies.map((m) => (
+          <div key={m.id} style={{ display: 'flex', gap: 8, padding: '4px 0', borderBottom: '1px solid rgba(26,26,34,0.5)' }}>
+            {m.poster && <img src={m.poster} alt={m.title} style={{ width: 32, height: 48, objectFit: 'cover', borderRadius: 2, flexShrink: 0 }} loading="lazy" />}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500, lineHeight: 1.3 }}>{m.title}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 2 }}>
+                <span style={{ color: m.rating >= 7 ? 'var(--green)' : m.rating >= 5 ? 'var(--amber)' : 'var(--red)' }}>{m.rating}/10</span>
+                <span> · {m.mediaType === 'tv' ? 'TV' : 'Movie'}</span>
+                {m.releaseDate && <span> · {m.releaseDate.slice(0, 4)}</span>}
+              </div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 2, lineHeight: 1.4, maxHeight: 28, overflow: 'hidden' }}>{m.overview.slice(0, 120)}{m.overview.length > 120 ? '...' : ''}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </>),
     'support': (<>
