@@ -202,6 +202,14 @@ function App() {
 
   const liveCount = games.filter((g) => g.status === 'in').length;
 
+  // Flip between price ticker and sports ticker every 15 seconds
+  const [tickerShowSports, setTickerShowSports] = useState(false);
+  useEffect(() => {
+    if (games.length === 0) return; // no sports = always show prices
+    const id = setInterval(() => setTickerShowSports(prev => !prev), 15000);
+    return () => clearInterval(id);
+  }, [games.length]);
+
   // Report panel health — auto-hide panels with failed APIs
   useEffect(() => {
     if (btcPrice > 0) panelHealth.reportData('bitcoin');
@@ -800,45 +808,45 @@ function App() {
         </div>
       </div>
 
-      {/* ── Price Ticker (scrolls LEFT) ── */}
+      {/* ── Ticker Bar — flips between prices and sports ── */}
       <div className="tickerBar">
-        <div className="tickerTrack">
-          {[...tickerItems, ...tickerItems].map((s, i) => (
-            <span key={i} className="tickerItem">
-              <span className="tickerSymbol">{s.symbol}</span>
-              <span className="tickerPrice">
-                ${s.price < 1
-                  ? s.price.toFixed(4)
-                  : s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-              <span className={`tickerChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
-                {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
-              </span>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Sports Ticker (scrolls RIGHT) ── */}
-      {games.length > 0 && (
-        <div className="sportsTicker">
-          <div className="sportsTickerTrack">
-            {[...games, ...games].map((game, i) => (
-              <span key={i} className={`sportsTickerItem ${game.status === 'in' ? 'sportsLive' : game.status === 'post' ? '' : 'sportsUpcoming'}`}>
-                {game.status === 'in' && <span className="sportsLiveDot" />}
-                <span className="sportsTeam">{game.awayAbbr}</span>
-                <span className="sportsScore">{game.awayScore}</span>
-                <span className="sportsTeam">{game.homeAbbr}</span>
-                <span className="sportsScore">{game.homeScore}</span>
-                <span className={`sportsStatus ${game.status === 'in' ? 'sportsStatusLive' : ''}`}>
-                  {game.statusDetail}
+        <div className={`tickerLayer ${tickerShowSports ? 'tickerHidden' : ''}`}>
+          <div className="tickerTrack">
+            {[...tickerItems, ...tickerItems].map((s, i) => (
+              <span key={i} className="tickerItem">
+                <span className="tickerSymbol">{s.symbol}</span>
+                <span className="tickerPrice">
+                  ${s.price < 1
+                    ? s.price.toFixed(4)
+                    : s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
-                <span className="sportsLeague">{game.league}</span>
+                <span className={`tickerChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>
+                  {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                </span>
               </span>
             ))}
           </div>
         </div>
-      )}
+        {games.length > 0 && (
+          <div className={`tickerLayer ${!tickerShowSports ? 'tickerHidden' : ''}`}>
+            <div className="sportsTickerTrack">
+              {[...games, ...games].map((game, i) => (
+                <span key={i} className={`sportsTickerItem ${game.status === 'in' ? 'sportsLive' : game.status === 'post' ? '' : 'sportsUpcoming'}`}>
+                  {game.status === 'in' && <span className="sportsLiveDot" />}
+                  <span className="sportsTeam">{game.awayAbbr}</span>
+                  <span className="sportsScore">{game.awayScore}</span>
+                  <span className="sportsTeam">{game.homeAbbr}</span>
+                  <span className="sportsScore">{game.homeScore}</span>
+                  <span className={`sportsStatus ${game.status === 'in' ? 'sportsStatusLive' : ''}`}>
+                    {game.statusDetail}
+                  </span>
+                  <span className="sportsLeague">{game.league}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── What's Happening + World Clocks (combined) ── */}
       <div className="nowSummary">
