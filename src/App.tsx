@@ -26,7 +26,6 @@ import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
 import { PanelManager } from './components/PanelManager';
 import { PanelHead } from './components/PanelHead';
 import { WeatherScene } from './components/WeatherScene';
-import { AIImageLab } from './components/AIImageLab';
 import { useInternetPulse } from './hooks/useInternetPulse';
 import { usePanelHealth } from './hooks/usePanelHealth';
 import { useTerminalsOnline } from './hooks/useTerminalsOnline';
@@ -666,7 +665,6 @@ function App() {
         })}
       </div>
     </>),
-    'ai-image': (<><PanelHead panelId="ai-image" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Image Lab</span><span className="panelTag">FLUX</span></div></PanelHead><AIImageLab /></>),
     'support': (<>
       <PanelHead panelId="support" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Support the Terminal</span></div></PanelHead>
       <div className="donateSection">

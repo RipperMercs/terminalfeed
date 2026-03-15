@@ -35,7 +35,6 @@ export const DEFAULT_LAYOUT = {
     'dev-status',
     'recipe',
     'daily-learn',
-    'ai-image',
     'support',
   ],
   hiddenPanels: [] as string[],
