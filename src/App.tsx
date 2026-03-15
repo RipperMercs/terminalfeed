@@ -24,6 +24,7 @@ import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
 import { PanelManager } from './components/PanelManager';
 import { PanelHead } from './components/PanelHead';
+import { LazyPanel } from './components/LazyPanel';
 import { WeatherScene } from './components/WeatherScene';
 import { useInternetPulse } from './hooks/useInternetPulse';
 import { usePanelHealth } from './hooks/usePanelHealth';
@@ -59,6 +60,15 @@ function App() {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
+
+  // Pause animations when tab is hidden — saves CPU in background
+  useEffect(() => {
+    const handler = () => {
+      document.documentElement.style.setProperty('--anim-state', document.hidden ? 'paused' : 'running');
+    };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
+  }, []);
   const layout = useLayoutManager();
   const { data: priceData } = useBtcPrice();
   const fearGreed = useFearGreed();
@@ -844,7 +854,7 @@ function App() {
         {panelRegistry['dev-status'] && (
           <div className="panel">{panelRegistry['dev-status']}</div>
         )}
-        {/* Remaining panels in order (skip pinned + support + unhealthy) */}
+        {/* Remaining panels — lazy loaded for performance */}
         {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'news', 'markets', 'wiki-live', 'dev-status'].includes(id) && panelHealth.isHealthy(id)).map(id => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
@@ -852,9 +862,9 @@ function App() {
           const content = panelRegistry[id as keyof typeof panelRegistry];
           if (!content) return null;
           return (
-            <div key={id} className={`panel ${span}`}>
+            <LazyPanel key={id} className={`panel ${span}`}>
               {content}
-            </div>
+            </LazyPanel>
           );
         })}
         {/* Support panel always last */}
