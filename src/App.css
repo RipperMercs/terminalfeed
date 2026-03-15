@@ -1327,7 +1327,48 @@
   border-radius: 3px;
 }
 
-/* Clear sky — warm gradient with animated sun */
+/* Day/night base gradients */
+.wxScene--day {
+  background: linear-gradient(180deg, #2E6FCF 0%, #5B9AE8 50%, #8ABFEF 100%);
+}
+.wxScene--night {
+  background: linear-gradient(180deg, #0A0A1A 0%, #111128 50%, #1A1A3A 100%);
+}
+
+/* Override with weather-specific gradients */
+.wxScene--day.wxScene--clear {
+  background: linear-gradient(180deg, #2E6FCF 0%, #5B9AE8 50%, #8ABFEF 100%);
+}
+.wxScene--night.wxScene--clear {
+  background: linear-gradient(180deg, #0A0A1A 0%, #111128 50%, #1A1A3A 100%);
+}
+
+/* Moon */
+.wxMoon {
+  position: absolute;
+  right: 18%;
+  top: 15%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #F5F0C1, #D4CA8E);
+  box-shadow: 0 0 12px rgba(245, 240, 193, 0.25), 0 0 24px rgba(245, 240, 193, 0.1);
+}
+
+/* Stars */
+.wxStar {
+  position: absolute;
+  border-radius: 50%;
+  background: #FFFFFF;
+  animation: twinkle 2s ease infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Legacy clear sky fallback */
 .wxScene--clear {
   background: linear-gradient(180deg, #1a1040 0%, #2d1b69 40%, #4a2080 100%);
 }
