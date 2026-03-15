@@ -1,3 +1,0 @@
-DROP YOUR ripper.png IMAGE HERE
-The footer expects: public/images/ripper.png
-Recommended size: 24-32px height, any width
