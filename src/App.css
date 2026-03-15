@@ -989,50 +989,117 @@
   letter-spacing: 0.3px;
 }
 
-/* ── Support Panel ── */
-.adPlaceholder {
-  border: 1px dashed var(--border);
-  border-radius: 3px;
-  padding: 14px;
-  text-align: center;
+/* ── Support / Donation Panel ── */
+.donateSection {
   margin-bottom: 10px;
 }
 
-.adLabel {
-  font-size: 9px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
-}
-
-.adSize {
-  font-size: 10px;
-  color: var(--text-dim);
-}
-
-.donateLabel {
-  font-size: 10px;
-  color: var(--text-dim);
-  margin-bottom: 6px;
+.donateAddrRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .donateAddr {
-  background: var(--bg-panel);
+  background: var(--bg);
   border-radius: 3px;
-  padding: 6px 8px;
-  font-size: 9px;
+  padding: 5px 8px;
+  font-size: 8px;
   color: var(--amber);
   word-break: break-all;
-  line-height: 1.5;
+  line-height: 1.4;
   border: 1px solid var(--border);
+  flex: 1;
+}
+
+.donateCopy {
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.donateCopy:hover {
+  color: var(--amber);
+  border-color: var(--amber);
 }
 
 .donateNote {
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.donorBoard {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.donorTitle {
+  font-size: 8px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.donorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(26, 26, 34, 0.5);
+  font-size: 10px;
+}
+
+.donorRow:last-child { border-bottom: none; }
+
+.donorRank {
+  color: var(--gold);
+  font-weight: 700;
+  min-width: 20px;
   font-size: 9px;
+}
+
+.donorAmount {
+  color: var(--amber);
+  font-weight: 600;
+  min-width: 50px;
+  font-size: 10px;
+}
+
+.donorAmount::before {
+  content: '\u20BF ';
+  font-size: 9px;
+}
+
+.donorAddr {
+  color: var(--text-mid);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+}
+
+.donorDate {
+  color: var(--text-dim);
+  font-size: 8px;
+  flex-shrink: 0;
+}
+
+.donorTotal {
+  font-size: 8px;
   color: var(--text-dim);
   margin-top: 6px;
-  text-align: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
 }
 
 /* ── Bottom Bar ── */

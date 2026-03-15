@@ -44,6 +44,7 @@ import { useWikipediaLive } from './hooks/useWikipediaLive';
 import { useGDACS } from './hooks/useGDACS';
 import { useGithubEvents } from './hooks/useGithubEvents';
 import { useTrendingBooks } from './hooks/useTrendingBooks';
+import { useDonations } from './hooks/useDonations';
 import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
@@ -92,6 +93,7 @@ function App() {
   const disasterAlerts = useGDACS();
   const ghEvents = useGithubEvents();
   const trendingBooks = useTrendingBooks();
+  const donationStats = useDonations();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
   const bskyPosts = useBluesky();
@@ -648,9 +650,30 @@ function App() {
     </>),
     'ai-image': (<><PanelHead panelId="ai-image" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Image Lab</span><span className="panelTag">FLUX</span></div></PanelHead><AIImageLab /></>),
     'support': (<>
-      <PanelHead panelId="support" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Support</span></div></PanelHead>
-      <div className="adPlaceholder"><div className="adLabel">Ad space</div><div className="adSize">300x250</div></div>
-      <div className="donateLabel">Donate BTC</div><div className="donateAddr">3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</div><div className="donateNote">Lightning / on-chain accepted</div>
+      <PanelHead panelId="support" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Support the Terminal</span></div></PanelHead>
+      <div className="donateSection">
+        <div className="donateAddrRow">
+          <div className="donateAddr">3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</div>
+          <button className="donateCopy" onClick={() => { navigator.clipboard.writeText('3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy'); }} title="Copy address">copy</button>
+        </div>
+        <div className="donateNote">on-chain accepted · fuel the terminal</div>
+      </div>
+      {donationStats.donations.length > 0 && (
+        <div className="donorBoard">
+          <div className="donorTitle">TOP SUPPORTERS</div>
+          {donationStats.donations.slice(0, 5).map((d, i) => (
+            <div key={d.txid} className="donorRow">
+              <span className="donorRank">#{i + 1}</span>
+              <span className="donorAmount">{d.amount.toFixed(4)}</span>
+              <span className="donorAddr">{d.address}</span>
+              <span className="donorDate">{d.date}</span>
+            </div>
+          ))}
+          <div className="donorTotal">
+            total: {donationStats.totalBtc.toFixed(4)} BTC from {donationStats.totalCount} supporter{donationStats.totalCount !== 1 ? 's' : ''}
+          </div>
+        </div>
+      )}
     </>),
   };
 
