@@ -49,6 +49,7 @@ import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import { useWire } from './hooks/useWire';
 import { useRSSNews } from './hooks/useRSSNews';
+import { useNpmTrends } from './hooks/useNpmTrends';
 import { useDailyPaws } from './hooks/useDailyPaws';
 import { useMuseumArt } from './hooks/useMuseumArt';
 import './App.css';
@@ -119,6 +120,7 @@ function App() {
   const trendingBooks = useTrendingBooks();
   const wire = useWire();
   const rssNews = useRSSNews();
+  const npmPackages = useNpmTrends();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const museumArt = useMuseumArt();
   const donationStats = useDonations();
@@ -488,6 +490,18 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {soQuestions.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading questions...</div>}
         {soQuestions.map((q) => (<a key={q.id} href={q.link} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="soScore">{q.score}</span><div style={{ flex: 1, minWidth: 0 }}><div className="newsTitle">{q.title}</div><div className="soTags">{q.tags.join(' · ')}</div></div><span className="soAnswers">{q.answerCount}A</span></a>))}
+      </div>
+    </>),
+    'npm-trends': (<>
+      <PanelHead panelId="npm-trends" isStale={panelHealth.isStale('npm-trends')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">NPM</span><span className="panelTag">DOWNLOADS</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {npmPackages.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {npmPackages.map((p) => (
+          <div key={p.name} className="listRow">
+            <span className="listRowSymbol" style={{ color: 'var(--cyan)' }}>{p.name}</span>
+            <span style={{ fontSize: 10, color: 'var(--text-mid)', fontWeight: 500 }}>{p.downloads >= 1e6 ? (p.downloads / 1e6).toFixed(1) + 'M' : p.downloads >= 1e3 ? (p.downloads / 1e3).toFixed(0) + 'K' : p.downloads}/day</span>
+          </div>
+        ))}
       </div>
     </>),
     'fitness': (<>

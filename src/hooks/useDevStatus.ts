@@ -15,6 +15,12 @@ const SERVICES = [
   { name: 'Anthropic', url: 'https://status.anthropic.com/api/v2/status.json' },
   { name: 'npm', url: 'https://status.npmjs.org/api/v2/status.json' },
   { name: 'Discord', url: 'https://discordstatus.com/api/v2/status.json' },
+  { name: 'Slack', url: 'https://status.slack.com/api/v2.0.0/current' },
+  { name: 'Atlassian', url: 'https://status.atlassian.com/api/v2/status.json' },
+  { name: 'Reddit', url: 'https://www.redditstatus.com/api/v2/status.json' },
+  { name: 'Stripe', url: 'https://status.stripe.com/api/v2/status.json' },
+  { name: 'Zoom', url: 'https://status.zoom.us/api/v2/status.json' },
+  { name: 'Datadog', url: 'https://status.datadoghq.com/api/v2/status.json' },
 ];
 
 const CACHE_KEY = 'dev_status';
