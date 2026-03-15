@@ -28,11 +28,14 @@ import { PanelHead } from './components/PanelHead';
 import { WeatherScene } from './components/WeatherScene';
 import { AIImageLab } from './components/AIImageLab';
 import { useInternetPulse } from './hooks/useInternetPulse';
+import { usePanelHealth } from './hooks/usePanelHealth';
 import { useTerminalsOnline } from './hooks/useTerminalsOnline';
 import { usePodcasts } from './hooks/usePodcasts';
 import { uapSightings, getShapeStats } from './data/uapSightings';
 import { useBluesky } from './hooks/useBluesky';
 import { usePanelHeat } from './hooks/usePanelHeat';
+import { useHNShowAsk } from './hooks/useHackerNewsTop';
+import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
@@ -68,6 +71,9 @@ function App() {
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
   const terminalsOnline = useTerminalsOnline();
+  const panelHealth = usePanelHealth();
+  const hnCommunity = useHNShowAsk();
+  const worldClocks = useWorldClock();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
   const bskyPosts = useBluesky();
@@ -154,6 +160,28 @@ function App() {
   };
 
   const liveCount = games.filter((g) => g.status === 'in').length;
+
+  // Report panel health — auto-hide panels with failed APIs
+  useEffect(() => {
+    if (btcPrice > 0) panelHealth.reportData('bitcoin');
+    if (stocks.length > 0) panelHealth.reportData('markets');
+    if (crypto.length > 0) panelHealth.reportData('crypto');
+    if (stories.length > 0) panelHealth.reportData('news');
+    if (redditPosts.length > 0) panelHealth.reportData('reddit');
+    if (trendingRepos.length > 0) panelHealth.reportData('github');
+    if (soQuestions.length > 0) panelHealth.reportData('stackoverflow');
+    if (earthquakes.length > 0) panelHealth.reportData('seismic');
+    if (weather) panelHealth.reportData('weather');
+    if (spaceLaunches.length > 0) panelHealth.reportData('launches');
+    if (devStatuses.length > 0) panelHealth.reportData('dev-status');
+    if (cryptoGlobal) panelHealth.reportData('crypto-global');
+    if (btcNet.blockHeight > 0) panelHealth.reportData('btc-network');
+    if (marketHours.length > 0) panelHealth.reportData('market-hours');
+    if (podcastEpisodes.length > 0) panelHealth.reportData('podcasts');
+    if (bskyPosts.length > 0) panelHealth.reportData('bluesky');
+    if (internetPulse.length > 0) panelHealth.reportData('internet-pulse');
+    if (recipes.length > 0) panelHealth.reportData('recipe');
+  });
 
   // Smart auto-curation: calculate panel heat scores for new visitors
   const panelHeat = usePanelHeat({
@@ -404,6 +432,36 @@ function App() {
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
       </div>
     </>),
+    'hn-community': (<>
+      <PanelHead panelId="hn-community" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Show / Ask HN</span><span className="panelTag">COMMUNITY</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {hnCommunity.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {hnCommunity.map((item) => (
+          <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="newsRow">
+            <span className="newsTag" style={{ color: item.type === 'show' ? 'var(--cyan)' : 'var(--purple)', background: item.type === 'show' ? 'rgba(79,209,197,0.1)' : 'rgba(167,139,250,0.1)' }}>{item.type === 'show' ? 'SHOW' : 'ASK'}</span>
+            <span className="newsTitle">{item.title}</span>
+            <span className="newsMeta">{item.score}pt</span>
+          </a>
+        ))}
+      </div>
+    </>),
+    'world-clocks': (<>
+      <PanelHead panelId="world-clocks" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">World Clocks</span><span className="panelTag">LIVE</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {worldClocks.map((c) => (
+          <div key={c.city} className="listRow">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.isBusinessHours ? 'var(--green)' : 'var(--text-dim)', opacity: c.isBusinessHours ? 1 : 0.4, flexShrink: 0 }} />
+              <span className="listRowSymbol">{c.city}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: c.isBusinessHours ? 'var(--text)' : 'var(--text-mid)' }}>{c.time}</span>
+              <span style={{ fontSize: 8, color: 'var(--text-dim)' }}>{c.date}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>),
     'ai-leaderboard': (<>
       <PanelHead panelId="ai-leaderboard" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Leaderboard</span><span className="panelTag">ELO</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -547,8 +605,8 @@ function App() {
         {panelRegistry['dev-status'] && (
           <div className="panel">{panelRegistry['dev-status']}</div>
         )}
-        {/* Remaining panels in order (skip pinned + support) */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'news', 'dev-status'].includes(id)).map(id => {
+        {/* Remaining panels in order (skip pinned + support + unhealthy) */}
+        {layout.panelOrder.filter(id => layout.isVisible(id) && !['support', 'bitcoin', 'weather', 'news', 'dev-status'].includes(id) && panelHealth.isHealthy(id)).map(id => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';

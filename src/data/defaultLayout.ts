@@ -18,6 +18,8 @@ export const DEFAULT_LAYOUT = {
     'seismic',
     'weather',
     'launches',
+    'hn-community',
+    'world-clocks',
     'ai-leaderboard',
     'bluesky',
     'internet-pulse',
