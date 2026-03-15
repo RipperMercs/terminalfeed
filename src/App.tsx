@@ -49,6 +49,7 @@ import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
+import { getRandomWireQuote } from './data/wireQuotes';
 import './App.css';
 
 function App() {
@@ -831,13 +832,11 @@ function App() {
         </div>
       </div>
 
-      {/* ── Fun Fact / Dev Joke Strip ── */}
-      {(funFact || devJoke) && (
-        <div className="jokeStrip">
-          <span className="jokePrefix">&gt;</span>
-          <span className="jokeText">{funFact || devJoke}</span>
-        </div>
-      )}
+      {/* ── Culture Strip — rotates fun facts, dev jokes, 2600 quotes ── */}
+      <div className="jokeStrip">
+        <span className="jokePrefix">&gt;</span>
+        <span className="jokeText">{funFact || devJoke || getRandomWireQuote()}</span>
+      </div>
 
       {/* ── Bottom Bar ── */}
       <div className="bottomBar">
