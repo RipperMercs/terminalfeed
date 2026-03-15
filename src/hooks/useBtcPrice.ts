@@ -149,8 +149,35 @@ export function useBtcPrice() {
     } catch {}
   }, [pushPrice]);
 
+  // Seed chart with 24h history so it shows instantly
+  const seedChart = useCallback(async () => {
+    if (!mountedRef.current) return;
+    try {
+      const res = await fetch(
+        'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1',
+        { signal: AbortSignal.timeout(8000) }
+      );
+      if (!res.ok || !mountedRef.current) return;
+      const data = await res.json();
+      if (!data.prices?.length) return;
+
+      // Only seed if WS hasn't delivered many ticks yet
+      setPriceHistory(prev => {
+        if (prev.length > 20) return prev; // WS already flowing
+        // Sample ~100 points from 24h data
+        const step = Math.max(1, Math.floor(data.prices.length / 100));
+        return data.prices
+          .filter((_: [number, number], i: number) => i % step === 0)
+          .map((p: [number, number]) => ({ time: p[0], price: p[1] }));
+      });
+    } catch {}
+  }, []);
+
   useEffect(() => {
     mountedRef.current = true;
+
+    // Seed chart immediately with 24h history
+    seedChart();
 
     // Start WebSocket
     connectWS();
@@ -165,7 +192,7 @@ export function useBtcPrice() {
       if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(); }
       clearInterval(statsInterval);
     };
-  }, [connectWS, fetchREST]);
+  }, [connectWS, fetchREST, seedChart]);
 
   return { data, connected, priceHistory };
 }
