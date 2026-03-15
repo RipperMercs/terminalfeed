@@ -1369,6 +1369,30 @@
   gap: 4px;
 }
 
+.footerBtc {
+  font-size: 8px;
+  color: var(--text-dim);
+  opacity: 0.5;
+  letter-spacing: 0.3px;
+}
+
+.footerCopy {
+  background: none;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 8px;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 2px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.footerCopy:hover {
+  opacity: 1;
+}
+
 .terminalsOnline {
   color: var(--cyan);
   font-weight: 600;

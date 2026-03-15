@@ -42,7 +42,6 @@ import { useGDACS } from './hooks/useGDACS';
 import { useGithubEvents } from './hooks/useGithubEvents';
 import { useTrendingBooks } from './hooks/useTrendingBooks';
 import { useWhaleWatch } from './hooks/useWhaleWatch';
-import { useDonations } from './hooks/useDonations';
 import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
@@ -137,7 +136,6 @@ function App() {
   const nasaApod = useNasaApod();
   const goodNews = useGoodNews();
   const trendingMovies = useTrendingMovies();
-  const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
@@ -964,32 +962,6 @@ function App() {
         ))}
       </div>
     </>),
-    'support': (<>
-      <PanelHead panelId="support" isStale={panelHealth.isStale('support')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Support the Terminal</span></div></PanelHead>
-      <div className="donateSection">
-        <div className="donateAddrRow">
-          <div className="donateAddr">3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</div>
-          <button className="donateCopy" onClick={() => { navigator.clipboard.writeText('3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy'); }} title="Copy address">copy</button>
-        </div>
-        <div className="donateNote">on-chain accepted · fuel the terminal</div>
-      </div>
-      {donationStats.donations.length > 0 && (
-        <div className="donorBoard">
-          <div className="donorTitle">TOP SUPPORTERS</div>
-          {donationStats.donations.slice(0, 5).map((d, i) => (
-            <div key={d.txid} className="donorRow">
-              <span className="donorRank">#{i + 1}</span>
-              <span className="donorAmount">{d.amount.toFixed(4)}</span>
-              <span className="donorAddr">{d.address}</span>
-              <span className="donorDate">{d.date}</span>
-            </div>
-          ))}
-          <div className="donorTotal">
-            total: {donationStats.totalBtc.toFixed(4)} BTC from {donationStats.totalCount} supporter{donationStats.totalCount !== 1 ? 's' : ''}
-          </div>
-        </div>
-      )}
-    </>),
   };
 
 
@@ -1134,12 +1106,6 @@ function App() {
             </LazyPanel>
           );
         })}
-        {/* Support panel always last */}
-        {layout.isVisible('support') && panelRegistry['support'] && (
-          <div className="panel">
-            {panelRegistry['support']}
-          </div>
-        )}
       </div>
 
       {/* ── Hidden Panels Shelf (Organize Mode Only) ── */}
@@ -1189,6 +1155,9 @@ function App() {
           <a href="https://x.com/terminalfeed" target="_blank" rel="noopener noreferrer" className="footerLink">@terminalfeed</a>
         </div>
         <div className="bottomBarStatus">
+          <span className="footerBtc" title="Support the terminal">BTC: 3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</span>
+          <button className="footerCopy" onClick={() => { navigator.clipboard.writeText('3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy'); }}>copy</button>
+          <span className="bottomBarDivider">&middot;</span>
           <span className="terminalsOnline">&gt;_ {terminalsOnline} terminal{terminalsOnline !== 1 ? 's' : ''} online</span>
           <span className="bottomBarDivider">&middot;</span>
           <span className="bottomBarDot" style={{
