@@ -104,6 +104,9 @@
   gap: 28px;
   animation: ticker 110s linear infinite;
   padding-left: 16px;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .tickerItem {
@@ -142,6 +145,9 @@
   gap: 32px;
   animation: tickerReverse 120s linear infinite;
   padding-left: 16px;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 @keyframes tickerReverse {
@@ -280,6 +286,9 @@
   gap: 20px;
   animation: ticker 90s linear infinite;
   padding-left: 16px;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .activityItem {
