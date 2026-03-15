@@ -50,7 +50,6 @@ import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import { getRandomWireQuote } from './data/wireQuotes';
-import { useCertStream } from './hooks/useCertStream';
 import { useWire } from './hooks/useWire';
 import './App.css';
 
@@ -104,7 +103,6 @@ function App() {
   const disasterAlerts = useGDACS();
   const ghEvents = useGithubEvents();
   const trendingBooks = useTrendingBooks();
-  const certStream = useCertStream();
   const wire = useWire();
   const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
@@ -510,22 +508,6 @@ function App() {
           {wire.item.type === 'fact' && <span style={{ color: 'var(--purple)' }}>+ </span>}
           {wire.item.text}
         </div>
-      </div>
-    </>),
-    'cert-stream': (<>
-      <PanelHead panelId="cert-stream" layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Cert Stream</span><span className="panelTag">SSL</span></div>
-        <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
-      </PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {certStream.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>connecting to stream...</div>}
-        {certStream.map((c, i) => (
-          <div key={`${c.domain}-${i}`} className="newsRow" style={{ cursor: 'default' }}>
-            <span style={{ color: 'var(--green)', flexShrink: 0, fontSize: 10 }}>SSL</span>
-            <span className="newsTitle" style={{ color: 'var(--text)' }}>{c.domain}</span>
-            <span className="newsMeta">{Math.floor((Date.now() - c.time) / 1000)}s</span>
-          </div>
-        ))}
       </div>
     </>),
     'whale-watch': (<>

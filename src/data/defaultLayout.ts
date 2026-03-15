@@ -20,7 +20,6 @@ export const DEFAULT_LAYOUT = {
     'whale-watch',
     // Row 3: more feeds
     'the-wire',
-    'cert-stream',
     'stackoverflow',
     'hn-community',
     'seismic',
