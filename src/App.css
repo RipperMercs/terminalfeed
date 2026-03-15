@@ -64,6 +64,14 @@
   vertical-align: middle;
 }
 
+.topTerminals {
+  font-size: 9px;
+  color: var(--cyan);
+  opacity: 0.6;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
 .topBarRight {
   display: flex;
   align-items: center;
