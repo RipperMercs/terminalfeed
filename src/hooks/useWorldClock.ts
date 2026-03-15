@@ -37,7 +37,7 @@ export function useWorldClock(): WorldClock[] {
   const [clocks, setClocks] = useState<WorldClock[]>(getClocks);
 
   useEffect(() => {
-    const id = setInterval(() => setClocks(getClocks()), 1000);
+    const id = setInterval(() => setClocks(getClocks()), 5000);
     return () => clearInterval(id);
   }, []);
 

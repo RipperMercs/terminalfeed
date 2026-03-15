@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
-import { useBlockStream } from './hooks/useBlockStream';
 import { useFearGreed } from './hooks/useFearGreed';
 import { useHackerNews } from './hooks/useHackerNews';
 import { useTime } from './hooks/useTime';
@@ -61,8 +60,7 @@ function App() {
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
   const layout = useLayoutManager();
-  const { data: priceData, connected: priceConnected } = useBtcPrice();
-  const { connected: blockConnected } = useBlockStream();
+  const { data: priceData } = useBtcPrice();
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
@@ -940,9 +938,9 @@ function App() {
           <span className="terminalsOnline">&gt;_ {terminalsOnline} terminal{terminalsOnline !== 1 ? 's' : ''} online</span>
           <span className="bottomBarDivider">&middot;</span>
           <span className="bottomBarDot" style={{
-            background: (priceConnected || blockConnected) ? 'var(--green)' : 'var(--red)',
+            background: (btcPrice > 0) ? 'var(--green)' : 'var(--red)',
           }} />
-          <span>{(priceConnected || blockConnected) ? 'All systems operational' : 'Connecting...'}</span>
+          <span>{(btcPrice > 0) ? 'All systems operational' : 'Connecting...'}</span>
         </div>
       </div>
 
