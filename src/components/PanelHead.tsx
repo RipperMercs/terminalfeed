@@ -8,7 +8,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-const LOCKED_PANELS = ['support'];
+const LOCKED_PANELS: string[] = [];
 
 export function PanelHead({ panelId, layout, isStale, children }: Props) {
   const isLocked = LOCKED_PANELS.includes(panelId);
