@@ -18,6 +18,7 @@ export const DEFAULT_LAYOUT = {
     'seismic',
     'weather',
     'launches',
+    'whale-watch',
     'wiki-live',
     'disasters',
     'gh-events',

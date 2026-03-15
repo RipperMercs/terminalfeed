@@ -43,6 +43,7 @@ import { useWikipediaLive } from './hooks/useWikipediaLive';
 import { useGDACS } from './hooks/useGDACS';
 import { useGithubEvents } from './hooks/useGithubEvents';
 import { useTrendingBooks } from './hooks/useTrendingBooks';
+import { useWhaleWatch } from './hooks/useWhaleWatch';
 import { useDonations } from './hooks/useDonations';
 import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
@@ -94,6 +95,7 @@ function App() {
   const ghEvents = useGithubEvents();
   const trendingBooks = useTrendingBooks();
   const donationStats = useDonations();
+  const whaleTxs = useWhaleWatch();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
   const bskyPosts = useBluesky();
@@ -467,6 +469,24 @@ function App() {
           ))}
         </div>
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
+      </div>
+    </>),
+    'whale-watch': (<>
+      <PanelHead panelId="whale-watch" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Whale Watch</span><span className="panelTag">MEMPOOL</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {whaleTxs.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>scanning mempool...</div>}
+        {whaleTxs.map((tx) => {
+          const isHuge = tx.btc >= 10;
+          const usdValue = tx.btc * btcPrice;
+          return (
+            <a key={tx.txid} href={`https://mempool.space/tx/${tx.txid}`} target="_blank" rel="noopener noreferrer" className="newsRow">
+              <span style={{ fontSize: 12, flexShrink: 0 }}>🐋</span>
+              <span style={{ fontSize: 11, color: isHuge ? 'var(--gold)' : 'var(--amber)', fontWeight: 700, minWidth: 75 }}>{tx.btc.toFixed(4)} BTC</span>
+              <span style={{ fontSize: 10, color: 'var(--text-dim)', flex: 1 }}>${usdValue >= 1e6 ? (usdValue / 1e6).toFixed(1) + 'M' : usdValue >= 1e3 ? (usdValue / 1e3).toFixed(0) + 'K' : usdValue.toFixed(0)}</span>
+              <span className="newsMeta">{timeAgo(Math.floor(tx.time / 1000))}</span>
+            </a>
+          );
+        })}
       </div>
     </>),
     'wiki-live': (<>
