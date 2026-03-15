@@ -344,6 +344,33 @@
   to { transform: translate3d(-50%, 0, 0); }
 }
 
+/* ── What's Happening Now Summary ── */
+.nowSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(79, 209, 197, 0.03);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.nowPrefix {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.nowText {
+  font-size: 10px;
+  color: var(--text-mid);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Main Grid ── */
 .grid {
   display: grid;
