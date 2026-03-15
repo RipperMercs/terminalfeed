@@ -1121,8 +1121,11 @@ function App() {
           <span className="bottomBarDivider">&middot;</span>
           <span>Not financial advice</span>
           <span className="bottomBarDivider">&middot;</span>
-          <button className="footerLink" onClick={() => setLegalModal('privacy')}>Privacy</button>
-          <button className="footerLink" onClick={() => setLegalModal('terms')}>Terms</button>
+          <a href="/about" className="footerLink">About</a>
+          <a href="/features" className="footerLink">Features</a>
+          <a href="/changelog" className="footerLink">Changelog</a>
+          <a href="/privacy" className="footerLink">Privacy</a>
+          <a href="/terms" className="footerLink">Terms</a>
           <span className="bottomBarDivider">&middot;</span>
           <a href="mailto:hello@terminalfeed.io" className="footerLink">Contact</a>
           <a href="mailto:feedback@terminalfeed.io" className="footerLink">Feedback</a>
