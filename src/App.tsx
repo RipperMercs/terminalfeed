@@ -809,48 +809,42 @@ function App() {
         </div>
       )}
 
-      {/* ── World Clocks Bar ── */}
-      <div className="clocksBar">
-        {worldClocks.map(c => (
-          <span key={c.city} className="clockItem">
-            <span className={`clockCity ${c.isBusinessHours ? 'clockActive' : ''}`}>{c.city.slice(0, 3).toUpperCase()}</span>
-            <span className={`clockTime ${c.isBusinessHours ? 'clockTimeActive' : ''}`}>{c.time}</span>
-          </span>
-        ))}
-      </div>
-
-      {/* ── What's Happening Right Now ── */}
+      {/* ── What's Happening + World Clocks (combined) ── */}
       <div className="nowSummary">
-        <span className="nowPrefix">&gt;_</span>
-        <span className="nowText">{(() => {
-          const parts: string[] = [];
-          if (btcPrice > 0) {
-            const dir = btcChange >= 0 ? 'up' : 'down';
-            parts.push(`BTC ${dir} ${Math.abs(btcChange).toFixed(1)}% at $${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
-          }
-          if (fearGreed) {
-            parts.push(`Fear & Greed: ${fearGreed.value} (${fearGreed.label})`);
-          }
-          if (liveCount > 0) {
-            parts.push(`${liveCount} live game${liveCount > 1 ? 's' : ''} right now`);
-          }
-          const bigQuake = earthquakes.find(q => q.magnitude >= 4.5);
-          if (bigQuake) {
-            parts.push(`M${bigQuake.magnitude.toFixed(1)} quake near ${bigQuake.place}`);
-          }
-          if (wikiEPM > 0) {
-            parts.push(`Wikipedia: ~${wikiEPM} edits/min`);
-          }
-          const downServices = devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown');
-          if (downServices.length > 0) {
-            parts.push(`${downServices.map(s => s.name).join(', ')} reporting issues`);
-          }
-          if (cryptoGlobal) {
-            const capDir = cryptoGlobal.marketCapChange24h >= 0 ? 'up' : 'down';
-            parts.push(`Crypto market ${capDir} ${Math.abs(cryptoGlobal.marketCapChange24h).toFixed(1)}%`);
-          }
-          return parts.slice(0, 4).join(' · ') || 'Loading feeds...';
-        })()}</span>
+        <div className="nowLeft">
+          <span className="nowPrefix">&gt;_</span>
+          <span className="nowText">{(() => {
+            const parts: string[] = [];
+            if (btcPrice > 0) {
+              const dir = btcChange >= 0 ? 'up' : 'down';
+              parts.push(`BTC ${dir} ${Math.abs(btcChange).toFixed(1)}% at $${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+            }
+            if (fearGreed) {
+              parts.push(`Fear & Greed: ${fearGreed.value} (${fearGreed.label})`);
+            }
+            if (liveCount > 0) {
+              parts.push(`${liveCount} live game${liveCount > 1 ? 's' : ''}`);
+            }
+            const bigQuake = earthquakes.find(q => q.magnitude >= 4.5);
+            if (bigQuake) {
+              parts.push(`M${bigQuake.magnitude.toFixed(1)} quake near ${bigQuake.place}`);
+            }
+            if (cryptoGlobal) {
+              const capDir = cryptoGlobal.marketCapChange24h >= 0 ? 'up' : 'down';
+              parts.push(`Crypto ${capDir} ${Math.abs(cryptoGlobal.marketCapChange24h).toFixed(1)}%`);
+            }
+            return parts.slice(0, 3).join(' · ') || 'Loading feeds...';
+          })()}</span>
+        </div>
+        <div className="nowClocks">
+          {worldClocks.slice(0, 6).map(c => (
+            <span key={c.city} className="nowClock">
+              <span>{c.isBusinessHours ? '\u2600' : '\u263E'}</span>
+              <span style={{ color: c.isBusinessHours ? 'var(--text)' : 'var(--text-dim)' }}>{c.city.slice(0, 3).toUpperCase()}</span>
+              <span style={{ color: c.isBusinessHours ? 'var(--text)' : 'var(--text-mid)' }}>{c.time.toLowerCase().replace(' ', '')}</span>
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
