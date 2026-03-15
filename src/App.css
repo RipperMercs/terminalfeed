@@ -348,8 +348,6 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  grid-auto-rows: auto;
-  align-items: start;
   gap: 6px;
   padding: 6px;
   background: var(--bg);
