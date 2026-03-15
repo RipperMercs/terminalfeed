@@ -55,6 +55,7 @@ import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { useSteamGames } from './hooks/useSteamGames';
 import { useDailyPaws } from './hooks/useDailyPaws';
 import { useMuseumArt } from './hooks/useMuseumArt';
+import { AdminTerminal } from './components/AdminTerminal';
 import './App.css';
 
 function App() {
@@ -63,6 +64,7 @@ function App() {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(false);
 
 
   // Full screen mode
@@ -174,8 +176,14 @@ function App() {
       if (e.key === 'c' || e.key === 'C') {
         setShowPanelManager(prev => !prev);
       }
+      if (e.key === '`') {
+        e.preventDefault();
+        setShowTerminal(prev => !prev);
+        return;
+      }
       if (e.key === 'Escape') {
-        if (layout.isOrganizing) layout.setIsOrganizing(false);
+        if (showTerminal) setShowTerminal(false);
+        else if (layout.isOrganizing) layout.setIsOrganizing(false);
         else {
           setShowPanelManager(false);
           setLegalModal(null);
@@ -199,7 +207,7 @@ function App() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [layout]);
+  }, [layout, showTerminal]);
 
   // Ticker items: BTC + metals + stocks + crypto
   const tickerItems = [
@@ -1144,6 +1152,11 @@ function App() {
       {/* Layout Toast */}
       {layout.toastMessage && (
         <div className="layoutToast">{layout.toastMessage}</div>
+      )}
+
+      {/* Admin Terminal */}
+      {showTerminal && (
+        <AdminTerminal layout={layout} onClose={() => setShowTerminal(false)} />
       )}
 
       {/* Panel Manager */}
