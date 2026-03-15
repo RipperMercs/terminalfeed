@@ -344,6 +344,44 @@
   to { transform: translate3d(-50%, 0, 0); }
 }
 
+/* ── World Clocks Bar ── */
+.clocksBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.clockItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.clockCity {
+  color: var(--text-dim);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.clockCity.clockActive {
+  color: var(--green);
+}
+
+.clockTime {
+  color: var(--text-mid);
+}
+
+.clockTime.clockTimeActive {
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* ── What's Happening Now Summary ── */
 .nowSummary {
   display: flex;
@@ -371,19 +409,25 @@
   white-space: nowrap;
 }
 
-/* ── Main Grid ── */
+/* ── Main Grid — CSS columns for masonry-like packing ── */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 6px;
+  column-count: 4;
+  column-gap: 6px;
   padding: 6px;
   background: var(--bg);
   max-width: 100%;
   width: 100%;
 }
 
-.spanCol2 { grid-column: span 2; }
-.spanCol3 { grid-column: span 3; }
+/* Panels never split across columns */
+.panel {
+  break-inside: avoid;
+  margin-bottom: 6px;
+}
+
+/* Wide panels break out to full width above the columns */
+.spanCol2 { column-span: all; }
+.spanCol3 { column-span: all; }
 
 /* ── Panel — terminal window style ── */
 .panel {
@@ -3054,18 +3098,17 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 1400px) {
+  .grid { column-count: 3; }
+}
+
 @media (max-width: 1100px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .spanCol3 { grid-column: span 2; }
+  .grid { column-count: 2; }
 }
 
 @media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-  .spanCol2, .spanCol3 { grid-column: span 1; }
+  .grid { column-count: 1; }
+  .spanCol2, .spanCol3 { column-span: none; }
 
   /* TradingView chart needs more height on mobile */
   .tradingview-widget-container {

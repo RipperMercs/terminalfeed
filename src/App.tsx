@@ -678,23 +678,6 @@ function App() {
         ))}
       </div>
     </>),
-    'world-clocks': (<>
-      <PanelHead panelId="world-clocks" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">World Clocks</span><span className="panelTag">LIVE</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {worldClocks.map((c) => (
-          <div key={c.city} className="listRow">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.isBusinessHours ? 'var(--green)' : 'var(--text-dim)', opacity: c.isBusinessHours ? 1 : 0.4, flexShrink: 0 }} />
-              <span className="listRowSymbol">{c.city}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: c.isBusinessHours ? 'var(--text)' : 'var(--text-mid)' }}>{c.time}</span>
-              <span style={{ fontSize: 8, color: 'var(--text-dim)' }}>{c.date}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>),
     'ai-leaderboard': (<>
       <PanelHead panelId="ai-leaderboard" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Leaderboard</span><span className="panelTag">ELO</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -843,6 +826,16 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* ── World Clocks Bar ── */}
+      <div className="clocksBar">
+        {worldClocks.map(c => (
+          <span key={c.city} className="clockItem">
+            <span className={`clockCity ${c.isBusinessHours ? 'clockActive' : ''}`}>{c.city.slice(0, 3).toUpperCase()}</span>
+            <span className={`clockTime ${c.isBusinessHours ? 'clockTimeActive' : ''}`}>{c.time}</span>
+          </span>
+        ))}
+      </div>
 
       {/* ── What's Happening Right Now ── */}
       <div className="nowSummary">
