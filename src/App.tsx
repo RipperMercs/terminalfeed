@@ -1123,6 +1123,7 @@ function App() {
           <span className="bottomBarDivider">&middot;</span>
           <a href="/about" className="footerLink">About</a>
           <a href="/features" className="footerLink">Features</a>
+          <a href="/developers" className="footerLink">API</a>
           <a href="/changelog" className="footerLink">Changelog</a>
           <a href="/privacy" className="footerLink">Privacy</a>
           <a href="/terms" className="footerLink">Terms</a>
