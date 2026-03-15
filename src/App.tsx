@@ -50,16 +50,8 @@ function App() {
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
-  const [customStocks, setCustomStocks] = useState<string[]>(() => {
-    try { const s = localStorage.getItem('tf_watchlist_stocks'); return s ? JSON.parse(s) : []; } catch { return []; }
-  });
-  const [customCrypto, setCustomCrypto] = useState<string[]>(() => {
-    try { const s = localStorage.getItem('tf_watchlist_crypto'); return s ? JSON.parse(s) : []; } catch { return []; }
-  });
-  const [stockInput, setStockInput] = useState('');
-  const [cryptoInput, setCryptoInput] = useState('');
-  const stocks = useSimStocks(customStocks);
-  const crypto = useSimCrypto(customCrypto);
+  const stocks = useSimStocks();
+  const crypto = useSimCrypto();
   const metals = useMetals();
   const marketHours = useMarketHours();
   const games = useSportsScores();
@@ -163,41 +155,6 @@ function App() {
 
   const liveCount = games.filter((g) => g.status === 'in').length;
 
-  // Custom watchlist management
-  const addStock = useCallback((sym: string) => {
-    const ticker = sym.toUpperCase().trim();
-    if (!ticker || ticker.length > 5) return;
-    if (customStocks.includes(ticker)) return;
-    if (customStocks.length >= 10) return;
-    const updated = [...customStocks, ticker];
-    setCustomStocks(updated);
-    localStorage.setItem('tf_watchlist_stocks', JSON.stringify(updated));
-    setStockInput('');
-  }, [customStocks]);
-
-  const removeStock = useCallback((sym: string) => {
-    const updated = customStocks.filter(s => s !== sym);
-    setCustomStocks(updated);
-    localStorage.setItem('tf_watchlist_stocks', JSON.stringify(updated));
-  }, [customStocks]);
-
-  const addCryptoTicker = useCallback((sym: string) => {
-    const ticker = sym.toUpperCase().trim();
-    if (!ticker) return;
-    if (customCrypto.includes(ticker)) return;
-    if (customCrypto.length >= 10) return;
-    const updated = [...customCrypto, ticker];
-    setCustomCrypto(updated);
-    localStorage.setItem('tf_watchlist_crypto', JSON.stringify(updated));
-    setCryptoInput('');
-  }, [customCrypto]);
-
-  const removeCrypto = useCallback((sym: string) => {
-    const updated = customCrypto.filter(s => s !== sym);
-    setCustomCrypto(updated);
-    localStorage.setItem('tf_watchlist_crypto', JSON.stringify(updated));
-  }, [customCrypto]);
-
   // Smart auto-curation: calculate panel heat scores for new visitors
   const panelHeat = usePanelHeat({
     btcChangeAbs: Math.abs(btcChange),
@@ -212,10 +169,6 @@ function App() {
     if (panelHeat.length > 0) layout.applyHeatOrder(panelHeat);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [panelHeat.length > 0]);
-
-  // Default stock symbols (can't be removed)
-  const defaultStockSymbols = ['SPY', 'QQQ', 'DIA', 'NVDA', 'MSFT', 'AAPL', 'TSLA', 'GOOGL', 'AMD', 'COIN', 'PLTR'];
-  const defaultCryptoSymbols = ['ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'LTC', 'HYPE', 'HBAR'];
 
   // Scroll to top button visibility
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -244,8 +197,8 @@ function App() {
           {priceData?.source && <span className="panelTagDim">{priceData.source}</span>}
         </div>
         <div className="panelLive">
-          <span className="liveDot" style={{ background: priceConnected ? 'var(--green)' : 'var(--red)' }} />
-          <span className="liveText">{priceConnected ? 'LIVE' : 'CONNECTING'}</span>
+          <span className="liveDot" style={{ background: btcPrice > 0 ? 'var(--green)' : 'var(--red)' }} />
+          <span className="liveText">{btcPrice > 0 ? 'LIVE' : 'LOADING'}</span>
         </div>
       </PanelHead>
       <div className="priceMain">
@@ -272,7 +225,7 @@ function App() {
         <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
       </PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {crypto.filter(c => defaultCryptoSymbols.includes(c.symbol)).map((c) => (
+        {crypto.map((c) => (
           <div key={c.symbol} className="listRow">
             <span className="listRowSymbol">{c.symbol}</span>
             <div>
@@ -281,22 +234,6 @@ function App() {
             </div>
           </div>
         ))}
-        {customCrypto.length > 0 && <div className="watchlistDivider">custom</div>}
-        {crypto.filter(c => customCrypto.includes(c.symbol)).map((c) => (
-          <div key={c.symbol} className="listRow">
-            <span className="listRowSymbol">{c.symbol}</span>
-            <div>
-              <span className="listRowPrice">${c.price < 1 ? c.price.toFixed(4) : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%</span>
-              <button className="watchlistRemove" onClick={() => removeCrypto(c.symbol)} title="Remove">x</button>
-            </div>
-          </div>
-        ))}
-        <div className="watchlistAdd">
-          <input className="watchlistInput" placeholder="Add symbol..." value={cryptoInput} onChange={e => setCryptoInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addCryptoTicker(cryptoInput); }} maxLength={10} />
-          <button className="watchlistAddBtn" onClick={() => addCryptoTicker(cryptoInput)}>+</button>
-          {customCrypto.length > 0 && <span className="watchlistCount">{customCrypto.length}/10</span>}
-        </div>
       </div>
     </>),
     'btc-network': (<>
@@ -377,14 +314,7 @@ function App() {
       </PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {metals.filter((m) => m.price > 0).map((m) => (<div key={m.symbol} className="listRow" style={{ paddingBottom: 6, marginBottom: 4, borderBottom: '1px solid var(--border)' }}><div><span className="listRowSymbol" style={{ color: 'var(--gold)' }}>{m.symbol}</span><span className="listRowName">{m.name}</span></div><div><span className="listRowPrice" style={{ color: 'var(--gold)' }}>${m.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span><span className={`listRowChange ${m.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{m.change >= 0 ? '+' : ''}{m.change.toFixed(2)}%</span></div></div>))}
-        {stocks.filter(s => defaultStockSymbols.includes(s.symbol)).map((s) => (<div key={s.symbol} className="listRow"><div><span className="listRowSymbol">{s.symbol}</span><span className="listRowName">{s.name}</span></div><div><span className="listRowPrice">${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%</span></div></div>))}
-        {customStocks.length > 0 && <div className="watchlistDivider">custom</div>}
-        {stocks.filter(s => customStocks.includes(s.symbol)).map((s) => (<div key={s.symbol} className="listRow"><div><span className="listRowSymbol">{s.symbol}</span><span className="listRowName">{s.name}</span></div><div><span className="listRowPrice">${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%</span><button className="watchlistRemove" onClick={() => removeStock(s.symbol)} title="Remove">x</button></div></div>))}
-        <div className="watchlistAdd">
-          <input className="watchlistInput" placeholder="Add ticker..." value={stockInput} onChange={e => setStockInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addStock(stockInput); }} maxLength={5} />
-          <button className="watchlistAddBtn" onClick={() => addStock(stockInput)}>+</button>
-          {customStocks.length > 0 && <span className="watchlistCount">{customStocks.length}/10</span>}
-        </div>
+        {stocks.map((s) => (<div key={s.symbol} className="listRow"><div><span className="listRowSymbol">{s.symbol}</span><span className="listRowName">{s.name}</span></div><div><span className="listRowPrice">${s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`listRowChange ${s.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%</span></div></div>))}
       </div>
     </>),
     'dev-status': (<>
