@@ -84,9 +84,9 @@ body {
   inset: 0;
   background: radial-gradient(
     ellipse at center,
-    rgba(74, 222, 128, 0.015) 0%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.3) 100%
+    rgba(74, 222, 128, 0.006) 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.15) 100%
   );
   pointer-events: none;
   z-index: 9998;
