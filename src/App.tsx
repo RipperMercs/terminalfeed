@@ -499,7 +499,7 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">The Wire</span></div>
         <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{wire.index + 1}/{wire.total}</span>
       </PanelHead>
-      <div style={{ padding: '8px 0', minHeight: 50, opacity: wire.fading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+      <div style={{ padding: '4px 0', opacity: wire.fading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
         <div style={{
           fontSize: wire.item.type === 'quote' ? 12 : 11,
           color: wire.item.type === 'meta' ? 'var(--cyan)' : wire.item.type === 'quote' ? 'var(--text)' : wire.item.type === 'history' ? 'var(--amber)' : 'var(--text-mid)',
