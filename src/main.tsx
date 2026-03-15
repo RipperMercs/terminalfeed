@@ -1,12 +1,33 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Component, type ReactNode } from 'react'
 import './index.css'
 import App from './App.tsx'
 
+// Error boundary — prevents white screen on crash
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error) { console.error('TerminalFeed crash:', error); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ background: '#080808', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace', color: '#F87171', gap: 12 }}>
+          <div style={{ fontSize: 14 }}>&gt;_ terminal error</div>
+          <div style={{ fontSize: 11, color: '#8A8880' }}>something broke. refreshing...</div>
+          <button onClick={() => window.location.reload()} style={{ background: 'none', border: '1px solid #4ADE80', color: '#4ADE80', fontFamily: 'monospace', fontSize: 11, padding: '6px 16px', borderRadius: 4, cursor: 'pointer', marginTop: 8 }}>reload</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// No StrictMode — it double-mounts components which causes
+// duplicate WebSocket connections and race conditions
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <ErrorBoundary>
     <App />
-  </StrictMode>,
+  </ErrorBoundary>
 )
 
 // Console easter egg
