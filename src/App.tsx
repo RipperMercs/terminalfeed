@@ -78,14 +78,14 @@ function App() {
         schedule();
       }, delay);
     };
-    // TESTING: first one fires after 10 seconds
+    // TESTING: first one fires after 3 seconds
     timer = setTimeout(() => {
       if (!document.hidden) {
         setMatrixActive(true);
         setTimeout(() => setMatrixActive(false), 8000);
       }
       schedule();
-    }, 10000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -884,13 +884,13 @@ function App() {
       {/* Matrix rain — gentle green characters behind panels */}
       {matrixActive && (
         <div className="matrixRain">
-          {Array.from({ length: 12 }, (_, i) => (
+          {Array.from({ length: 20 }, (_, i) => (
             <div key={i} className="matrixCol" style={{
-              left: `${(i * 8.3) + Math.random() * 3}%`,
+              left: `${(i * 5) + Math.random() * 2}%`,
               animationDelay: `${Math.random() * 2}s`,
               animationDuration: `${4 + Math.random() * 3}s`,
             }}>
-              {'01アイウエオカキクケコ10サシスセソ'.split('').sort(() => Math.random() - 0.5).slice(0, 8).join('\n')}
+              {'01アイウエオカキクケコ10サシスセソタチツテト'.split('').sort(() => Math.random() - 0.5).slice(0, 12).join('\n')}
             </div>
           ))}
         </div>
