@@ -209,7 +209,12 @@ export function useLayoutManager(): LayoutManager {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
-        showToast('Panel restored');
+        // Move restored panel to end of order so it doesn't disrupt layout
+        setPanelOrderState(order => {
+          const filtered = order.filter((p: string) => p !== id);
+          return [...filtered, id];
+        });
+        showToast('Panel restored to bottom');
       } else {
         next.add(id);
         showToast('Panel hidden');
