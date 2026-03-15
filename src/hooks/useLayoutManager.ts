@@ -7,12 +7,12 @@ import type { PanelHeat } from './usePanelHeat';
 // Top = most valuable data, bottom = niche/fun
 export const ALL_PANELS = [
   // Row 1: The glance zone
-  { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 2 },
+  { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 1 },
   // Row 2: Money
   { id: 'markets', label: 'Markets (US)', defaultSpan: 1 },
   { id: 'crypto', label: 'Crypto', defaultSpan: 1 },
   // Row 3: BTC deep dive
-  { id: 'btc-network', label: 'BTC Network', defaultSpan: 2 },
+  { id: 'btc-network', label: 'BTC Network', defaultSpan: 1 },
   { id: 'market-hours', label: 'Market Hours', defaultSpan: 1 },
   // Row 4: Information
   { id: 'news', label: 'Tech / AI Feed', defaultSpan: 1 },
