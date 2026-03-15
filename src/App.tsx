@@ -934,28 +934,6 @@ function App() {
         </div>
       )}
 
-      {/* ── Activity Log Ticker ── */}
-      <div className="activityBar">
-        <div className="activityTrack">
-          {[...(btcPrice > 0 ? [`btc $${btcPrice.toLocaleString(undefined, {maximumFractionDigits: 0})}`] : []),
-            ...(stories.length > 0 ? [`${stories.length} headlines loaded`] : []),
-            ...(redditPosts.length > 0 ? [`${redditPosts.length} reddit posts`] : []),
-            ...(earthquakes.length > 0 ? [`${earthquakes.length} quakes today`] : []),
-            ...(trendingRepos.length > 0 ? [`${trendingRepos.length} trending repos`] : []),
-            ...(devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown').length > 0
-              ? [`${devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown').length} service alerts`] : ['all services operational']),
-            ...(weather ? [`${weather.city} ${weather.temperature}°F`] : []),
-            ...(btcNet.blockHeight > 0 ? [`block ${btcNet.blockHeight.toLocaleString()}`] : []),
-            ...(btcNet.feeFastest > 0 ? [`fees ${btcNet.feeFastest} sat/vB`] : []),
-            ...(liveCount > 0 ? [`${liveCount} live games`] : []),
-            ...(cryptoGlobal ? [`crypto cap $${formatCompact(cryptoGlobal.totalMarketCap)}`] : []),
-            'terminalfeed.io',
-          ].flatMap(item => [item, item]).map((item, i) => (
-            <span key={i} className="activityItem"><span className="activityDot" />{item}</span>
-          ))}
-        </div>
-      </div>
-
 
       {/* ── Bottom Bar ── */}
       <div className="bottomBar">
