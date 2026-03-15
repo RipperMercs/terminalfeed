@@ -1,53 +1,52 @@
 // Default curated layout — what new visitors see
-// To update: type "admin-save-layout" on the live site,
-// paste the JSON output here, commit and deploy.
+// Most visually active/moving panels near the top to wow first-time visitors
 
 export const DEFAULT_LAYOUT = {
   panelOrder: [
-    // Row 1: top row — weather FIRST (top-left, ad slot)
+    // Row 1: anchor panels (weather, btc, news, markets already pinned in render)
     'weather',
     'bitcoin',
     'news',
     'markets',
     'wiki-live',
     'dev-status',
-    // Row 2: mix of content + data
+    // Row 2: visually active + high value
     'crypto',
+    'ai-hub',
+    'whale-watch',
+    'btc-network',
     'tech-news',
     'reddit',
-    'btc-network',
+    // Row 3: more moving feeds
     'github',
-    'market-hours',
-    'whale-watch',
-    // Row 3: more feeds
-    'predictions',
-    'steam',
-    'ai-hub',
+    'gh-events',
     'the-wire',
+    'predictions',
+    'market-hours',
+    'seismic',
+    // Row 4: content feeds
     'stackoverflow',
     'hn-community',
-    'seismic',
-    'gh-events',
-    // Row 4: supplementary
-    'disasters',
     'forex',
-    'books',
+    'disasters',
+    'steam',
+    'bluesky',
+    // Row 5: supplementary
     'solar',
     'launches',
-    // Row 5: culture + lifestyle
-    'podcasts',
+    'ai-leaderboard',
+    'npm-trends',
     'wikipedia',
     'producthunt',
-    'ai-leaderboard',
-    'bluesky',
     'internet-pulse',
-    'uap',
-    'npm-trends',
-    'fitness',
-    'museum-art',
-    'daily-paws',
-    'recipe',
+    'books',
+    // Bottom: lifestyle + fun
     'daily-learn',
+    'daily-paws',
+    'museum-art',
+    'recipe',
+    'uap',
+    'fitness',
     'support',
   ],
   hiddenPanels: [] as string[],
