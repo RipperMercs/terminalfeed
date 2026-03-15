@@ -61,33 +61,6 @@ function App() {
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
 
-  // Matrix rain background — gentle green characters falling behind panels
-  const [matrixActive, setMatrixActive] = useState(false);
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if (isMobile) return;
-
-    let timer: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      const delay = (12 + Math.random() * 8) * 60_000; // 12-20 min
-      timer = setTimeout(() => {
-        if (!document.hidden) {
-          setMatrixActive(true);
-          setTimeout(() => setMatrixActive(false), 8000); // runs for 8 seconds
-        }
-        schedule();
-      }, delay);
-    };
-    // TESTING: first one fires after 3 seconds
-    timer = setTimeout(() => {
-      if (!document.hidden) {
-        setMatrixActive(true);
-        setTimeout(() => setMatrixActive(false), 8000);
-      }
-      schedule();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Full screen mode
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -881,20 +854,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Matrix rain — gentle green characters behind panels */}
-      {matrixActive && (
-        <div className="matrixRain">
-          {Array.from({ length: 20 }, (_, i) => (
-            <div key={i} className="matrixCol" style={{
-              left: `${(i * 5) + Math.random() * 2}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${4 + Math.random() * 3}s`,
-            }}>
-              {'01アイウエオカキクケコ10サシスセソタチツテト'.split('').sort(() => Math.random() - 0.5).slice(0, 12).join('\n')}
-            </div>
-          ))}
-        </div>
-      )}
       {/* ── Top Bar ── */}
       <div className="topBar">
         <div className="topBarLeft">
