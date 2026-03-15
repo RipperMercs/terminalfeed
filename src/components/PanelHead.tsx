@@ -10,7 +10,15 @@ interface Props {
 
 const LOCKED_PANELS = ['support'];
 
-export function PanelHead({ panelId, layout, getGridCols, isStale, children }: Props) {
+function getColumnJumpSize(totalPanels: number): number {
+  const width = window.innerWidth;
+  if (width >= 1400) return Math.ceil(totalPanels / 4);
+  if (width >= 1100) return Math.ceil(totalPanels / 3);
+  if (width >= 900) return Math.ceil(totalPanels / 2);
+  return 1; // mobile — left/right same as up/down
+}
+
+export function PanelHead({ panelId, layout, isStale, children }: Props) {
   const isLocked = LOCKED_PANELS.includes(panelId);
 
   const move = (direction: 'up' | 'down' | 'left' | 'right') => {
@@ -19,23 +27,18 @@ export function PanelHead({ panelId, layout, getGridCols, isStale, children }: P
     const idx = visible.indexOf(panelId);
     if (idx < 0) return;
 
-    // In CSS columns, items flow top-to-bottom in each column.
-    // "Up" = previous item, "Down" = next item
-    // "Left" = jump backward by ~items-per-column, "Right" = jump forward
-    const cols = getGridCols();
-    const itemsPerCol = Math.ceil(visible.length / cols);
+    const jump = getColumnJumpSize(visible.length);
 
     let targetIdx: number;
     switch (direction) {
       case 'up': targetIdx = idx - 1; break;
       case 'down': targetIdx = idx + 1; break;
-      case 'left': targetIdx = idx - itemsPerCol; break;
-      case 'right': targetIdx = idx + itemsPerCol; break;
+      case 'left': targetIdx = idx - jump; break;
+      case 'right': targetIdx = idx + jump; break;
     }
 
     if (targetIdx < 0 || targetIdx >= visible.length) return;
 
-    // Swap in the full order array
     const fullIdxA = order.indexOf(visible[idx]);
     const fullIdxB = order.indexOf(visible[targetIdx]);
     const next = [...order];
