@@ -20,6 +20,8 @@ export const DEFAULT_LAYOUT = {
     'market-hours',
     'whale-watch',
     // Row 3: more feeds
+    'predictions',
+    'steam',
     'ai-hub',
     'the-wire',
     'stackoverflow',

@@ -51,6 +51,8 @@ import { useWire } from './hooks/useWire';
 import { useRSSNews } from './hooks/useRSSNews';
 import { useNpmTrends } from './hooks/useNpmTrends';
 import { useAIHub } from './hooks/useAIHub';
+import { usePredictionMarkets } from './hooks/usePredictionMarkets';
+import { useSteamGames } from './hooks/useSteamGames';
 import { useDailyPaws } from './hooks/useDailyPaws';
 import { useMuseumArt } from './hooks/useMuseumArt';
 import './App.css';
@@ -123,6 +125,8 @@ function App() {
   const rssNews = useRSSNews();
   const npmPackages = useNpmTrends();
   const aiHub = useAIHub();
+  const predictionMarkets = usePredictionMarkets();
+  const steamGames = useSteamGames();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const museumArt = useMuseumArt();
   const donationStats = useDonations();
@@ -602,6 +606,38 @@ function App() {
           ))}
         </div>
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
+      </div>
+    </>),
+    'predictions': (<>
+      <PanelHead panelId="predictions" isStale={panelHealth.isStale('predictions')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Predictions</span><span className="panelTag">POLYMARKET</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {predictionMarkets.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading markets...</div>}
+        {predictionMarkets.map((m) => (
+          <div key={m.id} style={{ padding: '4px 0', borderBottom: '1px solid rgba(26,26,34,0.5)' }}>
+            <div style={{ fontSize: 10, color: 'var(--text)', lineHeight: 1.4, marginBottom: 4 }}>{m.title}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600, minWidth: 32 }}>{m.probability}%</span>
+              <div style={{ flex: 1, height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${m.probability}%`, height: '100%', background: m.probability >= 50 ? 'var(--green)' : 'var(--red)', borderRadius: 3, transition: 'width 0.5s ease' }} />
+              </div>
+              <span style={{ fontSize: 10, color: 'var(--red)', fontWeight: 600, minWidth: 32, textAlign: 'right' }}>{100 - m.probability}%</span>
+            </div>
+            {m.volume > 0 && <div style={{ fontSize: 8, color: 'var(--text-dim)', marginTop: 2 }}>Vol: ${m.volume >= 1e6 ? (m.volume / 1e6).toFixed(1) + 'M' : m.volume >= 1e3 ? (m.volume / 1e3).toFixed(0) + 'K' : m.volume.toFixed(0)}</div>}
+          </div>
+        ))}
+        <div style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', paddingTop: 4 }}>data from polymarket.com</div>
+      </div>
+    </>),
+    'steam': (<>
+      <PanelHead panelId="steam" isStale={panelHealth.isStale('steam')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Steam</span><span className="panelTag">LIVE</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {steamGames.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading games...</div>}
+        {steamGames.map((g) => (
+          <div key={g.appId} className="listRow">
+            <span className="listRowSymbol">{g.name}</span>
+            <span style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600 }}>{g.playerCount >= 1e6 ? (g.playerCount / 1e6).toFixed(1) + 'M' : g.playerCount >= 1e3 ? (g.playerCount / 1e3).toFixed(0) + 'K' : g.playerCount} playing</span>
+          </div>
+        ))}
       </div>
     </>),
     'ai-hub': (<>
