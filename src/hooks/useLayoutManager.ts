@@ -204,6 +204,8 @@ export function useLayoutManager(): LayoutManager {
   const isCollapsed = useCallback((id: string) => collapsedPanels.has(id), [collapsedPanels]);
 
   const toggleHidden = useCallback((id: string) => {
+    // Lock scroll position so masonry reflow doesn't jump the page
+    const scrollY = window.scrollY;
     setHiddenPanels(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -220,6 +222,8 @@ export function useLayoutManager(): LayoutManager {
       }
       return next;
     });
+    // Restore scroll after React re-renders
+    requestAnimationFrame(() => window.scrollTo(0, scrollY));
   }, [showToast]);
 
   const toggleCollapse = useCallback((id: string) => {
