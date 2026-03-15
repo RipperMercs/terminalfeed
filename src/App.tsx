@@ -664,6 +664,7 @@ function App() {
           <span className="logoText">TERMINALFEED</span>
           <span className="logoDot">.io</span>
           <span className="logoCursor" />
+          <span className="topTerminals">{terminalsOnline} online</span>
         </div>
         <div className="topBarRight">
           <button
