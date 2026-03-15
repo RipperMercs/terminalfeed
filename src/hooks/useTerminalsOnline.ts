@@ -1,86 +1,40 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
-// Lightweight presence counter using BroadcastChannel + unique session ID
-// No external service needed — counts approximate concurrent visitors
-// via a simple heartbeat to localStorage with cleanup of stale sessions
+// Simulated terminal count with organic-feeling fluctuations
+// Base range: 1,700 - 4,978
+// Fluctuates naturally based on time of day (higher during US/EU business hours)
 
-const CHANNEL_KEY = 'tf_presence';
-const HEARTBEAT_MS = 15_000; // 15s heartbeat
-const STALE_MS = 45_000; // consider stale after 45s no heartbeat
+function getBaseCount(): number {
+  const hour = new Date().getUTCHours();
 
-interface PresenceEntry {
-  id: string;
-  ts: number;
-}
-
-function getSessionId(): string {
-  let id = sessionStorage.getItem('tf_session_id');
-  if (!id) {
-    id = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    sessionStorage.setItem('tf_session_id', id);
-  }
-  return id;
-}
-
-function getPresenceList(): PresenceEntry[] {
-  try {
-    const raw = localStorage.getItem(CHANNEL_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function savePresenceList(list: PresenceEntry[]): void {
-  try {
-    localStorage.setItem(CHANNEL_KEY, JSON.stringify(list));
-  } catch {}
+  // Simulate daily traffic pattern (UTC)
+  // Peak: 14-22 UTC (US daytime + EU evening)
+  // Low: 4-10 UTC (overnight US)
+  if (hour >= 14 && hour <= 22) return 3200 + Math.floor(Math.random() * 1500); // peak: 3200-4700
+  if (hour >= 10 && hour < 14) return 2400 + Math.floor(Math.random() * 1200);  // EU morning: 2400-3600
+  if (hour >= 22 || hour < 2) return 2000 + Math.floor(Math.random() * 1000);   // evening: 2000-3000
+  return 1700 + Math.floor(Math.random() * 800);                                 // overnight: 1700-2500
 }
 
 export function useTerminalsOnline(): number {
-  const [count, setCount] = useState(1);
-  const sessionId = useRef(getSessionId());
+  const [count, setCount] = useState(() => getBaseCount());
 
   useEffect(() => {
-    const heartbeat = () => {
-      const now = Date.now();
-      let list = getPresenceList();
-
-      // Remove stale entries
-      list = list.filter(e => now - e.ts < STALE_MS);
-
-      // Update or add our entry
-      const idx = list.findIndex(e => e.id === sessionId.current);
-      if (idx >= 0) {
-        list[idx].ts = now;
-      } else {
-        list.push({ id: sessionId.current, ts: now });
-      }
-
-      savePresenceList(list);
-      setCount(Math.max(1, list.length));
+    // Small fluctuations every 8-15 seconds to feel alive
+    const tick = () => {
+      setCount(prev => {
+        // Drift by -30 to +30 from current
+        const drift = Math.floor(Math.random() * 61) - 30;
+        const base = getBaseCount();
+        // Blend: 80% stay near current, 20% pull toward base
+        const blended = Math.round(prev * 0.8 + base * 0.2) + drift;
+        // Clamp to 1700-4978
+        return Math.max(1700, Math.min(4978, blended));
+      });
     };
 
-    // Initial heartbeat
-    heartbeat();
-
-    // Regular heartbeats
-    const id = setInterval(heartbeat, HEARTBEAT_MS);
-
-    // Clean up on leave
-    const cleanup = () => {
-      const list = getPresenceList().filter(e => e.id !== sessionId.current);
-      savePresenceList(list);
-    };
-
-    window.addEventListener('beforeunload', cleanup);
-
-    return () => {
-      clearInterval(id);
-      window.removeEventListener('beforeunload', cleanup);
-      cleanup();
-    };
+    const interval = setInterval(tick, 8000 + Math.floor(Math.random() * 7000));
+    return () => clearInterval(interval);
   }, []);
 
   return count;
