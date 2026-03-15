@@ -490,6 +490,22 @@ function App() {
         {soQuestions.map((q) => (<a key={q.id} href={q.link} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="soScore">{q.score}</span><div style={{ flex: 1, minWidth: 0 }}><div className="newsTitle">{q.title}</div><div className="soTags">{q.tags.join(' · ')}</div></div><span className="soAnswers">{q.answerCount}A</span></a>))}
       </div>
     </>),
+    'fitness': (<>
+      <PanelHead panelId="fitness" isStale={panelHealth.isStale('fitness')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Fitness</span><span className="panelTag" style={{ color: 'var(--green)' }}>LIVE</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>daily gains</span>
+      </PanelHead>
+      <div style={{ display: 'flex', gap: 16, padding: '0 0 8px', fontSize: 10 }}>
+        <div><div style={{ color: 'var(--red)', fontSize: 16, fontWeight: 700 }}>0</div><div style={{ color: 'var(--text-dim)', fontSize: 8 }}>reps today</div></div>
+        <div><div style={{ color: 'var(--gold)', fontSize: 16, fontWeight: 700 }}>3,200</div><div style={{ color: 'var(--text-dim)', fontSize: 8 }}>cal consumed</div></div>
+        <div><div style={{ color: 'var(--green)', fontSize: 16, fontWeight: 700 }}>100%</div><div style={{ color: 'var(--text-dim)', fontSize: 8 }}>pizza intake</div></div>
+      </div>
+      <img src="https://images.pexels.com/photos/1653877/pexels-photo-1653877.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Peak fitness performance" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
+      <div style={{ padding: '6px 0 0', fontSize: 8, color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+        <span>this one's for you, rupture</span>
+        <span>sponsored by carbs</span>
+      </div>
+    </>),
     'in-space': (<>
       <PanelHead panelId="in-space" isStale={panelHealth.isStale('in-space')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">In Space</span><span className="panelTag">NOW</span></div></PanelHead>
       {astros ? (
