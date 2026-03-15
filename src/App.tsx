@@ -50,6 +50,8 @@ import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import { getRandomWireQuote } from './data/wireQuotes';
+import { useCertStream } from './hooks/useCertStream';
+import { useWire } from './hooks/useWire';
 import './App.css';
 
 function App() {
@@ -94,6 +96,8 @@ function App() {
   const disasterAlerts = useGDACS();
   const ghEvents = useGithubEvents();
   const trendingBooks = useTrendingBooks();
+  const certStream = useCertStream();
+  const wire = useWire();
   const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
   const podcastEpisodes = usePodcasts();
@@ -471,6 +475,40 @@ function App() {
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
       </div>
     </>),
+    'the-wire': (<>
+      <PanelHead panelId="the-wire" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">The Wire</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{wire.index + 1}/{wire.total}</span>
+      </PanelHead>
+      <div style={{ padding: '8px 0', minHeight: 50, opacity: wire.fading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+        <div style={{
+          fontSize: wire.item.type === 'quote' ? 12 : 11,
+          color: wire.item.type === 'meta' ? 'var(--cyan)' : wire.item.type === 'quote' ? 'var(--text)' : wire.item.type === 'history' ? 'var(--amber)' : 'var(--text-mid)',
+          fontStyle: wire.item.type === 'quote' ? 'italic' : 'normal',
+          lineHeight: 1.6,
+        }}>
+          {wire.item.type === 'history' && <span style={{ color: 'var(--cyan)' }}>+ </span>}
+          {wire.item.type === 'fact' && <span style={{ color: 'var(--purple)' }}>+ </span>}
+          {wire.item.text}
+        </div>
+      </div>
+    </>),
+    'cert-stream': (<>
+      <PanelHead panelId="cert-stream" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Cert Stream</span><span className="panelTag">SSL</span></div>
+        <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {certStream.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>connecting to stream...</div>}
+        {certStream.map((c, i) => (
+          <div key={`${c.domain}-${i}`} className="newsRow" style={{ cursor: 'default' }}>
+            <span style={{ color: 'var(--green)', flexShrink: 0, fontSize: 10 }}>SSL</span>
+            <span className="newsTitle" style={{ color: 'var(--text)' }}>{c.domain}</span>
+            <span className="newsMeta">{Math.floor((Date.now() - c.time) / 1000)}s</span>
+          </div>
+        ))}
+      </div>
+    </>),
     'whale-watch': (<>
       <PanelHead panelId="whale-watch" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Whale Watch</span><span className="panelTag">MEMPOOL</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -789,15 +827,15 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* Top row — pinned: Weather, Bitcoin (wide), Tech News, Markets, Wiki Live, Dev Status */}
+        {/* Top row — WEATHER | TECH | BTC PRICE | MARKETS | WIKI | DEV STATUS */}
         {panelRegistry['weather'] && (
           <div className="panel">{panelRegistry['weather']}</div>
         )}
-        {panelRegistry['bitcoin'] && (
-          <div className="panel spanCol2">{panelRegistry['bitcoin']}</div>
-        )}
         {panelRegistry['news'] && (
           <div className="panel">{panelRegistry['news']}</div>
+        )}
+        {panelRegistry['bitcoin'] && (
+          <div className="panel spanCol2">{panelRegistry['bitcoin']}</div>
         )}
         {panelRegistry['markets'] && (
           <div className="panel">{panelRegistry['markets']}</div>
