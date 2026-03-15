@@ -102,11 +102,19 @@
 .tickerTrack {
   display: inline-flex;
   gap: 28px;
-  animation: ticker 110s linear infinite;
+  animation: ticker 200s linear infinite;
   padding-left: 16px;
   will-change: transform;
-  transform: translateZ(0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tickerTrack, .sportsTickerTrack, .activityTrack {
+    animation: none !important;
+  }
 }
 
 .tickerItem {
@@ -143,11 +151,13 @@
 .sportsTickerTrack {
   display: inline-flex;
   gap: 32px;
-  animation: tickerReverse 120s linear infinite;
+  animation: tickerReverse 220s linear infinite;
   padding-left: 16px;
   will-change: transform;
-  transform: translateZ(0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 @keyframes tickerReverse {
@@ -284,11 +294,13 @@
 .activityTrack {
   display: inline-flex;
   gap: 20px;
-  animation: ticker 90s linear infinite;
+  animation: ticker 180s linear infinite;
   padding-left: 16px;
   will-change: transform;
-  transform: translateZ(0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .activityItem {
