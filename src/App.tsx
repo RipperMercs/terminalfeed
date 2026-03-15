@@ -299,7 +299,11 @@ function App() {
         <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0', paddingTop: 6 }}>
           <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Market</div>
           {btcEth.map(c => (<div key={c.symbol} className="listRow"><div><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%</span></div></div>))}
-          {cryptoGlobal && <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>Total Cap</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalMarketCap)}</span></div>}
+          {cryptoGlobal && (<>
+            <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>Total Cap</span></div><div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalMarketCap)}</span><span className={`listRowChange ${cryptoGlobal.marketCapChange24h >= 0 ? 'tickerUp' : 'tickerDown'}`} style={{ fontSize: 9 }}>{cryptoGlobal.marketCapChange24h >= 0 ? '+' : ''}{cryptoGlobal.marketCapChange24h.toFixed(1)}%</span></div></div>
+            <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>BTC Dom</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>{cryptoGlobal.btcDominance.toFixed(1)}%</span></div>
+            <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>24h Vol</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalVolume24h)}</span></div>
+          </>)}
         </div>
       </>);
     })(),
@@ -401,17 +405,6 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {devStatuses.map((svc) => { const color = svc.indicator === 'none' ? 'var(--green)' : svc.indicator === 'minor' ? 'var(--amber)' : svc.indicator === 'major' ? 'var(--amber)' : svc.indicator === 'critical' ? 'var(--red)' : 'var(--text-dim)'; return (<div key={svc.name} className="statusRow"><div className="statusLeft"><span className="statusDot" style={{ background: color, boxShadow: `0 0 4px ${color}` }} /><span className="statusName">{svc.name}</span></div><span className="statusDesc" style={{ color }}>{svc.indicator === 'none' ? 'Operational' : svc.indicator === 'unknown' ? 'Checking...' : svc.description}</span></div>); })}
       </div>
-    </>),
-    'crypto-global': (<>
-      <PanelHead panelId="crypto-global" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Crypto Market</span><span className="panelTag">GLOBAL</span></div></PanelHead>
-      {cryptoGlobal ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div className="cryptoGlobalRow"><span className="cryptoGlobalLabel">Total Cap</span><div><span className="cryptoGlobalValue">${formatCompact(cryptoGlobal.totalMarketCap)}</span><span className={`listRowChange ${cryptoGlobal.marketCapChange24h >= 0 ? 'tickerUp' : 'tickerDown'}`}>{cryptoGlobal.marketCapChange24h >= 0 ? '+' : ''}{cryptoGlobal.marketCapChange24h.toFixed(1)}%</span></div></div>
-        <div className="cryptoGlobalRow"><span className="cryptoGlobalLabel">BTC Dom</span><span className="cryptoGlobalValue">{cryptoGlobal.btcDominance.toFixed(1)}%</span></div>
-        <div className="cryptoGlobalRow"><span className="cryptoGlobalLabel">ETH Dom</span><span className="cryptoGlobalValue">{cryptoGlobal.ethDominance.toFixed(1)}%</span></div>
-        <div className="cryptoGlobalRow"><span className="cryptoGlobalLabel">24h Vol</span><span className="cryptoGlobalValue">${formatCompact(cryptoGlobal.totalVolume24h)}</span></div>
-        <div className="cryptoGlobalRow"><span className="cryptoGlobalLabel">Active Coins</span><span className="cryptoGlobalValue">{cryptoGlobal.activeCryptos.toLocaleString()}</span></div>
-        <div className="domBar"><div className="domSegment domBtc" style={{ width: `${cryptoGlobal.btcDominance}%` }}>BTC</div><div className="domSegment domEth" style={{ width: `${cryptoGlobal.ethDominance}%` }}>ETH</div><div className="domSegment domOther" style={{ width: `${Math.max(0, 100 - cryptoGlobal.btcDominance - cryptoGlobal.ethDominance)}%` }}>Other</div></div>
-      </div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
     </>),
     'weather': (<>
       <PanelHead panelId="weather" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Weather</span>{weather && <span className="panelTag">{weather.city.toUpperCase()}</span>}</div></PanelHead>
