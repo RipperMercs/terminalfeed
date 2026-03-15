@@ -40,7 +40,6 @@ export const DEFAULT_LAYOUT = {
     'internet-pulse',
     'uap',
     'fitness',
-    'in-space',
     'museum-art',
     'daily-paws',
     'recipe',

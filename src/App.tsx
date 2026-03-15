@@ -50,7 +50,6 @@ import { getTodayTerm } from './data/techTerms';
 import { useWire } from './hooks/useWire';
 import { useRSSNews } from './hooks/useRSSNews';
 import { useDailyPaws } from './hooks/useDailyPaws';
-import { useAstros } from './hooks/useAstros';
 import { useMuseumArt } from './hooks/useMuseumArt';
 import './App.css';
 
@@ -121,7 +120,6 @@ function App() {
   const wire = useWire();
   const rssNews = useRSSNews();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
-  const astros = useAstros();
   const museumArt = useMuseumArt();
   const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
@@ -507,24 +505,6 @@ function App() {
         <span>this one's for you, rupture</span>
         <span>sponsored by carbs</span>
       </div>
-    </>),
-    'in-space': (<>
-      <PanelHead panelId="in-space" isStale={panelHealth.isStale('in-space')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">In Space</span><span className="panelTag">NOW</span></div></PanelHead>
-      {astros ? (
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--cyan)', textAlign: 'center', padding: '8px 0' }}>
-            {astros.count} <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-mid)' }}>humans in space right now</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {astros.people.map((p, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, padding: '2px 0' }}>
-                <span style={{ color: 'var(--text)' }}>{p.name}</span>
-                <span style={{ color: 'var(--text-dim)', fontSize: 9 }}>{p.craft}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>checking orbit...</div>}
     </>),
     'museum-art': (<>
       <PanelHead panelId="museum-art" isStale={panelHealth.isStale('museum-art')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Art</span><span className="panelTag">MUSEUM</span></div></PanelHead>

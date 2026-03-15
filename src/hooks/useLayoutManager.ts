@@ -46,7 +46,6 @@ export const ALL_PANELS = [
   { id: 'internet-pulse', label: 'Internet Pulse', defaultSpan: 1 },
   // Bottom: Fun/lifestyle
   { id: 'fitness', label: 'Fitness', defaultSpan: 1 },
-  { id: 'in-space', label: 'Humans in Space', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
   { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
   { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
