@@ -826,6 +826,40 @@ function App() {
         </div>
       )}
 
+      {/* ── What's Happening Right Now ── */}
+      <div className="nowSummary">
+        <span className="nowPrefix">&gt;_</span>
+        <span className="nowText">{(() => {
+          const parts: string[] = [];
+          if (btcPrice > 0) {
+            const dir = btcChange >= 0 ? 'up' : 'down';
+            parts.push(`BTC ${dir} ${Math.abs(btcChange).toFixed(1)}% at $${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+          }
+          if (fearGreed) {
+            parts.push(`Fear & Greed: ${fearGreed.value} (${fearGreed.label})`);
+          }
+          if (liveCount > 0) {
+            parts.push(`${liveCount} live game${liveCount > 1 ? 's' : ''} right now`);
+          }
+          const bigQuake = earthquakes.find(q => q.magnitude >= 4.5);
+          if (bigQuake) {
+            parts.push(`M${bigQuake.magnitude.toFixed(1)} quake near ${bigQuake.place}`);
+          }
+          if (wikiEPM > 0) {
+            parts.push(`Wikipedia: ~${wikiEPM} edits/min`);
+          }
+          const downServices = devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown');
+          if (downServices.length > 0) {
+            parts.push(`${downServices.map(s => s.name).join(', ')} reporting issues`);
+          }
+          if (cryptoGlobal) {
+            const capDir = cryptoGlobal.marketCapChange24h >= 0 ? 'up' : 'down';
+            parts.push(`Crypto market ${capDir} ${Math.abs(cryptoGlobal.marketCapChange24h).toFixed(1)}%`);
+          }
+          return parts.slice(0, 4).join(' · ') || 'Loading feeds...';
+        })()}</span>
+      </div>
+
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
         {/* All panels rendered from panelOrder — top row is just the default order */}
