@@ -14,7 +14,6 @@ export const DEFAULT_LAYOUT = {
     'reddit',
     'btc-network',
     'github',
-    'crypto-global',
     'market-hours',
     'whale-watch',
     // Row 3: more feeds
