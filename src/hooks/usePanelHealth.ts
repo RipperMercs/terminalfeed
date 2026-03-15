@@ -48,6 +48,13 @@ export function usePanelHealth() {
     return true;
   };
 
+  // Check if a panel's data is stale (> 3 minutes old)
+  const isStale = (panelId: string): boolean => {
+    const state = health[panelId];
+    if (!state || !state.hasData) return false;
+    return Date.now() - state.lastDataAt > 3 * 60_000;
+  };
+
   // Get list of unhealthy panels
   const unhealthyPanels = Object.entries(health)
     .filter(([, state]) => !state.hasData && state.failCount >= 3)
@@ -70,5 +77,5 @@ export function usePanelHealth() {
     return () => clearInterval(id);
   }, []);
 
-  return { reportData, reportFail, isHealthy, unhealthyPanels };
+  return { reportData, reportFail, isHealthy, isStale, unhealthyPanels };
 }

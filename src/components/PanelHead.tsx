@@ -4,19 +4,19 @@ interface Props {
   panelId: string;
   layout: LayoutManager;
   getGridCols: () => number;
+  isStale?: boolean;
   children: React.ReactNode;
 }
 
-// Panels that are permanently locked (can't be moved, hidden, or collapsed)
-// Only support is truly locked — top row panels show as "default" but CAN be moved
 const LOCKED_PANELS = ['support'];
 
-export function PanelHead({ panelId, layout, getGridCols, children }: Props) {
+export function PanelHead({ panelId, layout, getGridCols, isStale, children }: Props) {
   const isLocked = LOCKED_PANELS.includes(panelId);
 
   return (
     <div className="panelHeader">
       {children}
+      {isStale && <span className="staleIndicator">delayed</span>}
       {layout.isOrganizing && !isLocked && (
         <div className="orgControls">
           <button className="orgArrow" onClick={() => layout.swapPanels(panelId, 'left', getGridCols())} title="Move left">&#9664;</button>
