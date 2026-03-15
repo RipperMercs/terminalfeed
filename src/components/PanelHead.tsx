@@ -35,8 +35,10 @@ export function PanelHead({ panelId, layout, isStale, children }: Props) {
       {isStale && <span className="staleIndicator">delayed</span>}
       {layout.isOrganizing && !isLocked && (
         <div className="orgControls">
-          <button className="orgArrow" onClick={() => move(-1)} title="Move earlier">&#9650;</button>
-          <button className="orgArrow" onClick={() => move(1)} title="Move later">&#9660;</button>
+          <button className="orgArrow" onClick={() => move(-1)} title="Move left">&#9664;</button>
+          <button className="orgArrow" onClick={() => move(-1)} title="Move up">&#9650;</button>
+          <button className="orgArrow" onClick={() => move(1)} title="Move down">&#9660;</button>
+          <button className="orgArrow" onClick={() => move(1)} title="Move right">&#9654;</button>
           <button className="orgHide" onClick={() => layout.toggleHidden(panelId)} title="Hide panel">&#128065;</button>
         </div>
       )}
