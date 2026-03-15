@@ -354,6 +354,80 @@
 }
 
 /* ── Panel Hover ── */
+/* ── Warp Speed Background Event ── */
+.warpLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1s ease;
+  overflow: hidden;
+}
+
+.warp-active .warpLayer {
+  opacity: 1;
+}
+
+.warpStreak {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.warp-active .warpStreak {
+  animation: warpStreak 1.5s ease-in forwards;
+}
+
+.warpStreak:nth-child(1)  { top: 10%; left: 50%; animation-delay: 0.0s; }
+.warpStreak:nth-child(2)  { top: 25%; left: 30%; animation-delay: 0.1s; }
+.warpStreak:nth-child(3)  { top: 40%; left: 70%; animation-delay: 0.2s; }
+.warpStreak:nth-child(4)  { top: 55%; left: 20%; animation-delay: 0.05s; }
+.warpStreak:nth-child(5)  { top: 15%; left: 80%; animation-delay: 0.15s; }
+.warpStreak:nth-child(6)  { top: 70%; left: 45%; animation-delay: 0.25s; }
+.warpStreak:nth-child(7)  { top: 85%; left: 60%; animation-delay: 0.1s; }
+.warpStreak:nth-child(8)  { top: 35%; left: 15%; animation-delay: 0.3s; }
+.warpStreak:nth-child(9)  { top: 60%; left: 85%; animation-delay: 0.08s; }
+.warpStreak:nth-child(10) { top: 45%; left: 40%; animation-delay: 0.18s; }
+.warpStreak:nth-child(11) { top: 20%; left: 55%; animation-delay: 0.22s; }
+.warpStreak:nth-child(12) { top: 75%; left: 25%; animation-delay: 0.12s; }
+.warpStreak:nth-child(13) { top: 50%; left: 75%; animation-delay: 0.28s; }
+.warpStreak:nth-child(14) { top: 30%; left: 90%; animation-delay: 0.06s; }
+.warpStreak:nth-child(15) { top: 65%; left: 10%; animation-delay: 0.2s; }
+.warpStreak:nth-child(16) { top: 5%;  left: 65%; animation-delay: 0.14s; }
+.warpStreak:nth-child(17) { top: 90%; left: 35%; animation-delay: 0.26s; }
+.warpStreak:nth-child(18) { top: 80%; left: 50%; animation-delay: 0.04s; }
+.warpStreak:nth-child(19) { top: 15%; left: 42%; animation-delay: 0.16s; }
+.warpStreak:nth-child(20) { top: 55%; left: 58%; animation-delay: 0.24s; }
+
+@keyframes warpStreak {
+  0% { opacity: 0; width: 2px; height: 2px; }
+  20% { opacity: 0.7; width: 2px; height: 2px; }
+  100% { opacity: 0; width: 2px; height: 100px; transform: translateY(-50px); }
+}
+
+.warp-active .warpLayer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(79, 209, 197, 0.04) 0%, transparent 50%);
+  animation: warpGlow 4s ease-in-out forwards;
+}
+
+@keyframes warpGlow {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.warp-active .panel {
+  border-color: rgba(79, 209, 197, 0.08) !important;
+}
+
 /* Panel hover is handled below */
 
 @keyframes ticker {

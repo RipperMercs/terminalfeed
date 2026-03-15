@@ -60,6 +60,26 @@ function App() {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
+  // Warp speed background event — every 10 min (testing), skip mobile
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
+    let timer: ReturnType<typeof setTimeout>;
+    const scheduleWarp = () => {
+      const delay = (8 + Math.random() * 4) * 60_000; // 8-12 min randomized
+      timer = setTimeout(() => {
+        if (!document.hidden) {
+          document.body.classList.add('warp-active');
+          setTimeout(() => document.body.classList.remove('warp-active'), 6000);
+        }
+        scheduleWarp();
+      }, delay);
+    };
+    scheduleWarp();
+    return () => clearTimeout(timer);
+  }, []);
+
   // Full screen mode
   const [isFullScreen, setIsFullScreen] = useState(false);
   const toggleFullScreen = useCallback(() => {
@@ -852,6 +872,10 @@ function App() {
 
   return (
     <div className="app">
+      {/* Warp speed background — invisible until warp-active class on body */}
+      <div className="warpLayer">
+        {Array.from({ length: 20 }, (_, i) => <div key={i} className="warpStreak" />)}
+      </div>
       {/* ── Top Bar ── */}
       <div className="topBar">
         <div className="topBarLeft">
