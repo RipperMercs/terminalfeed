@@ -2257,7 +2257,7 @@
   background: rgba(79, 209, 197, 0.08);
 }
 
-/* ── Quiet Mode Button ── */
+/* ── Full Screen Button ── */
 .quietBtn {
   background: none;
   border: 1px solid var(--border);
@@ -2277,9 +2277,9 @@
 }
 
 .quietBtnActive {
-  color: var(--purple);
-  border-color: var(--purple);
-  background: rgba(167, 139, 250, 0.08);
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(79, 209, 197, 0.08);
 }
 
 /* ── Customize Button ── */

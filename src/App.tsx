@@ -57,10 +57,20 @@ function App() {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
-  const [quietMode, setQuietMode] = useState(false);
-
-  // Quiet mode panels — only these show when quiet mode is on
-  const QUIET_PANELS = ['bitcoin', 'markets', 'crypto', 'news', 'weather', 'btc-network'];
+  // Full screen mode
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const toggleFullScreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+  useEffect(() => {
+    const handler = () => setIsFullScreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   // Pause animations when tab is hidden — saves CPU in background
   useEffect(() => {
@@ -141,8 +151,8 @@ function App() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === 'q' || e.key === 'Q') {
-        setQuietMode(prev => !prev);
+      if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
       }
       if (e.key === 'e' || e.key === 'E') {
         layout.setIsOrganizing(!layout.isOrganizing);
@@ -783,11 +793,11 @@ function App() {
             {layout.isOrganizing ? 'Organize' : 'Locked'}
           </button>
           <button
-            className={`quietBtn ${quietMode ? 'quietBtnActive' : ''}`}
-            onClick={() => setQuietMode(!quietMode)}
-            title="Toggle quiet mode (Q)"
+            className={`quietBtn ${isFullScreen ? 'quietBtnActive' : ''}`}
+            onClick={toggleFullScreen}
+            title="Toggle full screen (F)"
           >
-            {quietMode ? 'Quiet' : 'Full'}
+            {isFullScreen ? 'Exit' : 'Full'}
           </button>
           <button className="customizeBtn" onClick={() => setShowPanelManager(true)}>Settings</button>
           {layout.isOrganizing && (
@@ -884,7 +894,7 @@ function App() {
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
         {/* All panels rendered from panelOrder — top row is just the default order */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id) && (!quietMode || QUIET_PANELS.includes(id))).map((id, idx) => {
+        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id)).map((id, idx) => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
@@ -904,8 +914,8 @@ function App() {
             </LazyPanel>
           );
         })}
-        {/* Support panel always last (hidden in quiet mode) */}
-        {!quietMode && layout.isVisible('support') && panelRegistry['support'] && (
+        {/* Support panel always last */}
+        {layout.isVisible('support') && panelRegistry['support'] && (
           <div className="panel">
             {panelRegistry['support']}
           </div>
