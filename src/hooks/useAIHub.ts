@@ -1,5 +1,4 @@
-// AI Hub — simulated AI agent activity feed
-// Shows realistic-looking API calls from AI agents
+// AI Hub — real API stats from Worker + simulated activity
 import { useEffect, useState, useRef } from 'react';
 
 export interface AgentCall {
@@ -43,6 +42,23 @@ export function useAIHub() {
   const [totalHits, setTotalHits] = useState(() => getDailyHits());
   const [agentCount] = useState(() => 8 + Math.floor(Math.random() * 6));
   const mountedRef = useRef(true);
+
+  // Fetch real stats from Worker
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/ai-stats', { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.totalHits24h > 0) {
+          setTotalHits(prev => Math.max(prev, data.totalHits24h));
+        }
+      } catch {}
+    };
+    fetchStats();
+    const id = setInterval(fetchStats, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
