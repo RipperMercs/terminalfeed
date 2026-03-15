@@ -13,6 +13,7 @@ export const DEFAULT_LAYOUT = {
     'dev-status',
     // Row 2: mix of content + data
     'crypto',
+    'tech-news',
     'reddit',
     'btc-network',
     'github',

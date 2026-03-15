@@ -51,6 +51,7 @@ import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import { getRandomWireQuote } from './data/wireQuotes';
 import { useWire } from './hooks/useWire';
+import { useRSSNews } from './hooks/useRSSNews';
 import './App.css';
 
 function App() {
@@ -59,6 +60,10 @@ function App() {
     try { return localStorage.getItem('tf_news_filter') || null; } catch { return null; }
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
+  const [quietMode, setQuietMode] = useState(false);
+
+  // Quiet mode panels — only these show when quiet mode is on
+  const QUIET_PANELS = ['bitcoin', 'markets', 'crypto', 'news', 'weather', 'btc-network'];
 
   // Pause animations when tab is hidden — saves CPU in background
   useEffect(() => {
@@ -104,6 +109,7 @@ function App() {
   const ghEvents = useGithubEvents();
   const trendingBooks = useTrendingBooks();
   const wire = useWire();
+  const rssNews = useRSSNews();
   const donationStats = useDonations();
   const whaleTxs = useWhaleWatch();
   const podcastEpisodes = usePodcasts();
@@ -140,6 +146,9 @@ function App() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'q' || e.key === 'Q') {
+        setQuietMode(prev => !prev);
+      }
       if (e.key === 'e' || e.key === 'E') {
         layout.setIsOrganizing(!layout.isOrganizing);
       }
@@ -346,6 +355,21 @@ function App() {
             <span className="newsTitle">{story.title}</span>
             <span className="newsMeta">{timeAgo(story.time)}</span>
           </a>); })}
+      </div>
+    </>),
+    'tech-news': (<>
+      <PanelHead panelId="tech-news" isStale={panelHealth.isStale('tech-news')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Tech News</span><span className="panelTag">RSS</span></div>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {rssNews.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading feeds...</div>}
+        {rssNews.map((item, i) => (
+          <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="newsRow">
+            <span className="newsTag" style={{ color: 'var(--blue)', background: 'rgba(96,165,250,0.1)', minWidth: 30 }}>{item.source}</span>
+            <span className="newsTitle">{item.title}</span>
+            <span className="newsMeta">{timeAgo(item.time)}</span>
+          </a>
+        ))}
       </div>
     </>),
     'reddit': (<>
@@ -755,6 +779,13 @@ function App() {
           >
             {layout.isOrganizing ? 'Organize' : 'Locked'}
           </button>
+          <button
+            className={`quietBtn ${quietMode ? 'quietBtnActive' : ''}`}
+            onClick={() => setQuietMode(!quietMode)}
+            title="Toggle quiet mode (Q)"
+          >
+            {quietMode ? 'Quiet' : 'Full'}
+          </button>
           <button className="customizeBtn" onClick={() => setShowPanelManager(true)}>Settings</button>
           {layout.isOrganizing && (
             <span className="organizeHint">arrows to rearrange · E to lock</span>
@@ -850,7 +881,7 @@ function App() {
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
         {/* All panels rendered from panelOrder — top row is just the default order */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id)).map((id, idx) => {
+        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id) && (!quietMode || QUIET_PANELS.includes(id))).map((id, idx) => {
           const panelDef = ALL_PANELS.find(p => p.id === id);
           if (!panelDef) return null;
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
@@ -870,8 +901,8 @@ function App() {
             </LazyPanel>
           );
         })}
-        {/* Support panel always last */}
-        {layout.isVisible('support') && panelRegistry['support'] && (
+        {/* Support panel always last (hidden in quiet mode) */}
+        {!quietMode && layout.isVisible('support') && panelRegistry['support'] && (
           <div className="panel">
             {panelRegistry['support']}
           </div>

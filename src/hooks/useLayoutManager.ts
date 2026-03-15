@@ -16,6 +16,7 @@ export const ALL_PANELS = [
   { id: 'market-hours', label: 'Market Hours', defaultSpan: 1 },
   // Row 4: Information
   { id: 'news', label: 'Tech / AI Feed', defaultSpan: 1 },
+  { id: 'tech-news', label: 'Tech News', defaultSpan: 1 },
   { id: 'reddit', label: 'Reddit', defaultSpan: 1 },
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
   // Row 5: Dev/nerd
@@ -55,7 +56,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '17'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '18'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
