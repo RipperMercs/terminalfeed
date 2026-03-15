@@ -30,6 +30,8 @@ export const ALL_PANELS = [
   // Row 7: Unique feeds
   { id: 'podcasts', label: 'Podcasts', defaultSpan: 1 },
   { id: 'uap', label: 'UAP Sightings', defaultSpan: 1 },
+  { id: 'hn-community', label: 'Show/Ask HN', defaultSpan: 1 },
+  { id: 'world-clocks', label: 'World Clocks', defaultSpan: 1 },
   { id: 'ai-leaderboard', label: 'AI Leaderboard', defaultSpan: 1 },
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
   { id: 'internet-pulse', label: 'Internet Pulse', defaultSpan: 1 },
@@ -46,7 +48,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '6'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '7'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
