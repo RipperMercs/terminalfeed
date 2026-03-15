@@ -77,9 +77,9 @@ export function AdminTerminal({ layout, onClose }: Props) {
   // Show login prompt on mount
   useEffect(() => {
     setHistory([
-      { type: 'output', text: '╔══════════════════════════════════════╗' },
-      { type: 'output', text: '║  TERMINALFEED ADMIN CONSOLE v1.0.0  ║' },
-      { type: 'output', text: '╚══════════════════════════════════════╝' },
+      { type: 'output', text: '╔════════════════════════════════════════════════╗' },
+      { type: 'output', text: '║  TERMINALFEED ADMIN CONSOLE v1.0.0 — RIPPERX  ║' },
+      { type: 'output', text: '╚════════════════════════════════════════════════╝' },
       { type: 'output', text: '' },
       { type: 'warn', text: '⚠ RESTRICTED SYSTEM — AUTHORIZED ACCESS ONLY' },
       { type: 'output', text: '' },
