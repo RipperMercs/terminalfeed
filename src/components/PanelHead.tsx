@@ -8,11 +8,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-const LOCKED_PANELS: string[] = [];
-
 export function PanelHead({ panelId, layout, isStale, children }: Props) {
-  const isLocked = LOCKED_PANELS.includes(panelId);
-
   const move = (offset: number) => {
     const order = layout.panelOrder;
     const visible = order.filter(id => layout.isVisible(id));
@@ -33,17 +29,13 @@ export function PanelHead({ panelId, layout, isStale, children }: Props) {
     <div className="panelHeader">
       {children}
       {isStale && <span className="staleIndicator">delayed</span>}
-      {layout.isOrganizing && !isLocked && (
+      {layout.isOrganizing && (
         <div className="orgControls">
-          <button className="orgArrow" onClick={() => move(-1)} title="Move left">&#9664;</button>
+          <span className="orgDragHandle" title="Drag to reorder">&#x2807;</span>
           <button className="orgArrow" onClick={() => move(-1)} title="Move up">&#9650;</button>
           <button className="orgArrow" onClick={() => move(1)} title="Move down">&#9660;</button>
-          <button className="orgArrow" onClick={() => move(1)} title="Move right">&#9654;</button>
           <button className="orgHide" onClick={() => layout.toggleHidden(panelId)} title="Hide panel">&#128065;</button>
         </div>
-      )}
-      {layout.isOrganizing && isLocked && (
-        <span className="orgLocked">pinned</span>
       )}
     </div>
   );
