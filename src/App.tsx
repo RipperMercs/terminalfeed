@@ -408,7 +408,25 @@ function App() {
     </>),
     'weather': (<>
       <PanelHead panelId="weather" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Weather</span>{weather && <span className="panelTag">{weather.city.toUpperCase()}</span>}</div></PanelHead>
-      {weather ? (<div className="weatherContent"><WeatherScene weatherCode={weather.weatherCode} /><div className="weatherOverlay"><div className="weatherTemp">{weather.temperature}°F</div><div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div><div className="weatherDetails"><span>Wind: {weather.windSpeed} mph</span><span>Humidity: {weather.humidity}%</span></div></div></div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>detecting location...</div>}
+      {weather ? (<div className="weatherContent">
+        <WeatherScene weatherCode={weather.weatherCode} isDaytime={weather.isDaytime} />
+        <div className="weatherOverlay">
+          <div className="weatherTemp">{weather.temperature}°F</div>
+          <div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>Feels like {weather.feelsLike}°F</div>
+          <div className="weatherDetails">
+            <span>Wind: {weather.windSpeed} mph</span>
+            <span>Humidity: {weather.humidity}%</span>
+          </div>
+          <div className="weatherDetails" style={{ marginTop: 2 }}>
+            <span>H: {weather.high}°F  L: {weather.low}°F</span>
+          </div>
+          {weather.sunrise && <div className="weatherDetails" style={{ marginTop: 2 }}>
+            <span>Rise: {weather.sunrise}</span>
+            <span>Set: {weather.sunset}</span>
+          </div>}
+        </div>
+      </div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>detecting location...</div>}
     </>),
     'seismic': (<>
       <PanelHead panelId="seismic" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Seismic</span><span className="panelTag">24H</span></div><span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>USGS M2.5+</span></PanelHead>

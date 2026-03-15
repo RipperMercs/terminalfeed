@@ -57,7 +57,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '14'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '15'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {

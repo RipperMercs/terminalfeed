@@ -3,10 +3,16 @@ import { getCache, setCache } from '../services/cache';
 
 export interface WeatherData {
   temperature: number;
+  feelsLike: number;
   windSpeed: number;
   humidity: number;
   weatherCode: number;
   city: string;
+  high: number;
+  low: number;
+  sunrise: string;
+  sunset: string;
+  isDaytime: boolean;
 }
 
 const CACHE_KEY = 'weather';
@@ -78,7 +84,7 @@ export function useWeather(): WeatherData | null {
     const fetchWeather = async (lat: number, lon: number, city: string) => {
       try {
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=1`,
           { signal: AbortSignal.timeout(5000) }
         );
         if (!res.ok) return;
@@ -86,12 +92,26 @@ export function useWeather(): WeatherData | null {
         const c = json.current;
         if (!c || !mountedRef.current) return;
 
+        const daily = json.daily;
+        const sunrise = daily?.sunrise?.[0] || '';
+        const sunset = daily?.sunset?.[0] || '';
+        const now = new Date();
+        const isDaytime = sunrise && sunset
+          ? now >= new Date(sunrise) && now <= new Date(sunset)
+          : now.getHours() >= 6 && now.getHours() <= 19;
+
         const result: WeatherData = {
           temperature: Math.round(c.temperature_2m),
+          feelsLike: Math.round(c.apparent_temperature ?? c.temperature_2m),
           windSpeed: Math.round(c.wind_speed_10m),
           humidity: Math.round(c.relative_humidity_2m),
           weatherCode: c.weather_code,
           city,
+          high: Math.round(daily?.temperature_2m_max?.[0] ?? c.temperature_2m),
+          low: Math.round(daily?.temperature_2m_min?.[0] ?? c.temperature_2m),
+          sunrise: sunrise ? new Date(sunrise).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '',
+          sunset: sunset ? new Date(sunset).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '',
+          isDaytime,
         };
 
         setData(result);

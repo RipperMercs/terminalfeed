@@ -4,13 +4,15 @@
 
 export const DEFAULT_LAYOUT = {
   panelOrder: [
+    // Row 1: top row — weather FIRST (top-left, ad slot)
+    'weather',
     'bitcoin',
-    'markets',
-    'crypto',
     'news',
+    'markets',
     'wiki-live',
     'dev-status',
     // Row 2: mix of content + data
+    'crypto',
     'reddit',
     'btc-network',
     'github',
@@ -26,7 +28,6 @@ export const DEFAULT_LAYOUT = {
     // Row 4: supplementary
     'disasters',
     'forex',
-    'weather',
     'books',
     'solar',
     'launches',

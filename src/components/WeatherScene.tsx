@@ -1,8 +1,8 @@
-// Animated weather scene — pure CSS animations, no canvas
-// Each weather type has a unique visual effect
+// Animated weather scene with sun/moon based on actual time of day
 
 interface Props {
   weatherCode: number;
+  isDaytime: boolean;
 }
 
 type WeatherType = 'clear' | 'cloudy' | 'rain' | 'heavyRain' | 'snow' | 'fog' | 'thunder' | 'drizzle';
@@ -19,19 +19,35 @@ function getWeatherType(code: number): WeatherType {
   return 'cloudy';
 }
 
-export function WeatherScene({ weatherCode }: Props) {
+export function WeatherScene({ weatherCode, isDaytime }: Props) {
   const type = getWeatherType(weatherCode);
 
   return (
-    <div className={`wxScene wxScene--${type}`}>
-      {/* Sun (clear/partly cloudy) */}
-      {(type === 'clear') && (
+    <div className={`wxScene ${isDaytime ? 'wxScene--day' : 'wxScene--night'} wxScene--${type}`}>
+      {/* Sun (daytime clear/partly cloudy) */}
+      {isDaytime && (type === 'clear' || type === 'cloudy') && (
         <div className="wxSun">
           <div className="wxSunCore" />
           {[...Array(8)].map((_, i) => (
             <div key={i} className="wxSunRay" style={{ transform: `rotate(${i * 45}deg)` }} />
           ))}
         </div>
+      )}
+
+      {/* Moon + stars (nighttime) */}
+      {!isDaytime && (type === 'clear' || type === 'cloudy') && (
+        <>
+          <div className="wxMoon" />
+          {[15, 30, 50, 65, 80, 25, 70, 45, 10, 88].map((x, i) => (
+            <div key={i} className="wxStar" style={{
+              left: `${x}%`,
+              top: `${10 + (i * 13) % 45}%`,
+              width: 1 + (i % 2),
+              height: 1 + (i % 2),
+              animationDelay: `${(i * 0.4) % 3}s`,
+            }} />
+          ))}
+        </>
       )}
 
       {/* Clouds */}
@@ -47,15 +63,11 @@ export function WeatherScene({ weatherCode }: Props) {
       {(type === 'rain' || type === 'heavyRain' || type === 'drizzle') && (
         <div className="wxRain">
           {[...Array(type === 'heavyRain' ? 20 : type === 'drizzle' ? 6 : 12)].map((_, i) => (
-            <div
-              key={i}
-              className={`wxDrop ${type === 'drizzle' ? 'wxDropLight' : ''}`}
-              style={{
-                left: `${(i * 37 + 13) % 100}%`,
-                animationDelay: `${(i * 0.17) % 1.2}s`,
-                animationDuration: `${type === 'heavyRain' ? 0.4 : 0.7}s`,
-              }}
-            />
+            <div key={i} className={`wxDrop ${type === 'drizzle' ? 'wxDropLight' : ''}`} style={{
+              left: `${(i * 37 + 13) % 100}%`,
+              animationDelay: `${(i * 0.17) % 1.2}s`,
+              animationDuration: `${type === 'heavyRain' ? 0.4 : 0.7}s`,
+            }} />
           ))}
         </div>
       )}
@@ -64,15 +76,11 @@ export function WeatherScene({ weatherCode }: Props) {
       {type === 'snow' && (
         <div className="wxSnow">
           {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="wxFlake"
-              style={{
-                left: `${(i * 29 + 7) % 100}%`,
-                animationDelay: `${(i * 0.3) % 2}s`,
-                fontSize: `${6 + (i % 3) * 3}px`,
-              }}
-            />
+            <div key={i} className="wxFlake" style={{
+              left: `${(i * 29 + 7) % 100}%`,
+              animationDelay: `${(i * 0.3) % 2}s`,
+              fontSize: `${6 + (i % 3) * 3}px`,
+            }} />
           ))}
         </div>
       )}
@@ -91,15 +99,11 @@ export function WeatherScene({ weatherCode }: Props) {
         <>
           <div className="wxRain">
             {[...Array(16)].map((_, i) => (
-              <div
-                key={i}
-                className="wxDrop"
-                style={{
-                  left: `${(i * 37 + 13) % 100}%`,
-                  animationDelay: `${(i * 0.15) % 1}s`,
-                  animationDuration: '0.4s',
-                }}
-              />
+              <div key={i} className="wxDrop" style={{
+                left: `${(i * 37 + 13) % 100}%`,
+                animationDelay: `${(i * 0.15) % 1}s`,
+                animationDuration: '0.4s',
+              }} />
             ))}
           </div>
           <div className="wxLightning" />
