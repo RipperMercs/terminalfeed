@@ -13,7 +13,7 @@ export interface SOQuestion {
 
 const API_URL = 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10&filter=withbody';
 const CACHE_KEY = 'stackoverflow';
-const POLL_MS = 10 * 60_000; // 10 min
+const POLL_MS = 3 * 60_000; // 3 min
 
 export function useStackOverflow(): SOQuestion[] {
   const [questions, setQuestions] = useState<SOQuestion[]>(() => {

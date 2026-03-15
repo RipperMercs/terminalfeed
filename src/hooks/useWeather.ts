@@ -11,7 +11,7 @@ export interface WeatherData {
 
 const CACHE_KEY = 'weather';
 const LOCATION_KEY = 'tf_weather_location';
-const POLL_MS = 15 * 60_000; // 15 min
+const POLL_MS = 5 * 60_000; // 5 min
 
 // WMO weather codes → descriptions + icons
 const WMO_CODES: Record<number, { desc: string; icon: string }> = {

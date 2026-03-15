@@ -18,7 +18,7 @@ const FEEDS = [
 ];
 
 const CACHE_KEY = 'bluesky';
-const POLL_MS = 5 * 60_000; // 5 min
+const POLL_MS = 2 * 60_000; // 2 min
 
 // Resolve handle to DID then fetch feed
 async function fetchAccountFeed(handle: string): Promise<BskyPost[]> {

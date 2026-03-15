@@ -18,7 +18,7 @@ const SERVICES = [
 ];
 
 const CACHE_KEY = 'dev_status';
-const POLL_MS = 2 * 60_000; // 2 min
+const POLL_MS = 60_000; // 60s
 
 export function useDevStatus(): ServiceStatus[] {
   const [statuses, setStatuses] = useState<ServiceStatus[]>(() => {

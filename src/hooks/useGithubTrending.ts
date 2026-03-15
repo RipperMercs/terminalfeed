@@ -11,7 +11,7 @@ export interface TrendingRepo {
 }
 
 // GitHub trending via unofficial API
-const POLL_MS = 15 * 60_000; // 15 min
+const POLL_MS = 5 * 60_000; // 5 min
 
 export function useGithubTrending() {
   const [repos, setRepos] = useState<TrendingRepo[]>([]);

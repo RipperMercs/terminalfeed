@@ -7,20 +7,11 @@ export interface RecipeData {
   area: string;
   thumbnail: string;
   url: string;
-  date: string; // YYYY-MM-DD
-}
-
-interface RecipePair {
-  recipes: RecipeData[];
-  date: string;
 }
 
 const API_URL = 'https://www.themealdb.com/api/json/v1/1/random.php';
-const CACHE_KEY = 'recipes_pair';
-
-function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+const CACHE_KEY = 'recipes_5';
+const REFRESH_MS = 3 * 60 * 60_000; // 3 hours
 
 function parseRecipe(meal: Record<string, string>): RecipeData {
   return {
@@ -29,14 +20,14 @@ function parseRecipe(meal: Record<string, string>): RecipeData {
     area: meal.strArea,
     thumbnail: meal.strMealThumb,
     url: meal.strSource || meal.strYoutube || `https://www.themealdb.com/meal/${meal.idMeal}`,
-    date: todayKey(),
   };
 }
 
 export function useRecipe(): RecipeData[] {
   const [recipes, setRecipes] = useState<RecipeData[]>(() => {
-    const cached = getCache<RecipePair>(CACHE_KEY);
-    if (cached?.data && cached.data.date === todayKey()) return cached.data.recipes;
+    const cached = getCache<RecipeData[]>(CACHE_KEY);
+    // Use cache if less than 3 hours old
+    if (cached?.data && cached.age < REFRESH_MS) return cached.data;
     return [];
   });
   const mountedRef = useRef(true);
@@ -44,40 +35,48 @@ export function useRecipe(): RecipeData[] {
   useEffect(() => {
     mountedRef.current = true;
 
-    // Already have today's recipes
-    if (recipes.length >= 2 && recipes[0]?.date === todayKey()) return;
-
     const fetchRecipes = async () => {
       try {
-        // Fetch 2 recipes in parallel
-        const [res1, res2] = await Promise.all([
-          fetch(API_URL, { signal: AbortSignal.timeout(5000) }),
-          fetch(API_URL, { signal: AbortSignal.timeout(5000) }),
-        ]);
+        // Fetch 5 recipes in parallel
+        const responses = await Promise.all(
+          Array.from({ length: 5 }, () =>
+            fetch(API_URL, { signal: AbortSignal.timeout(5000) })
+          )
+        );
 
         if (!mountedRef.current) return;
 
         const results: RecipeData[] = [];
+        const seenNames = new Set<string>();
 
-        if (res1.ok) {
-          const json = await res1.json();
-          if (json.meals?.[0]) results.push(parseRecipe(json.meals[0]));
-        }
-        if (res2.ok) {
-          const json = await res2.json();
-          if (json.meals?.[0]) results.push(parseRecipe(json.meals[0]));
+        for (const res of responses) {
+          if (res.ok) {
+            const json = await res.json();
+            const meal = json.meals?.[0];
+            if (meal && !seenNames.has(meal.strMeal)) {
+              seenNames.add(meal.strMeal);
+              results.push(parseRecipe(meal));
+            }
+          }
         }
 
         if (results.length > 0 && mountedRef.current) {
           setRecipes(results);
-          setCache(CACHE_KEY, { recipes: results, date: todayKey() }, 'themealdb');
+          setCache(CACHE_KEY, results, 'themealdb');
         }
       } catch {}
     };
 
-    fetchRecipes();
-    return () => { mountedRef.current = false; };
-  }, [recipes]);
+    // Fetch on load if cache is stale or empty
+    const cached = getCache<RecipeData[]>(CACHE_KEY);
+    if (!cached?.data || cached.age >= REFRESH_MS) {
+      fetchRecipes();
+    }
+
+    // Refresh every 3 hours
+    const id = setInterval(fetchRecipes, REFRESH_MS);
+    return () => { mountedRef.current = false; clearInterval(id); };
+  }, []);
 
   return recipes;
 }

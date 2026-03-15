@@ -7,7 +7,7 @@ export interface FearGreedData {
 }
 
 const API_URL = 'https://api.alternative.me/fng/?limit=1';
-const POLL_MS = 5 * 60_000; // 5 min
+const POLL_MS = 2 * 60_000; // 2 min
 
 export function useFearGreed() {
   const [data, setData] = useState<FearGreedData | null>(null);
