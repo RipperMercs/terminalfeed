@@ -341,6 +341,7 @@ function App() {
             <span className="newsMeta">{timeAgo(story.time)}</span>
           </a>); })}
       </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', padding: '6px 0 0' }}>listening for updates<span className="feedCursor" /></div>
     </>),
     'reddit': (<>
       <PanelHead panelId="reddit" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Reddit</span><span className="panelTag">TECH</span></div></PanelHead>
@@ -348,6 +349,7 @@ function App() {
         {redditPosts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading posts...</div>}
         {redditPosts.map((post) => (<a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="redditScore">{formatStars(post.score)}</span><div style={{ flex: 1, minWidth: 0 }}><span className="newsTitle">{post.title}</span></div><span className="redditSub">r/{post.subreddit}</span></a>))}
       </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', padding: '6px 0 0' }}>listening<span className="feedCursor" /></div>
     </>),
     'github': (<>
       <PanelHead panelId="github" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">GitHub Trending</span><span className="panelTag">7D</span></div></PanelHead>
@@ -355,6 +357,7 @@ function App() {
         {trendingRepos.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading repos...</div>}
         {trendingRepos.map((repo) => (<a key={repo.fullName} href={repo.url} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="ghStars">{formatStars(repo.stars)}</span><div style={{ flex: 1, minWidth: 0 }}><div className="ghRepoName">{repo.fullName}</div><div className="ghRepoDesc">{repo.description}</div></div>{repo.language && <span className="ghLang">{repo.language}</span>}</a>))}
       </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', padding: '6px 0 0' }}>scanning repos<span className="feedCursor" /></div>
     </>),
     'market-hours': (<>
       <PanelHead panelId="market-hours" layout={layout} getGridCols={getGridCols}>
@@ -659,6 +662,28 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* ── Activity Log Ticker ── */}
+      <div className="activityBar">
+        <div className="activityTrack">
+          {[...(btcPrice > 0 ? [`btc $${btcPrice.toLocaleString(undefined, {maximumFractionDigits: 0})}`] : []),
+            ...(stories.length > 0 ? [`${stories.length} headlines loaded`] : []),
+            ...(redditPosts.length > 0 ? [`${redditPosts.length} reddit posts`] : []),
+            ...(earthquakes.length > 0 ? [`${earthquakes.length} quakes today`] : []),
+            ...(trendingRepos.length > 0 ? [`${trendingRepos.length} trending repos`] : []),
+            ...(devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown').length > 0
+              ? [`${devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown').length} service alerts`] : ['all services operational']),
+            ...(weather ? [`${weather.city} ${weather.temperature}°F`] : []),
+            ...(btcNet.blockHeight > 0 ? [`block ${btcNet.blockHeight.toLocaleString()}`] : []),
+            ...(btcNet.feeFastest > 0 ? [`fees ${btcNet.feeFastest} sat/vB`] : []),
+            ...(liveCount > 0 ? [`${liveCount} live games`] : []),
+            ...(cryptoGlobal ? [`crypto cap $${formatCompact(cryptoGlobal.totalMarketCap)}`] : []),
+            'terminalfeed.io',
+          ].flatMap(item => [item, item]).map((item, i) => (
+            <span key={i} className="activityItem"><span className="activityDot" />{item}</span>
+          ))}
+        </div>
+      </div>
 
       {/* ── Dev Joke Strip ── */}
       {devJoke && (

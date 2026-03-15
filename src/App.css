@@ -211,6 +211,94 @@
   100% { color: inherit; text-shadow: none; }
 }
 
+/* ── New Item Glow (news/reddit/github) ── */
+.newItemGlow {
+  animation: newItemSlide 2s ease forwards;
+}
+
+@keyframes newItemSlide {
+  0% { opacity: 0; transform: translateY(-6px); border-left: 2px solid var(--cyan); background: rgba(79, 209, 197, 0.06); }
+  40% { opacity: 1; transform: translateY(0); border-left: 2px solid var(--cyan); background: rgba(79, 209, 197, 0.03); }
+  100% { opacity: 1; transform: translateY(0); border-left: 2px solid transparent; background: transparent; }
+}
+
+/* ── Panel Refresh Ripple ── */
+.panelRefreshing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(79, 209, 197, 0.25), transparent);
+  background-size: 50% 100%;
+  animation: dataRefresh 1s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes dataRefresh {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Feed Cursor (blinking terminal cursor) ── */
+.feedCursor {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  background: var(--cyan);
+  animation: cursorBlink 1s step-end infinite;
+  margin-left: 4px;
+  vertical-align: middle;
+  opacity: 0.6;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0; }
+}
+
+/* ── Activity Log (bottom ticker) ── */
+.activityBar {
+  border-top: 1px solid var(--border);
+  padding: 3px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--bg);
+}
+
+.activityTrack {
+  display: inline-flex;
+  gap: 20px;
+  animation: ticker 90s linear infinite;
+  padding-left: 16px;
+}
+
+.activityItem {
+  font-size: 9px;
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activityDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--cyan);
+  opacity: 0.5;
+}
+
+/* ── Refresh Countdown ── */
+.refreshCountdown {
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 0.3px;
+  margin-left: 6px;
+  opacity: 0.5;
+}
+
 /* ── Panel Hover ── */
 .panel {
   transition: border-color 0.15s ease;
@@ -300,9 +388,23 @@
   height: 5px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
-  animation: pulse 2s infinite;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+  animation: livePulse 2s ease infinite;
+  animation-delay: var(--pulse-delay, 0s);
 }
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(74, 222, 128, 0.4); }
+  50% { opacity: 0.3; box-shadow: 0 0 2px rgba(74, 222, 128, 0.2); }
+}
+
+/* Stagger pulse timing per panel so dots don't blink in sync */
+.panel:nth-child(2n) .liveDot { animation-delay: 0.4s; }
+.panel:nth-child(3n) .liveDot { animation-delay: 0.8s; }
+.panel:nth-child(4n) .liveDot { animation-delay: 1.2s; }
+.panel:nth-child(5n) .liveDot { animation-delay: 1.6s; }
+.panel:nth-child(7n) .liveDot { animation-delay: 0.6s; }
+.panel:nth-child(11n) .liveDot { animation-delay: 1.0s; }
 
 .liveText {
   font-size: 8px;
