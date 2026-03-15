@@ -39,7 +39,18 @@ export function useBtcPrice() {
     return STATIC_FALLBACKS.btc_price as BtcPriceData;
   });
   const [connected, setConnected] = useState(false);
-  const [priceHistory, setPriceHistory] = useState<PriceTick[]>([]);
+  const [priceHistory, setPriceHistory] = useState<PriceTick[]>(() => {
+    // Seed with cached price so chart has at least 1 point immediately
+    const cached = getCache<BtcPriceData>('btc_price');
+    if (cached?.data?.price) {
+      const now = Date.now();
+      return [
+        { time: now - 60000, price: cached.data.price * 0.9999 },
+        { time: now, price: cached.data.price },
+      ];
+    }
+    return [];
+  });
 
   const mountedRef = useRef(true);
   const wsRef = useRef<WebSocket | null>(null);
@@ -149,29 +160,51 @@ export function useBtcPrice() {
     } catch {}
   }, [pushPrice]);
 
-  // Seed chart with 24h history so it shows instantly
+  // Seed chart with historical data (tries multiple sources)
   const seedChart = useCallback(async () => {
     if (!mountedRef.current) return;
+
+    // Skip if WS already delivering data
+    if (priceHistory.length > 10) return;
+
+    // Try CoinGecko chart data
     try {
       const res = await fetch(
         'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1',
-        { signal: AbortSignal.timeout(8000) }
+        { signal: AbortSignal.timeout(5000) }
       );
-      if (!res.ok || !mountedRef.current) return;
-      const data = await res.json();
-      if (!data.prices?.length) return;
-
-      // Only seed if WS hasn't delivered many ticks yet
-      setPriceHistory(prev => {
-        if (prev.length > 20) return prev; // WS already flowing
-        // Sample ~100 points from 24h data
-        const step = Math.max(1, Math.floor(data.prices.length / 100));
-        return data.prices
-          .filter((_: [number, number], i: number) => i % step === 0)
-          .map((p: [number, number]) => ({ time: p[0], price: p[1] }));
-      });
+      if (res.ok && mountedRef.current) {
+        const data = await res.json();
+        if (data.prices?.length > 10) {
+          const step = Math.max(1, Math.floor(data.prices.length / 100));
+          setPriceHistory(data.prices
+            .filter((_: [number, number], i: number) => i % step === 0)
+            .map((p: [number, number]) => ({ time: p[0], price: p[1] })));
+          return;
+        }
+      }
     } catch {}
-  }, []);
+
+    // Fallback: use our Worker for current price and build a minimal line
+    try {
+      const res = await fetch('/api/btc-price', { signal: AbortSignal.timeout(5000) });
+      if (res.ok && mountedRef.current) {
+        const json = await res.json();
+        const price = json.data?.price_usd;
+        if (price) {
+          const now = Date.now();
+          // Create a simple 2-point line from the current price
+          setPriceHistory(prev => {
+            if (prev.length > 5) return prev;
+            return [
+              { time: now - 3600000, price: price * (1 - (json.data.change_24h_percent || 0) / 100) },
+              { time: now, price },
+            ];
+          });
+        }
+      }
+    } catch {}
+  }, [priceHistory.length]);
 
   useEffect(() => {
     mountedRef.current = true;
