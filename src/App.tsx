@@ -50,6 +50,7 @@ import { getTodayTerm } from './data/techTerms';
 import { useWire } from './hooks/useWire';
 import { useRSSNews } from './hooks/useRSSNews';
 import { useNpmTrends } from './hooks/useNpmTrends';
+import { useAIHub } from './hooks/useAIHub';
 import { useDailyPaws } from './hooks/useDailyPaws';
 import { useMuseumArt } from './hooks/useMuseumArt';
 import './App.css';
@@ -121,6 +122,7 @@ function App() {
   const wire = useWire();
   const rssNews = useRSSNews();
   const npmPackages = useNpmTrends();
+  const aiHub = useAIHub();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const museumArt = useMuseumArt();
   const donationStats = useDonations();
@@ -600,6 +602,53 @@ function App() {
           ))}
         </div>
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
+      </div>
+    </>),
+    'ai-hub': (<>
+      <PanelHead panelId="ai-hub" isStale={panelHealth.isStale('ai-hub')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">AI Hub</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)', borderColor: 'rgba(167,139,250,0.2)' }}>AGENTS</span></div>
+        <div className="panelLive"><span className="liveDot" style={{ background: 'var(--purple)' }} /><span className="liveText">LIVE</span></div>
+      </PanelHead>
+      {/* Stats bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', marginBottom: 6, borderBottom: '1px solid var(--border)' }}>
+        <div><span style={{ color: 'var(--purple)', fontSize: 15, fontWeight: 700 }}>{aiHub.totalHits.toLocaleString()}</span><span style={{ color: 'var(--text-dim)', fontSize: 9, marginLeft: 4 }}>API calls today</span></div>
+        <div><span style={{ color: 'var(--cyan)', fontSize: 15, fontWeight: 700 }}>{aiHub.agentCount}</span><span style={{ color: 'var(--text-dim)', fontSize: 9, marginLeft: 4 }}>agents</span></div>
+      </div>
+      {/* Briefing */}
+      <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>World Briefing</div>
+      <div style={{ fontSize: 10, color: 'var(--text)', lineHeight: 1.5, background: 'var(--bg)', padding: 8, borderRadius: 4, border: '1px solid var(--border)', marginBottom: 8 }}>
+        {(() => {
+          const parts: string[] = [];
+          if (btcPrice > 0) parts.push(`BTC $${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${btcChange >= 0 ? '+' : ''}${btcChange.toFixed(1)}%)`);
+          if (fearGreed) parts.push(`F&G: ${fearGreed.value} ${fearGreed.label}`);
+          if (earthquakes.length > 0) parts.push(`${earthquakes.length} quakes`);
+          const down = devStatuses.filter(s => s.indicator !== 'none' && s.indicator !== 'unknown');
+          parts.push(down.length > 0 ? `${down.map(s => s.name).join(', ')} issues` : 'All services OK');
+          return parts.join(' · ');
+        })()}
+      </div>
+      {/* Endpoints */}
+      <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Endpoints</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 8 }}>
+        {['briefing', 'btc-price', 'stocks', 'crypto', 'earthquake', 'fear-greed', 'hackernews', 'dev-status', 'weather', 'forex', 'disasters'].map(ep => (
+          <span key={ep} style={{ fontSize: 8, color: 'var(--cyan)', background: 'rgba(79,209,197,0.06)', padding: '1px 5px', borderRadius: 2, border: '1px solid rgba(79,209,197,0.1)' }}>/{ep}</span>
+        ))}
+      </div>
+      {/* Agent activity feed */}
+      <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Recent Calls</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {aiHub.calls.map((c, i) => (
+          <div key={c.timestamp + i} className="newsRow" style={{ cursor: 'default', padding: '3px 2px' }}>
+            <span style={{ color: 'var(--purple)', fontSize: 10, flexShrink: 0 }}>⚡</span>
+            <span style={{ color: 'var(--text-mid)', fontSize: 9, minWidth: 70 }}>{c.agent}</span>
+            <span style={{ color: 'var(--cyan)', fontSize: 9 }}>→</span>
+            <span style={{ color: 'var(--text)', fontSize: 9, flex: 1 }}>/api/{c.endpoint}</span>
+            <span style={{ color: 'var(--text-dim)', fontSize: 8 }}>{c.timeAgo}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 8, color: 'var(--text-dim)', padding: '6px 0 0', textAlign: 'center' }}>
+        agents: <span style={{ color: 'var(--cyan)' }}>terminalfeed.io/llms.txt</span>
       </div>
     </>),
     'the-wire': (<>
