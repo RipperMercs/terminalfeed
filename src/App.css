@@ -1961,6 +1961,22 @@
   font-weight: 600;
 }
 
+/* ── Daily Paws ── */
+.pawNextBtn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+}
+
+.pawNextBtn:hover {
+  color: var(--cyan);
+}
+
 /* ── Recipe ── */
 .recipeContent {
   display: flex;
