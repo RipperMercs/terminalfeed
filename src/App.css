@@ -12,6 +12,24 @@
   animation: pageIn 0.3s ease;
 }
 
+/* Subtle glass sheen — faint light reflection at the top */
+.app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.012) 0%,
+    rgba(255, 255, 255, 0.004) 30%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 9997;
+}
+
 @keyframes pageIn {
   from { opacity: 0; }
   to { opacity: 1; }
