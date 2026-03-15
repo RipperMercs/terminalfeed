@@ -2344,6 +2344,24 @@
   transform: scale(0.95);
 }
 
+.panelDragging {
+  opacity: 0.4;
+  outline: 1px dashed var(--green);
+}
+
+.panelDragOver {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+}
+
+.gridOrganizing .panel {
+  cursor: grab;
+}
+
+.gridOrganizing .panel:active {
+  cursor: grabbing;
+}
+
 .orgHide {
   width: 22px;
   height: 22px;

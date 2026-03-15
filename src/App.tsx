@@ -1092,16 +1092,51 @@ function App() {
           const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
           const content = panelRegistry[id as keyof typeof panelRegistry];
           if (!content) return null;
+
+          const dragProps = layout.isOrganizing ? {
+            draggable: true,
+            onDragStart: (e: React.DragEvent) => {
+              e.dataTransfer.setData('text/plain', id);
+              e.dataTransfer.effectAllowed = 'move';
+              (e.currentTarget as HTMLElement).classList.add('panelDragging');
+            },
+            onDragEnd: (e: React.DragEvent) => {
+              (e.currentTarget as HTMLElement).classList.remove('panelDragging');
+              document.querySelectorAll('.panelDragOver').forEach(el => el.classList.remove('panelDragOver'));
+            },
+            onDragOver: (e: React.DragEvent) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              (e.currentTarget as HTMLElement).classList.add('panelDragOver');
+            },
+            onDragLeave: (e: React.DragEvent) => {
+              (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
+            },
+            onDrop: (e: React.DragEvent) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
+              const fromId = e.dataTransfer.getData('text/plain');
+              if (!fromId || fromId === id) return;
+              const order = [...layout.panelOrder];
+              const fromIdx = order.indexOf(fromId);
+              const toIdx = order.indexOf(id);
+              if (fromIdx === -1 || toIdx === -1) return;
+              order.splice(fromIdx, 1);
+              order.splice(toIdx, 0, fromId);
+              layout.setPanelOrder(order);
+            },
+          } : {};
+
           // First 6 panels load immediately, rest are lazy
           if (idx < 6) {
             return (
-              <div key={id} className={`panel ${span}`}>
+              <div key={id} className={`panel ${span}`} {...dragProps}>
                 {content}
               </div>
             );
           }
           return (
-            <LazyPanel key={id} className={`panel ${span}`}>
+            <LazyPanel key={id} className={`panel ${span}`} {...dragProps}>
               {content}
             </LazyPanel>
           );
