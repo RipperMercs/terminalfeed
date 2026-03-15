@@ -35,6 +35,11 @@ import { uapSightings, getShapeStats } from './data/uapSightings';
 import { useBluesky } from './hooks/useBluesky';
 import { usePanelHeat } from './hooks/usePanelHeat';
 import { useHNShowAsk } from './hooks/useHackerNewsTop';
+import { useForexHeatmap } from './hooks/useForexHeatmap';
+import { useWikipedia } from './hooks/useWikipedia';
+import { useSolarWeather } from './hooks/useSolarWeather';
+import { useProductHunt } from './hooks/useProductHunt';
+import { useFunFact } from './hooks/useFunFact';
 import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
@@ -74,6 +79,11 @@ function App() {
   const panelHealth = usePanelHealth();
   const hnCommunity = useHNShowAsk();
   const worldClocks = useWorldClock();
+  const forexRates = useForexHeatmap();
+  const wikiArticle = useWikipedia();
+  const solarWeather = useSolarWeather();
+  const phProducts = useProductHunt();
+  const funFact = useFunFact();
   const podcastEpisodes = usePodcasts();
   const uapShapeStats = getShapeStats();
   const bskyPosts = useBluesky();
@@ -432,6 +442,65 @@ function App() {
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
       </div>
     </>),
+    'forex': (<>
+      <PanelHead panelId="forex" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Forex</span><span className="panelTag">HEATMAP</span></div></PanelHead>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+        {forexRates.length === 0 && <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading rates...</div>}
+        {forexRates.map((r) => (
+          <div key={r.currency} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 10 }}>
+            <span style={{ color: 'var(--text)', fontWeight: 600 }}>{r.currency}</span>
+            <span style={{ color: r.change >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>{r.change >= 0 ? '+' : ''}{r.change.toFixed(2)}%</span>
+          </div>
+        ))}
+      </div>
+    </>),
+    'wikipedia': (<>
+      <PanelHead panelId="wikipedia" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Wikipedia</span><span className="panelTag">FEATURED</span></div></PanelHead>
+      {wikiArticle ? (
+        <a href={wikiArticle.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {wikiArticle.thumbnail && <img src={wikiArticle.thumbnail} alt="" style={{ width: 60, height: 60, borderRadius: 3, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--border)' }} loading="lazy" />}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{wikiArticle.title}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', lineHeight: 1.4 }}>{wikiArticle.extract}...</div>
+            </div>
+          </div>
+        </a>
+      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+    </>),
+    'solar': (<>
+      <PanelHead panelId="solar" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Space Weather</span><span className="panelTag">NASA</span></div></PanelHead>
+      {solarWeather ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {solarWeather.events.length === 0 && <div style={{ fontSize: 10, color: 'var(--green)', padding: '8px 0' }}>All quiet — no significant solar activity</div>}
+          {solarWeather.events.map((e, i) => {
+            const color = e.severity === 'extreme' ? 'var(--red)' : e.severity === 'high' ? 'var(--amber)' : e.severity === 'moderate' ? 'var(--gold)' : 'var(--text-dim)';
+            return (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', borderBottom: '1px solid rgba(26,26,34,0.5)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 8, color, fontWeight: 700, background: `${color}15`, padding: '1px 4px', borderRadius: 2 }}>{e.type}</span>
+                  <span style={{ fontSize: 11, color, fontWeight: 600 }}>{e.classType}</span>
+                </div>
+                <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{e.time ? timeAgo(Math.floor(new Date(e.time).getTime() / 1000)) : ''}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+    </>),
+    'producthunt': (<>
+      <PanelHead panelId="producthunt" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Product Hunt</span><span className="panelTag">TODAY</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {phProducts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading products...</div>}
+        {phProducts.map((p, i) => (
+          <a key={i} href={p.link} target="_blank" rel="noopener noreferrer" className="newsRow">
+            <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 700, flexShrink: 0, minWidth: 16 }}>{i + 1}</span>
+            <span className="newsTitle">{p.title}</span>
+            <span className="newsMeta">{p.pubDate ? timeAgo(Math.floor(new Date(p.pubDate).getTime() / 1000)) : ''}</span>
+          </a>
+        ))}
+      </div>
+    </>),
     'hn-community': (<>
       <PanelHead panelId="hn-community" layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Show / Ask HN</span><span className="panelTag">COMMUNITY</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -670,11 +739,11 @@ function App() {
         </div>
       </div>
 
-      {/* ── Dev Joke Strip ── */}
-      {devJoke && (
+      {/* ── Fun Fact / Dev Joke Strip ── */}
+      {(funFact || devJoke) && (
         <div className="jokeStrip">
           <span className="jokePrefix">&gt;</span>
-          <span className="jokeText">{devJoke}</span>
+          <span className="jokeText">{funFact || devJoke}</span>
         </div>
       )}
 
