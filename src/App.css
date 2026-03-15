@@ -542,8 +542,6 @@
   break-inside: avoid;
   margin-bottom: 4px;
   transition: border-color 0.15s ease;
-  content-visibility: auto;
-  contain-intrinsic-size: 0 150px;
 }
 
 .panel:hover {
