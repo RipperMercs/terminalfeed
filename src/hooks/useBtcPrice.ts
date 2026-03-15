@@ -37,7 +37,8 @@ const WS_MAX_RECONNECT_MS = 30000;
 const STATS_POLL_MS = 60_000;
 const MAX_TICKS = 600;
 const FALLBACK_DELAY_MS = 8000;
-const PRICE_THROTTLE_MS = 1000; // update display max once per second
+const IS_MOBILE = typeof window !== 'undefined' && window.innerWidth < 768;
+const PRICE_THROTTLE_MS = IS_MOBILE ? 3000 : 1000; // 3s on mobile, 1s on desktop
 
 export function useBtcPrice() {
   // Initialize from cache or static fallback — never show $0.00
