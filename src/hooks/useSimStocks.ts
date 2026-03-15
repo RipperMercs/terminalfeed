@@ -15,18 +15,36 @@ const FINNHUB_REST = 'https://finnhub.io/api/v1/quote';
 const RECONNECT_MS = 5000;
 
 const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
+  // Indices
   { symbol: 'SPY', name: 'S&P 500' },
   { symbol: 'QQQ', name: 'NASDAQ' },
   { symbol: 'DIA', name: 'DOW' },
+  { symbol: 'IWM', name: 'Russell 2000' },
+  // Mega caps + high-volatility
   { symbol: 'NVDA', name: 'NVIDIA' },
-  { symbol: 'MSFT', name: 'Microsoft' },
   { symbol: 'AAPL', name: 'Apple' },
-  { symbol: 'TSLA', name: 'Tesla' },
+  { symbol: 'MSFT', name: 'Microsoft' },
   { symbol: 'GOOGL', name: 'Google' },
+  { symbol: 'AMZN', name: 'Amazon' },
+  { symbol: 'META', name: 'Meta' },
+  { symbol: 'TSLA', name: 'Tesla' },
   { symbol: 'AMD', name: 'AMD' },
   { symbol: 'COIN', name: 'Coinbase' },
   { symbol: 'PLTR', name: 'Palantir' },
+  { symbol: 'MSTR', name: 'MicroStrategy' },
+  { symbol: 'SMCI', name: 'Super Micro' },
+  { symbol: 'AVGO', name: 'Broadcom' },
+  { symbol: 'CRM', name: 'Salesforce' },
+  { symbol: 'NFLX', name: 'Netflix' },
+  { symbol: 'SQ', name: 'Block' },
+  { symbol: 'SHOP', name: 'Shopify' },
+  { symbol: 'HOOD', name: 'Robinhood' },
+  { symbol: 'SOFI', name: 'SoFi' },
+  { symbol: 'MARA', name: 'Marathon Digital' },
+  { symbol: 'RIOT', name: 'Riot Platforms' },
 ];
+
+export const INDICES = ['SPY', 'QQQ', 'DIA', 'IWM'];
 
 export function useSimStocks(customSymbols: string[] = []) {
   const SYMBOLS = [

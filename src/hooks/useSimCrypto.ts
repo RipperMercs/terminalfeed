@@ -13,10 +13,10 @@ const ASSETS = 'ethereum,solana,dogecoin,ripple,cardano,polkadot,avalanche-2,cha
 const COINCAP_WS = `wss://ws.coincap.io/prices?assets=${ASSETS.replace(/-2/g, '')}`;
 const RECONNECT_MS = 5000;
 
-// 24h stats from CoinGecko (includes more tokens)
+// 24h stats from CoinGecko — fetch top 30 for movers panel
 const COINGECKO_URL =
-  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ASSETS}&sparkline=false&order=market_cap_desc`;
-const STATS_POLL_MS = 60_000;
+  'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&sparkline=false&price_change_percentage=24h';
+const STATS_POLL_MS = 45_000;
 
 const GECKO_TO_SYMBOL: Record<string, string> = {
   ethereum: 'ETH',
@@ -78,29 +78,25 @@ export function useSimCrypto(customSymbols: string[] = []) {
       const res = await fetch(COINGECKO_URL);
       if (!res.ok) return;
       const coins = await res.json();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || !Array.isArray(coins)) return;
 
+      // Update change refs for WS-connected coins
       for (const coin of coins) {
-        const sym = GECKO_TO_SYMBOL[coin.id];
+        const sym = GECKO_TO_SYMBOL[coin.id] || coin.symbol?.toUpperCase();
         if (sym) {
           changeRef.current[sym] = coin.price_change_percentage_24h ?? 0;
         }
       }
 
-      // Seed prices if WS hasn't delivered yet
-      setCrypto((prev) => {
-        const hasData = prev.some((c) => c.price > 0);
-        if (hasData) return prev;
-        return prev.map((c) => {
-          const coin = coins.find((gc: any) => GECKO_TO_SYMBOL[gc.id] === c.symbol);
-          if (!coin) return c;
-          return {
-            ...c,
-            price: coin.current_price,
-            change: coin.price_change_percentage_24h ?? 0,
-          };
-        });
-      });
+      // Build full list from CoinGecko data (top 30 by market cap)
+      const fullList: CryptoItem[] = coins.map((coin: { id: string; symbol: string; current_price: number; price_change_percentage_24h: number }) => ({
+        symbol: GECKO_TO_SYMBOL[coin.id] || coin.symbol?.toUpperCase() || '???',
+        price: coin.current_price ?? 0,
+        change: coin.price_change_percentage_24h ?? 0,
+      })).filter((c: CryptoItem) => c.price > 0);
+
+      setCrypto(fullList);
+      setCache('crypto_prices', fullList, 'coingecko');
     } catch {}
   }, []);
 
