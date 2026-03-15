@@ -2296,11 +2296,35 @@
   opacity: 0.7;
 }
 
-/* ── Grid Organize Mode ── */
+/* ── Grid Organize Mode — switch to flex for predictable positioning ── */
 .gridOrganizing {
+  column-count: unset !important;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 4px;
   outline: 1px solid rgba(79, 209, 197, 0.15);
   outline-offset: -1px;
   animation: orgPulse 3s infinite;
+}
+
+.gridOrganizing .panel {
+  width: calc(25% - 3px);
+  margin-bottom: 0;
+  flex-shrink: 0;
+  cursor: grab;
+  transition: opacity 0.2s, transform 0.2s, outline-color 0.2s, box-shadow 0.2s;
+}
+
+@media (max-width: 1400px) {
+  .gridOrganizing .panel { width: calc(33.333% - 3px); }
+}
+
+@media (max-width: 1100px) {
+  .gridOrganizing .panel { width: calc(50% - 2px); }
+}
+
+@media (max-width: 900px) {
+  .gridOrganizing .panel { width: 100%; }
 }
 
 @keyframes orgPulse {
@@ -2369,11 +2393,6 @@
   outline: 2px solid var(--cyan);
   outline-offset: -2px;
   box-shadow: 0 0 12px rgba(93, 202, 165, 0.12);
-}
-
-.gridOrganizing .panel {
-  cursor: grab;
-  transition: opacity 0.2s, transform 0.2s, outline-color 0.2s, box-shadow 0.2s;
 }
 
 .gridOrganizing .panel:active {
@@ -3368,7 +3387,7 @@
   .orgArrow { width: 32px; height: 32px; font-size: 12px; }
   .orgHide { width: 32px; height: 32px; font-size: 14px; }
   .orgDragHandle { display: none; }
-  .gridOrganizing .panel { cursor: default; }
+  .gridOrganizing .panel { cursor: default; width: 100%; }
 
   /* Ticker bar tweaks */
   .tickerBar { font-size: 10px; }
