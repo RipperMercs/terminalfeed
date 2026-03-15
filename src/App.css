@@ -2074,16 +2074,16 @@
 
 /* ── Ripper Footer Branding ── */
 .ripperLogo {
-  height: 20px;
-  width: auto;
-  opacity: 0.6;
-  transition: opacity 0.2s, transform 0.2s;
+  height: 16px;
+  width: 16px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
   border-radius: 2px;
+  object-fit: contain;
 }
 
 .ripperLogo:hover {
   opacity: 1;
-  transform: scale(1.1);
 }
 
 .ripperCredit {
