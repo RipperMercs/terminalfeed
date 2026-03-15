@@ -18,6 +18,8 @@ export const DEFAULT_LAYOUT = {
     'seismic',
     'weather',
     'launches',
+    'the-wire',
+    'cert-stream',
     'whale-watch',
     'wiki-live',
     'disasters',
