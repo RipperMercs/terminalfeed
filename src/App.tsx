@@ -1130,13 +1130,13 @@ function App() {
           // First 6 panels load immediately, rest are lazy
           if (idx < 6) {
             return (
-              <div key={id} className={`panel ${span}`} {...dragProps}>
+              <div key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
                 {content}
               </div>
             );
           }
           return (
-            <LazyPanel key={id} className={`panel ${span}`} {...dragProps}>
+            <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
               {content}
             </LazyPanel>
           );
