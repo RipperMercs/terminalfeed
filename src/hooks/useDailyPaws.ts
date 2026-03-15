@@ -47,6 +47,7 @@ export function useDailyPaws() {
   const [paw, setPaw] = useState<PawData | null>(null);
   const [fading, setFading] = useState(false);
   const mountedRef = useRef(true);
+  const turnRef = useRef(0); // alternates: even=cat, odd=dog
 
   const fetchNew = async () => {
     if (!mountedRef.current) return;
@@ -54,7 +55,8 @@ export function useDailyPaws() {
     await new Promise(r => setTimeout(r, 400));
     if (!mountedRef.current) return;
 
-    const isCat = Math.random() > 0.5;
+    const isCat = turnRef.current % 2 === 0;
+    turnRef.current++;
     let result = isCat ? await fetchCat() : await fetchDog();
     if (!result) result = isCat ? await fetchDog() : await fetchCat(); // fallback
 
