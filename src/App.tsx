@@ -35,7 +35,7 @@ import { usePanelHeat } from './hooks/usePanelHeat';
 import { useHNShowAsk } from './hooks/useHackerNewsTop';
 import { useForexHeatmap } from './hooks/useForexHeatmap';
 import { useWikipedia } from './hooks/useWikipedia';
-import { useSolarWeather } from './hooks/useSolarWeather';
+
 import { useProductHunt } from './hooks/useProductHunt';
 import { useWikipediaLive } from './hooks/useWikipediaLive';
 import { useGDACS } from './hooks/useGDACS';
@@ -120,7 +120,7 @@ function App() {
   const worldClocks = useWorldClock();
   const forexRates = useForexHeatmap();
   const wikiArticle = useWikipedia();
-  const solarWeather = useSolarWeather();
+
   const phProducts = useProductHunt();
   const { edits: wikiEdits, editsPerMin: wikiEPM } = useWikipediaLive();
   const disasterAlerts = useGDACS();
@@ -821,26 +821,6 @@ function App() {
             </div>
           </div>
         </a>
-      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
-    </>),
-    'solar': (<>
-      <PanelHead panelId="solar" isStale={panelHealth.isStale('solar')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Space Weather</span><span className="panelTag">NASA</span></div></PanelHead>
-      {solarWeather ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {solarWeather.events.length === 0 && <div style={{ fontSize: 10, color: 'var(--green)', padding: '8px 0' }}>All quiet — no significant solar activity</div>}
-          {solarWeather.events.map((e, i) => {
-            const color = e.severity === 'extreme' ? 'var(--red)' : e.severity === 'high' ? 'var(--amber)' : e.severity === 'moderate' ? 'var(--gold)' : 'var(--text-dim)';
-            return (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', borderBottom: '1px solid rgba(26,26,34,0.5)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 8, color, fontWeight: 700, background: `${color}15`, padding: '1px 4px', borderRadius: 2 }}>{e.type}</span>
-                  <span style={{ fontSize: 11, color, fontWeight: 600 }}>{e.classType}</span>
-                </div>
-                <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{e.time ? timeAgo(Math.floor(new Date(e.time).getTime() / 1000)) : ''}</span>
-              </div>
-            );
-          })}
-        </div>
       ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
     </>),
     'producthunt': (<>
