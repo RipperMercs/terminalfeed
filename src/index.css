@@ -82,11 +82,12 @@ body {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(74, 222, 128, 0.003) 0%,
-    transparent 35%,
-    rgba(0, 0, 0, 0.08) 100%
+  background: linear-gradient(
+    180deg,
+    rgba(74, 222, 128, 0.04) 0%,
+    transparent 3%,
+    transparent 97%,
+    rgba(74, 222, 128, 0.02) 100%
   );
   pointer-events: none;
   z-index: 9998;
