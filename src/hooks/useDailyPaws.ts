@@ -12,19 +12,26 @@ export interface PawData {
 const POLL_MS = 30_000; // new friend every 30 seconds
 
 async function fetchCat(): Promise<PawData | null> {
-  try {
-    const res = await fetch('https://api.thecatapi.com/v1/images/search?size=small&mime_types=jpg,png&limit=1', {
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data?.[0]?.url) return null;
-    return {
-      url: data[0].url,
-      type: 'cat',
-      breed: data[0].breeds?.[0]?.name || null,
-    };
-  } catch { return null; }
+  // Try up to 3 times to get a non-Tumblr image
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch('https://api.thecatapi.com/v1/images/search?size=small&mime_types=jpg,png&limit=1', {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const url = data?.[0]?.url;
+      if (!url) return null;
+      // Skip Tumblr-hosted images — they frequently get removed
+      if (url.includes('tumblr') || url.includes('media.tumblr')) continue;
+      return {
+        url,
+        type: 'cat',
+        breed: data[0].breeds?.[0]?.name || null,
+      };
+    } catch { return null; }
+  }
+  return null;
 }
 
 async function fetchDog(): Promise<PawData | null> {
@@ -61,10 +68,25 @@ export function useDailyPaws() {
     if (!result) result = isCat ? await fetchDog() : await fetchCat(); // fallback
 
     if (result && mountedRef.current) {
-      // Preload image
+      // Preload image — retry on error
       const img = new Image();
-      img.onload = () => { if (mountedRef.current) { setPaw(result); setFading(false); } };
-      img.onerror = () => { if (mountedRef.current) setFading(false); };
+      img.onload = () => {
+        if (mountedRef.current) { setPaw(result); setFading(false); }
+      };
+      img.onerror = () => {
+        // Image failed (Tumblr removed, 404, etc.) — try a dog instead
+        if (!mountedRef.current) return;
+        fetchDog().then(fallback => {
+          if (fallback && mountedRef.current) {
+            const retry = new Image();
+            retry.onload = () => { if (mountedRef.current) { setPaw(fallback); setFading(false); } };
+            retry.onerror = () => { if (mountedRef.current) setFading(false); };
+            retry.src = fallback.url;
+          } else {
+            if (mountedRef.current) setFading(false);
+          }
+        });
+      };
       img.src = result.url;
     } else {
       if (mountedRef.current) setFading(false);
