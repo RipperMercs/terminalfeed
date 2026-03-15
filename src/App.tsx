@@ -962,7 +962,7 @@ function App() {
       {/* ── Bottom Bar ── */}
       <div className="bottomBar">
         <div className="bottomBarLeft">
-          <img src="/favicon.svg" alt="TerminalFeed" className="ripperLogo" />
+          <img src="/images/terminalfeed_logo.png" alt="TerminalFeed" className="ripperLogo" />
           <span className="ripperCredit">built by ripper</span>
           <span className="bottomBarDivider">&middot;</span>
           <span>terminalfeed.io</span>
