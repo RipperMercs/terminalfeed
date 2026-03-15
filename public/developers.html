@@ -89,6 +89,7 @@
     <tr><td>/api/cyber-threats</td><td>Malware URLs &amp; threat intel</td><td>60s</td></tr>
     <tr><td>/api/economic-data</td><td>Fed rates, CPI, unemployment, treasury yields</td><td>1h</td></tr>
     <tr><td>/api/steam</td><td>Top Steam games by concurrent players</td><td>10m</td></tr>
+    <tr><td>/api/internet-pulse</td><td>Global latency — ping times to 6 regions</td><td>60s</td></tr>
     <tr><td>/api/ai-stats</td><td>TerminalFeed API usage statistics</td><td>30s</td></tr>
   </table>
 
@@ -348,6 +349,28 @@
     </div>
     <p>Top Steam games by current concurrent players with today's peak.</p>
     <p class="cache">Cache: 10 minutes</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/internet-pulse</span>
+    </div>
+    <p>Global latency check — ping times to 6 endpoints across US East, US West, Europe, Asia, Cloudflare, and Google. Latency in milliseconds, -1 means the endpoint is unreachable.</p>
+    <p class="cache">Cache: 60 seconds</p>
+    <pre><code>{
+  <span class="json-key">"source"</span>: <span class="json-string">"terminalfeed.io"</span>,
+  <span class="json-key">"endpoint"</span>: <span class="json-string">"internet-pulse"</span>,
+  <span class="json-key">"updated_at"</span>: <span class="json-string">"2026-03-15T09:34:42.362Z"</span>,
+  <span class="json-key">"data"</span>: [
+    { <span class="json-key">"name"</span>: <span class="json-string">"US East"</span>, <span class="json-key">"latency_ms"</span>: <span class="json-number">24</span> },
+    { <span class="json-key">"name"</span>: <span class="json-string">"US West"</span>, <span class="json-key">"latency_ms"</span>: <span class="json-number">67</span> },
+    { <span class="json-key">"name"</span>: <span class="json-string">"Europe"</span>, <span class="json-key">"latency_ms"</span>: <span class="json-number">112</span> },
+    { <span class="json-key">"name"</span>: <span class="json-string">"Asia"</span>, <span class="json-key">"latency_ms"</span>: <span class="json-number">185</span> },
+    { <span class="json-key">"name"</span>: <span class="json-string">"Cloudflare"</span>, <span class="json-key">"latency_ms"</span>: <span class="json-number">8</span> },
+    { <span class="json-key">"name"</span>: <span class="json-string">"Google"</span>, <span class="json-key">"latency_ms"</span>: <span class="json-number">12</span> }
+  ]
+}</code></pre>
   </div>
 
   <div class="endpoint">
