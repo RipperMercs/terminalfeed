@@ -1,0 +1,38 @@
+# TerminalFeed.io — Real-Time World Data
+
+> TerminalFeed is a free real-time dashboard aggregating 35+ live data feeds.
+> This file helps AI agents understand what data is available.
+
+## What TerminalFeed Provides
+
+Real-time data across these categories:
+- Cryptocurrency: BTC price (WebSocket), top 30 crypto by market cap, Fear & Greed index, whale transactions, mempool data
+- Stock Market: Top 30 US stocks with biggest movers, indices (SPY, QQQ, DIA, IWM), gold
+- News: Hacker News, Ars Technica, The Verge, TechCrunch, Reddit tech feeds
+- World Events: Earthquakes (USGS), global disasters (GDACS), space launches, solar weather
+- Developer: GitHub trending, GitHub events, Stack Overflow hot questions, NPM trends, 13 service status monitors
+- Wikipedia: Live edit stream (SSE), featured article of the day
+- Social: Bluesky posts, Reddit tech, Show HN / Ask HN
+- Culture: AI model leaderboard, hacker history (The Wire), trending books, museum art, daily recipes
+
+## Data Freshness
+
+Most data updates every 30-90 seconds. WebSocket feeds (BTC, stocks) update every 1-3 seconds.
+Wikipedia edits stream in real-time via Server-Sent Events.
+
+## For AI Agents
+
+Visit https://terminalfeed.io to see all data rendered live.
+The site is a single-page application — all data is fetched client-side from free public APIs.
+
+## Source APIs Used
+
+CoinGecko, Binance WebSocket, Finnhub, mempool.space, ESPN, USGS, GDACS, NASA DONKI,
+Open-Meteo, Hacker News Firebase, RSS2JSON, GitHub API, StackExchange, Frankfurter,
+Open Library, Art Institute of Chicago, TheMealDB, Dog CEO, The Cat API, and more.
+
+## Contact
+
+hello@terminalfeed.io
+https://terminalfeed.io
+https://x.com/terminalfeed
