@@ -58,6 +58,9 @@ import { useNasaApod } from './hooks/useNasaApod';
 import { useGoodNews } from './hooks/useGoodNews';
 import { useTrendingMovies } from './hooks/useTrendingMovies';
 import { AdminTerminal } from './components/AdminTerminal';
+import { useHumansInSpace } from './hooks/useHumansInSpace';
+import { useThisDay } from './hooks/useThisDay';
+import { useFooterQuote } from './hooks/useFooterQuote';
 import './App.css';
 
 function App() {
@@ -142,6 +145,9 @@ function App() {
   const bskyPosts = useBluesky();
   const todayInTech = getTodayInTech();
   const todayTerm = getTodayTerm();
+  const humansInSpace = useHumansInSpace();
+  const thisDayEvents = useThisDay();
+  const footerQuote = useFooterQuote();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -261,6 +267,8 @@ function App() {
     if (bskyPosts.length > 0) panelHealth.reportData('bluesky');
     if (internetPulse.length > 0) panelHealth.reportData('internet-pulse');
     if (recipes.length > 0) panelHealth.reportData('recipe');
+    if (humansInSpace) panelHealth.reportData('humans-in-space');
+    if (thisDayEvents.length > 0) panelHealth.reportData('this-day');
   });
 
   // Smart auto-curation: calculate panel heat scores for new visitors
@@ -962,6 +970,33 @@ function App() {
         ))}
       </div>
     </>),
+    'humans-in-space': (<>
+      <PanelHead panelId="humans-in-space" isStale={panelHealth.isStale('humans-in-space')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Humans In Space</span><span className="panelTag" style={{ color: 'var(--purple)' }}>LIVE</span></div></PanelHead>
+      {humansInSpace ? (
+        <>
+          <div style={{ textAlign: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--green)', fontFamily: 'monospace' }}>{humansInSpace.count}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-dim)', fontFamily: 'monospace' }}>humans in orbit right now</div>
+          </div>
+          {humansInSpace.people.map((person, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: i < humansInSpace.people.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 11, fontFamily: 'monospace' }}>
+              <span style={{ color: 'var(--text)' }}>{person.name}</span>
+              <span style={{ color: 'var(--text-dim)', fontSize: 9 }}>{person.craft}</span>
+            </div>
+          ))}
+        </>
+      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+    </>),
+    'this-day': (<>
+      <PanelHead panelId="this-day" isStale={panelHealth.isStale('this-day')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">This Day In History</span><span className="panelTag" style={{ color: 'var(--amber)' }}>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span></div></PanelHead>
+      {thisDayEvents.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+      {thisDayEvents.map((event, i) => (
+        <div key={i} style={{ padding: '5px 0', borderBottom: i < thisDayEvents.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 11, fontFamily: 'monospace', lineHeight: 1.4 }}>
+          <span style={{ color: 'var(--green)', fontWeight: 600, marginRight: 8 }}>{event.year}</span>
+          <span style={{ color: 'var(--text)' }}>{event.text.length > 100 ? event.text.slice(0, 100) + '...' : event.text}</span>
+        </div>
+      ))}
+    </>),
   };
 
 
@@ -1201,6 +1236,13 @@ function App() {
           <span>{(btcPrice > 0) ? 'All systems operational' : 'Connecting...'}</span>
         </div>
       </div>
+
+      {/* ── Footer Quote ── */}
+      {footerQuote && (
+        <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--text-dim)', fontStyle: 'italic', padding: '4px 16px', textAlign: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+          &ldquo;{footerQuote.text}&rdquo; &mdash; {footerQuote.author}
+        </div>
+      )}
 
       {/* Scroll to Top */}
       <button
