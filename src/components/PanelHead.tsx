@@ -65,6 +65,8 @@ function findVisualNeighbor(panelId: string, direction: 'up' | 'down' | 'left' |
   return best;
 }
 
+const isAdPanel = (id: string) => id.startsWith('ad-');
+
 export function PanelHead({ panelId, layout, isStale, children }: Props) {
   const moveVisual = (direction: 'up' | 'down' | 'left' | 'right') => {
     const targetId = findVisualNeighbor(panelId, direction);
@@ -85,7 +87,7 @@ export function PanelHead({ panelId, layout, isStale, children }: Props) {
     <div className="panelHeader">
       {children}
       {isStale && <span className="staleIndicator">delayed</span>}
-      {layout.isOrganizing && (
+      {layout.isOrganizing && !isAdPanel(panelId) && (
         <div className="orgControls">
           <span className="orgDragHandle" title="Drag to reorder">&#x2807;</span>
           <button className="orgArrow" onClick={() => moveVisual('left')} title="Move left">&#9664;</button>

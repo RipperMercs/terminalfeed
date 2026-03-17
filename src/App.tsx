@@ -61,6 +61,7 @@ import { AdminTerminal } from './components/AdminTerminal';
 import { useHumansInSpace } from './hooks/useHumansInSpace';
 import { useThisDay } from './hooks/useThisDay';
 import { useFooterQuote } from './hooks/useFooterQuote';
+import { AdPanel } from './components/AdPanel';
 import './App.css';
 
 function App() {
@@ -383,6 +384,7 @@ function App() {
       </div>
       {btcNet.diffProgress > 0 && (<div className="diffBarWrap"><div className="diffBarLabel"><span>Epoch Progress</span><span>{btcNet.diffRemainingBlocks} blocks remain</span></div><div className="diffBar"><div className="diffBarFill" style={{ width: `${btcNet.diffProgress}%` }} /></div></div>)}
       {btcNet.recentBlocks.length > 0 && (<div className="recentBlocksWrap"><div className="recentBlocksTitle">Recent Blocks</div><div className="recentBlocksList">{btcNet.recentBlocks.map((b) => (<div key={b.height} className="recentBlockRow"><span className="rbHeight">{b.height.toLocaleString()}</span><span className="rbPool">{b.pool}</span><span className="rbTxCount">{b.txCount} tx</span><span className="rbSize">{(b.size / 1e6).toFixed(2)} MB</span><span className="rbTime">{timeAgo(b.timestamp)}</span></div>))}</div></div>)}
+      {whaleTxs.length > 0 && (<div className="recentBlocksWrap"><div className="recentBlocksTitle">Whale Watch</div><div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>{whaleTxs.map((tx) => { const isHuge = tx.btc >= 10; const usdValue = tx.btc * btcPrice; return (<a key={tx.txid} href={`https://mempool.space/tx/${tx.txid}`} target="_blank" rel="noopener noreferrer" className="newsRow"><span style={{ fontSize: 12, flexShrink: 0 }}>🐋</span><span style={{ fontSize: 11, color: isHuge ? 'var(--gold)' : 'var(--amber)', fontWeight: 700, minWidth: 75 }}>{tx.btc.toFixed(4)} BTC</span><span style={{ fontSize: 10, color: 'var(--text-dim)', flex: 1 }}>${usdValue >= 1e6 ? (usdValue / 1e6).toFixed(1) + 'M' : usdValue >= 1e3 ? (usdValue / 1e3).toFixed(0) + 'K' : usdValue.toFixed(0)}</span><span className="newsMeta">{timeAgo(Math.floor(tx.time / 1000))}</span></a>); })}</div></div>)}
     </>),
     'news': (<>
       <PanelHead panelId="news" isStale={panelHealth.isStale('news')} layout={layout} getGridCols={getGridCols}>
@@ -529,6 +531,24 @@ function App() {
           </div>
         ))}
       </div>
+    </>),
+    'ad-1': (<>
+      <PanelHead panelId="ad-1" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Sponsored</span></div>
+      </PanelHead>
+      <AdPanel slotId="ad-1" />
+    </>),
+    'ad-2': (<>
+      <PanelHead panelId="ad-2" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Sponsored</span></div>
+      </PanelHead>
+      <AdPanel slotId="ad-2" />
+    </>),
+    'ad-3': (<>
+      <PanelHead panelId="ad-3" layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Sponsored</span></div>
+      </PanelHead>
+      <AdPanel slotId="ad-3" />
     </>),
     'fitness': (<>
       <PanelHead panelId="fitness" isStale={panelHealth.isStale('fitness')} layout={layout} getGridCols={getGridCols}>
@@ -723,24 +743,6 @@ function App() {
           {wire.item.type === 'fact' && <span style={{ color: 'var(--purple)' }}>+ </span>}
           {wire.item.text}
         </div>
-      </div>
-    </>),
-    'whale-watch': (<>
-      <PanelHead panelId="whale-watch" isStale={panelHealth.isStale('whale-watch')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Whale Watch</span><span className="panelTag">MEMPOOL</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {whaleTxs.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>scanning mempool...</div>}
-        {whaleTxs.map((tx) => {
-          const isHuge = tx.btc >= 10;
-          const usdValue = tx.btc * btcPrice;
-          return (
-            <a key={tx.txid} href={`https://mempool.space/tx/${tx.txid}`} target="_blank" rel="noopener noreferrer" className="newsRow">
-              <span style={{ fontSize: 12, flexShrink: 0 }}>🐋</span>
-              <span style={{ fontSize: 11, color: isHuge ? 'var(--gold)' : 'var(--amber)', fontWeight: 700, minWidth: 75 }}>{tx.btc.toFixed(4)} BTC</span>
-              <span style={{ fontSize: 10, color: 'var(--text-dim)', flex: 1 }}>${usdValue >= 1e6 ? (usdValue / 1e6).toFixed(1) + 'M' : usdValue >= 1e3 ? (usdValue / 1e3).toFixed(0) + 'K' : usdValue.toFixed(0)}</span>
-              <span className="newsMeta">{timeAgo(Math.floor(tx.time / 1000))}</span>
-            </a>
-          );
-        })}
       </div>
     </>),
     'wiki-live': (<>
@@ -1120,62 +1122,93 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* All panels rendered from panelOrder — top row is just the default order */}
-        {layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id)).map((id, idx) => {
-          const panelDef = ALL_PANELS.find(p => p.id === id);
-          if (!panelDef) return null;
-          const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
-          const content = panelRegistry[id as keyof typeof panelRegistry];
-          if (!content) return null;
-
-          const dragProps = layout.isOrganizing ? {
-            draggable: true,
-            onDragStart: (e: React.DragEvent) => {
-              e.dataTransfer.setData('text/plain', id);
-              e.dataTransfer.effectAllowed = 'move';
-              (e.currentTarget as HTMLElement).classList.add('panelDragging');
-            },
-            onDragEnd: (e: React.DragEvent) => {
-              (e.currentTarget as HTMLElement).classList.remove('panelDragging');
-              document.querySelectorAll('.panelDragOver').forEach(el => el.classList.remove('panelDragOver'));
-            },
-            onDragOver: (e: React.DragEvent) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-              (e.currentTarget as HTMLElement).classList.add('panelDragOver');
-            },
-            onDragLeave: (e: React.DragEvent) => {
-              (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
-            },
-            onDrop: (e: React.DragEvent) => {
-              e.preventDefault();
-              (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
-              const fromId = e.dataTransfer.getData('text/plain');
-              if (!fromId || fromId === id) return;
-              const order = [...layout.panelOrder];
-              const fromIdx = order.indexOf(fromId);
-              const toIdx = order.indexOf(id);
-              if (fromIdx === -1 || toIdx === -1) return;
-              order.splice(fromIdx, 1);
-              order.splice(toIdx, 0, fromId);
-              layout.setPanelOrder(order);
-            },
-          } : {};
-
-          // First 6 panels load immediately, rest are lazy
-          if (idx < 6) {
-            return (
-              <div key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
-                {content}
-              </div>
-            );
-          }
-          return (
-            <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
-              {content}
-            </LazyPanel>
+        {/* Ads inject at fixed positions; user panels flow around them */}
+        {(() => {
+          // Build user panel list (no ads) and inject ads at fixed slot positions
+          const userPanels = layout.panelOrder.filter(id =>
+            !id.startsWith('ad-') && layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id)
           );
-        })}
+          // Fixed ad positions: after every 10 user panels
+          const AD_SLOTS: { position: number; id: 'ad-1' | 'ad-2' | 'ad-3' }[] = [
+            { position: 10, id: 'ad-1' },
+            { position: 21, id: 'ad-2' },
+            { position: 32, id: 'ad-3' },
+          ];
+          // Merge: insert ads at their fixed positions
+          const merged: string[] = [];
+          let adIdx = 0;
+          for (let i = 0; i < userPanels.length; i++) {
+            // Insert any ads that belong at this position
+            while (adIdx < AD_SLOTS.length && merged.length === AD_SLOTS[adIdx].position) {
+              merged.push(AD_SLOTS[adIdx].id);
+              adIdx++;
+            }
+            merged.push(userPanels[i]);
+          }
+          // Append remaining ads if the feed is short
+          while (adIdx < AD_SLOTS.length) {
+            merged.push(AD_SLOTS[adIdx].id);
+            adIdx++;
+          }
+
+          return merged.map((id, idx) => {
+            const isAd = id.startsWith('ad-');
+            const panelDef = ALL_PANELS.find(p => p.id === id);
+            if (!panelDef) return null;
+            const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
+            const content = panelRegistry[id as keyof typeof panelRegistry];
+            if (!content) return null;
+
+            // Ad panels are never draggable
+            const dragProps = layout.isOrganizing && !isAd ? {
+              draggable: true,
+              onDragStart: (e: React.DragEvent) => {
+                e.dataTransfer.setData('text/plain', id);
+                e.dataTransfer.effectAllowed = 'move';
+                (e.currentTarget as HTMLElement).classList.add('panelDragging');
+              },
+              onDragEnd: (e: React.DragEvent) => {
+                (e.currentTarget as HTMLElement).classList.remove('panelDragging');
+                document.querySelectorAll('.panelDragOver').forEach(el => el.classList.remove('panelDragOver'));
+              },
+              onDragOver: (e: React.DragEvent) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                (e.currentTarget as HTMLElement).classList.add('panelDragOver');
+              },
+              onDragLeave: (e: React.DragEvent) => {
+                (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
+              },
+              onDrop: (e: React.DragEvent) => {
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
+                const fromId = e.dataTransfer.getData('text/plain');
+                if (!fromId || fromId === id) return;
+                const order = [...layout.panelOrder];
+                const fromIdx = order.indexOf(fromId);
+                const toIdx = order.indexOf(id);
+                if (fromIdx === -1 || toIdx === -1) return;
+                order.splice(fromIdx, 1);
+                order.splice(toIdx, 0, fromId);
+                layout.setPanelOrder(order);
+              },
+            } : {};
+
+            // First 6 panels load immediately, rest are lazy
+            if (idx < 6) {
+              return (
+                <div key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
+                  {content}
+                </div>
+              );
+            }
+            return (
+              <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
+                {content}
+              </LazyPanel>
+            );
+          });
+        })()}
       </div>
 
       {/* ── Hidden Panels Shelf (Organize Mode Only) ── */}

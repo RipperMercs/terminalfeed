@@ -34,7 +34,6 @@ export const ALL_PANELS = [
   { id: 'steam', label: 'Steam Games', defaultSpan: 1 },
   { id: 'ai-hub', label: 'AI Hub', defaultSpan: 1 },
   { id: 'the-wire', label: 'The Wire', defaultSpan: 1 },
-  { id: 'whale-watch', label: 'Whale Watch', defaultSpan: 1 },
   { id: 'wiki-live', label: 'Wikipedia Live', defaultSpan: 1 },
   { id: 'disasters', label: 'Global Alerts', defaultSpan: 1 },
   { id: 'gh-events', label: 'GitHub Live', defaultSpan: 1 },
@@ -52,6 +51,9 @@ export const ALL_PANELS = [
   { id: 'trending-movies', label: 'Trending Movies', defaultSpan: 1 },
   // Bottom: Fun/lifestyle
   { id: 'npm-trends', label: 'NPM Trends', defaultSpan: 1 },
+  { id: 'ad-1', label: 'Sponsored', defaultSpan: 1 },
+  { id: 'ad-2', label: 'Sponsored', defaultSpan: 1 },
+  { id: 'ad-3', label: 'Sponsored', defaultSpan: 1 },
   { id: 'fitness', label: 'Fitness', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
   { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
@@ -67,7 +69,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '29'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '30'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -206,6 +208,8 @@ export function useLayoutManager(): LayoutManager {
   const isCollapsed = useCallback((id: string) => collapsedPanels.has(id), [collapsedPanels]);
 
   const toggleHidden = useCallback((id: string) => {
+    // Ad panels cannot be hidden
+    if (id.startsWith('ad-')) return;
     // Lock scroll position so masonry reflow doesn't jump the page
     const scrollY = window.scrollY;
     setHiddenPanels(prev => {
@@ -243,6 +247,7 @@ export function useLayoutManager(): LayoutManager {
   }, [showToast]);
 
   const swapPanels = useCallback((panelId: string, direction: 'left' | 'right' | 'up' | 'down', cols: number) => {
+    if (panelId.startsWith('ad-')) return; // ad panels are position-locked
     setPanelOrderState(prev => {
       // Work with visible panels only for position calculation
       const visible = prev.filter(id => !hiddenPanels.has(id));
