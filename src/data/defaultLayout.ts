@@ -1,5 +1,5 @@
 // Default curated layout — what new visitors see
-// Updated 2026-03-15 via admin terminal export
+// Updated 2026-03-16 — ads injected at fixed positions, not in panelOrder
 
 export const DEFAULT_LAYOUT = {
   panelOrder: [
@@ -14,7 +14,6 @@ export const DEFAULT_LAYOUT = {
     'seismic',
     'bitcoin',
     'btc-network',
-    'whale-watch',
     'ai-hub',
     'gh-events',
     'stackoverflow',
