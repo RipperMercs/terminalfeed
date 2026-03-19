@@ -65,7 +65,6 @@ import { useFooterQuote } from './hooks/useFooterQuote';
 import { useFlightRadar } from './hooks/useFlightRadar';
 import { useTCGMarket } from './hooks/useTCGMarket';
 import { useCloudStatus } from './hooks/useCloudStatus';
-import { useXkcd } from './hooks/useXkcd';
 import { AdPanel } from './components/AdPanel';
 import './App.css';
 
@@ -158,7 +157,6 @@ function App() {
   const footerQuote = useFooterQuote();
   const flightStats = useFlightRadar();
   const cloudStatus = useCloudStatus();
-  const xkcdComic = useXkcd();
   const tcgMarket = useTCGMarket();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
@@ -275,7 +273,6 @@ function App() {
     if (claudeStatus) panelHealth.reportData('claude-status');
     if (cloudStatus) panelHealth.reportData('cloud-status');
     if (flightStats) panelHealth.reportData('flight-radar');
-    if (xkcdComic) panelHealth.reportData('xkcd');
     if (tcgMarket) panelHealth.reportData('tcg-market');
     if (cryptoGlobal) panelHealth.reportData('crypto-global');
     if (btcNet.blockHeight > 0) panelHealth.reportData('btc-network');
@@ -697,20 +694,6 @@ function App() {
           </div>
         </div>
       ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading art...</div>}
-    </>),
-    'xkcd': (<>
-      <PanelHead panelId="xkcd" isStale={panelHealth.isStale('xkcd')} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">XKCD</span>{xkcdComic && <span className="panelTag">#{xkcdComic.num}</span>}</div>
-      </PanelHead>
-      {xkcdComic ? (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{xkcdComic.title}</div>
-          <img src={xkcdComic.img} alt={xkcdComic.title} title={xkcdComic.alt} style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 3, display: 'block', background: '#fff' }} loading="lazy" />
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4, fontStyle: 'italic' }}>{xkcdComic.alt}</div>
-        </div>
-      ) : (
-        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Loading comic...</div>
-      )}
     </>),
     'daily-paws': (<>
       <PanelHead panelId="daily-paws" isStale={panelHealth.isStale('daily-paws')} layout={layout} getGridCols={getGridCols}>
@@ -1314,6 +1297,32 @@ function App() {
           while (adIdx < AD_SLOTS.length) {
             merged.push(AD_SLOTS[adIdx].id);
             adIdx++;
+          }
+
+          // Ensure no two ad panels are adjacent — shift ads down if needed
+          for (let i = 1; i < merged.length; i++) {
+            if (merged[i].startsWith('ad-') && merged[i - 1].startsWith('ad-')) {
+              // Find the next non-ad panel after this position to swap with
+              let swapIdx = -1;
+              for (let j = i + 1; j < merged.length; j++) {
+                if (!merged[j].startsWith('ad-')) { swapIdx = j; break; }
+              }
+              if (swapIdx !== -1) {
+                // Move the non-ad panel between the two ads
+                const [nonAd] = merged.splice(swapIdx, 1);
+                merged.splice(i, 0, nonAd);
+              }
+              // If no non-ad panel found after, try before
+              else {
+                for (let j = i - 2; j >= 0; j--) {
+                  if (!merged[j].startsWith('ad-')) { swapIdx = j; break; }
+                }
+                if (swapIdx !== -1) {
+                  const [nonAd] = merged.splice(swapIdx, 1);
+                  merged.splice(i - 1, 0, nonAd);
+                }
+              }
+            }
           }
 
           return merged.map((id, idx) => {

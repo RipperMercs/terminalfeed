@@ -47,7 +47,6 @@ export const DEFAULT_LAYOUT = {
     'recipe',
     'fitness',
     'support',
-    'xkcd',
     'daily-paws',
   ],
   hiddenPanels: [] as string[],
