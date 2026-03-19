@@ -76,7 +76,7 @@ function App() {
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
   const [showTerminal, setShowTerminal] = useState(false);
-  const [showLockTip, setShowLockTip] = useState(() => !localStorage.getItem('tipDismissed'));
+  const [showLockTip, setShowLockTip] = useState(() => !sessionStorage.getItem('tipDismissed'));
 
 
   // Full screen mode
@@ -468,8 +468,8 @@ function App() {
     'markets': (() => {
       const indicesData = stocks.filter(s => INDICES.includes(s.symbol));
       const movers = stocks.filter(s => !INDICES.includes(s.symbol) && s.price > 0 && s.change !== 0);
-      const gainers = [...movers].filter(s => s.change > 0).sort((a, b) => b.change - a.change).slice(0, 5);
-      const losers = [...movers].filter(s => s.change < 0).sort((a, b) => a.change - b.change).slice(0, 5);
+      const gainers = [...movers].filter(s => s.change > 0).sort((a, b) => b.change - a.change).slice(0, 10);
+      const losers = [...movers].filter(s => s.change < 0).sort((a, b) => a.change - b.change).slice(0, 10);
       return (<>
         <PanelHead panelId="markets" isStale={panelHealth.isStale('markets')} layout={layout} getGridCols={getGridCols}>
           <div className="panelHeaderLeft"><span className="panelTitle">Markets</span><span className="panelTag">US</span></div>
@@ -1181,7 +1181,7 @@ function App() {
           )}
           <button
             className={`lockBtn ${layout.isOrganizing ? 'lockBtnActive' : ''}`}
-            onClick={() => { layout.setIsOrganizing(!layout.isOrganizing); if (showLockTip) { setShowLockTip(false); localStorage.setItem('tipDismissed', '1'); } }}
+            onClick={() => { layout.setIsOrganizing(!layout.isOrganizing); if (showLockTip) { setShowLockTip(false); sessionStorage.setItem('tipDismissed', '1'); } }}
             title={layout.isOrganizing ? 'Lock layout (E)' : 'Organize panels (E)'}
           >
             {layout.isOrganizing ? 'Organize' : 'Locked'}
