@@ -27,6 +27,7 @@ export const DEFAULT_LAYOUT = {
     'crypto',
     'uap',
     'the-wire',
+    'tcg-market',
     'steam',
     'market-hours',
     'daily-learn',

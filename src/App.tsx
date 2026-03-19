@@ -63,6 +63,7 @@ import { useHumansInSpace } from './hooks/useHumansInSpace';
 import { useThisDay } from './hooks/useThisDay';
 import { useFooterQuote } from './hooks/useFooterQuote';
 import { useFlightRadar } from './hooks/useFlightRadar';
+import { useTCGMarket } from './hooks/useTCGMarket';
 import { useCloudStatus } from './hooks/useCloudStatus';
 import { useXkcd } from './hooks/useXkcd';
 import { AdPanel } from './components/AdPanel';
@@ -157,6 +158,7 @@ function App() {
   const flightStats = useFlightRadar();
   const cloudStatus = useCloudStatus();
   const xkcdComic = useXkcd();
+  const tcgMarket = useTCGMarket();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -273,6 +275,7 @@ function App() {
     if (cloudStatus) panelHealth.reportData('cloud-status');
     if (flightStats) panelHealth.reportData('flight-radar');
     if (xkcdComic) panelHealth.reportData('xkcd');
+    if (tcgMarket) panelHealth.reportData('tcg-market');
     if (cryptoGlobal) panelHealth.reportData('crypto-global');
     if (btcNet.blockHeight > 0) panelHealth.reportData('btc-network');
     if (marketHours.length > 0) panelHealth.reportData('market-hours');
@@ -797,6 +800,34 @@ function App() {
         ))}
         <div style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', paddingTop: 4 }}>data from polymarket.com</div>
       </div>
+    </>),
+    'tcg-market': (<>
+      <PanelHead panelId="tcg-market" isStale={panelHealth.isStale('tcg-market')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">TCG Market</span><span className="panelTag">WATCH</span></div>
+      </PanelHead>
+      {tcgMarket && tcgMarket.cards.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {tcgMarket.cards.map((card, i) => {
+            const gameColor = card.game === 'Pokemon' ? 'var(--amber)' : card.game === 'MTG' ? 'var(--cyan)' : 'var(--purple, #a78bfa)';
+            const gameTag = card.game === 'Pokemon' ? 'PKM' : card.game === 'MTG' ? 'MTG' : 'YGO';
+            return (
+              <a key={`${card.game}-${card.name}-${i}`} href={card.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+                {card.image && <img src={card.image} alt={card.name} style={{ width: 28, height: 40, objectFit: 'cover', borderRadius: 2, flexShrink: 0 }} loading="lazy" />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{card.name}</div>
+                  <div style={{ fontSize: 8, color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{card.set}</div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>${card.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div style={{ fontSize: 7, color: gameColor, letterSpacing: 1, fontWeight: 600 }}>{gameTag}</div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Loading card market data...</div>
+      )}
     </>),
     'steam': (<>
       <PanelHead panelId="steam" isStale={panelHealth.isStale('steam')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Steam</span><span className="panelTag">LIVE</span></div></PanelHead>
