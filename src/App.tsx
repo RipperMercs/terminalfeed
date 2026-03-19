@@ -62,6 +62,9 @@ import { AdminTerminal } from './components/AdminTerminal';
 import { useHumansInSpace } from './hooks/useHumansInSpace';
 import { useThisDay } from './hooks/useThisDay';
 import { useFooterQuote } from './hooks/useFooterQuote';
+import { useFlightRadar } from './hooks/useFlightRadar';
+import { useCloudStatus } from './hooks/useCloudStatus';
+import { useXkcd } from './hooks/useXkcd';
 import { AdPanel } from './components/AdPanel';
 import './App.css';
 
@@ -151,6 +154,9 @@ function App() {
   const humansInSpace = useHumansInSpace();
   const thisDayEvents = useThisDay();
   const footerQuote = useFooterQuote();
+  const flightStats = useFlightRadar();
+  const cloudStatus = useCloudStatus();
+  const xkcdComic = useXkcd();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -264,6 +270,9 @@ function App() {
     if (spaceLaunches.length > 0) panelHealth.reportData('launches');
     if (devStatuses.length > 0) panelHealth.reportData('dev-status');
     if (claudeStatus) panelHealth.reportData('claude-status');
+    if (cloudStatus) panelHealth.reportData('cloud-status');
+    if (flightStats) panelHealth.reportData('flight-radar');
+    if (xkcdComic) panelHealth.reportData('xkcd');
     if (cryptoGlobal) panelHealth.reportData('crypto-global');
     if (btcNet.blockHeight > 0) panelHealth.reportData('btc-network');
     if (marketHours.length > 0) panelHealth.reportData('market-hours');
@@ -516,6 +525,68 @@ function App() {
         <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Connecting to status.claude.com...</div>
       )}
     </>),
+    'cloud-status': (<>
+      <PanelHead panelId="cloud-status" isStale={panelHealth.isStale('cloud-status')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Cloud Status</span><span className="panelTag">AWS/GCP/AZURE</span></div>
+      </PanelHead>
+      {cloudStatus ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {cloudStatus.providers.map((p) => {
+            const color = p.status === 'operational' ? 'var(--green)' : p.status === 'incident' ? 'var(--amber)' : 'var(--text-dim)';
+            return (
+              <div key={p.name}>
+                <div className="statusRow">
+                  <div className="statusLeft"><span className="statusDot" style={{ background: color, boxShadow: `0 0 4px ${color}` }} /><span className="statusName">{p.name}</span></div>
+                  <span className="statusDesc" style={{ color }}>{p.status === 'operational' ? 'Operational' : p.status === 'incident' ? `${p.incidents.length} incident${p.incidents.length > 1 ? 's' : ''}` : 'Checking...'}</span>
+                </div>
+                {p.incidents.length > 0 && p.incidents.map((inc, i) => (
+                  <div key={i} style={{ fontSize: 9, color: 'var(--text-dim)', paddingLeft: 16, marginTop: 2, lineHeight: 1.3 }}>{inc.title.length > 80 ? inc.title.slice(0, 80) + '...' : inc.title}</div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Checking cloud providers...</div>
+      )}
+    </>),
+    'flight-radar': (<>
+      <PanelHead panelId="flight-radar" isStale={panelHealth.isStale('flight-radar')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Flight Radar</span><span className="panelTag">OPENSKY</span></div>
+        <div className="panelLive">
+          <span className="liveDot" style={{ background: flightStats ? 'var(--green)' : 'var(--text-dim)' }} />
+          <span className="liveText">{flightStats ? 'LIVE' : 'LOADING'}</span>
+        </div>
+      </PanelHead>
+      {flightStats ? (<>
+        <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>{flightStats.totalAirborne.toLocaleString()}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>Aircraft Airborne</div>
+        </div>
+        <div className="btcNetStats" style={{ marginTop: 4 }}>
+          <div className="btcNetStat"><span className="btcNetLabel">On Ground</span><span className="btcNetValue">{flightStats.totalOnGround.toLocaleString()}</span></div>
+          <div className="btcNetStat"><span className="btcNetLabel">Avg Altitude</span><span className="btcNetValue">{Math.round(flightStats.avgAltitude * 3.281).toLocaleString()} ft</span></div>
+          <div className="btcNetStat"><span className="btcNetLabel">Avg Speed</span><span className="btcNetValue">{Math.round(flightStats.avgSpeed * 1.944)} kts</span></div>
+        </div>
+        {flightStats.topCountries.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 6 }}>
+            <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Top Countries</div>
+            {flightStats.topCountries.map((c) => {
+              const pct = (c.count / flightStats.totalAirborne) * 100;
+              return (
+                <div key={c.country} className="pulseRow">
+                  <span className="pulseName" style={{ minWidth: 80 }}>{c.country}</span>
+                  <div className="pulseBar"><div className="pulseFill" style={{ width: `${Math.min(100, pct * 3)}%`, background: 'var(--cyan)' }} /></div>
+                  <span className="pulseMs" style={{ color: 'var(--text-mid)', minWidth: 40, textAlign: 'right' }}>{c.count.toLocaleString()}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>) : (
+        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Contacting OpenSky Network...</div>
+      )}
+    </>),
     'dev-status': (<>
       <PanelHead panelId="dev-status" isStale={panelHealth.isStale('dev-status')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Status</span><span className="panelTag">DEV/OPS</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -622,6 +693,20 @@ function App() {
           </div>
         </div>
       ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading art...</div>}
+    </>),
+    'xkcd': (<>
+      <PanelHead panelId="xkcd" isStale={panelHealth.isStale('xkcd')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">XKCD</span>{xkcdComic && <span className="panelTag">#{xkcdComic.num}</span>}</div>
+      </PanelHead>
+      {xkcdComic ? (
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{xkcdComic.title}</div>
+          <img src={xkcdComic.img} alt={xkcdComic.title} title={xkcdComic.alt} style={{ width: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 3, display: 'block', background: '#fff' }} loading="lazy" />
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4, fontStyle: 'italic' }}>{xkcdComic.alt}</div>
+        </div>
+      ) : (
+        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Loading comic...</div>
+      )}
     </>),
     'daily-paws': (<>
       <PanelHead panelId="daily-paws" isStale={panelHealth.isStale('daily-paws')} layout={layout} getGridCols={getGridCols}>

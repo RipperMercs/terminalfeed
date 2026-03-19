@@ -21,7 +21,9 @@ export const ALL_PANELS = [
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
   // Row 5: Dev/nerd
   { id: 'claude-status', label: 'Claude Status', defaultSpan: 1 },
+  { id: 'cloud-status', label: 'Cloud Status', defaultSpan: 1 },
   { id: 'dev-status', label: 'Dev/Ops Status', defaultSpan: 1 },
+  { id: 'flight-radar', label: 'Flight Radar', defaultSpan: 1 },
   { id: 'stackoverflow', label: 'Stack Overflow', defaultSpan: 1 },
   // Row 6+: Supplementary
   { id: 'seismic', label: 'Earthquakes', defaultSpan: 1 },
@@ -57,6 +59,7 @@ export const ALL_PANELS = [
   { id: 'ad-3', label: 'Sponsored', defaultSpan: 1 },
   { id: 'fitness', label: 'Fitness', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
+  { id: 'xkcd', label: 'XKCD', defaultSpan: 1 },
   { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
   { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
   { id: 'humans-in-space', label: 'Humans In Space', defaultSpan: 1 },
