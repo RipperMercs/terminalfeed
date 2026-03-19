@@ -1291,7 +1291,7 @@ function App() {
         {(() => {
           // Build user panel list (no ads) and inject ads at fixed slot positions
           const userPanels = layout.panelOrder.filter(id =>
-            !id.startsWith('ad-') && layout.isVisible(id) && id !== 'support' && panelHealth.isHealthy(id)
+            !id.startsWith('ad-') && layout.isVisible(id) && id !== 'support'
           );
           // Fixed ad positions: after every 10 user panels
           const AD_SLOTS: { position: number; id: 'ad-1' | 'ad-2' | 'ad-3' }[] = [
