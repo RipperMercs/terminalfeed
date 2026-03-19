@@ -34,6 +34,7 @@ export const ALL_PANELS = [
   { id: 'podcasts', label: 'Podcasts', defaultSpan: 1 },
   { id: 'uap', label: 'UAP Sightings', defaultSpan: 1 },
   { id: 'predictions', label: 'Prediction Markets', defaultSpan: 1 },
+  { id: 'tcg-market', label: 'TCG Market Watch', defaultSpan: 1 },
   { id: 'steam', label: 'Steam Games', defaultSpan: 1 },
   { id: 'ai-hub', label: 'AI Hub', defaultSpan: 1 },
   { id: 'the-wire', label: 'The Wire', defaultSpan: 1 },
