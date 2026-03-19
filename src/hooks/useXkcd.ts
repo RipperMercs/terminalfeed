@@ -11,7 +11,7 @@ export interface XkcdComic {
   day: string;
 }
 
-const API_URL = 'https://xkcd.com/info.0.json';
+const API_URL = '/api/xkcd';
 const CACHE_KEY = 'xkcd_latest';
 const POLL_MS = 300_000; // 5 minutes — comics update infrequently
 

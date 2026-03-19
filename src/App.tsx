@@ -1295,9 +1295,9 @@ function App() {
           );
           // Fixed ad positions: after every 10 user panels
           const AD_SLOTS: { position: number; id: 'ad-1' | 'ad-2' | 'ad-3' }[] = [
-            { position: 10, id: 'ad-1' },
-            { position: 21, id: 'ad-2' },
-            { position: 32, id: 'ad-3' },
+            { position: 0, id: 'ad-1' },
+            { position: 11, id: 'ad-2' },
+            { position: 22, id: 'ad-3' },
           ];
           // Merge: insert ads at their fixed positions
           const merged: string[] = [];
@@ -1423,7 +1423,7 @@ function App() {
           <a href="https://x.com/terminalfeed" target="_blank" rel="noopener noreferrer" className="footerLink">@terminalfeed</a>
         </div>
         <div className="bottomBarStatus">
-          <span className="footerBtc" title="Support the terminal">BTC: 3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</span>
+          <span className="footerBtc" title="Support the terminal">3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</span>
           <button className="footerCopy" onClick={() => { navigator.clipboard.writeText('3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy'); }}>copy</button>
           <span className="bottomBarDivider">&middot;</span>
           <span className="terminalsOnline">&gt;_ {terminalsOnline} terminal{terminalsOnline !== 1 ? 's' : ''} online</span>
