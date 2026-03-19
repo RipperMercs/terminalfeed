@@ -1279,8 +1279,8 @@ function App() {
           // Fixed ad positions: after every 10 user panels
           const AD_SLOTS: { position: number; id: 'ad-1' | 'ad-2' | 'ad-3' }[] = [
             { position: 0, id: 'ad-1' },
-            { position: 11, id: 'ad-2' },
-            { position: 22, id: 'ad-3' },
+            { position: 17, id: 'ad-2' },
+            { position: 34, id: 'ad-3' },
           ];
           // Merge: insert ads at their fixed positions
           const merged: string[] = [];
