@@ -76,6 +76,7 @@ function App() {
   });
   const [showPanelManager, setShowPanelManager] = useState(false);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [showLockTip, setShowLockTip] = useState(() => !localStorage.getItem('tipDismissed'));
 
 
   // Full screen mode
@@ -1175,9 +1176,12 @@ function App() {
           <span className="topTerminals">{terminalsOnline} online</span>
         </div>
         <div className="topBarRight">
+          {!layout.isOrganizing && showLockTip && (
+            <span className="lockTip">click to unlock &amp; rearrange tabs →</span>
+          )}
           <button
             className={`lockBtn ${layout.isOrganizing ? 'lockBtnActive' : ''}`}
-            onClick={() => layout.setIsOrganizing(!layout.isOrganizing)}
+            onClick={() => { layout.setIsOrganizing(!layout.isOrganizing); if (showLockTip) { setShowLockTip(false); localStorage.setItem('tipDismissed', '1'); } }}
             title={layout.isOrganizing ? 'Lock layout (E)' : 'Organize panels (E)'}
           >
             {layout.isOrganizing ? 'Organize' : 'Locked'}

@@ -2256,6 +2256,21 @@
   color: var(--text-dim);
 }
 
+/* ── Lock Tip ── */
+.lockTip {
+  font-size: 10px;
+  color: rgba(248, 113, 113, 0.6);
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+  animation: lockTipPulse 2s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes lockTipPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* ── Lock / Organize Toggle ── */
 .lockBtn {
   background: none;
@@ -3434,6 +3449,7 @@
   .topBarLeft { gap: 4px; }
   .logoText { font-size: 11px; letter-spacing: 1px; }
   .logoDot { display: none; }
+  .lockTip { display: none; }
   .lockBtn { font-size: 8px; padding: 2px 6px; }
   .customizeBtn { font-size: 8px; padding: 2px 6px; }
   .moodIndicator { display: none; }
