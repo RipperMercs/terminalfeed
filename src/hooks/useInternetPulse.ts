@@ -12,6 +12,10 @@ const ENDPOINTS = [
   { name: 'Asia', url: 'https://dynamodb.ap-northeast-1.amazonaws.com/' },
   { name: 'Cloudflare', url: 'https://1.1.1.1/cdn-cgi/trace' },
   { name: 'Google', url: 'https://www.google.com/generate_204' },
+  // DNS infrastructure
+  { name: 'DNS: Google', url: 'https://dns.google/resolve?name=example.com&type=A' },
+  { name: 'DNS: Quad9', url: 'https://dns.quad9.net:5053/dns-query?name=example.com&type=A' },
+  { name: 'DNS: OpenDNS', url: 'https://doh.opendns.com/dns-query?name=example.com&type=A' },
 ];
 
 const POLL_MS = 60_000;
