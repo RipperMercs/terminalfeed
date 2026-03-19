@@ -20,6 +20,7 @@ export const ALL_PANELS = [
   { id: 'reddit', label: 'Reddit', defaultSpan: 1 },
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
   // Row 5: Dev/nerd
+  { id: 'claude-status', label: 'Claude Status', defaultSpan: 1 },
   { id: 'dev-status', label: 'Dev/Ops Status', defaultSpan: 1 },
   { id: 'stackoverflow', label: 'Stack Overflow', defaultSpan: 1 },
   // Row 6+: Supplementary

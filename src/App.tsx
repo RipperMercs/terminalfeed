@@ -13,6 +13,7 @@ import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
 import { useDevStatus } from './hooks/useDevStatus';
+import { useClaudeStatus } from './hooks/useClaudeStatus';
 import { useCryptoGlobal } from './hooks/useCryptoGlobal';
 import { useEarthquakes } from './hooks/useEarthquakes';
 import { useWeather, weatherDescription } from './hooks/useWeather';
@@ -109,6 +110,7 @@ function App() {
   const trendingRepos = useGithubTrending();
   const redditPosts = useRedditTech();
   const devStatuses = useDevStatus();
+  const claudeStatus = useClaudeStatus();
   const cryptoGlobal = useCryptoGlobal();
   const earthquakes = useEarthquakes();
   const weather = useWeather();
@@ -261,6 +263,7 @@ function App() {
     if (weather) panelHealth.reportData('weather');
     if (spaceLaunches.length > 0) panelHealth.reportData('launches');
     if (devStatuses.length > 0) panelHealth.reportData('dev-status');
+    if (claudeStatus) panelHealth.reportData('claude-status');
     if (cryptoGlobal) panelHealth.reportData('crypto-global');
     if (btcNet.blockHeight > 0) panelHealth.reportData('btc-network');
     if (marketHours.length > 0) panelHealth.reportData('market-hours');
@@ -471,6 +474,48 @@ function App() {
         </div>
       </>);
     })(),
+    'claude-status': (<>
+      <PanelHead panelId="claude-status" isStale={panelHealth.isStale('claude-status')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Claude</span><span className="panelTag">STATUS</span></div>
+        <div className="panelLive">
+          <span className="liveDot" style={{ background: claudeStatus ? (claudeStatus.overall.indicator === 'none' ? 'var(--green)' : claudeStatus.overall.indicator === 'critical' ? 'var(--red)' : 'var(--amber)') : 'var(--text-dim)' }} />
+          <span className="liveText">{claudeStatus ? (claudeStatus.overall.indicator === 'none' ? 'ALL OK' : claudeStatus.overall.description) : 'LOADING'}</span>
+        </div>
+      </PanelHead>
+      {claudeStatus ? (<>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {claudeStatus.components.map((c) => {
+            const color = c.status === 'operational' ? 'var(--green)' : c.status === 'under_maintenance' ? 'var(--cyan)' : c.status === 'degraded_performance' ? 'var(--amber)' : c.status === 'partial_outage' ? 'var(--amber)' : 'var(--red)';
+            const label = c.status === 'operational' ? 'Operational' : c.status === 'under_maintenance' ? 'Maintenance' : c.status === 'degraded_performance' ? 'Degraded' : c.status === 'partial_outage' ? 'Partial Outage' : 'Major Outage';
+            return (
+              <div key={c.id} className="statusRow">
+                <div className="statusLeft"><span className="statusDot" style={{ background: color, boxShadow: `0 0 4px ${color}` }} /><span className="statusName">{c.name}</span></div>
+                <span className="statusDesc" style={{ color }}>{label}</span>
+              </div>
+            );
+          })}
+        </div>
+        {claudeStatus.incidents.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 6 }}>
+            <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Active Incidents</div>
+            {claudeStatus.incidents.map((inc) => {
+              const impactColor = inc.impact === 'critical' ? 'var(--red)' : inc.impact === 'major' ? 'var(--amber)' : 'var(--text-mid)';
+              return (
+                <div key={inc.id} style={{ marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, color: impactColor, fontWeight: 600 }}>{inc.name}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-dim)', display: 'flex', gap: 6 }}>
+                    <span style={{ textTransform: 'uppercase' }}>{inc.status}</span>
+                    <span>{new Date(inc.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>) : (
+        <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Connecting to status.claude.com...</div>
+      )}
+    </>),
     'dev-status': (<>
       <PanelHead panelId="dev-status" isStale={panelHealth.isStale('dev-status')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Status</span><span className="panelTag">DEV/OPS</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
