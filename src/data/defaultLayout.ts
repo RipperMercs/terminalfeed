@@ -34,6 +34,7 @@ export const DEFAULT_LAYOUT = {
     'launches',
     'ai-leaderboard',
     'wiki-live',
+    'claude-status',
     'dev-status',
     'markets',
     'internet-pulse',
