@@ -28,7 +28,7 @@
 <body>
   <a href="/" class="back">&larr; back to terminal</a>
   <h1>>_ Privacy Policy</h1>
-  <p class="date">Last updated: March 14, 2026</p>
+  <p class="date">Last updated: March 21, 2026</p>
 
   <h3>1. Introduction</h3>
   <p>TerminalFeed.io ("we", "our", "us") operates the terminalfeed.io website (the "Service"). This Privacy Policy explains how we collect, use, and protect information when you use our Service. We are committed to protecting your privacy and being transparent about our data practices.</p>
@@ -53,7 +53,37 @@
   <ul>
     <li><strong>Cloudflare:</strong> Provides hosting, CDN, DDoS protection, and security services. Cloudflare may collect IP addresses and request metadata for security purposes. See <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare's Privacy Policy</a>.</li>
     <li><strong>CoinGecko, CoinCap, Mempool.space, Finnhub, USGS, NASA, ESPN, and other API providers:</strong> We fetch publicly available data from these APIs on behalf of your browser. No personal information is shared with them beyond standard HTTP request headers (IP address, user agent).</li>
+    <li><strong>Cloudflare Speed Test (speed.cloudflare.com):</strong> Provides download and upload speed measurement for the WiFi Health Monitor tool. Speed tests are conducted using Cloudflare's public speed test endpoints. See <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare's Privacy Policy</a>.</li>
+    <li><strong>Cloudflare DNS (1.1.1.1):</strong> Provides DNS resolution speed testing for the WiFi Health Monitor tool via DNS-over-HTTPS. Receives DNS queries when a WiFi test is run. See <a href="https://developers.cloudflare.com/1.1.1.1/privacy/public-dns-resolver/" target="_blank" rel="noopener noreferrer">Cloudflare's public resolver privacy commitment</a>.</li>
   </ul>
+
+  <h3>4A. WiFi Health Monitor Tool &mdash; Data Practices</h3>
+  <p>The WiFi Health Monitor tool at terminalfeed.io/wifi has the following specific data practices:</p>
+  <p><strong>What the WiFi Tool Collects:</strong></p>
+  <ul>
+    <li>Your public IP address is processed by our own Cloudflare Pages Function to retrieve your approximate geographic location and ISP information. This data comes from Cloudflare's built-in request metadata and is never sent to a third-party IP lookup service.</li>
+    <li>DNS queries for common domains (google.com, cloudflare.com, amazon.com, netflix.com) are sent to Cloudflare's public DNS-over-HTTPS resolver (cloudflare-dns.com) to measure DNS resolution speed. These queries are subject to Cloudflare's public resolver privacy policy.</li>
+    <li>HTTP requests are made to Google's connectivity check endpoints (generate_204) for latency and speed measurements. Standard HTTP request headers (IP address, user agent) are transmitted as part of these requests.</li>
+  </ul>
+  <p><strong>What the WiFi Tool Does NOT Collect:</strong></p>
+  <ul>
+    <li>We do not store or transmit your speed test results, health scores, or diagnostic information to our servers or any third party.</li>
+    <li>We do not access your local network, router settings, WiFi configuration, connected devices, or any information about your home network topology.</li>
+    <li>We do not scan for nearby WiFi networks, access points, or signal strength data.</li>
+    <li>Test history is stored only in your browser's session memory and is cleared when you close the page. No test data persists between visits.</li>
+  </ul>
+  <p><strong>Third-Party Data Sharing:</strong></p>
+  <ul>
+    <li>Cloudflare receives speed test requests when you run a test (speed.cloudflare.com). See: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare Privacy Policy</a>.</li>
+    <li>Cloudflare receives DNS queries when you run a test. See: <a href="https://developers.cloudflare.com/1.1.1.1/privacy/public-dns-resolver/" target="_blank" rel="noopener noreferrer">Cloudflare public resolver privacy</a>.</li>
+    <li>Google receives HTTP requests for connectivity checks. See: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</li>
+  </ul>
+  <p><strong>Browser APIs Used:</strong></p>
+  <ul>
+    <li>Network Information API (if supported by your browser) &mdash; to detect connection type and estimated bandwidth. This data stays in your browser.</li>
+    <li>Performance API &mdash; to measure request timing. This data stays in your browser.</li>
+  </ul>
+  <p>No WiFi Tool data is sent to TerminalFeed.io servers. All measurements and diagnostics are computed client-side in your browser.</p>
 
   <h3>5. Advertising</h3>
   <p>We may display advertisements on the Service in the future through advertising partners such as Google AdSense. If and when advertising is enabled, advertising partners may use cookies to serve ads based on your prior visits to our website or other websites. You will be able to opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</p>

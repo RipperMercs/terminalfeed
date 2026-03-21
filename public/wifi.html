@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiFi Health Monitor — TerminalFeed</title>
+<meta name="description" content="Free browser-based WiFi diagnostics. Test your connection speed, latency, jitter, DNS resolution, and get actionable recommendations. No app required.">
+<link rel="canonical" href="https://terminalfeed.io/wifi">
+<meta property="og:title" content="WiFi Health Monitor — TerminalFeed">
+<meta property="og:description" content="Free browser-based WiFi health check. Speed, latency, DNS, diagnostics — all in your browser.">
+<meta property="og:url" content="https://terminalfeed.io/wifi">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --bg-panel: #0D0D0F;
+    --bg-card: #111114;
+    --bg-inset: #0A0A0C;
+    --border: #1A1A22;
+    --border-active: #2A2A3A;
+    --text: #C8C8C0;
+    --text-mid: #7A7A72;
+    --text-dim: #3E3E3A;
+    --green: #4ADE80;
+    --green-dim: rgba(74, 222, 128, 0.12);
+    --green-glow: rgba(74, 222, 128, 0.25);
+    --red: #F87171;
+    --red-dim: rgba(248, 113, 113, 0.12);
+    --amber: #EF9F27;
+    --amber-dim: rgba(239, 159, 39, 0.12);
+    --blue: #60A5FA;
+    --blue-dim: rgba(96, 165, 250, 0.12);
+    --cyan: #4FD1C5;
+    --cyan-dim: rgba(79, 209, 197, 0.12);
+    --purple: #A78BFA;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* Subtle grid texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(26, 26, 34, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26, 26, 34, 0.12) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8, 8, 8, 0.92);
+    backdrop-filter: blur(12px);
+  }
+
+  .top-bar-left { display: flex; align-items: center; gap: 10px; }
+
+  .logo-icon {
+    width: 26px; height: 26px;
+    background: var(--green-dim);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    color: var(--green);
+  }
+
+  .logo-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .logo-text span { color: var(--text-dim); font-weight: 400; }
+
+  .top-bar-right { display: flex; align-items: center; gap: 12px; }
+
+  .back-link {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--green); }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .status-pill.online {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+  }
+
+  .status-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Hero */
+  .hero { text-align: center; padding: 28px 0 20px; }
+
+  .hero h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: -0.02em;
+  }
+
+  .hero p {
+    color: var(--text-mid);
+    font-size: 11px;
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  /* Score Ring */
+  .score-wrap { display: flex; justify-content: center; margin: 20px 0; }
+
+  .score-ring-box {
+    position: relative;
+    width: 180px; height: 180px;
+  }
+
+  .score-ring-bg {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, var(--bg-card) 60%, var(--bg-inset) 100%);
+    border: 1px solid var(--border);
+  }
+
+  .score-ring-svg {
+    position: absolute; inset: 0;
+    transform: rotate(-90deg);
+  }
+
+  .score-ring-track { fill: none; stroke: var(--border); stroke-width: 5; }
+
+  .score-ring-fill {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+
+  .score-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  .score-num {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .score-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mid);
+    margin-top: 2px;
+  }
+
+  .score-grade {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+
+  /* Actions */
+  .actions { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 8px 20px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+    outline: none;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: var(--bg);
+    border-color: var(--green);
+    font-weight: 600;
+  }
+
+  .btn-primary:hover { box-shadow: 0 0 20px var(--green-glow); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-mid);
+  }
+
+  .btn-ghost:hover { background: var(--bg-card); border-color: var(--border-active); color: var(--text); }
+
+  /* Network Info Strip */
+  .net-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .net-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  .net-item-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+    font-weight: 500;
+  }
+
+  .net-item-val {
+    font-size: 13px;
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  .net-item-sub {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* Metric Cards */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 800px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+
+  .m-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    transition: border-color 0.3s;
+  }
+
+  .m-card:hover { border-color: var(--border-active); }
+
+  .m-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+  .m-title {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mid);
+    font-weight: 500;
+  }
+
+  .m-icon {
+    width: 24px; height: 24px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+
+  .m-val {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .m-unit { font-size: 12px; font-weight: 400; color: var(--text-mid); }
+
+  .m-status {
+    font-size: 9px;
+    margin-top: 5px;
+    font-weight: 500;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Chart Area */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 5fr 3fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 800px) { .chart-row { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .card-meta { font-size: 9px; color: var(--text-dim); }
+
+  /* Latency bars */
+  .lat-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 160px;
+    padding-top: 14px;
+  }
+
+  .lat-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    min-height: 3px;
+    transition: height 0.3s ease;
+  }
+
+  /* Stability bars */
+  .stab-row { margin-bottom: 12px; }
+  .stab-row-head {
+    display: flex; justify-content: space-between; margin-bottom: 4px;
+  }
+  .stab-lbl { font-size: 10px; color: var(--text-mid); }
+  .stab-val { font-size: 10px; font-weight: 600; }
+  .stab-track {
+    height: 4px;
+    background: var(--bg-inset);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stab-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  /* DNS Section */
+  .dns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .dns-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  .dns-card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .dns-provider { font-size: 12px; font-weight: 600; }
+  .dns-ip { font-size: 9px; color: var(--text-dim); }
+  .dns-time {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .dns-time-unit { font-size: 10px; color: var(--text-mid); font-weight: 400; }
+  .dns-status { font-size: 9px; margin-top: 3px; font-weight: 500; }
+
+  /* Diagnostics */
+  .diag-section { margin-bottom: 16px; }
+
+  .diag-list { display: flex; flex-direction: column; gap: 5px; }
+
+  .diag-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-inset);
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .diag-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .diag-dot.g { background: var(--green); box-shadow: 0 0 6px var(--green-dim); }
+  .diag-dot.y { background: var(--amber); box-shadow: 0 0 6px var(--amber-dim); }
+  .diag-dot.r { background: var(--red); box-shadow: 0 0 6px var(--red-dim); }
+
+  .diag-txt { color: var(--text-mid); flex: 1; }
+  .diag-txt strong { color: var(--text); font-weight: 600; }
+
+  /* Disclaimer */
+  .disclaimer {
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .disclaimer strong { color: var(--text-mid); }
+  .disclaimer a { color: var(--green); text-decoration: none; }
+  .disclaimer a:hover { text-decoration: underline; }
+
+  .page-footer {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 9px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+  }
+
+  .page-footer a { color: var(--text-mid); text-decoration: none; }
+  .page-footer a:hover { color: var(--green); }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fin { animation: fadeUp 0.4s ease forwards; opacity: 0; }
+  .fin:nth-child(1) { animation-delay: 0.04s; }
+  .fin:nth-child(2) { animation-delay: 0.08s; }
+  .fin:nth-child(3) { animation-delay: 0.12s; }
+  .fin:nth-child(4) { animation-delay: 0.16s; }
+  .fin:nth-child(5) { animation-delay: 0.2s; }
+  .fin:nth-child(6) { animation-delay: 0.24s; }
+
+  /* Progress indicator */
+  .test-progress {
+    display: none;
+    margin-bottom: 16px;
+  }
+
+  .test-progress.active { display: block; }
+
+  .progress-steps {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 6px;
+  }
+
+  .progress-step {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-step.done { background: var(--green); }
+  .progress-step.active {
+    background: linear-gradient(90deg, var(--green), var(--border));
+    animation: shimmer 1s ease infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -100px; }
+    100% { background-position: 200px; }
+  }
+
+  .progress-label {
+    font-size: 10px;
+    color: var(--text-mid);
+    text-align: center;
+  }
+
+  /* History log */
+  .history-section { margin-bottom: 16px; }
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  .history-table th {
+    text-align: left;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .history-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(26, 26, 34, 0.4);
+    color: var(--text-mid);
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <div class="logo-icon">>_</div>
+    <div class="logo-text">TerminalFeed <span>/ wifi</span></div>
+  </div>
+  <div class="top-bar-right">
+    <a href="/" class="back-link">&larr; back to terminal</a>
+    <div class="status-pill online" id="statusPill">
+      <div class="status-dot"></div>
+      <span id="statusText">Ready</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="hero fin">
+    <h1>>_ WiFi Health Monitor</h1>
+    <p>Real-time connection diagnostics &middot; Speed analysis &middot; DNS performance &middot; Network intelligence</p>
+  </div>
+
+  <!-- Score -->
+  <div class="score-wrap fin">
+    <div class="score-ring-box">
+      <div class="score-ring-bg"></div>
+      <svg class="score-ring-svg" viewBox="0 0 180 180">
+        <circle class="score-ring-track" cx="90" cy="90" r="77"/>
+        <circle class="score-ring-fill" id="scoreRing" cx="90" cy="90" r="77"
+          stroke-dasharray="484" stroke-dashoffset="484"/>
+      </svg>
+      <div class="score-center">
+        <div class="score-num" id="scoreNum">&mdash;</div>
+        <div class="score-lbl">Health Score</div>
+        <div class="score-grade" id="scoreGrade">Awaiting test</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions fin">
+    <button class="btn btn-primary" id="runBtn" onclick="runFullTest()">&#9654; Run Full Test</button>
+    <button class="btn btn-ghost" onclick="exportReport()">&#8595; Export</button>
+    <button class="btn btn-ghost" onclick="toggleHistory()">&#9201; History</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="test-progress" id="testProgress">
+    <div class="progress-steps" id="progressSteps">
+      <div class="progress-step" data-step="0"></div>
+      <div class="progress-step" data-step="1"></div>
+      <div class="progress-step" data-step="2"></div>
+      <div class="progress-step" data-step="3"></div>
+      <div class="progress-step" data-step="4"></div>
+      <div class="progress-step" data-step="5"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">Initializing...</div>
+  </div>
+
+  <!-- Network Info -->
+  <div class="net-strip fin" id="netStrip">
+    <div class="net-item">
+      <div class="net-item-lbl">Your IP</div>
+      <div class="net-item-val" id="netIP">Detecting...</div>
+      <div class="net-item-sub" id="netIPSub"></div>
+    </div>
+    <div class="net-item">
+      <div class="net-item-lbl">ISP</div>
+      <div class="net-item-val" id="netISP">&mdash;</div>
+      <div class="net-item-sub" id="netISPSub"></div>
+    </div>
+    <div class="net-item">
+      <div class="net-item-lbl">Connection</div>
+      <div class="net-item-val" id="netConn">&mdash;</div>
+      <div class="net-item-sub" id="netConnSub"></div>
+    </div>
+    <div class="net-item">
+      <div class="net-item-lbl">Location</div>
+      <div class="net-item-val" id="netLoc">&mdash;</div>
+      <div class="net-item-sub" id="netLocSub"></div>
+    </div>
+    <div class="net-item">
+      <div class="net-item-lbl">Last Test</div>
+      <div class="net-item-val" id="netLast">Never</div>
+      <div class="net-item-sub" id="netTests">0 tests run</div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="m-card fin">
+      <div class="m-head">
+        <div class="m-title">Download</div>
+        <div class="m-icon" style="background:var(--green-dim);color:var(--green);">&#8595;</div>
+      </div>
+      <div class="m-val" id="dlVal">&mdash;<span class="m-unit"> Mbps</span></div>
+      <div class="m-status" id="dlSt" style="color:var(--text-dim);">Not tested</div>
+    </div>
+    <div class="m-card fin">
+      <div class="m-head">
+        <div class="m-title">Upload</div>
+        <div class="m-icon" style="background:var(--blue-dim);color:var(--blue);">&#8593;</div>
+      </div>
+      <div class="m-val" id="ulVal">&mdash;<span class="m-unit"> Mbps</span></div>
+      <div class="m-status" id="ulSt" style="color:var(--text-dim);">Not tested</div>
+    </div>
+    <div class="m-card fin">
+      <div class="m-head">
+        <div class="m-title">Latency</div>
+        <div class="m-icon" style="background:var(--amber-dim);color:var(--amber);">&#9201;</div>
+      </div>
+      <div class="m-val" id="latVal">&mdash;<span class="m-unit"> ms</span></div>
+      <div class="m-status" id="latSt" style="color:var(--text-dim);">Not tested</div>
+    </div>
+    <div class="m-card fin">
+      <div class="m-head">
+        <div class="m-title">Jitter</div>
+        <div class="m-icon" style="background:var(--cyan-dim);color:var(--cyan);">~</div>
+      </div>
+      <div class="m-val" id="jitVal">&mdash;<span class="m-unit"> ms</span></div>
+      <div class="m-status" id="jitSt" style="color:var(--text-dim);">Not tested</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-row">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Latency Over Time</div>
+        <div class="card-meta" id="pingCt">0 pings</div>
+      </div>
+      <div class="lat-bars" id="latChart"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Connection Stability</div>
+      </div>
+      <div style="padding-top:4px;">
+        <div class="stab-row">
+          <div class="stab-row-head">
+            <span class="stab-lbl">Packet Loss</span>
+            <span class="stab-val" id="plVal">&mdash;</span>
+          </div>
+          <div class="stab-track"><div class="stab-fill" id="plBar" style="width:0%;background:var(--green);"></div></div>
+        </div>
+        <div class="stab-row">
+          <div class="stab-row-head">
+            <span class="stab-lbl">Stability Index</span>
+            <span class="stab-val" id="stabVal">&mdash;</span>
+          </div>
+          <div class="stab-track"><div class="stab-fill" id="stabBar" style="width:0%;background:var(--blue);"></div></div>
+        </div>
+        <div class="stab-row">
+          <div class="stab-row-head">
+            <span class="stab-lbl">Speed Consistency</span>
+            <span class="stab-val" id="consVal">&mdash;</span>
+          </div>
+          <div class="stab-track"><div class="stab-fill" id="consBar" style="width:0%;background:var(--cyan);"></div></div>
+        </div>
+        <div style="margin-top:10px;padding:8px 10px;background:var(--bg-inset);border-radius:4px;">
+          <div style="font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Verdict</div>
+          <div style="font-size:11px;" id="verdict">Run a test to see results</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DNS Performance -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head">
+      <div class="card-title">DNS Resolution Speed</div>
+      <div class="card-meta">Tested via Cloudflare DoH</div>
+    </div>
+    <div class="dns-grid" id="dnsGrid">
+      <div class="dns-card">
+        <div class="dns-card-head">
+          <div class="dns-provider">google.com</div>
+          <div class="dns-ip">A record</div>
+        </div>
+        <div class="dns-time" id="dnsGoogle">&mdash;<span class="dns-time-unit"> ms</span></div>
+        <div class="dns-status" id="dnsGoogleSt" style="color:var(--text-dim);">Waiting</div>
+      </div>
+      <div class="dns-card">
+        <div class="dns-card-head">
+          <div class="dns-provider">cloudflare.com</div>
+          <div class="dns-ip">A record</div>
+        </div>
+        <div class="dns-time" id="dnsCF">&mdash;<span class="dns-time-unit"> ms</span></div>
+        <div class="dns-status" id="dnsCFSt" style="color:var(--text-dim);">Waiting</div>
+      </div>
+      <div class="dns-card">
+        <div class="dns-card-head">
+          <div class="dns-provider">amazon.com</div>
+          <div class="dns-ip">A record</div>
+        </div>
+        <div class="dns-time" id="dnsAmazon">&mdash;<span class="dns-time-unit"> ms</span></div>
+        <div class="dns-status" id="dnsAmazonSt" style="color:var(--text-dim);">Waiting</div>
+      </div>
+      <div class="dns-card">
+        <div class="dns-card-head">
+          <div class="dns-provider">netflix.com</div>
+          <div class="dns-ip">A record</div>
+        </div>
+        <div class="dns-time" id="dnsNetflix">&mdash;<span class="dns-time-unit"> ms</span></div>
+        <div class="dns-status" id="dnsNetflixSt" style="color:var(--text-dim);">Waiting</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagnostics -->
+  <div class="card diag-section">
+    <div class="card-head">
+      <div class="card-title">Diagnostics &amp; Recommendations</div>
+      <div class="card-meta" id="diagTime">&mdash;</div>
+    </div>
+    <div class="diag-list" id="diagList">
+      <div class="diag-item">
+        <div class="diag-dot" style="background:var(--text-dim);"></div>
+        <div class="diag-txt">Run a test to generate diagnostics</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card history-section" id="historySection" style="display:none;">
+    <div class="card-head">
+      <div class="card-title">Test History</div>
+      <div class="card-meta" id="historyMeta">This session</div>
+    </div>
+    <table class="history-table">
+      <thead>
+        <tr><th>Time</th><th>Score</th><th>Down</th><th>Up</th><th>Latency</th><th>Jitter</th><th>Loss</th></tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr><td colspan="7" style="text-align:center;color:var(--text-dim);">No tests yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This tool provides estimates based on browser-level measurements and
+    Cloudflare's speed test infrastructure. Speed results are approximate and may differ from
+    dedicated speed test applications. This tool does not access your router, scan your local
+    network, or collect any personally identifiable information. All tests run entirely in your
+    browser. Network information is derived from Cloudflare request headers processed by our own
+    server function. Speed tests use
+    <a href="https://speed.cloudflare.com" target="_blank" rel="noopener noreferrer">Cloudflare's public speed test endpoints</a>.
+    DNS resolution tested via
+    <a href="https://developers.cloudflare.com/1.1.1.1/" target="_blank" rel="noopener noreferrer">Cloudflare's public DoH resolver</a>.
+    Not a substitute for professional network analysis. See our
+    <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a> for details.
+  </div>
+</div>
+
+<div class="page-footer">
+  <a href="https://terminalfeed.io">terminalfeed.io</a> &middot;
+  <a href="/about">About</a> &middot;
+  <a href="/features">Features</a> &middot;
+  <a href="/changelog">Changelog</a> &middot;
+  <a href="/wifi">WiFi</a> &middot;
+  <a href="/privacy">Privacy</a> &middot;
+  <a href="/terms">Terms</a> &middot;
+  Built by <a href="https://pizzarobotstudios.com" target="_blank" rel="noopener noreferrer">Pizza Robot Studios</a>
+</div>
+
+<script>
+// ============================================================
+// WiFi Health Monitor v2 — TerminalFeed.io/wifi
+// APIs: Cloudflare network-info, speed.cloudflare.com, CF DoH, Google generate_204
+// ============================================================
+
+var S = {
+  latHistory: [],
+  running: false,
+  tests: 0,
+  history: [],
+  netInfo: null,
+};
+
+// ---- Progress Bar ----
+function setProgress(step, label) {
+  var el = document.getElementById('testProgress');
+  el.classList.add('active');
+  document.getElementById('progressLabel').textContent = label;
+  document.querySelectorAll('.progress-step').forEach(function(s, i) {
+    s.className = 'progress-step';
+    if (i < step) s.classList.add('done');
+    else if (i === step) s.classList.add('active');
+  });
+}
+
+function clearProgress() {
+  document.getElementById('testProgress').classList.remove('active');
+}
+
+// ---- Network Info (Cloudflare Pages Function — reads CF headers, no external API) ----
+async function detectNetwork() {
+  try {
+    var r = await fetch('/api/network-info');
+    if (!r.ok) throw new Error('Network info failed');
+    var d = await r.json();
+    S.netInfo = d;
+    document.getElementById('netIP').textContent = d.ip || '\u2014';
+    document.getElementById('netISP').textContent = d.asOrg || '\u2014';
+    document.getElementById('netISPSub').textContent = d.asn ? 'AS' + d.asn : '';
+    document.getElementById('netLoc').textContent = [d.city, d.region].filter(Boolean).join(', ') || '\u2014';
+    document.getElementById('netLocSub').textContent = d.country + (d.colo ? ' \u00B7 CF ' + d.colo : '');
+  } catch (e) {
+    document.getElementById('netIP').textContent = 'Unavailable';
+    document.getElementById('netISP').textContent = '\u2014';
+  }
+}
+
+// ---- Connection Info (Network Information API) ----
+function detectConn() {
+  var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (c) {
+    var type = (c.effectiveType || c.type || '?').toUpperCase();
+    document.getElementById('netConn').textContent = type;
+    document.getElementById('netConnSub').textContent = c.downlink ? '~' + c.downlink + ' Mbps est.' : '';
+    c.addEventListener('change', detectConn);
+  } else {
+    document.getElementById('netConn').textContent = 'Unknown';
+  }
+}
+
+// ---- Latency Test (Google generate_204 — fine for timing round-trips) ----
+async function measureLatency(samples) {
+  samples = samples || 24;
+  var results = [];
+  var fails = 0;
+  var targets = [
+    'https://www.google.com/generate_204',
+    'https://www.gstatic.com/generate_204',
+    'https://connectivitycheck.gstatic.com/generate_204',
+  ];
+
+  for (var i = 0; i < samples; i++) {
+    var t = targets[i % targets.length];
+    var t0 = performance.now();
+    try {
+      await fetch(t, { mode: 'no-cors', cache: 'no-store' });
+      var ms = performance.now() - t0;
+      results.push(ms);
+      S.latHistory.push(ms);
+    } catch (e) {
+      fails++;
+      S.latHistory.push(-1);
+    }
+    await new Promise(function(r) { setTimeout(r, 120); });
+  }
+
+  var valid = results.filter(function(r) { return r > 0; });
+  var avg = valid.length ? valid.reduce(function(a, b) { return a + b; }, 0) / valid.length : -1;
+  var jitter = valid.length > 1
+    ? valid.slice(1).reduce(function(s, v, i) { return s + Math.abs(v - valid[i]); }, 0) / (valid.length - 1)
+    : 0;
+
+  return {
+    avg: Math.round(avg),
+    min: Math.round(Math.min.apply(null, valid) || 0),
+    max: Math.round(Math.max.apply(null, valid) || 0),
+    jitter: Math.round(jitter),
+    packetLoss: (fails / samples) * 100,
+    samples: valid.length,
+    fails: fails,
+  };
+}
+
+// ---- Download Speed (Cloudflare speed.cloudflare.com/__down — exact byte counts) ----
+async function measureDownload() {
+  var sizes = [100000, 500000, 1000000, 5000000]; // 100KB, 500KB, 1MB, 5MB progressive
+  var results = [];
+
+  for (var i = 0; i < sizes.length; i++) {
+    var bytes = sizes[i];
+    var url = 'https://speed.cloudflare.com/__down?bytes=' + bytes + '&_=' + Date.now();
+    var start = performance.now();
+
+    try {
+      var resp = await fetch(url, { cache: 'no-store' });
+      await resp.blob(); // consume full body
+      var elapsed = (performance.now() - start) / 1000;
+
+      // Use PerformanceResourceTiming for more accurate transfer time if available
+      var transferTime = elapsed;
+      var entries = performance.getEntriesByName(url, 'resource');
+      if (entries.length > 0) {
+        var entry = entries[entries.length - 1];
+        if (entry.responseEnd && entry.requestStart) {
+          transferTime = (entry.responseEnd - entry.requestStart) / 1000;
+        }
+      }
+
+      var mbps = (bytes * 8 / transferTime) / 1000000;
+      results.push(mbps);
+
+      // If this took >3s, skip larger payloads (slow connection)
+      if (elapsed > 3) break;
+    } catch (e) {
+      // Skip failed tests
+    }
+    performance.clearResourceTimings();
+  }
+
+  if (results.length === 0) return 0;
+  // 90th percentile (matches Cloudflare's own methodology)
+  results.sort(function(a, b) { return a - b; });
+  var p90 = results[Math.floor(results.length * 0.9)];
+  return Math.round(p90 * 10) / 10;
+}
+
+// ---- Upload Speed (Cloudflare speed.cloudflare.com/__up — known payload POST) ----
+async function measureUpload() {
+  var sizes = [100000, 500000, 1000000]; // 100KB, 500KB, 1MB progressive
+  var results = [];
+
+  for (var i = 0; i < sizes.length; i++) {
+    var bytes = sizes[i];
+    var payload = new ArrayBuffer(bytes);
+    var start = performance.now();
+
+    try {
+      var resp = await fetch('https://speed.cloudflare.com/__up', {
+        method: 'POST',
+        body: payload,
+        cache: 'no-store',
+      });
+      await resp.text(); // consume response
+
+      var elapsed = (performance.now() - start) / 1000;
+
+      // Subtract server processing time if available via server-timing header
+      var serverTiming = resp.headers.get('server-timing');
+      var serverMs = 0;
+      if (serverTiming) {
+        var match = serverTiming.match(/dur=([\d.]+)/);
+        if (match) serverMs = parseFloat(match[1]);
+      }
+
+      var adjustedElapsed = elapsed - (serverMs / 1000);
+      var mbps = (bytes * 8 / Math.max(adjustedElapsed, 0.001)) / 1000000;
+      results.push(mbps);
+
+      if (elapsed > 3) break;
+    } catch (e) {
+      // Skip
+    }
+  }
+
+  if (results.length === 0) return 0;
+  results.sort(function(a, b) { return a - b; });
+  var p90 = results[Math.floor(results.length * 0.9)];
+  return Math.round(p90 * 10) / 10;
+}
+
+// ---- DNS Resolution Test (Cloudflare DoH — free, HTTPS, no key) ----
+async function testDNS(domain) {
+  var t0 = performance.now();
+  try {
+    var r = await fetch('https://cloudflare-dns.com/dns-query?name=' + domain + '&type=A', {
+      headers: { 'Accept': 'application/dns-json' },
+    });
+    var d = await r.json();
+    var ms = Math.round(performance.now() - t0);
+    var ips = (d.Answer || []).filter(function(a) { return a.type === 1; }).map(function(a) { return a.data; });
+    return { ms: ms, ips: ips, ok: true };
+  } catch (e) {
+    return { ms: -1, ips: [], ok: false };
+  }
+}
+
+async function runDNSTests() {
+  var tests = [
+    { domain: 'google.com', elTime: 'dnsGoogle', elSt: 'dnsGoogleSt' },
+    { domain: 'cloudflare.com', elTime: 'dnsCF', elSt: 'dnsCFSt' },
+    { domain: 'amazon.com', elTime: 'dnsAmazon', elSt: 'dnsAmazonSt' },
+    { domain: 'netflix.com', elTime: 'dnsNetflix', elSt: 'dnsNetflixSt' },
+  ];
+
+  var results = [];
+  for (var i = 0; i < tests.length; i++) {
+    var t = tests[i];
+    var r = await testDNS(t.domain);
+    results.push({ ms: r.ms, ips: r.ips, ok: r.ok, domain: t.domain });
+
+    var color = r.ok ? (r.ms < 50 ? 'var(--green)' : r.ms < 100 ? 'var(--amber)' : 'var(--red)') : 'var(--red)';
+    var label = r.ok ? (r.ms < 50 ? '\u25CF Fast' : r.ms < 100 ? '\u25CF Normal' : '\u25CF Slow') : '\u25CF Failed';
+
+    document.getElementById(t.elTime).innerHTML = r.ok ? r.ms + '<span class="dns-time-unit"> ms</span>' : 'FAIL';
+    document.getElementById(t.elTime).style.color = color;
+    document.getElementById(t.elSt).textContent = label + (r.ips.length ? ' \u00B7 ' + r.ips[0] : '');
+    document.getElementById(t.elSt).style.color = color;
+  }
+
+  return results;
+}
+
+// ---- Scoring ----
+function calcScore(lat, jit, dl, ul, pl, dnsAvg) {
+  var s = 100;
+  if (lat > 200) s -= 30; else if (lat > 100) s -= 18; else if (lat > 50) s -= 8; else if (lat > 30) s -= 3;
+  if (jit > 50) s -= 22; else if (jit > 20) s -= 12; else if (jit > 10) s -= 6;
+  if (dl < 1) s -= 25; else if (dl < 5) s -= 15; else if (dl < 10) s -= 8; else if (dl < 25) s -= 3;
+  if (ul < 1) s -= 12; else if (ul < 3) s -= 8; else if (ul < 5) s -= 3;
+  if (pl > 10) s -= 20; else if (pl > 5) s -= 12; else if (pl > 1) s -= 5;
+  if (dnsAvg > 150) s -= 10; else if (dnsAvg > 80) s -= 5;
+  return Math.max(0, Math.min(100, Math.round(s)));
+}
+
+function getGrade(s) {
+  if (s >= 90) return { g: 'Excellent', c: 'var(--green)' };
+  if (s >= 75) return { g: 'Good', c: 'var(--green)' };
+  if (s >= 55) return { g: 'Fair', c: 'var(--amber)' };
+  if (s >= 35) return { g: 'Poor', c: 'var(--red)' };
+  return { g: 'Critical', c: 'var(--red)' };
+}
+
+function mColor(type, v) {
+  if (type === 'dl' || type === 'ul') return v >= 25 ? 'var(--green)' : v >= 10 ? 'var(--green)' : v >= 3 ? 'var(--amber)' : 'var(--red)';
+  if (type === 'lat') return v < 30 ? 'var(--green)' : v < 60 ? 'var(--green)' : v < 100 ? 'var(--amber)' : 'var(--red)';
+  if (type === 'jit') return v < 10 ? 'var(--green)' : v < 25 ? 'var(--amber)' : 'var(--red)';
+  return 'var(--green)';
+}
+
+function mLabel(type, v) {
+  if (type === 'dl' || type === 'ul') return v >= 25 ? '\u25CF Fast' : v >= 10 ? '\u25CF Good' : v >= 3 ? '\u25CF Slow' : '\u25CF Very Slow';
+  if (type === 'lat') return v < 30 ? '\u25CF Excellent' : v < 60 ? '\u25CF Good' : v < 100 ? '\u25CF Fair' : '\u25CF Poor';
+  if (type === 'jit') return v < 10 ? '\u25CF Stable' : v < 25 ? '\u25CF Moderate' : '\u25CF Unstable';
+  return '';
+}
+
+// ---- Diagnostics ----
+function genDiag(lat, jit, dl, ul, pl, dnsResults) {
+  var d = [];
+
+  if (lat < 30) d.push({ s: 'g', t: '<strong>Latency is excellent</strong> (' + lat + 'ms) \u2014 great for gaming, video calls, and real-time apps.' });
+  else if (lat < 80) d.push({ s: 'g', t: '<strong>Latency is acceptable</strong> (' + lat + 'ms) \u2014 fine for most activities.' });
+  else if (lat < 150) d.push({ s: 'y', t: '<strong>Elevated latency</strong> (' + lat + 'ms) \u2014 you may notice lag. Try moving closer to your router or check if you\'re connected through a WiFi extender.' });
+  else d.push({ s: 'r', t: '<strong>High latency</strong> (' + lat + 'ms) \u2014 noticeable lag expected. Possible causes: WiFi extender adding hops, router overloaded, too many devices, or ISP congestion.' });
+
+  if (jit > 25) d.push({ s: 'r', t: '<strong>High jitter</strong> (' + jit + 'ms) \u2014 connection is unstable. Causes choppy video/audio. Check for interference from microwaves, Bluetooth devices, baby monitors, or congested WiFi channels.' });
+  else if (jit > 10) d.push({ s: 'y', t: '<strong>Moderate jitter</strong> (' + jit + 'ms) \u2014 some instability. Try switching to the 5GHz band if your router supports dual-band.' });
+  else d.push({ s: 'g', t: '<strong>Low jitter</strong> (' + jit + 'ms) \u2014 connection is stable.' });
+
+  if (pl > 5) d.push({ s: 'r', t: '<strong>Significant packet loss</strong> (' + pl.toFixed(1) + '%) \u2014 requests are failing. Often indicates weak signal or network congestion.' });
+  else if (pl > 0) d.push({ s: 'y', t: '<strong>Minor packet loss</strong> (' + pl.toFixed(1) + '%) \u2014 mostly fine but worth monitoring.' });
+  else d.push({ s: 'g', t: '<strong>Zero packet loss</strong> \u2014 all requests completed successfully.' });
+
+  if (dl < 5) d.push({ s: 'r', t: '<strong>Download speed is very low</strong> (' + dl + ' Mbps) \u2014 streaming and large downloads will struggle. Check if other devices are hogging bandwidth.' });
+  else if (dl < 15) d.push({ s: 'y', t: '<strong>Download speed is moderate</strong> (' + dl + ' Mbps) \u2014 fine for browsing but HD streaming may buffer.' });
+  else d.push({ s: 'g', t: '<strong>Download speed is solid</strong> at ' + dl + ' Mbps.' });
+
+  if (ul < 2) d.push({ s: 'y', t: '<strong>Upload speed is low</strong> (' + ul + ' Mbps) \u2014 video calls and file uploads may be affected.' });
+
+  var dnsOk = dnsResults.filter(function(r) { return r.ok; });
+  var dnsFail = dnsResults.filter(function(r) { return !r.ok; });
+  var dnsAvg = dnsOk.length ? Math.round(dnsOk.reduce(function(a, r) { return a + r.ms; }, 0) / dnsOk.length) : -1;
+
+  if (dnsFail.length > 0) {
+    d.push({ s: 'r', t: '<strong>DNS failures detected</strong> \u2014 ' + dnsFail.map(function(f) { return f.domain; }).join(', ') + ' failed to resolve. This can cause slow page loads. Try switching to Cloudflare DNS (1.1.1.1) or Google DNS (8.8.8.8).' });
+  } else if (dnsAvg > 100) {
+    d.push({ s: 'y', t: '<strong>DNS resolution is slow</strong> (avg ' + dnsAvg + 'ms) \u2014 consider switching to a faster DNS provider like Cloudflare (1.1.1.1) or Google (8.8.8.8).' });
+  } else {
+    d.push({ s: 'g', t: '<strong>DNS resolution is fast</strong> (avg ' + dnsAvg + 'ms) \u2014 domain lookups are healthy.' });
+  }
+
+  // WiFi extender detection heuristic
+  if (lat > 60 && jit > 15) {
+    d.push({ s: 'y', t: '<strong>WiFi extender may be the bottleneck</strong> \u2014 high latency + jitter is a classic symptom of being routed through an extender. Run this test from different rooms to compare. If your main router room scores much better, consider a mesh WiFi system instead.' });
+  }
+
+  // Network info diagnostic
+  if (S.netInfo && S.netInfo.asOrg) {
+    d.push({ s: 'g', t: '<strong>Network detected:</strong> ' + S.netInfo.asOrg + (S.netInfo.asn ? ' (AS' + S.netInfo.asn + ')' : '') + ' \u2014 ' + [S.netInfo.city, S.netInfo.region].filter(Boolean).join(', ') + (S.netInfo.colo ? ' \u00B7 CF edge: ' + S.netInfo.colo : '') + '.' });
+  }
+
+  return d;
+}
+
+// ---- UI Helpers ----
+function setScoreRing(score) {
+  var ring = document.getElementById('scoreRing');
+  var circ = 2 * Math.PI * 77; // ~484
+  var off = circ - (score / 100) * circ;
+  var grade = getGrade(score);
+  ring.style.strokeDashoffset = off;
+  ring.style.stroke = grade.c;
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('scoreNum').style.color = grade.c;
+  document.getElementById('scoreGrade').textContent = grade.g;
+  document.getElementById('scoreGrade').style.color = grade.c;
+}
+
+function drawLatChart() {
+  var el = document.getElementById('latChart');
+  el.innerHTML = '';
+  var max = 80;
+  var hist = S.latHistory.slice(-max);
+  var validPings = hist.filter(function(v) { return v > 0; });
+  var peak = Math.max.apply(null, validPings.length ? validPings : [80]);
+  if (peak < 80) peak = 80;
+  document.getElementById('pingCt').textContent = S.latHistory.length + ' pings';
+
+  hist.forEach(function(v) {
+    var bar = document.createElement('div');
+    bar.className = 'lat-bar';
+    if (v < 0) {
+      bar.style.height = '100%';
+      bar.style.background = 'var(--red)';
+      bar.style.opacity = '0.4';
+      bar.title = 'Failed';
+    } else {
+      bar.style.height = Math.max(3, (v / peak) * 100) + '%';
+      bar.style.background = v < 40 ? 'var(--green)' : v < 80 ? 'var(--amber)' : 'var(--red)';
+      bar.title = Math.round(v) + 'ms';
+    }
+    el.appendChild(bar);
+  });
+}
+
+function setMetric(id, stId, type, val) {
+  var c = mColor(type, val);
+  var unit = type === 'dl' || type === 'ul' ? ' Mbps' : ' ms';
+  document.getElementById(id).innerHTML = val + '<span class="m-unit">' + unit + '</span>';
+  document.getElementById(id).style.color = c;
+  document.getElementById(stId).textContent = mLabel(type, val);
+  document.getElementById(stId).style.color = c;
+}
+
+function renderDiag(diags) {
+  var el = document.getElementById('diagList');
+  el.innerHTML = '';
+  diags.forEach(function(d) {
+    var item = document.createElement('div');
+    item.className = 'diag-item';
+    item.innerHTML = '<div class="diag-dot ' + d.s + '"></div><div class="diag-txt">' + d.t + '</div>';
+    el.appendChild(item);
+  });
+  document.getElementById('diagTime').textContent = new Date().toLocaleTimeString();
+}
+
+function addHistory(score, dl, ul, lat, jit, pl) {
+  var row = { time: new Date().toLocaleTimeString(), score: score, dl: dl, ul: ul, lat: lat, jit: jit, pl: pl };
+  S.history.push(row);
+
+  var tbody = document.getElementById('historyBody');
+  if (S.history.length === 1) tbody.innerHTML = '';
+
+  var tr = document.createElement('tr');
+  var grade = getGrade(score);
+  tr.innerHTML =
+    '<td>' + row.time + '</td>' +
+    '<td style="color:' + grade.c + ';font-weight:600;">' + score + '</td>' +
+    '<td>' + dl + ' Mbps</td>' +
+    '<td>' + ul + ' Mbps</td>' +
+    '<td>' + lat + ' ms</td>' +
+    '<td>' + jit + ' ms</td>' +
+    '<td>' + pl.toFixed(1) + '%</td>';
+  tbody.insertBefore(tr, tbody.firstChild);
+  document.getElementById('historyMeta').textContent = S.history.length + ' test' + (S.history.length > 1 ? 's' : '') + ' this session';
+}
+
+function toggleHistory() {
+  var el = document.getElementById('historySection');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ---- Main Test ----
+async function runFullTest() {
+  if (S.running) return;
+  S.running = true;
+
+  var btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Testing...';
+  document.getElementById('statusText').textContent = 'Testing';
+  S.latHistory = [];
+
+  // Step 0: Network detection (CF headers — no external API)
+  setProgress(0, 'Detecting network info...');
+  await detectNetwork();
+
+  // Step 1: Latency (24 pings to Google generate_204)
+  setProgress(1, 'Measuring latency (24 pings)...');
+  var lat = await measureLatency(24);
+  setMetric('latVal', 'latSt', 'lat', lat.avg);
+  setMetric('jitVal', 'jitSt', 'jit', lat.jitter);
+  drawLatChart();
+
+  var pl = lat.packetLoss;
+  document.getElementById('plVal').textContent = pl.toFixed(1) + '%';
+  document.getElementById('plBar').style.width = Math.max(2, 100 - pl * 5) + '%';
+  document.getElementById('plBar').style.background = pl > 5 ? 'var(--red)' : pl > 1 ? 'var(--amber)' : 'var(--green)';
+
+  // Step 2: Download (Cloudflare speed test — progressive payloads)
+  setProgress(2, 'Testing download speed...');
+  var dl = await measureDownload();
+  setMetric('dlVal', 'dlSt', 'dl', dl);
+
+  // Step 3: Upload (Cloudflare speed test — progressive payloads)
+  setProgress(3, 'Testing upload speed...');
+  var ul = await measureUpload();
+  setMetric('ulVal', 'ulSt', 'ul', ul);
+
+  // Step 4: DNS (Cloudflare DoH for 4 domains)
+  setProgress(4, 'Testing DNS resolution...');
+  var dnsResults = await runDNSTests();
+  var dnsOk = dnsResults.filter(function(r) { return r.ok; });
+  var dnsAvg = dnsOk.length ? Math.round(dnsOk.reduce(function(a, r) { return a + r.ms; }, 0) / dnsOk.length) : 999;
+
+  // Step 5: Scoring + diagnostics
+  setProgress(5, 'Calculating score...');
+  await new Promise(function(r) { setTimeout(r, 300); });
+
+  var stability = Math.max(0, Math.min(100, 100 - lat.jitter * 2));
+  document.getElementById('stabVal').textContent = stability + '%';
+  document.getElementById('stabBar').style.width = stability + '%';
+
+  var consistency = dl > 0 && ul > 0 ? Math.min(100, Math.round((Math.min(dl, ul) / Math.max(dl, ul)) * 100)) : 0;
+  document.getElementById('consVal').textContent = consistency + '%';
+  document.getElementById('consBar').style.width = consistency + '%';
+
+  var score = calcScore(lat.avg, lat.jitter, dl, ul, pl, dnsAvg);
+  setScoreRing(score);
+
+  var grade = getGrade(score);
+  var verdicts = {
+    'Excellent': 'Your WiFi is running great. No issues detected.',
+    'Good': 'Connection is solid. Minor optimizations possible.',
+    'Fair': 'Some issues detected. Check diagnostics below.',
+    'Poor': 'Connection has problems. Review diagnostics for fixes.',
+    'Critical': 'Serious connectivity issues. Immediate attention needed.',
+  };
+  document.getElementById('verdict').textContent = verdicts[grade.g];
+
+  var diags = genDiag(lat.avg, lat.jitter, dl, ul, pl, dnsResults);
+  renderDiag(diags);
+
+  addHistory(score, dl, ul, lat.avg, lat.jitter, pl);
+
+  document.getElementById('netLast').textContent = new Date().toLocaleTimeString();
+  S.tests++;
+  document.getElementById('netTests').textContent = S.tests + ' test' + (S.tests > 1 ? 's' : '') + ' run';
+
+  clearProgress();
+  S.running = false;
+  btn.disabled = false;
+  btn.innerHTML = '&#9654; Run Full Test';
+  document.getElementById('statusText').textContent = 'Ready';
+}
+
+// ---- Export ----
+function exportReport() {
+  var lines = [
+    '\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550',
+    ' WiFi Health Report \u2014 TerminalFeed.io/wifi',
+    '\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550',
+    'Generated: ' + new Date().toLocaleString(),
+    '',
+    'Health Score: ' + document.getElementById('scoreNum').textContent + '/100 (' + document.getElementById('scoreGrade').textContent + ')',
+    '',
+    '\u2500\u2500 Speed \u2500\u2500',
+    'Download:     ' + document.getElementById('dlVal').textContent,
+    'Upload:       ' + document.getElementById('ulVal').textContent,
+    '',
+    '\u2500\u2500 Latency \u2500\u2500',
+    'Latency:      ' + document.getElementById('latVal').textContent,
+    'Jitter:       ' + document.getElementById('jitVal').textContent,
+    'Packet Loss:  ' + document.getElementById('plVal').textContent,
+    '',
+    '\u2500\u2500 Network \u2500\u2500',
+    'IP:           ' + document.getElementById('netIP').textContent,
+    'ISP:          ' + document.getElementById('netISP').textContent,
+    'Connection:   ' + document.getElementById('netConn').textContent,
+    'Location:     ' + document.getElementById('netLoc').textContent,
+    '',
+    '\u2500\u2500 DNS Resolution \u2500\u2500',
+    'google.com:     ' + document.getElementById('dnsGoogle').textContent,
+    'cloudflare.com: ' + document.getElementById('dnsCF').textContent,
+    'amazon.com:     ' + document.getElementById('dnsAmazon').textContent,
+    'netflix.com:    ' + document.getElementById('dnsNetflix').textContent,
+    '',
+    '\u2500\u2500 Diagnostics \u2500\u2500',
+  ];
+
+  var diagEls = document.querySelectorAll('.diag-txt');
+  for (var i = 0; i < diagEls.length; i++) {
+    lines.push('\u2022 ' + diagEls[i].textContent);
+  }
+
+  lines.push('');
+  lines.push('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550');
+  lines.push(' https://terminalfeed.io/wifi');
+  lines.push(' Built by Pizza Robot Studios');
+  lines.push('\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550');
+
+  var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wifi-health-' + Date.now() + '.txt';
+  a.click();
+}
+
+// ---- Init ----
+detectConn();
+detectNetwork();
+</script>
+
+</body>
+</html>

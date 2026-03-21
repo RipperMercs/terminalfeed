@@ -1423,6 +1423,8 @@ function App() {
           <a href="/features" className="footerLink">Features</a>
           <a href="/developers" className="footerLink">API</a>
           <a href="/changelog" className="footerLink">Changelog</a>
+          {/* WiFi link — uncomment after AdSense approval */}
+          {/* <a href="/wifi" className="footerLink">WiFi</a> */}
           <a href="/privacy" className="footerLink">Privacy</a>
           <a href="/terms" className="footerLink">Terms</a>
           <span className="bottomBarDivider">&middot;</span>
