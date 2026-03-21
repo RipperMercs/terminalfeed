@@ -36,7 +36,7 @@ export function LegalModal({ type, onClose }: LegalModalProps) {
 function PrivacyPolicy() {
   return (
     <>
-      <p className="legalDate">Last updated: March 14, 2026</p>
+      <p className="legalDate">Last updated: March 21, 2026</p>
 
       <h3>1. Introduction</h3>
       <p>
@@ -79,7 +79,26 @@ function PrivacyPolicy() {
           You can opt out of personalized advertising at <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
         <li><strong>Cloudflare:</strong> Provides hosting, CDN, and security services. See <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare's Privacy Policy</a>.</li>
         <li><strong>CoinGecko, CoinCap, Mempool.space, HackerNews:</strong> We fetch publicly available data from these APIs. No personal information is shared with them.</li>
+        <li><strong>Cloudflare Speed Test (speed.cloudflare.com):</strong> Provides download and upload speed measurement for the WiFi Health Monitor tool via Cloudflare's public speed test endpoints.</li>
+        <li><strong>Cloudflare DNS (1.1.1.1):</strong> Provides DNS resolution speed testing for the WiFi Health Monitor tool via DNS-over-HTTPS. Receives DNS queries when a WiFi test is run.</li>
       </ul>
+
+      <h3>4A. WiFi Health Monitor Tool — Data Practices</h3>
+      <p>
+        The WiFi Health Monitor tool at terminalfeed.io/wifi computes all measurements and diagnostics
+        client-side in your browser. No WiFi Tool data is sent to TerminalFeed.io servers.
+      </p>
+      <p>
+        <strong>What the WiFi Tool collects:</strong> Your public IP address is processed by our own
+        Cloudflare server function for geolocation (never sent to a third-party IP lookup service).
+        Speed tests use Cloudflare's public speed test endpoints. DNS queries are sent to Cloudflare's
+        DoH resolver. HTTP requests are made to Google's connectivity endpoints for latency measurements.
+      </p>
+      <p>
+        <strong>What it does NOT collect:</strong> We do not store test results, access your local network
+        or router, scan for nearby WiFi networks, or persist any test data between visits. Test history
+        exists only in browser session memory.
+      </p>
 
       <h3>5. Google AdSense & Cookies</h3>
       <p>
@@ -131,7 +150,7 @@ function PrivacyPolicy() {
 function TermsOfService() {
   return (
     <>
-      <p className="legalDate">Last updated: March 14, 2026</p>
+      <p className="legalDate">Last updated: March 21, 2026</p>
 
       <h3>1. Acceptance of Terms</h3>
       <p>
@@ -142,7 +161,8 @@ function TermsOfService() {
       <h3>2. Description of Service</h3>
       <p>
         TerminalFeed.io is a real-time information dashboard that aggregates publicly available
-        data including cryptocurrency prices, market data, network statistics, and news feeds.
+        data including cryptocurrency prices, market data, network statistics, news feeds,
+        browser-based WiFi and network diagnostics, and other data streams.
         The Service is provided for informational and entertainment purposes only.
       </p>
 
@@ -154,6 +174,18 @@ function TermsOfService() {
         incomplete. You should not make any financial decisions based solely on information
         displayed on this Service. Always consult a qualified financial advisor before making
         investment decisions.
+      </p>
+
+      <h3>3A. WiFi Health Monitor Tool — Disclaimer</h3>
+      <p>
+        The WiFi Health Monitor tool at terminalfeed.io/wifi provides browser-based network
+        diagnostics including approximate speed measurements, latency tests, DNS resolution timing,
+        and connection quality estimates. The WiFi Tool provides estimates and approximations only
+        and should not be used as the sole basis for network purchasing decisions, ISP service
+        disputes, or contractual claims. It does NOT access your router, scan your local network,
+        or interact with any network hardware. All tests use standard HTTP/HTTPS requests to
+        publicly available endpoints (Cloudflare Speed Test, Cloudflare DoH, Google connectivity checks).
+        Use at your own risk.
       </p>
 
       <h3>4. No Warranties</h3>
@@ -180,9 +212,10 @@ function TermsOfService() {
 
       <h3>6. Third-Party Data</h3>
       <p>
-        The Service aggregates data from third-party APIs and sources. We are not responsible for
-        the accuracy, reliability, or availability of third-party data. Third-party services are
-        subject to their own terms of service and privacy policies.
+        The Service aggregates data from third-party APIs and sources including but not limited to
+        CoinGecko, CoinCap, Mempool.space, Finnhub, Hacker News, Cloudflare DNS (1.1.1.1), Cloudflare Speed Test,
+        and others. We are not responsible for the accuracy, reliability, or availability of third-party
+        data. Third-party services are subject to their own terms of service and privacy policies.
       </p>
 
       <h3>7. Acceptable Use</h3>

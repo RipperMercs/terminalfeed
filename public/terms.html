@@ -27,18 +27,33 @@
 <body>
   <a href="/" class="back">&larr; back to terminal</a>
   <h1>>_ Terms of Service</h1>
-  <p class="date">Last updated: March 14, 2026</p>
+  <p class="date">Last updated: March 21, 2026</p>
 
   <h3>1. Acceptance of Terms</h3>
   <p>By accessing and using TerminalFeed.io (the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Service. These Terms constitute a legally binding agreement between you and TerminalFeed.io.</p>
 
   <h3>2. Description of Service</h3>
-  <p>TerminalFeed.io is a free, real-time information dashboard that aggregates publicly available data including cryptocurrency prices, stock market data, network statistics, news feeds, earthquake data, space launch schedules, weather information, and other data streams from third-party APIs. The Service is provided for informational and entertainment purposes only.</p>
+  <p>TerminalFeed.io is a free, real-time information dashboard that aggregates publicly available data including cryptocurrency prices, stock market data, network statistics, news feeds, earthquake data, space launch schedules, weather information, browser-based WiFi and network diagnostics, and other data streams from third-party APIs. The Service is provided for informational and entertainment purposes only.</p>
   <p>The Service is a single-page web application that runs entirely in your browser. It does not require account creation, login, or any form of registration. Dashboard preferences and cached data are stored locally in your browser.</p>
 
   <h3>3. Not Financial Advice</h3>
   <p><strong>The information displayed on TerminalFeed.io does not constitute financial advice, investment advice, trading advice, or any other form of professional advice.</strong> All data is provided "as is" from third-party sources and may be delayed, inaccurate, or incomplete. You should not make any financial decisions based solely on information displayed on this Service. Always consult a qualified financial advisor before making investment decisions.</p>
   <p>Cryptocurrency and stock market data displayed on the Service may not reflect real-time prices and should not be used as the sole basis for any trading decisions. Data feeds may experience delays, outages, or inaccuracies that are beyond our control.</p>
+
+  <h3>3A. WiFi Health Monitor Tool &mdash; Disclaimer</h3>
+  <p>The WiFi Health Monitor tool available at terminalfeed.io/wifi ("WiFi Tool") provides browser-based network diagnostics including approximate speed measurements, latency tests, DNS resolution timing, and connection quality estimates. By using the WiFi Tool, you acknowledge and agree to the following:</p>
+  <p><strong>Not a Professional Network Analysis Tool.</strong> The WiFi Tool provides estimates and approximations only. Speed, latency, jitter, and other measurements are derived from browser-level timing of HTTP requests and may differ significantly from results obtained through dedicated speed test applications, ISP-provided diagnostic tools, or professional network analysis equipment. Results should not be used as the sole basis for any network purchasing decisions, ISP service disputes, or contractual claims.</p>
+  <p><strong>No Router or Device Access.</strong> The WiFi Tool does NOT access, scan, modify, or interact with your router, modem, WiFi access points, network extenders, or any other network hardware. It does not perform network scanning, packet sniffing, port scanning, or any form of local network enumeration. All tests are conducted entirely within your web browser using standard HTTP/HTTPS requests to publicly available endpoints.</p>
+  <p><strong>Third-Party APIs.</strong> The WiFi Tool uses the following third-party services to provide its functionality:</p>
+  <ul>
+    <li><strong>Cloudflare request metadata</strong> &mdash; For IP address geolocation and ISP detection. Your network information is derived from Cloudflare's built-in request headers processed by our own server function. No third-party IP lookup service is used.</li>
+    <li><strong>Cloudflare DNS-over-HTTPS (DoH)</strong> &mdash; For DNS resolution speed testing via Cloudflare's public 1.1.1.1 resolver API. Subject to Cloudflare's privacy policy and terms of service.</li>
+    <li><strong>Google connectivity endpoints</strong> &mdash; For latency measurement via Google's public generate_204 endpoints.</li>
+  </ul>
+  <p>We are not affiliated with, endorsed by, or partnered with any of these third-party services. Their availability, accuracy, and terms are outside our control.</p>
+  <p><strong>Accuracy Limitations.</strong> Browser-based network measurements are inherently limited by factors including but not limited to: browser throttling, background processes, CORS restrictions, varying payload sizes, CDN caching, geographic routing, VPN interference, browser extensions, and device performance. The "Health Score" and diagnostic recommendations are generated algorithmically and should be treated as general guidance, not professional network advice.</p>
+  <p><strong>No Warranty of Results.</strong> We make no representations or warranties about the accuracy, reliability, or completeness of any measurements, scores, diagnostics, or recommendations provided by the WiFi Tool.</p>
+  <p><strong>Use at Your Own Risk.</strong> Any actions taken based on the WiFi Tool's results &mdash; including but not limited to changing DNS settings, purchasing network equipment, contacting your ISP, or modifying your network configuration &mdash; are taken at your own risk and discretion.</p>
 
   <h3>4. No Warranties</h3>
   <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, either express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, accuracy, completeness, reliability, or non-infringement.</p>
@@ -62,7 +77,7 @@
   </ul>
 
   <h3>6. Third-Party Data and Services</h3>
-  <p>The Service aggregates data from numerous third-party APIs and sources including but not limited to CoinGecko, CoinCap, Mempool.space, Finnhub, Hacker News, Reddit, GitHub, USGS, NASA, ESPN, Wikipedia, and others. We are not responsible for the accuracy, reliability, availability, or content of third-party data. Third-party services are subject to their own terms of service and privacy policies.</p>
+  <p>The Service aggregates data from numerous third-party APIs and sources including but not limited to CoinGecko, CoinCap, Mempool.space, Finnhub, Hacker News, Reddit, GitHub, USGS, NASA, ESPN, Wikipedia, Cloudflare DNS (1.1.1.1), Cloudflare Speed Test, and others. We are not responsible for the accuracy, reliability, availability, or content of third-party data. Third-party services are subject to their own terms of service and privacy policies.</p>
   <p>Links to third-party websites or services are provided for convenience only. We do not endorse and are not responsible for the content, accuracy, or practices of any third-party sites.</p>
 
   <h3>7. Acceptable Use</h3>
