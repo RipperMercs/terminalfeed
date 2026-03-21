@@ -1157,6 +1157,7 @@ function App() {
           <span className="logoDot">.io</span>
           <span className="logoCursor" />
           <span className="topTerminals">{terminalsOnline} online</span>
+          <a href="/live" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (

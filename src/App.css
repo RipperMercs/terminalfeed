@@ -90,6 +90,34 @@
   margin-left: 4px;
 }
 
+.liveBriefingLink {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: #4ADE80;
+  text-decoration: none;
+  letter-spacing: 1.5px;
+  margin-left: 12px;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.liveBriefingLink:hover { opacity: 1; text-decoration: none; }
+
+.liveDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4ADE80;
+  animation: livePulse 2s ease infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .topBarRight {
   display: flex;
   align-items: center;

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What's Happening Right Now — TerminalFeed Live</title>
+  <meta name="description" content="Real-time world briefing updated every 5 minutes. Bitcoin price, stock market, earthquakes, prediction markets, space, and breaking news — all in one place.">
+
+  <!-- OG Tags for sharing -->
+  <meta property="og:title" content="What's Happening Right Now — TerminalFeed Live">
+  <meta property="og:description" content="Real-time world briefing. BTC price, markets, earthquakes, predictions, and more. Updated every 5 minutes.">
+  <meta property="og:url" content="https://terminalfeed.io/live">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="What's Happening Right Now — TerminalFeed Live">
+  <meta name="twitter:description" content="Real-time world briefing updated every 5 minutes.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+
+  <link rel="canonical" href="https://terminalfeed.io/live">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- JSON-LD for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "TerminalFeed Live — Real-Time World Briefing",
+    "description": "Real-time world briefing updated every 5 minutes with Bitcoin price, stock market, earthquakes, prediction markets, and breaking news.",
+    "url": "https://terminalfeed.io/live",
+    "isPartOf": {
+      "@type": "WebApplication",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "dateModified": "2026-03-20T00:00:00Z"
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      width: 100%;
+    }
+
+    .header {
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      color: #5DCAA5;
+      letter-spacing: 3px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+
+    .header .timestamp {
+      font-size: 12px;
+      color: #4E4D49;
+    }
+
+    .header .auto-refresh {
+      font-size: 10px;
+      color: #3A3A44;
+      margin-top: 4px;
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ADE80;
+      margin-right: 6px;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #1E1E24;
+      margin: 24px 0;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .section-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #D4D2CB;
+    }
+
+    .section-content .highlight {
+      color: #F0EDE6;
+      font-weight: 500;
+    }
+
+    .section-content .green { color: #4ADE80; }
+    .section-content .red { color: #F87171; }
+    .section-content .amber { color: #EF9F27; }
+    .section-content .teal { color: #5DCAA5; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .stat-box {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #F0EDE6;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #4E4D49;
+      margin-top: 4px;
+    }
+
+    .predictions-list {
+      margin-top: 8px;
+    }
+
+    .prediction-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #1A1A1E;
+      font-size: 12px;
+    }
+
+    .prediction-question {
+      color: #D4D2CB;
+      flex: 1;
+      margin-right: 12px;
+    }
+
+    .prediction-odds {
+      color: #4ADE80;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .quake-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #1A1A1E;
+      font-size: 12px;
+    }
+
+    .quake-mag {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .services-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .service-badge {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+
+    .service-operational {
+      color: #4ADE80;
+      border-color: #4ADE8030;
+      background: #4ADE8010;
+    }
+
+    .service-issue {
+      color: #F87171;
+      border-color: #F8717130;
+      background: #F8717110;
+    }
+
+    .cta {
+      text-align: center;
+      margin-top: 32px;
+      padding: 24px;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+    }
+
+    .cta a {
+      color: #5DCAA5;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .cta a:hover {
+      text-decoration: underline;
+    }
+
+    .cta .sub {
+      font-size: 10px;
+      color: #4E4D49;
+      margin-top: 8px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 10px;
+      color: #3A3A44;
+    }
+
+    .footer a {
+      color: #4E4D49;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: #5DCAA5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 0;
+      color: #4E4D49;
+      font-size: 12px;
+    }
+
+    .error-msg {
+      text-align: center;
+      padding: 40px 0;
+      color: #F87171;
+      font-size: 12px;
+    }
+
+    .ai-note {
+      text-align: center;
+      font-size: 10px;
+      color: #3A3A44;
+      margin-top: 16px;
+    }
+    .ai-note a { color: #4E4D49; }
+    .ai-note a:hover { color: #5DCAA5; }
+
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-value { font-size: 18px; }
+      .section-content { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back">&larr; back to terminal</a>
+
+    <div class="header">
+      <h1>>_ WHAT'S HAPPENING RIGHT NOW</h1>
+      <div class="timestamp">
+        <span class="pulse-dot"></span>
+        <span id="timestamp">Loading...</span>
+      </div>
+      <div class="auto-refresh">auto-refreshes every 5 minutes</div>
+    </div>
+
+    <div id="content">
+      <div class="loading">fetching world briefing...</div>
+    </div>
+
+    <div class="cta">
+      <a href="/">→ See the full real-time dashboard at terminalfeed.io</a>
+      <div class="sub">30+ live data feeds · crypto · stocks · news · earthquakes · predictions · and more</div>
+      <div class="sub" style="margin-top: 12px;">
+        API: <a href="/api/briefing" style="color: #8A8880;">terminalfeed.io/api/briefing</a>
+      </div>
+    </div>
+
+    <div class="ai-note">AI agents: add <a href="/live?format=json">?format=json</a> for structured data or visit <a href="/api/briefing">/api/briefing</a></div>
+
+    <div class="footer">
+      <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper &middot; Not financial advice</p>
+      <p><a href="/">Home</a> &middot; <a href="/about">About</a> &middot; <a href="/features">Features</a> &middot; <a href="/live">Live</a> &middot; <a href="/changelog">Changelog</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
+    </div>
+  </div>
+
+  <script>
+    // ?format=json → redirect to the raw API endpoint
+    if (new URLSearchParams(window.location.search).get('format') === 'json') {
+      window.location.replace('/api/briefing');
+    }
+
+    async function fetchBriefing() {
+      try {
+        var res = await fetch('/api/briefing');
+        var data = await res.json();
+        renderBriefing(data);
+      } catch (error) {
+        document.getElementById('content').innerHTML = '<div class="error-msg">Unable to load briefing. <a href="/" style="color: #5DCAA5;">Visit the dashboard</a></div>';
+      }
+    }
+
+    function renderBriefing(data) {
+      var now = new Date();
+      document.getElementById('timestamp').textContent =
+        'Last updated: ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) +
+        ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+
+      var sections = data.sections || {};
+      var html = '<hr class="divider">';
+
+      // MARKETS
+      var crypto = sections.crypto;
+      var fg = sections.fear_greed;
+      if (crypto || fg) {
+        html += '<div class="section">';
+        html += '<div class="section-label">MARKETS</div>';
+        html += '<div class="stats-grid">';
+        if (crypto && crypto.price_usd) {
+          var changeClass = crypto.change_24h_percent >= 0 ? 'green' : 'red';
+          var changeSign = crypto.change_24h_percent >= 0 ? '+' : '';
+          html += '<div class="stat-box">';
+          html += '<div class="stat-value">$' + Number(crypto.price_usd).toLocaleString() + '</div>';
+          html += '<div class="stat-label">Bitcoin <span class="' + changeClass + '">' + changeSign + Number(crypto.change_24h_percent).toFixed(1) + '% (24h)</span></div>';
+          html += '</div>';
+        }
+        if (fg && fg.value) {
+          var fgColor = fg.value < 25 ? 'red' : fg.value < 50 ? 'amber' : fg.value < 75 ? 'teal' : 'green';
+          html += '<div class="stat-box">';
+          html += '<div class="stat-value ' + fgColor + '">' + fg.value + '</div>';
+          html += '<div class="stat-label">Fear & Greed — ' + (fg.label || '') + '</div>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+
+      // PREDICTIONS
+      var preds = sections.predictions;
+      if (preds && preds.length > 0) {
+        html += '<hr class="divider">';
+        html += '<div class="section">';
+        html += '<div class="section-label">PREDICTION MARKETS</div>';
+        html += '<div class="predictions-list">';
+        var predSlice = preds.slice(0, 5);
+        for (var i = 0; i < predSlice.length; i++) {
+          var p = predSlice[i];
+          html += '<div class="prediction-item">';
+          html += '<span class="prediction-question">' + (p.question || '') + '</span>';
+          html += '<span class="prediction-odds">' + (p.yes_percent || p.yes_probability_percent || '?') + '% Yes</span>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+
+      // EARTHQUAKES
+      var quakes = sections.earthquakes;
+      if (quakes && quakes.earthquakes && quakes.earthquakes.length > 0) {
+        html += '<hr class="divider">';
+        html += '<div class="section">';
+        html += '<div class="section-label">SEISMIC ACTIVITY</div>';
+        html += '<div class="section-content">' + quakes.count + ' earthquakes detected in the last 24 hours.</div>';
+        var quakeSlice = quakes.earthquakes.slice(0, 4);
+        for (var j = 0; j < quakeSlice.length; j++) {
+          var q = quakeSlice[j];
+          var magColor = q.magnitude >= 5 ? 'red' : q.magnitude >= 4 ? 'amber' : 'teal';
+          html += '<div class="quake-item">';
+          html += '<span class="quake-mag ' + magColor + '">M' + q.magnitude + '</span>';
+          html += '<span style="color: #8A8880;">' + (q.location || '') + '</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      // TECH / NEWS
+      var news = sections.news;
+      if (news && news.length > 0) {
+        html += '<hr class="divider">';
+        html += '<div class="section">';
+        html += '<div class="section-label">TECH & NEWS</div>';
+        for (var k = 0; k < Math.min(news.length, 5); k++) {
+          var n = news[k];
+          html += '<div style="padding: 6px 0; border-bottom: 1px solid #1A1A1E; font-size: 12px;">';
+          if (n.url) {
+            html += '<a href="' + n.url + '" target="_blank" rel="noopener" style="color: #D4D2CB; text-decoration: none;">' + (n.title || '') + '</a>';
+          } else {
+            html += '<span>' + (n.title || '') + '</span>';
+          }
+          if (n.score) {
+            html += ' <span style="color: #4E4D49; font-size: 10px;">' + n.score + ' pts</span>';
+          }
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      // SERVICES
+      var services = sections.services;
+      if (services && services.length > 0) {
+        html += '<hr class="divider">';
+        html += '<div class="section">';
+        html += '<div class="section-label">SERVICE STATUS</div>';
+        html += '<div class="services-grid">';
+        for (var m = 0; m < services.length; m++) {
+          var s = services[m];
+          var isOp = s.status === 'operational';
+          html += '<span class="service-badge ' + (isOp ? 'service-operational' : 'service-issue') + '">';
+          html += (isOp ? '●' : '⚠') + ' ' + (s.name || '');
+          html += '</span>';
+        }
+        html += '</div></div>';
+      }
+
+      // SUMMARY at top
+      if (data.summary) {
+        html = '<div class="section"><div class="section-content" style="font-size: 15px; line-height: 1.8;">' + data.summary + '</div></div>' + html;
+      }
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    // Fetch on load
+    fetchBriefing();
+
+    // Refresh every 5 minutes
+    setInterval(fetchBriefing, 300000);
+
+    // Update the "last updated" timestamp every minute
+    setInterval(function() {
+      var ts = document.getElementById('timestamp');
+      if (ts && !ts.textContent.includes('Loading')) {
+        var now = new Date();
+        ts.textContent = 'Last updated: ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) +
+          ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+      }
+    }, 60000);
+  </script>
+</body>
+</html>
