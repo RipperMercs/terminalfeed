@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 // ── AdSense Configuration ──
 // Once approved, set your publisher ID and ad slot IDs here
-const ADSENSE_PUB_ID = ''; // e.g. 'ca-pub-1234567890123456'
+const ADSENSE_PUB_ID = 'ca-pub-7224757913262984';
 const AD_SLOTS: Record<string, string> = {
   'ad-1': '', // e.g. '1234567890'
   'ad-2': '',
