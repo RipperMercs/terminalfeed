@@ -1063,7 +1063,12 @@ function App() {
               <img src={nasaApod.url} alt={nasaApod.title} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
             </a>
           ) : (
-            <iframe src={nasaApod.url} title={nasaApod.title} style={{ width: '100%', height: 200, border: 'none', borderRadius: 3 }} allow="autoplay; encrypted-media" />
+            <a href={nasaApod.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', height: 200, borderRadius: 3, background: 'var(--bg-panel)', position: 'relative', textDecoration: 'none' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: 32 }}>&#9654;</span>
+                <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>Open video</span>
+              </div>
+            </a>
           )}
           <div style={{ padding: '6px 0 0' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)' }}>{nasaApod.title}</div>
