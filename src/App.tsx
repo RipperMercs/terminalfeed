@@ -1058,18 +1058,9 @@ function App() {
       </PanelHead>
       {nasaApod ? (
         <div>
-          {nasaApod.media_type === 'image' ? (
-            <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer">
-              <img src={nasaApod.url} alt={nasaApod.title} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
-            </a>
-          ) : (
-            <a href={nasaApod.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', height: 200, borderRadius: 3, background: 'var(--bg-panel)', position: 'relative', textDecoration: 'none' }}>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 32 }}>&#9654;</span>
-                <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>Open video</span>
-              </div>
-            </a>
-          )}
+          <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer">
+            <img src={nasaApod.url} alt={nasaApod.title} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
+          </a>
           <div style={{ padding: '6px 0 0' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)' }}>{nasaApod.title}</div>
             <div style={{ fontSize: 9, color: 'var(--text-dim)', lineHeight: 1.5, marginTop: 4, maxHeight: 54, overflow: 'hidden' }}>{nasaApod.explanation.slice(0, 200)}{nasaApod.explanation.length > 200 ? '...' : ''}</div>
