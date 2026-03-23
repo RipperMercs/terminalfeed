@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Radio — TerminalFeed</title>
+  <meta name="description" content="Lo-fi, ambient, and chill streams for coding and focus. Free internet radio with a terminal aesthetic. Groove Salad, Drone Zone, DEF CON Radio, and more.">
+
+  <!-- OG Tags -->
+  <meta property="og:title" content="Terminal Radio — TerminalFeed">
+  <meta property="og:description" content="Lo-fi, ambient, and chill streams for coding and focus. Free internet radio with a terminal aesthetic.">
+  <meta property="og:url" content="https://terminalfeed.io/radio">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Terminal Radio — TerminalFeed">
+  <meta name="twitter:description" content="Lo-fi, ambient, and chill streams for coding and focus. Free internet radio with a terminal aesthetic.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+
+  <link rel="canonical" href="https://terminalfeed.io/radio">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Terminal Radio — Free Internet Radio for Coding & Focus",
+    "description": "Lo-fi, ambient, and chill streams for coding and focus. Groove Salad, Drone Zone, DEF CON Radio, and more from SomaFM.",
+    "url": "https://terminalfeed.io/radio",
+    "isPartOf": {
+      "@type": "WebApplication",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "dateModified": "2026-03-22T00:00:00Z"
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 760px;
+      width: 100%;
+    }
+
+    /* Back link */
+    .back-link {
+      display: inline-block;
+      color: #4E4D49;
+      text-decoration: none;
+      font-size: 12px;
+      margin-bottom: 24px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #5DCAA5; }
+
+    /* Header */
+    .header {
+      margin-bottom: 32px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .header-left h1 {
+      font-size: 16px;
+      color: #5DCAA5;
+      letter-spacing: 3px;
+      font-weight: 400;
+      margin-bottom: 6px;
+    }
+    .header-left .subtitle {
+      font-size: 11px;
+      color: #4E4D49;
+      letter-spacing: 1px;
+    }
+
+    /* On Air indicator */
+    .on-air {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #F87171;
+      letter-spacing: 2px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .on-air.active { opacity: 1; }
+    .on-air-dot {
+      width: 8px;
+      height: 8px;
+      background: #F87171;
+      border-radius: 50%;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(248,113,113,0.6); }
+      50% { opacity: 0.6; box-shadow: 0 0 8px 4px rgba(248,113,113,0.2); }
+    }
+
+    /* Now Playing */
+    .now-playing {
+      background: #0D0D0F;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .now-playing-label {
+      font-size: 10px;
+      color: #4E4D49;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .now-playing-station {
+      font-size: 18px;
+      color: #4ADE80;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .now-playing-genre {
+      font-size: 11px;
+      color: #7A7A72;
+      margin-bottom: 16px;
+    }
+
+    /* Visualizer */
+    .visualizer-container {
+      width: 100%;
+      height: 80px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #0A0A0C;
+    }
+    .visualizer-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* CSS fallback visualizer */
+    .css-visualizer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      padding: 0 4px;
+    }
+    .css-visualizer .bar {
+      flex: 1;
+      max-width: 12px;
+      background: #4ADE80;
+      border-radius: 1px 1px 0 0;
+      height: 3px;
+      transition: height 0.1s ease;
+    }
+    .css-visualizer.active .bar {
+      animation: bar-bounce var(--duration) ease-in-out infinite var(--delay);
+    }
+    @keyframes bar-bounce {
+      0%, 100% { height: var(--min-h); opacity: 0.5; }
+      50% { height: var(--max-h); opacity: 1; }
+    }
+    .css-visualizer.idle .bar {
+      height: 3px;
+      opacity: 0.3;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .play-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid #4ADE80;
+      background: transparent;
+      color: #4ADE80;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .play-btn:hover {
+      background: rgba(74,222,128,0.1);
+      box-shadow: 0 0 16px rgba(74,222,128,0.15);
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .volume-label {
+      font-size: 10px;
+      color: #4E4D49;
+      flex-shrink: 0;
+    }
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: #1A1A22;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #4ADE80;
+      cursor: pointer;
+      border: none;
+    }
+    .volume-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #4ADE80;
+      cursor: pointer;
+      border: none;
+    }
+    .volume-slider::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 2px;
+    }
+
+    .shortcut-hint {
+      font-size: 9px;
+      color: #3A3A44;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .shortcut-hint kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      background: #1A1A22;
+      border: 1px solid #2A2A32;
+      border-radius: 3px;
+      font-family: inherit;
+      font-size: 9px;
+      color: #4E4D49;
+    }
+
+    /* Error message */
+    .stream-error {
+      display: none;
+      font-size: 11px;
+      color: #F87171;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .stream-error.visible { display: block; }
+
+    /* Station grid */
+    .stations-header {
+      font-size: 10px;
+      color: #4E4D49;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .stations-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .station-card {
+      background: #0D0D0F;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid var(--accent);
+      position: relative;
+    }
+    .station-card:hover {
+      border-color: #2A2A32;
+      border-left-color: var(--accent);
+      background: #111114;
+    }
+    .station-card.active {
+      border-color: #4ADE80;
+      border-left-color: #4ADE80;
+      background: rgba(74,222,128,0.03);
+    }
+    .station-card .station-name {
+      font-size: 12px;
+      color: #D4D2CB;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .station-card.active .station-name { color: #4ADE80; }
+    .station-card .station-desc {
+      font-size: 10px;
+      color: #4E4D49;
+      line-height: 1.5;
+    }
+
+    /* Featured Artist */
+    .featured-artist {
+      background: #0D0D0F;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .featured-label {
+      font-size: 10px;
+      color: #A78BFA;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+    }
+    .featured-name {
+      font-size: 18px;
+      color: #D4D2CB;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .featured-sublabel {
+      font-size: 10px;
+      color: #4E4D49;
+      margin-bottom: 10px;
+    }
+    .featured-desc {
+      font-size: 11px;
+      color: #7A7A72;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .spotify-embed {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .spotify-embed iframe {
+      display: block;
+      border-radius: 12px;
+    }
+    .spotify-link {
+      display: inline-block;
+      font-size: 11px;
+      color: #4ADE80;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .spotify-link:hover { color: #5DCAA5; text-decoration: underline; }
+
+    /* SEO Content */
+    .seo-content {
+      border-top: 1px solid #1A1A22;
+      padding-top: 28px;
+      margin-bottom: 40px;
+    }
+    .seo-content h2 {
+      font-size: 14px;
+      color: #5DCAA5;
+      font-weight: 400;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .seo-content p {
+      font-size: 11px;
+      color: #4E4D49;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid #1A1A22;
+      padding-top: 20px;
+      text-align: center;
+      font-size: 10px;
+      color: #3A3A44;
+    }
+    .footer-links {
+      margin-bottom: 8px;
+    }
+    .footer-links a {
+      color: #4E4D49;
+      text-decoration: none;
+      margin: 0 8px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: #5DCAA5; }
+    .footer-credit {
+      margin-top: 6px;
+    }
+    .footer-credit a {
+      color: #4E4D49;
+      text-decoration: none;
+    }
+    .footer-credit a:hover { color: #5DCAA5; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      body { padding: 24px 14px; }
+      .stations-grid { grid-template-columns: 1fr; }
+      .header { flex-direction: column; gap: 10px; }
+      .now-playing-station { font-size: 15px; }
+      .controls { gap: 14px; }
+      .play-btn { width: 46px; height: 46px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← back to terminal</a>
+
+    <div class="header">
+      <div class="header-left">
+        <h1>>_ TERMINAL RADIO</h1>
+        <div class="subtitle">ambient · lo-fi · downtempo · focus</div>
+      </div>
+      <div class="on-air" id="onAir">
+        <div class="on-air-dot"></div>
+        ON AIR
+      </div>
+    </div>
+
+    <!-- Now Playing -->
+    <div class="now-playing">
+      <div class="now-playing-label">NOW PLAYING</div>
+      <div class="now-playing-station" id="nowPlayingStation">Groove Salad</div>
+      <div class="now-playing-genre" id="nowPlayingGenre">A nicely chilled plate of ambient/downtempo beats and grooves</div>
+
+      <div class="visualizer-container" id="visualizerContainer">
+        <canvas class="visualizer-canvas" id="visualizerCanvas"></canvas>
+        <div class="css-visualizer idle" id="cssVisualizer" style="display:none;"></div>
+      </div>
+
+      <div class="controls">
+        <button class="play-btn" id="playBtn" aria-label="Play">▶</button>
+        <div class="volume-control">
+          <span class="volume-label">VOL</span>
+          <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70">
+        </div>
+      </div>
+      <div class="shortcut-hint"><kbd>Space</kbd> to play / pause</div>
+      <div class="stream-error" id="streamError">Stream unavailable — try another station</div>
+    </div>
+
+    <!-- AdSense placeholder -->
+    <!-- AD SLOT: Terminal Radio top banner -->
+
+    <!-- Station Selector -->
+    <div class="stations-header">STATIONS</div>
+    <div class="stations-grid" id="stationsGrid"></div>
+
+    <!-- Featured Artist -->
+    <div class="featured-artist">
+      <div class="featured-label">FEATURED ARTIST</div>
+      <div class="featured-name">RYKARD</div>
+      <div class="featured-sublabel">Pizza Robot Studios</div>
+      <div class="featured-desc">Atmospheric, cinematic soundscapes blending ambient and electronic textures. Perfect for deep focus and late-night coding sessions.</div>
+      <div class="spotify-embed">
+        <iframe src="https://open.spotify.com/embed/artist/1LRJLfTaPGMbcaVKONBtMs?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;"></iframe>
+      </div>
+      <a href="https://open.spotify.com/artist/1LRJLfTaPGMbcaVKONBtMs" target="_blank" rel="noopener" class="spotify-link">→ Listen on Spotify</a>
+    </div>
+
+    <!-- AdSense placeholder -->
+    <!-- AD SLOT: Terminal Radio mid-page -->
+
+    <!-- SEO Content -->
+    <div class="seo-content">
+      <h2>Terminal Radio — Free Internet Radio for Coding &amp; Focus</h2>
+
+      <p>Terminal Radio is a curated internet radio experience built for developers, designers, and anyone who needs a focused sonic backdrop while they work. Styled with the same terminal aesthetic as the rest of TerminalFeed, it brings together some of the best ambient, lo-fi, and downtempo streams from across the internet — all in one dark, distraction-free interface.</p>
+
+      <p>The streams featured on Terminal Radio are provided by SomaFM, one of the internet's longest-running independent radio stations. Founded in 2000 by Rusty Hodge in San Francisco, SomaFM is entirely listener-supported and completely ad-free. Every stream is hand-curated by real DJs who care deeply about the music they play. SomaFM has been a staple of the internet radio landscape for over two decades, and we are proud to feature their streams here.</p>
+
+      <p>Research has consistently shown that ambient and lo-fi music can improve concentration, reduce stress, and help maintain a flow state during deep work. Unlike music with prominent vocals or unpredictable changes, ambient and downtempo genres provide a consistent sonic texture that supports focus without demanding attention. This makes them ideal companions for coding sessions, writing, studying, or any task that requires sustained concentration.</p>
+
+      <p>Our station selection covers a range of moods and styles. Groove Salad delivers smooth ambient and downtempo beats — it has been one of SomaFM's most popular channels since its launch. Drone Zone drifts into deeper, more atmospheric territory with textured ambient soundscapes. DEF CON Radio brings dark ambient, industrial, and synthwave with a hacker edge — named after the famous security conference. Space Station Soma offers spaced-out mid-tempo electronica, while Lush features sensuous, mellow vocals. Vaporwaves serves up the nostalgic, slowed-down aesthetic of the vaporwave movement. n5MD Radio showcases ambient and post-rock from the respected n5MD label, and cliqhop idm delivers intelligent dance music with intricate beats and clicks.</p>
+
+      <p>Terminal Radio also features a rotating spotlight on independent artists whose music fits the coding and focus aesthetic. Our featured artist program highlights musicians who create atmospheric, cinematic, and ambient works perfect for late-night sessions. These artists are often independent creators pushing boundaries in electronic and ambient music.</p>
+
+      <p>Everything here is free to use. There are no ads in the audio streams — that is the SomaFM promise. The interface is designed to stay out of your way: pick a station, hit play, and get back to work. Your last selected station and volume are remembered automatically so you can jump right back in. Terminal Radio is just one part of the TerminalFeed ecosystem of tools, feeds, and utilities built for people who live in the terminal.</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/live">Live</a>
+        <a href="/tools">Tools</a>
+        <a href="/agent">Agents</a>
+      </div>
+      <div>© 2026 TerminalFeed.io</div>
+      <div class="footer-credit">Streams provided by <a href="https://somafm.com" target="_blank" rel="noopener">SomaFM</a> — listener-supported, ad-free radio</div>
+    </div>
+  </div>
+
+  <script>
+    // Station data
+    const stations = [
+      { name: 'Groove Salad', desc: 'A nicely chilled plate of ambient/downtempo beats and grooves', url: 'https://ice1.somafm.com/groovesalad-256-mp3', accent: '#4ADE80' },
+      { name: 'Drone Zone', desc: 'Atmospheric textures with an electronic edge', url: 'https://ice1.somafm.com/dronezone-256-mp3', accent: '#60A5FA' },
+      { name: 'DEF CON Radio', desc: 'Music for hackers. Dark ambient, industrial, and synthwave', url: 'https://ice1.somafm.com/defcon-256-mp3', accent: '#F87171' },
+      { name: 'Space Station Soma', desc: 'Spaced-out ambient and mid-tempo electronica', url: 'https://ice1.somafm.com/spacestation-128-mp3', accent: '#A78BFA' },
+      { name: 'Lush', desc: 'Sensuous and mellow vocals, mostly female', url: 'https://ice1.somafm.com/lush-128-mp3', accent: '#F9CB42' },
+      { name: 'Vaporwaves', desc: 'All vaporwave, all the time', url: 'https://ice1.somafm.com/vaporwaves-128-mp3', accent: '#4FD1C5' },
+      { name: 'n5MD Radio', desc: 'Ambient, experimental, and post-rock from the n5MD label', url: 'https://ice1.somafm.com/n5md-128-mp3', accent: '#EF9F27' },
+      { name: 'cliqhop idm', desc: 'Intelligent dance music: beats, clicks, and cuts', url: 'https://ice1.somafm.com/cliqhop-256-mp3', accent: '#5DCAA5' }
+    ];
+
+    // State
+    let currentStation = 0;
+    let isPlaying = false;
+    let useCSSVisualizer = false;
+    let analyser = null;
+    let audioCtx = null;
+    let source = null;
+    let animFrame = null;
+
+    // Elements
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.preload = 'none';
+    const playBtn = document.getElementById('playBtn');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const onAir = document.getElementById('onAir');
+    const nowPlayingStation = document.getElementById('nowPlayingStation');
+    const nowPlayingGenre = document.getElementById('nowPlayingGenre');
+    const streamError = document.getElementById('streamError');
+    const canvas = document.getElementById('visualizerCanvas');
+    const canvasCtx = canvas.getContext('2d');
+    const visualizerContainer = document.getElementById('visualizerContainer');
+    const cssVisualizerEl = document.getElementById('cssVisualizer');
+
+    // Restore saved state
+    const savedStation = localStorage.getItem('tf_radio_station');
+    const savedVolume = localStorage.getItem('tf_radio_volume');
+    if (savedStation !== null) {
+      const idx = parseInt(savedStation, 10);
+      if (idx >= 0 && idx < stations.length) currentStation = idx;
+    }
+    if (savedVolume !== null) {
+      volumeSlider.value = savedVolume;
+    }
+    audio.volume = volumeSlider.value / 100;
+
+    // Build station cards
+    const grid = document.getElementById('stationsGrid');
+    stations.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'station-card' + (i === currentStation ? ' active' : '');
+      card.style.setProperty('--accent', s.accent);
+      card.innerHTML = '<div class="station-name">' + s.name + '</div><div class="station-desc">' + s.desc + '</div>';
+      card.addEventListener('click', () => selectStation(i));
+      grid.appendChild(card);
+    });
+
+    // Build CSS fallback visualizer bars
+    const NUM_BARS = 40;
+    for (let i = 0; i < NUM_BARS; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      const dur = (0.6 + Math.random() * 1.2).toFixed(2);
+      const delay = (Math.random() * 1.5).toFixed(2);
+      const minH = (2 + Math.random() * 4).toFixed(0);
+      const maxH = (15 + Math.random() * 55).toFixed(0);
+      bar.style.setProperty('--duration', dur + 's');
+      bar.style.setProperty('--delay', delay + 's');
+      bar.style.setProperty('--min-h', minH + 'px');
+      bar.style.setProperty('--max-h', maxH + 'px');
+      cssVisualizerEl.appendChild(bar);
+    }
+
+    // Update display
+    function updateDisplay() {
+      const s = stations[currentStation];
+      nowPlayingStation.textContent = s.name;
+      nowPlayingGenre.textContent = s.desc;
+      document.querySelectorAll('.station-card').forEach((card, i) => {
+        card.classList.toggle('active', i === currentStation);
+      });
+    }
+    updateDisplay();
+
+    // Select station
+    function selectStation(idx) {
+      const wasPlaying = isPlaying;
+      if (isPlaying) stopAudio();
+      currentStation = idx;
+      localStorage.setItem('tf_radio_station', idx);
+      updateDisplay();
+      streamError.classList.remove('visible');
+      if (wasPlaying) playAudio();
+    }
+
+    // Canvas visualizer setup
+    function setupCanvasSize() {
+      const rect = visualizerContainer.getBoundingClientRect();
+      canvas.width = rect.width * (window.devicePixelRatio || 1);
+      canvas.height = rect.height * (window.devicePixelRatio || 1);
+    }
+    setupCanvasSize();
+    window.addEventListener('resize', setupCanvasSize);
+
+    // Draw idle bars on canvas
+    function drawIdle() {
+      setupCanvasSize();
+      const w = canvas.width;
+      const h = canvas.height;
+      canvasCtx.clearRect(0, 0, w, h);
+      const barCount = 40;
+      const gap = 2;
+      const barW = (w - gap * (barCount - 1)) / barCount;
+      canvasCtx.fillStyle = 'rgba(74,222,128,0.2)';
+      for (let i = 0; i < barCount; i++) {
+        const x = i * (barW + gap);
+        canvasCtx.fillRect(x, h - 3, barW, 3);
+      }
+    }
+    drawIdle();
+
+    // Try Web Audio API visualizer
+    function setupWebAudioVisualizer() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!source) {
+          source = audioCtx.createMediaElementSource(audio);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 128;
+          source.connect(analyser);
+          analyser.connect(audioCtx.destination);
+        }
+        useCSSVisualizer = false;
+        canvas.style.display = 'block';
+        cssVisualizerEl.style.display = 'none';
+        drawVisualizer();
+      } catch (e) {
+        // CORS or other error — fall back to CSS visualizer
+        useCSSVisualizer = true;
+        canvas.style.display = 'none';
+        cssVisualizerEl.style.display = 'flex';
+        if (source) {
+          try { source.disconnect(); } catch(_) {}
+          source = null;
+        }
+        // Make sure audio still outputs
+        // (if createMediaElementSource failed, audio routes normally)
+      }
+    }
+
+    function drawVisualizer() {
+      if (useCSSVisualizer || !analyser) return;
+      const bufferLength = analyser.frequencyBinCount;
+      const data = new Uint8Array(bufferLength);
+
+      function draw() {
+        animFrame = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(data);
+        const w = canvas.width;
+        const h = canvas.height;
+        canvasCtx.clearRect(0, 0, w, h);
+        const barCount = Math.min(bufferLength, 48);
+        const gap = 2;
+        const barW = (w - gap * (barCount - 1)) / barCount;
+        for (let i = 0; i < barCount; i++) {
+          const val = data[i] / 255;
+          const barH = Math.max(3, val * h * 0.9);
+          const x = i * (barW + gap);
+          const alpha = 0.35 + val * 0.65;
+          canvasCtx.fillStyle = 'rgba(74,222,128,' + alpha + ')';
+          canvasCtx.fillRect(x, h - barH, barW, barH);
+        }
+      }
+      draw();
+    }
+
+    // Play / stop
+    function playAudio() {
+      streamError.classList.remove('visible');
+      const s = stations[currentStation];
+      audio.src = s.url;
+      audio.load();
+      audio.play().then(() => {
+        isPlaying = true;
+        playBtn.textContent = '⏸';
+        onAir.classList.add('active');
+        setupWebAudioVisualizer();
+        if (useCSSVisualizer) {
+          cssVisualizerEl.classList.remove('idle');
+          cssVisualizerEl.classList.add('active');
+        }
+      }).catch(err => {
+        streamError.classList.add('visible');
+      });
+    }
+
+    function stopAudio() {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      onAir.classList.remove('active');
+      if (animFrame) cancelAnimationFrame(animFrame);
+      if (!useCSSVisualizer) {
+        drawIdle();
+      } else {
+        cssVisualizerEl.classList.remove('active');
+        cssVisualizerEl.classList.add('idle');
+      }
+    }
+
+    // Event listeners
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) stopAudio(); else playAudio();
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      audio.volume = volumeSlider.value / 100;
+      localStorage.setItem('tf_radio_volume', volumeSlider.value);
+    });
+
+    audio.addEventListener('error', () => {
+      if (isPlaying) {
+        streamError.classList.add('visible');
+        stopAudio();
+      }
+    });
+
+    // Keyboard shortcut: Space to play/pause
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        if (isPlaying) stopAudio(); else playAudio();
+      }
+    });
+  </script>
+</body>
+</html>
