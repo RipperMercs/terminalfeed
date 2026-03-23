@@ -1153,9 +1153,9 @@ function App() {
           <span className="logoDot">.io</span>
           <span className="logoCursor" />
           <span className="topTerminals">{terminalsOnline} online</span>
-          <a href="/live" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
+          <a href="/live" target="_blank" rel="noopener noreferrer" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
           <span className="topNavDivider">|</span>
-          <a href="/tools" className="liveBriefingLink toolsLink">TOOLS</a>
+          <a href="/tools" target="_blank" rel="noopener noreferrer" className="liveBriefingLink toolsLink">TOOLS</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (
