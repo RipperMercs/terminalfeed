@@ -54,54 +54,81 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/agent</loc><lastmod>2026-03-22</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/agent</loc><lastmod>2026-03-22</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/agent</loc><lastmod>2026-03-22</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/radio</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/radio</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/radio</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/radio</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools/json</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools/json</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools/json</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools/json</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools/base64</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools/base64</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools/base64</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools/base64</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools/uuid</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools/uuid</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools/uuid</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools/uuid</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools/timestamp</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools/timestamp</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools/timestamp</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools/timestamp</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools/jwt</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools/jwt</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools/jwt</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools/jwt</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/tools/regex</loc>
     <lastmod>2026-03-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url><loc>https://terminalfeed.io/es/tools/regex</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/pt/tools/regex</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/de/tools/regex</loc><lastmod>2026-03-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://terminalfeed.io/?layout=trader</loc>
     <lastmod>2026-03-15</lastmod>

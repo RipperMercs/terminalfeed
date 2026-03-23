@@ -19,6 +19,11 @@
   <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
 
   <link rel="canonical" href="https://terminalfeed.io/radio">
+  <link rel="alternate" hreflang="en" href="https://terminalfeed.io/radio">
+  <link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/radio">
+  <link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/radio">
+  <link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/radio">
+  <link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/radio">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
   <!-- JSON-LD -->
@@ -435,24 +440,24 @@
     }
   </style>
 </head>
-<body>
+<body data-page="radio">
   <div class="container">
-    <a href="/" class="back-link">← back to terminal</a>
+    <a href="/" class="back-link" data-i18n="back_terminal">← back to terminal</a>
 
     <div class="header">
       <div class="header-left">
-        <h1>>_ TERMINAL RADIO</h1>
-        <div class="subtitle">ambient · lo-fi · downtempo · focus</div>
+        <h1 data-i18n="radio_heading">>_ TERMINAL RADIO</h1>
+        <div class="subtitle" data-i18n="radio_subtitle">ambient · lo-fi · downtempo · focus</div>
       </div>
       <div class="on-air" id="onAir">
         <div class="on-air-dot"></div>
-        ON AIR
+        <span data-i18n="on_air">ON AIR</span>
       </div>
     </div>
 
     <!-- Now Playing -->
     <div class="now-playing">
-      <div class="now-playing-label">NOW PLAYING</div>
+      <div class="now-playing-label" data-i18n="now_playing">NOW PLAYING</div>
       <div class="now-playing-station" id="nowPlayingStation">Groove Salad</div>
       <div class="now-playing-genre" id="nowPlayingGenre">A nicely chilled plate of ambient/downtempo beats and grooves</div>
 
@@ -476,14 +481,14 @@
     <!-- AD SLOT: Terminal Radio top banner -->
 
     <!-- Station Selector -->
-    <div class="stations-header">STATIONS</div>
+    <div class="stations-header" data-i18n="stations_header">STATIONS</div>
     <div class="stations-grid" id="stationsGrid"></div>
 
     <!-- Featured Artist -->
     <div class="featured-artist">
-      <div class="featured-label">FEATURED ARTIST</div>
+      <div class="featured-label" data-i18n="featured_artist">FEATURED ARTIST</div>
       <div class="featured-name">RYKARD</div>
-      <div class="featured-desc">Atmospheric, cinematic soundscapes blending ambient and electronic textures. Perfect for deep focus and late-night coding sessions.</div>
+      <div class="featured-desc" data-i18n="featured_artist_desc">Atmospheric, cinematic soundscapes blending ambient and electronic textures. Perfect for deep focus and late-night coding sessions.</div>
       <div class="spotify-embed">
         <iframe src="https://open.spotify.com/embed/artist/1Lv74nSxjs4UMpxaceSclV?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;"></iframe>
       </div>
@@ -494,7 +499,7 @@
     <!-- AD SLOT: Terminal Radio mid-page -->
 
     <!-- SEO Content -->
-    <div class="seo-content">
+    <div class="seo-content" data-i18n-html="radio_seo">
       <h2>Terminal Radio — Free Internet Radio for Coding &amp; Focus</h2>
 
       <p>Terminal Radio is a curated internet radio experience built for developers, designers, and anyone who needs a focused sonic backdrop while they work. Styled with the same terminal aesthetic as the rest of TerminalFeed, it brings together some of the best ambient, lo-fi, and downtempo streams from across the internet — all in one dark, distraction-free interface.</p>
@@ -513,10 +518,10 @@
     <!-- Footer -->
     <div class="footer">
       <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/live">Live</a>
-        <a href="/tools">Tools</a>
-        <a href="/agent">Agents</a>
+        <a href="/" data-i18n="footer_home">Home</a>
+        <a href="/live" data-i18n="footer_live">Live</a>
+        <a href="/tools" data-i18n="footer_tools">Tools</a>
+        <a href="/agent" data-i18n="footer_agents">Agents</a>
       </div>
       <div>© 2026 TerminalFeed.io</div>
       <div class="footer-credit">Streams provided by <a href="https://somafm.com" target="_blank" rel="noopener">SomaFM</a> — listener-supported, ad-free radio</div>
@@ -763,5 +768,6 @@
       }
     });
   </script>
+  <script src="/i18n.js"></script>
 </body>
 </html>

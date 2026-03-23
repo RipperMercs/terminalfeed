@@ -7,6 +7,11 @@
 <meta name="description" content="Generate random UUIDs (v4) instantly in your browser. Bulk generation, click-to-copy, uppercase and hyphen options. No data leaves your machine.">
 <meta name="keywords" content="uuid, generator, v4, random, guid, tool, online, bulk">
 <link rel="canonical" href="https://terminalfeed.io/tools/uuid">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/uuid">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/uuid">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/uuid">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/uuid">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/uuid">
 <meta property="og:title" content="UUID Generator — TerminalFeed Tools">
 <meta property="og:description" content="Generate random UUIDs (v4) instantly in your browser. Bulk generation, click-to-copy, uppercase and hyphen options.">
 <meta property="og:url" content="https://terminalfeed.io/tools/uuid">
@@ -244,12 +249,12 @@
   }
 </style>
 </head>
-<body>
-<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<body data-page="tools-uuid">
+<div class="back-link"><a href="/tools" data-i18n="back_tools">&larr; back to tools</a></div>
 <div class="container">
   <div class="header">
-    <h1><span>&gt;_</span> UUID GENERATOR</h1>
-    <span class="badge">&#9889; runs locally</span>
+    <h1><span>&gt;_</span> <span data-i18n="uuid_title">UUID GENERATOR</span></h1>
+    <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
   </div>
 
   <div class="single-uuid" id="singleDisplay" title="Click to copy">
@@ -259,27 +264,27 @@
   </div>
 
   <div class="actions">
-    <button class="btn-primary" id="btnGenerate">Generate</button>
-    <button id="btnCopy">Copy</button>
+    <button class="btn-primary" id="btnGenerate" data-i18n="generate">Generate</button>
+    <button id="btnCopy" data-i18n="copy">Copy</button>
   </div>
 
   <div class="options">
-    <label><input type="checkbox" id="optUppercase"> Uppercase</label>
-    <label><input type="checkbox" id="optNoHyphens"> Without hyphens</label>
+    <label><input type="checkbox" id="optUppercase"> <span data-i18n="uppercase">Uppercase</span></label>
+    <label><input type="checkbox" id="optNoHyphens"> <span data-i18n="no_hyphens">Without hyphens</span></label>
   </div>
 
   <div class="session-count">Generated this session: <strong id="sessionCount">0</strong></div>
 
   <div class="bulk-section">
     <div class="bulk-header">
-      <span>Generate</span>
+      <span data-i18n="generate">Generate</span>
       <input type="number" id="bulkCount" value="5" min="1" max="500">
       <span>UUIDs</span>
-      <button id="btnBulkGenerate">Generate Bulk</button>
+      <button id="btnBulkGenerate" data-i18n="generate_bulk">Generate Bulk</button>
     </div>
     <div class="bulk-list" id="bulkList"></div>
     <div class="bulk-actions">
-      <button id="btnCopyAll" style="display:none;">Copy All</button>
+      <button id="btnCopyAll" style="display:none;" data-i18n="copy_all">Copy All</button>
     </div>
   </div>
 </div>
@@ -288,7 +293,7 @@
   <!-- AdSense placeholder -->
   <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
-  <div class="seo-content">
+  <div class="seo-content" data-i18n-html="uuid_seo">
     <h2>UUID Generator &mdash; Generate UUIDs Online</h2>
 
     <h3>What Is a UUID?</h3>
@@ -312,7 +317,7 @@
 </div>
 
 <footer>
-  <a href="/tools">Tools</a>
+  <a href="/tools" data-i18n="tools">Tools</a>
   <a href="/">TerminalFeed.io</a>
 </footer>
 
@@ -428,5 +433,6 @@
   showMain();
 })();
 </script>
+<script src="/i18n.js"></script>
 </body>
 </html>
