@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Agent Tracker — TerminalFeed</title>
+  <meta name="description" content="Track every major AI agent in real-time. Live status, capabilities, pricing, and more for Claude, GPT, Gemini, Copilot, Devin, and 30+ AI agents.">
+
+  <!-- OG Tags -->
+  <meta property="og:title" content="AI Agent Tracker — TerminalFeed">
+  <meta property="og:description" content="Track every major AI agent in real-time. Live status, capabilities, pricing, and more for Claude, GPT, Gemini, Copilot, Devin, and 30+ AI agents.">
+  <meta property="og:url" content="https://terminalfeed.io/agent">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Agent Tracker — TerminalFeed">
+  <meta name="twitter:description" content="Track every major AI agent in real-time. Live status, capabilities, pricing, and more for 30+ AI agents.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+
+  <link rel="canonical" href="https://terminalfeed.io/agent">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AI Agent Tracker — TerminalFeed",
+    "description": "Track every major AI agent in real-time. Live status, capabilities, pricing, and more for Claude, GPT, Gemini, Copilot, Devin, and 30+ AI agents.",
+    "url": "https://terminalfeed.io/agent",
+    "isPartOf": {
+      "@type": "WebApplication",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "AI Agent Directory",
+      "numberOfItems": 34,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Claude", "description": "Advanced reasoning, analysis, and coding with 200K context" },
+        { "@type": "ListItem", "position": 2, "name": "ChatGPT", "description": "Conversational AI with GPT-4o, plugins, and image generation" },
+        { "@type": "ListItem", "position": 3, "name": "Gemini", "description": "Multimodal AI with Search integration and 1M context" },
+        { "@type": "ListItem", "position": 4, "name": "GitHub Copilot", "description": "AI pair programmer integrated into VS Code and IDEs" },
+        { "@type": "ListItem", "position": 5, "name": "Perplexity", "description": "AI-powered search with cited sources" },
+        { "@type": "ListItem", "position": 6, "name": "Midjourney", "description": "State-of-the-art AI image generation" },
+        { "@type": "ListItem", "position": 7, "name": "Devin", "description": "Autonomous software engineer agent" }
+      ]
+    },
+    "dateModified": "2026-03-22T00:00:00Z"
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .back-link {
+      padding: 16px 24px;
+      font-size: 13px;
+      color: #4E4D49;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #5DCAA5; text-decoration: none; }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+      width: 100%;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 40px 0 32px;
+    }
+    .header-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .header-title .prompt { color: #4E4D49; }
+    .header-sub {
+      font-size: 14px;
+      color: #4E4D49;
+      margin-bottom: 24px;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #D4D2CB;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #4E4D49;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+      background: #0D0D0F;
+      border: 1px solid #1A1A22;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .filter-row:last-child { margin-bottom: 0; }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid #1A1A22;
+      color: #4E4D49;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: #5DCAA5;
+      color: #5DCAA5;
+    }
+    .filter-btn.active {
+      background: #5DCAA5;
+      color: #0A0A0C;
+      border-color: #5DCAA5;
+      font-weight: 600;
+    }
+
+    .search-input {
+      background: #0A0A0C;
+      border: 1px solid #1A1A22;
+      color: #D4D2CB;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 4px;
+      flex: 1;
+      min-width: 200px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: #5DCAA5; }
+    .search-input::placeholder { color: #4E4D49; }
+
+    .sort-label {
+      font-size: 11px;
+      color: #4E4D49;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-left: auto;
+    }
+    .sort-select {
+      background: #0A0A0C;
+      border: 1px solid #1A1A22;
+      color: #D4D2CB;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      outline: none;
+    }
+    .sort-select:focus { border-color: #5DCAA5; }
+
+    /* Agent grid */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .agent-card {
+      background: #0D0D0F;
+      border: 1px solid #1A1A22;
+      border-radius: 8px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .agent-card:hover {
+      border-color: #5DCAA5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(93, 202, 165, 0.08);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.operational {
+      background: #4ADE80;
+      box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+      animation: pulse-green 2s infinite;
+    }
+    .status-dot.degraded {
+      background: #EF9F27;
+      box-shadow: 0 0 6px rgba(239, 159, 39, 0.5);
+    }
+    .status-dot.down {
+      background: #F87171;
+      box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
+    }
+    .status-dot.unknown {
+      background: #4E4D49;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .agent-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #D4D2CB;
+      flex: 1;
+    }
+
+    .category-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .company-name {
+      font-size: 12px;
+      color: #4E4D49;
+    }
+
+    .agent-desc {
+      font-size: 12px;
+      color: #8A897F;
+      line-height: 1.5;
+    }
+
+    .pricing-tag {
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+    .pricing-free { color: #4ADE80; border-color: #4ADE8040; }
+    .pricing-freemium { color: #60A5FA; border-color: #60A5FA40; }
+    .pricing-paid { color: #EF9F27; border-color: #EF9F2740; }
+    .pricing-enterprise { color: #A78BFA; border-color: #A78BFA40; }
+
+    .capabilities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .cap-tag {
+      font-size: 10px;
+      color: #4E4D49;
+      background: #1A1A22;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid #1A1A22;
+    }
+    .last-checked {
+      font-size: 10px;
+      color: #4E4D49;
+    }
+    .visit-link {
+      font-size: 11px;
+      color: #5DCAA5;
+    }
+
+    /* Ad placeholder */
+    .ad-slot {
+      grid-column: 1 / -1;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Footer */
+    .page-footer {
+      margin-top: auto;
+      padding: 32px 24px;
+      text-align: center;
+      border-top: 1px solid #1A1A22;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 12px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: #4E4D49;
+    }
+    .footer-links a:hover { color: #5DCAA5; }
+    .footer-copy {
+      font-size: 11px;
+      color: #4E4D49;
+    }
+
+    .last-updated {
+      text-align: center;
+      font-size: 11px;
+      color: #4E4D49;
+      padding: 16px 0;
+    }
+
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #4E4D49;
+      font-size: 14px;
+    }
+
+    /* Status tooltip */
+    .status-tooltip {
+      position: relative;
+    }
+    .status-tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1A1A22;
+      color: #D4D2CB;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .status-tooltip:hover::after { opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .agent-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .agent-grid { grid-template-columns: 1fr; }
+      .header-title { font-size: 20px; }
+      .stats-bar { gap: 20px; }
+      .filter-row { flex-direction: column; align-items: stretch; }
+      .sort-label { margin-left: 0; }
+      .container { padding: 0 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/" class="back-link">&larr; back to terminal</a>
+
+  <div class="container">
+    <header class="header">
+      <h1 class="header-title"><span class="prompt">&gt;_ </span>AI AGENT TRACKER</h1>
+      <p class="header-sub">Real-time directory of AI agents, models &amp; platforms</p>
+      <div class="stats-bar">
+        <div class="stat">
+          <div class="stat-value" id="stat-total">--</div>
+          <div class="stat-label">Agents Tracked</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-operational">--</div>
+          <div class="stat-label">Operational Now</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-categories">--</div>
+          <div class="stat-label">Categories</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="filter-bar">
+      <div class="filter-row">
+        <button class="filter-btn active" data-category="All">All</button>
+        <button class="filter-btn" data-category="Coding">Coding</button>
+        <button class="filter-btn" data-category="General">General</button>
+        <button class="filter-btn" data-category="Research">Research</button>
+        <button class="filter-btn" data-category="Creative">Creative</button>
+        <button class="filter-btn" data-category="Autonomous">Autonomous</button>
+        <button class="filter-btn" data-category="Search">Search</button>
+        <button class="filter-btn" data-category="Data">Data</button>
+      </div>
+      <div class="filter-row">
+        <input type="text" class="search-input" id="search" placeholder="Search agents by name...">
+        <span class="sort-label">Sort by:</span>
+        <select class="sort-select" id="sort">
+          <option value="name">Name</option>
+          <option value="company">Company</option>
+          <option value="status">Status</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="agent-grid" id="agent-grid"></div>
+
+    <!-- AdSense placeholder: ad slot between agent card rows -->
+    <!-- <div class="ad-slot"><ins class="adsbygoogle" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="XXXXXXX"></ins></div> -->
+
+    <div class="last-updated" id="last-updated">Last status check: --</div>
+  </div>
+
+  <footer class="page-footer">
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/live">Live</a>
+      <a href="/developers">Tools</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 TerminalFeed.io</div>
+  </footer>
+
+  <script>
+    // ─── Agent Database ─────────────────────────────────────────
+    const agents = [
+      // General Assistants
+      {
+        name: "Claude",
+        company: "Anthropic",
+        category: "General",
+        desc: "Advanced reasoning, analysis, and coding with 200K context",
+        pricing: "Freemium",
+        capabilities: ["Reasoning", "Coding", "Analysis", "200K Context"],
+        url: "https://claude.ai",
+        statusApi: "anthropic",
+        status: "unknown"
+      },
+      {
+        name: "ChatGPT",
+        company: "OpenAI",
+        category: "General",
+        desc: "Conversational AI with GPT-4o, plugins, and image generation",
+        pricing: "Freemium",
+        capabilities: ["GPT-4o", "Plugins", "DALL-E", "Vision"],
+        url: "https://chat.openai.com",
+        statusApi: "openai",
+        status: "unknown"
+      },
+      {
+        name: "Gemini",
+        company: "Google",
+        category: "General",
+        desc: "Multimodal AI with Search integration and 1M context",
+        pricing: "Freemium",
+        capabilities: ["Multimodal", "1M Context", "Search", "Code"],
+        url: "https://gemini.google.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Grok",
+        company: "xAI",
+        category: "General",
+        desc: "Real-time knowledge with X/Twitter integration",
+        pricing: "Freemium",
+        capabilities: ["Real-time", "X Integration", "Reasoning"],
+        url: "https://grok.x.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Meta AI",
+        company: "Meta",
+        category: "General",
+        desc: "Open-source Llama-powered assistant",
+        pricing: "Free",
+        capabilities: ["Open Source", "Llama", "Multimodal"],
+        url: "https://www.meta.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Mistral Le Chat",
+        company: "Mistral",
+        category: "General",
+        desc: "European AI with strong multilingual capabilities",
+        pricing: "Freemium",
+        capabilities: ["Multilingual", "Open Weights", "Fast"],
+        url: "https://chat.mistral.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Command R+",
+        company: "Cohere",
+        category: "General",
+        desc: "Enterprise RAG and business AI",
+        pricing: "Paid",
+        capabilities: ["RAG", "Enterprise", "Multilingual"],
+        url: "https://cohere.com",
+        statusApi: null,
+        status: "unknown"
+      },
+
+      // Coding Agents
+      {
+        name: "GitHub Copilot",
+        company: "Microsoft",
+        category: "Coding",
+        desc: "AI pair programmer integrated into VS Code and IDEs",
+        pricing: "Paid",
+        capabilities: ["Code Completion", "VS Code", "Chat", "CLI"],
+        url: "https://github.com/features/copilot",
+        statusApi: "github",
+        status: "unknown"
+      },
+      {
+        name: "Cursor",
+        company: "Cursor Inc",
+        category: "Coding",
+        desc: "AI-first code editor with codebase understanding",
+        pricing: "Freemium",
+        capabilities: ["IDE", "Codebase Context", "Multi-file Edits"],
+        url: "https://cursor.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Claude Code",
+        company: "Anthropic",
+        category: "Coding",
+        desc: "Agentic CLI for software engineering tasks",
+        pricing: "Paid",
+        capabilities: ["CLI", "Agentic", "Multi-file", "Git"],
+        url: "https://docs.anthropic.com/en/docs/claude-code",
+        statusApi: "anthropic",
+        status: "unknown"
+      },
+      {
+        name: "Devin",
+        company: "Cognition",
+        category: "Coding",
+        desc: "Autonomous software engineer agent",
+        pricing: "Paid",
+        capabilities: ["Autonomous", "Full Stack", "Planning", "Browser"],
+        url: "https://devin.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Windsurf",
+        company: "Codeium",
+        category: "Coding",
+        desc: "AI-powered IDE with Cascade agent",
+        pricing: "Freemium",
+        capabilities: ["IDE", "Cascade Agent", "Autocomplete"],
+        url: "https://codeium.com/windsurf",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Replit Agent",
+        company: "Replit",
+        category: "Coding",
+        desc: "Build and deploy apps from natural language",
+        pricing: "Freemium",
+        capabilities: ["Deploy", "Full Stack", "Natural Language"],
+        url: "https://replit.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Codex",
+        company: "OpenAI",
+        category: "Coding",
+        desc: "Cloud-based coding agent by OpenAI",
+        pricing: "Paid",
+        capabilities: ["Cloud Agent", "Sandboxed", "Parallel Tasks"],
+        url: "https://openai.com/index/introducing-codex/",
+        statusApi: "openai",
+        status: "unknown"
+      },
+      {
+        name: "Augment Code",
+        company: "Augment",
+        category: "Coding",
+        desc: "AI coding assistant for large codebases",
+        pricing: "Paid",
+        capabilities: ["Large Codebases", "Context Engine", "IDE"],
+        url: "https://www.augmentcode.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Tabnine",
+        company: "Tabnine",
+        category: "Coding",
+        desc: "AI code completion with privacy focus",
+        pricing: "Freemium",
+        capabilities: ["Privacy", "On-Prem", "Autocomplete"],
+        url: "https://www.tabnine.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Amazon Q Developer",
+        company: "AWS",
+        category: "Coding",
+        desc: "AWS-integrated coding and DevOps agent",
+        pricing: "Freemium",
+        capabilities: ["AWS", "DevOps", "Code Transform", "Security"],
+        url: "https://aws.amazon.com/q/developer/",
+        statusApi: null,
+        status: "unknown"
+      },
+
+      // Search & Research
+      {
+        name: "Perplexity",
+        company: "Perplexity AI",
+        category: "Search",
+        desc: "AI-powered search with cited sources",
+        pricing: "Freemium",
+        capabilities: ["Citations", "Real-time", "Pro Search"],
+        url: "https://www.perplexity.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "You.com",
+        company: "You.com",
+        category: "Search",
+        desc: "AI search engine with developer mode",
+        pricing: "Freemium",
+        capabilities: ["Search", "Developer Mode", "Agents"],
+        url: "https://you.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Elicit",
+        company: "Elicit",
+        category: "Research",
+        desc: "AI research assistant for academic papers",
+        pricing: "Freemium",
+        capabilities: ["Papers", "Extraction", "Systematic Review"],
+        url: "https://elicit.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Consensus",
+        company: "Consensus",
+        category: "Research",
+        desc: "Evidence-based answers from scientific papers",
+        pricing: "Freemium",
+        capabilities: ["Science", "Citations", "Evidence"],
+        url: "https://consensus.app",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "NotebookLM",
+        company: "Google",
+        category: "Research",
+        desc: "AI notebook that understands your documents",
+        pricing: "Free",
+        capabilities: ["Documents", "Audio Overview", "Sources"],
+        url: "https://notebooklm.google.com",
+        statusApi: null,
+        status: "unknown"
+      },
+
+      // Creative
+      {
+        name: "Midjourney",
+        company: "Midjourney",
+        category: "Creative",
+        desc: "State-of-the-art AI image generation",
+        pricing: "Paid",
+        capabilities: ["Images", "Upscaling", "Styles", "V6"],
+        url: "https://www.midjourney.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "DALL-E",
+        company: "OpenAI",
+        category: "Creative",
+        desc: "Text-to-image generation via ChatGPT",
+        pricing: "Paid",
+        capabilities: ["Images", "Editing", "Variations"],
+        url: "https://openai.com/dall-e-3",
+        statusApi: "openai",
+        status: "unknown"
+      },
+      {
+        name: "Runway",
+        company: "Runway",
+        category: "Creative",
+        desc: "AI video generation and editing",
+        pricing: "Paid",
+        capabilities: ["Video Gen", "Gen-3", "Editing", "VFX"],
+        url: "https://runwayml.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Suno",
+        company: "Suno",
+        category: "Creative",
+        desc: "AI music generation from text prompts",
+        pricing: "Freemium",
+        capabilities: ["Music", "Lyrics", "Vocals", "Remix"],
+        url: "https://suno.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "ElevenLabs",
+        company: "ElevenLabs",
+        category: "Creative",
+        desc: "AI voice synthesis and cloning",
+        pricing: "Freemium",
+        capabilities: ["Voice Clone", "TTS", "Dubbing", "SFX"],
+        url: "https://elevenlabs.io",
+        statusApi: null,
+        status: "unknown"
+      },
+
+      // Autonomous / Agentic
+      {
+        name: "AutoGPT",
+        company: "Significant Gravitas",
+        category: "Autonomous",
+        desc: "Open-source autonomous AI agent framework",
+        pricing: "Free",
+        capabilities: ["Open Source", "Autonomous", "Plugins"],
+        url: "https://agpt.co",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "CrewAI",
+        company: "CrewAI",
+        category: "Autonomous",
+        desc: "Multi-agent orchestration framework",
+        pricing: "Freemium",
+        capabilities: ["Multi-Agent", "Orchestration", "Python"],
+        url: "https://www.crewai.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "LangChain",
+        company: "LangChain",
+        category: "Autonomous",
+        desc: "Framework for building LLM-powered applications",
+        pricing: "Free",
+        capabilities: ["Framework", "Chains", "RAG", "Agents"],
+        url: "https://www.langchain.com",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Zapier AI",
+        company: "Zapier",
+        category: "Autonomous",
+        desc: "AI-powered workflow automation",
+        pricing: "Freemium",
+        capabilities: ["Automation", "Integrations", "No-Code"],
+        url: "https://zapier.com/ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Adept ACT-1",
+        company: "Adept AI",
+        category: "Autonomous",
+        desc: "AI that uses software tools like a human",
+        pricing: "Enterprise",
+        capabilities: ["UI Interaction", "Tool Use", "Enterprise"],
+        url: "https://www.adept.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+
+      // Data & Analytics
+      {
+        name: "Julius AI",
+        company: "Julius",
+        category: "Data",
+        desc: "AI data analyst that visualizes and interprets data",
+        pricing: "Freemium",
+        capabilities: ["Visualization", "Analysis", "Upload Data"],
+        url: "https://julius.ai",
+        statusApi: null,
+        status: "unknown"
+      },
+      {
+        name: "Hex AI",
+        company: "Hex",
+        category: "Data",
+        desc: "AI-powered analytics and data science notebooks",
+        pricing: "Paid",
+        capabilities: ["Notebooks", "SQL", "Python", "Charts"],
+        url: "https://hex.tech",
+        statusApi: null,
+        status: "unknown"
+      }
+    ];
+
+    // ─── Category Colors ────────────────────────────────────────
+    const categoryColors = {
+      Coding:     "#60A5FA",
+      General:    "#4ADE80",
+      Search:     "#4FD1C5",
+      Research:   "#A78BFA",
+      Creative:   "#F9CB42",
+      Autonomous: "#EF9F27",
+      Data:       "#5B9BD5"
+    };
+
+    // ─── Status API Endpoints ───────────────────────────────────
+    const statusEndpoints = {
+      anthropic: "https://status.anthropic.com/api/v2/status.json",
+      openai:    "https://status.openai.com/api/v2/status.json",
+      github:    "https://www.githubstatus.com/api/v2/status.json"
+    };
+
+    // ─── State ──────────────────────────────────────────────────
+    let activeCategory = "All";
+    let searchQuery = "";
+    let sortBy = "name";
+    let lastCheckedTime = null;
+
+    // ─── Status Fetching ────────────────────────────────────────
+    function mapIndicator(indicator) {
+      if (indicator === "none") return "operational";
+      if (indicator === "minor" || indicator === "major") return "degraded";
+      if (indicator === "critical") return "down";
+      return "unknown";
+    }
+
+    async function fetchStatuses() {
+      const results = {};
+      const fetches = Object.entries(statusEndpoints).map(async ([key, url]) => {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          const data = await res.json();
+          results[key] = mapIndicator(data.status.indicator);
+        } catch {
+          results[key] = "unknown";
+        }
+      });
+      await Promise.allSettled(fetches);
+
+      agents.forEach(a => {
+        if (a.statusApi && results[a.statusApi] !== undefined) {
+          a.status = results[a.statusApi];
+        }
+      });
+
+      lastCheckedTime = new Date();
+      updateLastChecked();
+      renderGrid();
+      updateStats();
+    }
+
+    function updateLastChecked() {
+      const el = document.getElementById("last-updated");
+      if (lastCheckedTime) {
+        el.textContent = "Last status check: " + lastCheckedTime.toLocaleTimeString();
+      }
+    }
+
+    // ─── Rendering ──────────────────────────────────────────────
+    function getStatusLabel(s) {
+      return { operational: "Operational", degraded: "Degraded", down: "Down", unknown: "Unknown" }[s] || "Unknown";
+    }
+    function getStatusTooltip(agent) {
+      if (!agent.statusApi) return "Status not monitored";
+      return getStatusLabel(agent.status);
+    }
+
+    function getFilteredAgents() {
+      let list = [...agents];
+      if (activeCategory !== "All") {
+        list = list.filter(a => a.category === activeCategory);
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        list = list.filter(a => a.name.toLowerCase().includes(q) || a.company.toLowerCase().includes(q));
+      }
+      list.sort((a, b) => {
+        if (sortBy === "name") return a.name.localeCompare(b.name);
+        if (sortBy === "company") return a.company.localeCompare(b.company);
+        if (sortBy === "status") {
+          const order = { operational: 0, degraded: 1, down: 2, unknown: 3 };
+          return (order[a.status] ?? 3) - (order[b.status] ?? 3);
+        }
+        return 0;
+      });
+      return list;
+    }
+
+    function renderCard(agent) {
+      const color = categoryColors[agent.category] || "#4E4D49";
+      const pricingClass = "pricing-" + agent.pricing.toLowerCase();
+      const caps = agent.capabilities.map(c => `<span class="cap-tag">${c}</span>`).join("");
+      const checked = lastCheckedTime ? lastCheckedTime.toLocaleTimeString() : "--:--";
+
+      return `
+        <div class="agent-card" onclick="window.open('${agent.url}', '_blank')" role="link" tabindex="0">
+          <div class="card-top">
+            <span class="status-dot ${agent.status} status-tooltip" data-tooltip="${getStatusTooltip(agent)}"></span>
+            <span class="agent-name">${agent.name}</span>
+            <span class="category-badge" style="background:${color}20;color:${color};border:1px solid ${color}40">${agent.category}</span>
+          </div>
+          <div class="company-name">${agent.company}</div>
+          <div class="agent-desc">${agent.desc}</div>
+          <div>
+            <span class="pricing-tag ${pricingClass}">${agent.pricing}</span>
+          </div>
+          <div class="capabilities">${caps}</div>
+          <div class="card-footer">
+            <span class="last-checked">Checked: ${checked}</span>
+            <span class="visit-link">${agent.url.replace('https://', '').split('/')[0]} &rarr;</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById("agent-grid");
+      const filtered = getFilteredAgents();
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-results">No agents match your filters.</div>';
+        return;
+      }
+
+      let html = "";
+      const adIndex = 9; // insert ad placeholder after 9th card
+      filtered.forEach((agent, i) => {
+        html += renderCard(agent);
+        if (i === adIndex - 1) {
+          html += `
+            <div class="ad-slot">
+              <!-- AdSense ad slot placeholder: mid-grid placement -->
+              <!-- <ins class="adsbygoogle" style="display:block" data-ad-format="fluid" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="XXXXXXX"></ins> -->
+            </div>
+          `;
+        }
+      });
+      grid.innerHTML = html;
+    }
+
+    function updateStats() {
+      document.getElementById("stat-total").textContent = agents.length;
+      const opCount = agents.filter(a => a.status === "operational").length;
+      document.getElementById("stat-operational").textContent = opCount;
+      const cats = new Set(agents.map(a => a.category));
+      document.getElementById("stat-categories").textContent = cats.size;
+    }
+
+    // ─── Event Listeners ────────────────────────────────────────
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeCategory = btn.dataset.category;
+        renderGrid();
+      });
+    });
+
+    document.getElementById("search").addEventListener("input", e => {
+      searchQuery = e.target.value;
+      renderGrid();
+    });
+
+    document.getElementById("sort").addEventListener("change", e => {
+      sortBy = e.target.value;
+      renderGrid();
+    });
+
+    // Keyboard support on cards
+    document.getElementById("agent-grid").addEventListener("keydown", e => {
+      if (e.key === "Enter" && e.target.classList.contains("agent-card")) {
+        e.target.click();
+      }
+    });
+
+    // ─── Init ───────────────────────────────────────────────────
+    updateStats();
+    renderGrid();
+    fetchStatuses();
+    setInterval(fetchStatuses, 60000);
+  </script>
+</body>
+</html>

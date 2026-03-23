@@ -1156,6 +1156,8 @@ function App() {
           <a href="/live" target="_blank" rel="noopener noreferrer" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
           <span className="topNavDivider">|</span>
           <a href="/tools" target="_blank" rel="noopener noreferrer" className="liveBriefingLink toolsLink">TOOLS</a>
+          <span className="topNavDivider">|</span>
+          <a href="/agent" target="_blank" rel="noopener noreferrer" className="liveBriefingLink agentLink">AGENTS</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (
@@ -1422,6 +1424,7 @@ function App() {
           <a href="/developers" className="footerLink">API</a>
           <a href="/changelog" className="footerLink">Changelog</a>
           <a href="/tools" className="footerLink">Tools</a>
+          <a href="/agent" className="footerLink">Agents</a>
           {/* WiFi link — uncomment after AdSense approval */}
           {/* <a href="/wifi" className="footerLink">WiFi</a> */}
           <a href="/privacy" className="footerLink">Privacy</a>

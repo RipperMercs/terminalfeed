@@ -116,6 +116,11 @@
   margin-left: 0;
 }
 
+.agentLink {
+  color: #A78BFA;
+  margin-left: 0;
+}
+
 .liveDot {
   display: inline-block;
   width: 5px;
