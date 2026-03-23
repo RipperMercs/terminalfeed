@@ -449,6 +449,53 @@
     color: var(--text-dim);
   }
 
+  /* SEO content */
+  .seo-content {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid #1A1A22;
+    color: #7A7A72;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .seo-content h2 {
+    color: #C8C8C0;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    letter-spacing: 0.5px;
+  }
+  .seo-content h3 {
+    color: #9A9A92;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+  }
+  .seo-content p {
+    margin-bottom: 12px;
+  }
+  .seo-content code {
+    background: #151518;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #4ADE80;
+  }
+  .seo-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+  }
+  .seo-content th, .seo-content td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1A1A22;
+    font-size: 12px;
+  }
+  .seo-content th {
+    color: #C8C8C0;
+  }
+
   /* Responsive */
   @media (max-width: 600px) {
     .header { padding: 36px 0 8px; }
@@ -546,6 +593,40 @@
       <div class="status-item">
         <span id="execTimeText">0 ms</span>
       </div>
+    </div>
+
+    <!-- SEO Content -->
+    <div class="seo-content">
+      <h2>Regex Tester &mdash; Test Regular Expressions Online</h2>
+      <p>Regular expressions (regex) are sequences of characters that define search patterns. Developers, data engineers, and system administrators use regex to validate input, search and replace text, parse log files, extract data from strings, and enforce formatting rules. Despite their power, regular expressions can be difficult to write and debug without a live testing tool.</p>
+
+      <h3>How to Use This Tool</h3>
+      <p>Enter your regex pattern in the pattern field at the top of the page. Toggle flags such as <code>g</code> (global), <code>i</code> (case-insensitive), <code>m</code> (multiline), and <code>s</code> (dotall) to adjust matching behavior. Paste or type your test string in the text area below. Matches highlight instantly as you type &mdash; no button click required. The match details table shows each match index, value, and any captured groups with color-coded labels. Use the quick-pattern buttons to load common patterns with sample test strings so you can experiment right away.</p>
+
+      <h3>Common Regex Patterns</h3>
+      <table>
+        <thead>
+          <tr><th>Pattern</th><th>Regex</th><th>Example Match</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Email</td><td><code>[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}</code></td><td>user@example.com</td></tr>
+          <tr><td>URL</td><td><code>https?://[\w.-]+(?:\.[a-zA-Z]{2,})(?:/[^\s]*)?</code></td><td>https://example.com/path</td></tr>
+          <tr><td>IP Address</td><td><code>\b(?:\d{1,3}\.){3}\d{1,3}\b</code></td><td>192.168.1.1</td></tr>
+          <tr><td>Phone Number</td><td><code>\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}</code></td><td>(555) 123-4567</td></tr>
+          <tr><td>Date (YYYY-MM-DD)</td><td><code>\d{4}[/-]\d{1,2}[/-]\d{1,2}</code></td><td>2026-03-22</td></tr>
+          <tr><td>Hex Color</td><td><code>#[0-9A-Fa-f]{3,8}</code></td><td>#5DCAA5</td></tr>
+          <tr><td>ZIP Code (US)</td><td><code>\b\d{5}(-\d{4})?\b</code></td><td>90210</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Regex Syntax Quick Reference</h3>
+      <p><strong>Character classes:</strong> <code>\d</code> matches any digit (0-9). <code>\w</code> matches any word character (letters, digits, underscore). <code>\s</code> matches any whitespace (space, tab, newline). Use uppercase versions (<code>\D</code>, <code>\W</code>, <code>\S</code>) to match the opposite. Square brackets define custom sets: <code>[aeiou]</code> matches any vowel, and <code>[^0-9]</code> matches any non-digit.</p>
+      <p><strong>Quantifiers:</strong> <code>*</code> matches zero or more times. <code>+</code> matches one or more times. <code>?</code> matches zero or one time. <code>{n}</code> matches exactly n times, <code>{n,}</code> matches n or more, and <code>{n,m}</code> matches between n and m times. Append <code>?</code> to any quantifier to make it non-greedy.</p>
+      <p><strong>Anchors:</strong> <code>^</code> matches the start of a line and <code>$</code> matches the end. <code>\b</code> matches a word boundary, which is useful for matching whole words without partial matches.</p>
+      <p><strong>Groups and alternation:</strong> Parentheses <code>()</code> create capture groups for extracting parts of a match. Use <code>|</code> for alternation &mdash; for example, <code>(cat|dog)</code> matches either &ldquo;cat&rdquo; or &ldquo;dog&rdquo;. Non-capturing groups <code>(?:...)</code> group without capturing, which is useful when you need grouping but do not need the matched value.</p>
+
+      <h3>Privacy and Performance</h3>
+      <p>This regex tester runs 100% in your browser using the JavaScript RegExp engine. No data is transmitted to any server. Your patterns and test strings never leave your machine, making it safe for testing against sensitive data such as log files, credentials patterns, or proprietary formats. The tool evaluates matches in real time and displays execution time in milliseconds so you can gauge pattern performance.</p>
     </div>
 
     <!-- Footer -->
