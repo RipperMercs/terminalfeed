@@ -233,6 +233,53 @@
     ::-webkit-scrollbar-thumb { background: #1A1A22; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #2A2A34; }
 
+    /* SEO content */
+    .seo-content {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #1A1A22;
+      color: #7A7A72;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .seo-content h2 {
+      color: #C8C8C0;
+      font-size: 15px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      letter-spacing: 0.5px;
+    }
+    .seo-content h3 {
+      color: #9A9A92;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 16px 0 8px;
+    }
+    .seo-content p {
+      margin-bottom: 12px;
+    }
+    .seo-content code {
+      background: #151518;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #4ADE80;
+    }
+    .seo-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+    .seo-content th, .seo-content td {
+      text-align: left;
+      padding: 6px 10px;
+      border-bottom: 1px solid #1A1A22;
+      font-size: 12px;
+    }
+    .seo-content th {
+      color: #C8C8C0;
+    }
+
     @media (max-width: 600px) {
       .container { padding: 20px 14px 28px; }
       textarea { min-height: 160px; font-size: 12px; padding: 12px; }
@@ -276,6 +323,43 @@
       <span class="status-item" id="statusChars">0 chars</span>
       <span class="status-item" id="statusLines">0 lines</span>
       <span class="status-item" id="statusDepth">depth: 0</span>
+    </div>
+  </div>
+
+  <!-- SEO Content -->
+  <div class="container">
+    <div class="seo-content">
+      <h2>JSON Formatter &amp; Validator &mdash; Format JSON Online</h2>
+      <p>JSON (JavaScript Object Notation) is the most widely used data interchange format on the web. APIs return it, configuration files rely on it, and databases store it. However, raw JSON &mdash; especially minified responses from production APIs &mdash; is nearly impossible to read without proper formatting. A good formatter turns a wall of text into a structured, indented document you can actually understand.</p>
+
+      <h3>How to Use This Tool</h3>
+      <p>Paste your JSON into the input area and click <strong>Format</strong> (or press <code>Ctrl+Enter</code>) to pretty-print it with two-space indentation and full syntax highlighting. Click <strong>Minify</strong> to compress formatted JSON into a single line, removing all unnecessary whitespace &mdash; useful for reducing payload size before sending data over the network. Click <strong>Validate</strong> to check whether your JSON is syntactically correct and view a summary of its structure including type, entry count, nesting depth, and minified size. Use <strong>Copy</strong> to copy the output to your clipboard and <strong>Clear</strong> to reset both fields.</p>
+
+      <h3>Common JSON Use Cases</h3>
+      <table>
+        <thead>
+          <tr><th>Use Case</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>API Responses</td><td>REST and GraphQL APIs return JSON payloads that need formatting for debugging and inspection.</td></tr>
+          <tr><td>Configuration Files</td><td>Tools like package.json, tsconfig.json, and .eslintrc use JSON to define project settings.</td></tr>
+          <tr><td>Data Exchange</td><td>JSON is the standard format for transferring structured data between services, microservices, and front-end applications.</td></tr>
+          <tr><td>Database Documents</td><td>NoSQL databases like MongoDB and CouchDB store records as JSON documents.</td></tr>
+          <tr><td>Logging &amp; Monitoring</td><td>Structured logging frameworks output JSON logs for easier parsing by tools like Elasticsearch and Datadog.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>JSON Syntax Basics</h3>
+      <p>A JSON value must be one of six types: <strong>object</strong> (<code>{}</code>), <strong>array</strong> (<code>[]</code>), <strong>string</strong> (double-quoted), <strong>number</strong>, <strong>boolean</strong> (<code>true</code> or <code>false</code>), or <strong>null</strong>. Objects contain comma-separated key-value pairs where keys must be double-quoted strings. Arrays contain comma-separated values of any type. JSON does not support comments, trailing commas, or single-quoted strings &mdash; these are the most common sources of parse errors.</p>
+
+      <h3>Common JSON Errors and How to Fix Them</h3>
+      <p><strong>Trailing commas:</strong> A comma after the last item in an object or array is invalid in JSON, even though JavaScript allows it. Remove the trailing comma or add another entry after it.</p>
+      <p><strong>Single quotes:</strong> JSON requires double quotes around strings and keys. Replace all single quotes with double quotes. Many text editors have a find-and-replace feature that makes this quick.</p>
+      <p><strong>Unquoted keys:</strong> Unlike JavaScript objects, JSON keys must always be wrapped in double quotes. <code>{name: "value"}</code> is invalid &mdash; it must be <code>{"name": "value"}</code>.</p>
+      <p><strong>Special characters:</strong> Newlines, tabs, and backslashes inside strings must be escaped as <code>\n</code>, <code>\t</code>, and <code>\\</code> respectively. Unescaped control characters will cause a parse failure.</p>
+
+      <h3>Privacy and Performance</h3>
+      <p>This JSON formatter and validator runs 100% in your browser. No data is sent to any server. Your JSON never leaves your machine, making it safe for formatting sensitive payloads such as authentication tokens, private API responses, and internal configuration files. Syntax highlighting and validation happen instantly using the browser's native JSON parser.</p>
     </div>
   </div>
 

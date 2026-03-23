@@ -140,6 +140,51 @@
     flex-wrap: wrap;
     justify-content: center;
   }
+  .seo-content {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid #1A1A22;
+    color: #7A7A72;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .seo-content h2 {
+    color: #C8C8C0;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    letter-spacing: 0.5px;
+  }
+  .seo-content h3 {
+    color: #9A9A92;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+  }
+  .seo-content p {
+    margin-bottom: 12px;
+  }
+  .seo-content code {
+    background: #151518;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #4ADE80;
+  }
+  .seo-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+  }
+  .seo-content th, .seo-content td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1A1A22;
+    font-size: 12px;
+  }
+  .seo-content th {
+    color: #C8C8C0;
+  }
 </style>
 </head>
 <body>
@@ -176,6 +221,33 @@
         <span class="char-count"><span id="outputCount">0</span> chars</span>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="seo-content">
+    <h2>Base64 Encoder &amp; Decoder &mdash; Convert Base64 Online</h2>
+
+    <h3>What Is Base64 Encoding?</h3>
+    <p>Base64 is a binary-to-text encoding scheme that converts binary data into a sequence of printable ASCII characters. It was originally designed to allow binary data to be transmitted over channels that only reliably support text, such as email (MIME) and early HTTP. The name "Base64" refers to the fact that the encoding uses a 64-character alphabet to represent data: the uppercase letters <code>A-Z</code>, lowercase letters <code>a-z</code>, digits <code>0-9</code>, and two additional symbols <code>+</code> and <code>/</code>. The <code>=</code> character is used as padding when the input length is not a multiple of three bytes.</p>
+
+    <h3>How Base64 Works</h3>
+    <p>Base64 encoding works by taking every three bytes (24 bits) of input data and splitting them into four groups of six bits each. Each six-bit group maps to one of the 64 characters in the Base64 alphabet. Because three bytes of binary input become four bytes of text output, Base64-encoded data is always roughly 33% larger than the original. This overhead is the trade-off for guaranteed safe transport through text-only systems.</p>
+
+    <h3>Common Use Cases</h3>
+    <p>Base64 encoding appears throughout web development and software engineering. It is used in <strong>data URLs</strong> to embed images, fonts, and other assets directly into HTML or CSS without additional HTTP requests. Email systems use Base64 as part of the <strong>MIME standard</strong> to encode file attachments. <strong>HTTP Basic Authentication</strong> headers transmit credentials in the format <code>username:password</code> encoded as Base64. JSON Web Tokens (<strong>JWT</strong>) encode their header and payload segments using a URL-safe Base64 variant. Developers also use Base64 to embed small images in stylesheets, pass binary data through JSON APIs, and store cryptographic keys or certificates as text.</p>
+
+    <h3>URL-Safe Base64</h3>
+    <p>Standard Base64 uses <code>+</code> and <code>/</code> characters, which conflict with URL syntax. The URL-safe variant (sometimes called Base64url) replaces <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code>, and typically omits padding. This variant is used in JWTs, filename-safe tokens, and anywhere Base64 data needs to appear in a URL or query string without percent-encoding.</p>
+
+    <h3>How to Use This Tool</h3>
+    <p>Paste or type your text into the input field on the left. Click <strong>Encode</strong> to convert plain text to Base64, or <strong>Decode</strong> to convert a Base64 string back to plain text. With <strong>live mode</strong> enabled, the output updates automatically as you type. Click <strong>Copy Output</strong> to copy the result to your clipboard.</p>
+
+    <h3>Unicode &amp; UTF-8 Support</h3>
+    <p>Unlike many Base64 tools that only handle ASCII, this encoder fully supports <strong>UTF-8 and Unicode</strong> characters, including emoji, CJK characters, and accented text. Input is first encoded to UTF-8 bytes before Base64 conversion, so multi-byte characters are handled correctly in both directions.</p>
+
+    <h3>Privacy &amp; Security</h3>
+    <p>This tool runs <strong>100% client-side</strong> in your browser. No data is transmitted to any server. Your input never leaves your machine, making it safe to encode or decode sensitive strings such as API keys, tokens, and credentials. There are no usage limits, no accounts required, and no telemetry.</p>
   </div>
 </div>
 
