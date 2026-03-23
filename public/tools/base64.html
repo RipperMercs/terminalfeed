@@ -7,6 +7,11 @@
 <meta name="description" content="Encode and decode Base64 strings instantly in your browser. Supports full Unicode/UTF-8. No data leaves your machine.">
 <meta name="keywords" content="base64, encode, decode, converter, tool, online, utf-8, unicode">
 <link rel="canonical" href="https://terminalfeed.io/tools/base64">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/base64">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/base64">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/base64">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/base64">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/base64">
 <meta property="og:title" content="Base64 Encode & Decode — TerminalFeed Tools">
 <meta property="og:description" content="Encode and decode Base64 strings instantly in your browser. Supports full Unicode/UTF-8.">
 <meta property="og:url" content="https://terminalfeed.io/tools/base64">
@@ -187,35 +192,35 @@
   }
 </style>
 </head>
-<body>
-<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<body data-page="tools-base64">
+<div class="back-link"><a href="/tools" data-i18n="back_tools">&larr; back to tools</a></div>
 <div class="container">
   <div class="header">
-    <h1><span>&gt;_</span> BASE64</h1>
-    <span class="badge">&#9889; runs locally</span>
+    <h1 data-i18n="base64_heading"><span>&gt;_</span> BASE64</h1>
+    <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
   </div>
 
   <div class="live-toggle">
     <input type="checkbox" id="liveMode" checked>
-    <label for="liveMode">Live mode (encode/decode as you type)</label>
+    <label for="liveMode" data-i18n="live_mode">Live mode (encode/decode as you type)</label>
   </div>
 
   <div class="workspace">
     <div class="panel">
-      <label for="inputArea">Input</label>
-      <textarea id="inputArea" placeholder="Type or paste text here..."></textarea>
+      <label for="inputArea" data-i18n="input_label">Input</label>
+      <textarea id="inputArea" placeholder="Type or paste text here..." data-i18n-placeholder="base64_input_placeholder"></textarea>
       <div class="char-count"><span id="inputCount">0</span> chars</div>
     </div>
 
     <div class="controls-col">
-      <button id="btnEncode">Encode &rarr;</button>
-      <button id="btnDecode">&larr; Decode</button>
-      <button class="btn-copy" id="btnCopy">Copy Output</button>
+      <button id="btnEncode" data-i18n="encode">Encode &rarr;</button>
+      <button id="btnDecode" data-i18n="decode">&larr; Decode</button>
+      <button class="btn-copy" id="btnCopy" data-i18n="copy">Copy Output</button>
     </div>
 
     <div class="panel">
-      <label for="outputArea">Output</label>
-      <textarea id="outputArea" placeholder="Result appears here..." readonly></textarea>
+      <label for="outputArea" data-i18n="output_label">Output</label>
+      <textarea id="outputArea" placeholder="Result appears here..." data-i18n-placeholder="base64_output_placeholder" readonly></textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="error-msg" id="errorMsg"></span>
         <span class="char-count"><span id="outputCount">0</span> chars</span>
@@ -228,7 +233,7 @@
   <!-- AdSense placeholder -->
   <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
-  <div class="seo-content">
+  <div class="seo-content" data-i18n-html="base64_seo">
     <h2>Base64 Encoder &amp; Decoder &mdash; Convert Base64 Online</h2>
 
     <h3>What Is Base64 Encoding?</h3>
@@ -255,8 +260,8 @@
 </div>
 
 <footer>
-  <a href="/tools">Tools</a>
-  <a href="/">TerminalFeed.io</a>
+  <a href="/tools" data-i18n="tools">Tools</a>
+  <a href="/" data-i18n="home">TerminalFeed.io</a>
 </footer>
 
 <script>
@@ -337,5 +342,6 @@
   updateCounts();
 })();
 </script>
+<script src="/i18n.js"></script>
 </body>
 </html>

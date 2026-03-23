@@ -7,6 +7,11 @@
 <meta name="description" content="Free online regex tester with live matching, capture group highlighting, and quick patterns. Runs 100% in your browser — nothing leaves your machine.">
 <meta name="keywords" content="regex tester, regular expression, regex online, regex matcher, regex pattern tester, developer tools">
 <link rel="canonical" href="https://terminalfeed.io/tools/regex">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/regex">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/regex">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/regex">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/regex">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/regex">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Regex Tester — TerminalFeed Tools">
 <meta property="og:description" content="Free online regex tester with live matching, capture group highlighting, and quick patterns. Runs 100% in your browser.">
@@ -506,28 +511,28 @@
   }
 </style>
 </head>
-<body>
+<body data-page="tools-regex">
 
   <!-- Top bar -->
   <div class="top-bar">
-    <a href="/tools" class="back-link">&larr; back to tools</a>
+    <a href="/tools" class="back-link" data-i18n="back_tools">&larr; back to tools</a>
   </div>
 
   <div class="container">
 
     <!-- Header -->
     <div class="header">
-      <h1>&gt;_ REGEX TESTER</h1>
-      <span class="badge">&#9889; runs locally</span>
+      <h1>&gt;_ <span data-i18n="regex_title">REGEX TESTER</span></h1>
+      <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
     </div>
 
     <!-- Pattern input -->
     <div class="section">
-      <div class="section-label">Pattern</div>
+      <div class="section-label" data-i18n="pattern">Pattern</div>
       <div class="pattern-row">
         <div class="pattern-wrap" id="patternWrap">
           <span class="pattern-slash">/</span>
-          <input type="text" class="pattern-input" id="patternInput" placeholder="enter regex pattern..." spellcheck="false" autocomplete="off">
+          <input type="text" class="pattern-input" id="patternInput" placeholder="enter regex pattern..." data-i18n-placeholder="regex_pattern_placeholder" spellcheck="false" autocomplete="off">
           <span class="pattern-slash">/</span>
         </div>
         <div class="flags-row">
@@ -540,6 +545,7 @@
     </div>
 
     <!-- Quick patterns -->
+    <div class="section-label" data-i18n="quick_patterns" style="margin-top:16px;margin-bottom:4px;">Quick Patterns</div>
     <div class="quick-row">
       <button class="quick-btn" data-pattern="email">Email</button>
       <button class="quick-btn" data-pattern="url">URL</button>
@@ -553,19 +559,19 @@
 
     <!-- Test string -->
     <div class="section">
-      <div class="section-label">Test String</div>
-      <textarea class="test-textarea" id="testInput" placeholder="enter test string..." spellcheck="false"></textarea>
+      <div class="section-label" data-i18n="test_string">Test String</div>
+      <textarea class="test-textarea" id="testInput" placeholder="enter test string..." data-i18n-placeholder="regex_test_placeholder" spellcheck="false"></textarea>
     </div>
 
     <!-- Results: highlighted matches -->
     <div class="section">
-      <div class="section-label">Matches</div>
+      <div class="section-label" data-i18n="matches">Matches</div>
       <div class="results-box" id="resultsBox"><span class="no-matches">matches will appear here...</span></div>
     </div>
 
     <!-- Match details table -->
     <div class="section" id="detailsSection" style="display:none;">
-      <div class="section-label">Match Details</div>
+      <div class="section-label" data-i18n="match_details">Match Details</div>
       <div class="match-table-wrap">
         <table class="match-table" id="matchTable">
           <thead>
@@ -599,7 +605,7 @@
     <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
     <!-- SEO Content -->
-    <div class="seo-content">
+    <div class="seo-content" data-i18n-html="regex_seo">
       <h2>Regex Tester &mdash; Test Regular Expressions Online</h2>
       <p>Regular expressions (regex) are sequences of characters that define search patterns. Developers, data engineers, and system administrators use regex to validate input, search and replace text, parse log files, extract data from strings, and enforce formatting rules. Despite their power, regular expressions can be difficult to write and debug without a live testing tool.</p>
 
@@ -635,8 +641,8 @@
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-links">
-        <a href="/tools">Tools</a>
-        <a href="/">Home</a>
+        <a href="/tools" data-i18n="tools">Tools</a>
+        <a href="/" data-i18n="home">Home</a>
       </div>
       <p class="footer-copy">&copy; 2026 TerminalFeed.io</p>
     </footer>
@@ -933,5 +939,6 @@
 })();
 </script>
 
+<script src="/i18n.js"></script>
 </body>
 </html>

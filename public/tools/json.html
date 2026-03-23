@@ -7,6 +7,11 @@
   <meta name="description" content="Free online JSON formatter, validator, and minifier. Syntax highlighting, error detection with line numbers, keyboard shortcuts. Runs entirely in your browser — no data sent to any server.">
   <meta name="keywords" content="json formatter, json validator, json minifier, json beautifier, json pretty print, online json tool">
   <link rel="canonical" href="https://terminalfeed.io/tools/json">
+  <link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/json">
+  <link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/json">
+  <link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/json">
+  <link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/json">
+  <link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/json">
   <meta property="og:type" content="website">
   <meta property="og:title" content="JSON Formatter & Validator — TerminalFeed Tools">
   <meta property="og:description" content="Free online JSON formatter and validator with syntax highlighting. Runs locally in your browser.">
@@ -290,31 +295,31 @@
     }
   </style>
 </head>
-<body>
+<body data-page="tools-json">
 
   <div class="container">
-    <a href="/tools" class="back">&larr; back to tools</a>
+    <a href="/tools" class="back" data-i18n="back_tools">&larr; back to tools</a>
 
     <div class="header">
-      <h1>>_ JSON FORMATTER</h1>
-      <span class="badge">&#9889; runs locally</span>
+      <h1 data-i18n="json_heading">>_ JSON FORMATTER</h1>
+      <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
     </div>
 
     <div class="input-section">
-      <textarea id="jsonInput" placeholder="Paste your JSON here..." spellcheck="false"></textarea>
+      <textarea id="jsonInput" placeholder="Paste your JSON here..." data-i18n-placeholder="json_placeholder" spellcheck="false"></textarea>
     </div>
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="formatJSON()" title="Ctrl+Enter">Format</button>
-      <button class="btn" onclick="minifyJSON()">Minify</button>
-      <button class="btn" onclick="validateJSON()">Validate</button>
-      <button class="btn" onclick="copyOutput()">Copy</button>
-      <button class="btn" onclick="clearAll()">Clear</button>
-      <span class="shortcut-hint">Ctrl+Enter to format</span>
+      <button class="btn btn-primary" onclick="formatJSON()" title="Ctrl+Enter" data-i18n="format">Format</button>
+      <button class="btn" onclick="minifyJSON()" data-i18n="minify">Minify</button>
+      <button class="btn" onclick="validateJSON()" data-i18n="validate">Validate</button>
+      <button class="btn" onclick="copyOutput()" data-i18n="copy">Copy</button>
+      <button class="btn" onclick="clearAll()" data-i18n="clear">Clear</button>
+      <span class="shortcut-hint" data-i18n="shortcut_format">Ctrl+Enter to format</span>
     </div>
 
     <div class="output-section">
-      <div class="output-label">Output</div>
+      <div class="output-label" data-i18n="output_label">Output</div>
       <div class="output" id="jsonOutput"></div>
     </div>
 
@@ -331,7 +336,7 @@
     <!-- AdSense placeholder -->
     <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
-    <div class="seo-content">
+    <div class="seo-content" data-i18n-html="json_seo">
       <h2>JSON Formatter &amp; Validator &mdash; Format JSON Online</h2>
       <p>JSON (JavaScript Object Notation) is the most widely used data interchange format on the web. APIs return it, configuration files rely on it, and databases store it. However, raw JSON &mdash; especially minified responses from production APIs &mdash; is nearly impossible to read without proper formatting. A good formatter turns a wall of text into a structured, indented document you can actually understand.</p>
 
@@ -367,9 +372,9 @@
   </div>
 
   <footer class="footer">
-    <a href="/tools">&larr; All Tools</a>
+    <a href="/tools" data-i18n="all_tools">&larr; All Tools</a>
     <span class="sep">|</span>
-    <a href="/">TerminalFeed Home</a>
+    <a href="/" data-i18n="home">TerminalFeed Home</a>
     <span class="sep">|</span>
     <span>&copy; TerminalFeed.io</span>
   </footer>
@@ -672,5 +677,6 @@
     }
   </script>
 
+<script src="/i18n.js"></script>
 </body>
 </html>

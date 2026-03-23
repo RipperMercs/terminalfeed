@@ -7,6 +7,11 @@
 <meta name="description" content="Free online developer tools that run 100% in your browser. JSON formatter, Base64 encoder, UUID generator, timestamp converter, JWT decoder, regex tester, and more.">
 <meta name="keywords" content="developer tools, JSON formatter, Base64 encoder, UUID generator, timestamp converter, JWT decoder, regex tester, online tools, browser tools">
 <link rel="canonical" href="https://terminalfeed.io/tools">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Developer Tools — TerminalFeed">
 <meta property="og:description" content="Free online developer tools that run 100% in your browser. JSON formatter, Base64 encoder, UUID generator, timestamp converter, JWT decoder, regex tester, and more.">
@@ -270,20 +275,20 @@
   }
 </style>
 </head>
-<body>
+<body data-page="tools-index">
 
   <!-- Top bar -->
   <div class="top-bar">
-    <a href="/" class="back-link">&larr; back to terminal</a>
+    <a href="/" class="back-link" data-i18n="back_terminal">&larr; back to terminal</a>
   </div>
 
   <div class="container">
 
     <!-- Header -->
     <div class="header">
-      <h1>&gt;_ DEVELOPER TOOLS</h1>
-      <p class="subtitle">All tools run locally in your browser — nothing leaves your machine.</p>
-      <span class="badge">&#9889; 100% client-side — your data never leaves your browser</span>
+      <h1 data-i18n="tools_heading">&gt;_ DEVELOPER TOOLS</h1>
+      <p class="subtitle" data-i18n="tools_subtitle">All tools run locally in your browser — nothing leaves your machine.</p>
+      <span class="badge" data-i18n="privacy_badge">&#9889; 100% client-side — your data never leaves your browser</span>
     </div>
 
     <!-- Tools grid -->
@@ -291,20 +296,20 @@
 
       <a href="/tools/json" class="tool-card">
         <span class="tool-icon">{ }</span>
-        <span class="tool-name">JSON Formatter</span>
-        <span class="tool-desc">Format, validate &amp; minify JSON</span>
+        <span class="tool-name" data-i18n="tool_json_name">JSON Formatter</span>
+        <span class="tool-desc" data-i18n="tool_json_desc">Format, validate &amp; minify JSON</span>
       </a>
 
       <a href="/tools/base64" class="tool-card">
         <span class="tool-icon">&lt;/&gt;</span>
-        <span class="tool-name">Base64 Encode/Decode</span>
-        <span class="tool-desc">Encode &amp; decode Base64 strings</span>
+        <span class="tool-name" data-i18n="tool_base64_name">Base64 Encode/Decode</span>
+        <span class="tool-desc" data-i18n="tool_base64_desc">Encode &amp; decode Base64 strings</span>
       </a>
 
       <a href="/tools/uuid" class="tool-card">
         <span class="tool-icon">#</span>
-        <span class="tool-name">UUID Generator</span>
-        <span class="tool-desc">Generate v4 UUIDs instantly</span>
+        <span class="tool-name" data-i18n="tool_uuid_name">UUID Generator</span>
+        <span class="tool-desc" data-i18n="tool_uuid_desc">Generate v4 UUIDs instantly</span>
       </a>
 
       <!-- AdSense placeholder: insert ad unit between tool cards -->
@@ -312,20 +317,20 @@
 
       <a href="/tools/timestamp" class="tool-card">
         <span class="tool-icon">&#8986;</span>
-        <span class="tool-name">Timestamp Converter</span>
-        <span class="tool-desc">Convert Unix timestamps &#8596; dates</span>
+        <span class="tool-name" data-i18n="tool_timestamp_name">Timestamp Converter</span>
+        <span class="tool-desc" data-i18n="tool_timestamp_desc">Convert Unix timestamps &#8596; dates</span>
       </a>
 
       <a href="/tools/jwt" class="tool-card">
         <span class="tool-icon">&#9919;</span>
-        <span class="tool-name">JWT Decoder</span>
-        <span class="tool-desc">Decode &amp; inspect JWT tokens</span>
+        <span class="tool-name" data-i18n="tool_jwt_name">JWT Decoder</span>
+        <span class="tool-desc" data-i18n="tool_jwt_desc">Decode &amp; inspect JWT tokens</span>
       </a>
 
       <a href="/tools/regex" class="tool-card">
         <span class="tool-icon">.*</span>
-        <span class="tool-name">Regex Tester</span>
-        <span class="tool-desc">Test regex patterns with live matching</span>
+        <span class="tool-name" data-i18n="tool_regex_name">Regex Tester</span>
+        <span class="tool-desc" data-i18n="tool_regex_desc">Test regex patterns with live matching</span>
       </a>
 
     </div>
@@ -333,14 +338,15 @@
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/live">Live</a>
-        <a href="/developers">Dashboard</a>
+        <a href="/" data-i18n="home">Home</a>
+        <a href="/live" data-i18n="live">Live</a>
+        <a href="/developers" data-i18n="dashboard">Dashboard</a>
       </div>
       <p class="footer-copy">&copy; 2026 TerminalFeed.io</p>
     </footer>
 
   </div>
 
+<script src="/i18n.js"></script>
 </body>
 </html>

@@ -8,6 +8,11 @@
 <meta name="keywords" content="jwt decoder, jwt parser, json web token, jwt debugger, jwt inspector">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://terminalfeed.io/tools/jwt">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/jwt">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/jwt">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/jwt">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/jwt">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/jwt">
 
 <meta property="og:title" content="JWT Decoder — TerminalFeed Tools">
 <meta property="og:description" content="Decode and inspect JWT tokens instantly. Runs locally in your browser — tokens never leave your machine.">
@@ -284,39 +289,39 @@
   }
 </style>
 </head>
-<body>
+<body data-page="tools-jwt">
 <div class="container">
-  <a href="/tools" class="back-link">← back to tools</a>
+  <a href="/tools" class="back-link" data-i18n="back_tools">← back to tools</a>
 
   <div class="page-header">
-    <h1>&gt;_ JWT DECODER</h1>
-    <span class="badge">⚡ runs locally</span>
+    <h1>&gt;_ <span data-i18n="jwt_title">JWT DECODER</span></h1>
+    <span class="badge" data-i18n="runs_locally">⚡ runs locally</span>
   </div>
 
   <!-- Input -->
   <div class="section">
-    <div class="section-title">Paste JWT Token</div>
-    <textarea id="jwtInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U" spellcheck="false"></textarea>
-    <div class="disclaimer">⚠ This tool does not verify signatures. Decoding happens entirely in your browser — tokens never leave your machine.</div>
+    <div class="section-title" data-i18n="paste_jwt">Paste JWT Token</div>
+    <textarea id="jwtInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U" data-i18n-placeholder="jwt_placeholder" spellcheck="false"></textarea>
+    <div class="disclaimer" data-i18n="jwt_warning">⚠ This tool does not verify signatures. Decoding happens entirely in your browser — tokens never leave your machine.</div>
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
   <!-- Status Bar -->
   <div class="status-bar" id="statusBar">
     <div class="status-item">
-      <div class="s-label">Algorithm</div>
+      <div class="s-label" data-i18n="algorithm">Algorithm</div>
       <div class="s-value" id="sAlg">—</div>
     </div>
     <div class="status-item">
-      <div class="s-label">Issued At</div>
+      <div class="s-label" data-i18n="issued_at">Issued At</div>
       <div class="s-value" id="sIat">—</div>
     </div>
     <div class="status-item">
-      <div class="s-label">Expires At</div>
+      <div class="s-label" data-i18n="expires_at">Expires At</div>
       <div class="s-value" id="sExp">—</div>
     </div>
     <div class="status-item">
-      <div class="s-label">Expired?</div>
+      <div class="s-label" data-i18n="is_expired">Expired?</div>
       <div class="s-value" id="sExpired">—</div>
     </div>
   </div>
@@ -325,19 +330,19 @@
   <div class="decoded-sections" id="decoded">
     <!-- Header -->
     <div class="section">
-      <div class="section-title">Header</div>
+      <div class="section-title" data-i18n="header">Header</div>
       <div class="json-block" id="headerJson"></div>
     </div>
 
     <!-- Payload -->
     <div class="section">
-      <div class="section-title">Payload</div>
+      <div class="section-title" data-i18n="payload">Payload</div>
       <div class="json-block" id="payloadJson"></div>
     </div>
 
     <!-- Signature -->
     <div class="section">
-      <div class="section-title">Signature</div>
+      <div class="section-title" data-i18n="signature">Signature</div>
       <div class="sig-block" id="sigBlock"></div>
       <div class="sig-note">Signature verification requires the secret key — this tool only decodes.</div>
     </div>
@@ -346,7 +351,7 @@
   <!-- AdSense placeholder -->
   <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
-  <div class="seo-content">
+  <div class="seo-content" data-i18n-html="jwt_seo">
     <h2>JWT Decoder — Decode JSON Web Tokens Online</h2>
 
     <h3>What Is a JWT?</h3>
@@ -390,7 +395,7 @@
   </div>
 
   <div class="footer">
-    <a href="/tools">Tools</a>
+    <a href="/tools" data-i18n="tools">Tools</a>
     <span class="sep">·</span>
     <a href="/">TerminalFeed.io</a>
   </div>
@@ -544,5 +549,6 @@ function showError(msg) {
   decoded.style.display = 'none';
 }
 </script>
+<script src="/i18n.js"></script>
 </body>
 </html>

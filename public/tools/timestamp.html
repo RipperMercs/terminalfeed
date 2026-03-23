@@ -8,6 +8,11 @@
 <meta name="keywords" content="unix timestamp converter, epoch converter, timestamp to date, date to timestamp, unix time">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://terminalfeed.io/tools/timestamp">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/timestamp">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/timestamp">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/timestamp">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/timestamp">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/timestamp">
 
 <meta property="og:title" content="Unix Timestamp Converter — TerminalFeed Tools">
 <meta property="og:description" content="Convert Unix timestamps to human-readable dates and back. Runs locally in your browser.">
@@ -292,53 +297,53 @@
   }
 </style>
 </head>
-<body>
+<body data-page="tools-timestamp">
 <div class="container">
-  <a href="/tools" class="back-link">← back to tools</a>
+  <a href="/tools" class="back-link" data-i18n="back_tools">← back to tools</a>
 
   <div class="page-header">
-    <h1>&gt;_ TIMESTAMP CONVERTER</h1>
-    <span class="badge">⚡ runs locally</span>
+    <h1>&gt;_ <span data-i18n="timestamp_title">TIMESTAMP CONVERTER</span></h1>
+    <span class="badge" data-i18n="runs_locally">⚡ runs locally</span>
   </div>
 
   <!-- Live Clock -->
   <div class="section live-clock">
-    <div class="label">Current Unix Timestamp</div>
+    <div class="label" data-i18n="current_unix">Current Unix Timestamp</div>
     <div class="timestamp" id="liveSec"></div>
     <div class="millis" id="liveMs"></div>
     <div class="copy-row">
-      <button class="btn" id="copyLiveBtn" onclick="copyLive()">Copy</button>
+      <button class="btn" id="copyLiveBtn" onclick="copyLive()" data-i18n="copy">Copy</button>
     </div>
   </div>
 
   <!-- Timestamp → Human -->
   <div class="section">
-    <div class="section-title">Timestamp → Human Date</div>
+    <div class="section-title" data-i18n="ts_to_human">Timestamp → Human Date</div>
     <div class="input-group">
       <label for="tsInput">Unix timestamp (seconds or milliseconds)</label>
-      <input type="number" id="tsInput" placeholder="e.g. 1711123200" oninput="convertToHuman()">
+      <input type="number" id="tsInput" placeholder="e.g. 1711123200" data-i18n-placeholder="ts_input_placeholder" oninput="convertToHuman()">
     </div>
     <div class="quick-buttons">
-      <button class="btn" onclick="setQuick(0)">Now</button>
-      <button class="btn" onclick="setQuick(3600)">+1 hour</button>
-      <button class="btn" onclick="setQuick(86400)">+1 day</button>
-      <button class="btn" onclick="setQuick(604800)">+1 week</button>
+      <button class="btn" onclick="setQuick(0)" data-i18n="now">Now</button>
+      <button class="btn" onclick="setQuick(3600)" data-i18n="plus_1_hour">+1 hour</button>
+      <button class="btn" onclick="setQuick(86400)" data-i18n="plus_1_day">+1 day</button>
+      <button class="btn" onclick="setQuick(604800)" data-i18n="plus_1_week">+1 week</button>
     </div>
     <div class="result-grid" id="tsResults" style="display:none;">
       <div class="result-row">
-        <span class="result-label">Local Time</span>
+        <span class="result-label" data-i18n="local_time">Local Time</span>
         <span class="result-value" id="rLocal"></span>
       </div>
       <div class="result-row">
-        <span class="result-label">UTC</span>
+        <span class="result-label" data-i18n="utc">UTC</span>
         <span class="result-value" id="rUtc"></span>
       </div>
       <div class="result-row">
-        <span class="result-label">ISO 8601</span>
+        <span class="result-label" data-i18n="iso_8601">ISO 8601</span>
         <span class="result-value" id="rIso"></span>
       </div>
       <div class="result-row">
-        <span class="result-label">Relative</span>
+        <span class="result-label" data-i18n="relative">Relative</span>
         <span class="result-value amber" id="rRelative"></span>
       </div>
       <div class="result-row">
@@ -354,7 +359,7 @@
 
   <!-- Human → Timestamp -->
   <div class="section">
-    <div class="section-title">Human Date → Timestamp</div>
+    <div class="section-title" data-i18n="human_to_ts">Human Date → Timestamp</div>
     <div class="date-time-row">
       <div class="input-group">
         <label for="dateInput">Date</label>
@@ -384,7 +389,7 @@
   <!-- AdSense placeholder -->
   <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
-  <div class="seo-content">
+  <div class="seo-content" data-i18n-html="timestamp_seo">
     <h2>Unix Timestamp Converter — Convert Epoch Time Online</h2>
 
     <h3>What Is a Unix Timestamp?</h3>
@@ -418,7 +423,7 @@
   </div>
 
   <div class="footer">
-    <a href="/tools">Tools</a>
+    <a href="/tools" data-i18n="tools">Tools</a>
     <span class="sep">·</span>
     <a href="/">TerminalFeed.io</a>
   </div>
@@ -522,5 +527,6 @@ function convertToTimestamp() {
   convertToTimestamp();
 })();
 </script>
+<script src="/i18n.js"></script>
 </body>
 </html>
