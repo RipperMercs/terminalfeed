@@ -1154,6 +1154,7 @@ function App() {
           <span className="logoCursor" />
           <span className="topTerminals">{terminalsOnline} online</span>
           <a href="/live" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
+          <span className="topNavDivider">|</span>
           <a href="/tools" className="liveBriefingLink toolsLink">TOOLS</a>
         </div>
         <div className="topBarRight">
