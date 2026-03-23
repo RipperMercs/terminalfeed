@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UUID Generator — TerminalFeed Tools</title>
+<meta name="description" content="Generate random UUIDs (v4) instantly in your browser. Bulk generation, click-to-copy, uppercase and hyphen options. No data leaves your machine.">
+<meta name="keywords" content="uuid, generator, v4, random, guid, tool, online, bulk">
+<link rel="canonical" href="https://terminalfeed.io/tools/uuid">
+<meta property="og:title" content="UUID Generator — TerminalFeed Tools">
+<meta property="og:description" content="Generate random UUIDs (v4) instantly in your browser. Bulk generation, click-to-copy, uppercase and hyphen options.">
+<meta property="og:url" content="https://terminalfeed.io/tools/uuid">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="UUID Generator — TerminalFeed Tools">
+<meta name="twitter:description" content="Generate random UUIDs (v4) instantly in your browser. Bulk generation and click-to-copy.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "UUID Generator",
+  "url": "https://terminalfeed.io/tools/uuid",
+  "description": "Generate random UUIDs (v4) instantly in your browser. Bulk generation, click-to-copy, uppercase and hyphen options.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link { align-self: flex-start; max-width: 640px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+  .back-link a { color: #4E4D49; }
+  .back-link a:hover { color: #5DCAA5; }
+  .container { max-width: 640px; width: 100%; }
+  .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; }
+  .header h1 span { color: #5DCAA5; }
+  .badge {
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(93,202,165,0.25);
+    white-space: nowrap;
+  }
+  .single-uuid {
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .single-uuid:hover { border-color: #5DCAA5; }
+  .single-uuid .uuid-text {
+    font-size: 1.5rem;
+    letter-spacing: 0.05em;
+    color: #D4D2CB;
+    word-break: break-all;
+    user-select: all;
+  }
+  .single-uuid .hint {
+    font-size: 0.7rem;
+    color: #4E4D49;
+    margin-top: 0.6rem;
+  }
+  .single-uuid .copied-toast {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.8rem;
+    font-size: 0.7rem;
+    color: #5DCAA5;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .single-uuid .copied-toast.show { opacity: 1; }
+  .actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  button {
+    background: rgba(93,202,165,0.12);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.3);
+    padding: 0.55rem 1.1rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: #5DCAA5; color: #0A0A0C; font-weight: 600; border-color: #5DCAA5; }
+  .btn-primary:hover { background: #4bb893; }
+  .options {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: #4E4D49;
+  }
+  .options label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+  .options input[type="checkbox"] { accent-color: #5DCAA5; }
+  .session-count { font-size: 0.75rem; color: #4E4D49; margin-bottom: 1.5rem; }
+  .bulk-section {
+    border-top: 1px solid #1A1A22;
+    padding-top: 1.5rem;
+    margin-top: 0.5rem;
+  }
+  .bulk-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+  }
+  .bulk-header span { color: #4E4D49; }
+  .bulk-header input[type="number"] {
+    width: 70px;
+    background: #111114;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.8rem;
+    text-align: center;
+    outline: none;
+  }
+  .bulk-header input[type="number"]:focus { border-color: #5DCAA5; }
+  .bulk-list {
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 0.8rem;
+  }
+  .bulk-list:empty { display: none; }
+  .bulk-list .uuid-row {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.12s;
+    border-bottom: 1px solid #1A1A22;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bulk-list .uuid-row:last-child { border-bottom: none; }
+  .bulk-list .uuid-row:hover { background: rgba(93,202,165,0.06); }
+  .bulk-list .uuid-row .row-copied {
+    font-size: 0.65rem;
+    color: #5DCAA5;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .bulk-list .uuid-row .row-copied.show { opacity: 1; }
+  .bulk-actions { display: flex; gap: 0.5rem; }
+  footer {
+    margin-top: auto;
+    padding-top: 3rem;
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-align: center;
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> UUID GENERATOR</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+
+  <div class="single-uuid" id="singleDisplay" title="Click to copy">
+    <div class="uuid-text" id="mainUuid"></div>
+    <div class="hint">click to copy</div>
+    <div class="copied-toast" id="mainToast">Copied!</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="btnGenerate">Generate</button>
+    <button id="btnCopy">Copy</button>
+  </div>
+
+  <div class="options">
+    <label><input type="checkbox" id="optUppercase"> Uppercase</label>
+    <label><input type="checkbox" id="optNoHyphens"> Without hyphens</label>
+  </div>
+
+  <div class="session-count">Generated this session: <strong id="sessionCount">0</strong></div>
+
+  <div class="bulk-section">
+    <div class="bulk-header">
+      <span>Generate</span>
+      <input type="number" id="bulkCount" value="5" min="1" max="500">
+      <span>UUIDs</span>
+      <button id="btnBulkGenerate">Generate Bulk</button>
+    </div>
+    <div class="bulk-list" id="bulkList"></div>
+    <div class="bulk-actions">
+      <button id="btnCopyAll" style="display:none;">Copy All</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="/tools">Tools</a>
+  <a href="/">TerminalFeed.io</a>
+</footer>
+
+<script>
+(function() {
+  var sessionCount = 0;
+  var bulkUuids = [];
+
+  function formatUuid(raw) {
+    var u = raw;
+    if (document.getElementById('optNoHyphens').checked) u = u.replace(/-/g, '');
+    if (document.getElementById('optUppercase').checked) u = u.toUpperCase();
+    return u;
+  }
+
+  function generateOne() {
+    sessionCount++;
+    document.getElementById('sessionCount').textContent = sessionCount;
+    return formatUuid(crypto.randomUUID());
+  }
+
+  function showMain() {
+    var uuid = generateOne();
+    document.getElementById('mainUuid').textContent = uuid;
+  }
+
+  function flashToast(el) {
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, 1200);
+  }
+
+  function copyText(text, toastEl) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (toastEl) flashToast(toastEl);
+    });
+  }
+
+  // Single UUID
+  document.getElementById('btnGenerate').addEventListener('click', showMain);
+
+  document.getElementById('singleDisplay').addEventListener('click', function() {
+    var text = document.getElementById('mainUuid').textContent;
+    if (text) copyText(text, document.getElementById('mainToast'));
+  });
+
+  document.getElementById('btnCopy').addEventListener('click', function() {
+    var text = document.getElementById('mainUuid').textContent;
+    if (text) {
+      var btn = this;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1200);
+      });
+    }
+  });
+
+  // Bulk
+  function renderBulk() {
+    var list = document.getElementById('bulkList');
+    list.innerHTML = '';
+    bulkUuids.forEach(function(u, i) {
+      var row = document.createElement('div');
+      row.className = 'uuid-row';
+      row.innerHTML = '<span>' + u + '</span><span class="row-copied">Copied!</span>';
+      row.addEventListener('click', function() {
+        copyText(u, row.querySelector('.row-copied'));
+      });
+      list.appendChild(row);
+    });
+    document.getElementById('btnCopyAll').style.display = bulkUuids.length ? '' : 'none';
+  }
+
+  document.getElementById('btnBulkGenerate').addEventListener('click', function() {
+    var count = parseInt(document.getElementById('bulkCount').value, 10);
+    if (isNaN(count) || count < 1) count = 1;
+    if (count > 500) count = 500;
+    bulkUuids = [];
+    for (var i = 0; i < count; i++) bulkUuids.push(generateOne());
+    renderBulk();
+  });
+
+  document.getElementById('btnCopyAll').addEventListener('click', function() {
+    var btn = this;
+    navigator.clipboard.writeText(bulkUuids.join('\n')).then(function() {
+      btn.textContent = 'Copied All!';
+      setTimeout(function() { btn.textContent = 'Copy All'; }, 1200);
+    });
+  });
+
+  // Re-format when options change
+  document.getElementById('optUppercase').addEventListener('change', function() {
+    var main = document.getElementById('mainUuid').textContent;
+    if (main) showMain();
+    if (bulkUuids.length) {
+      bulkUuids = bulkUuids.map(function() { return formatUuid(crypto.randomUUID()); });
+      sessionCount += bulkUuids.length;
+      document.getElementById('sessionCount').textContent = sessionCount;
+      renderBulk();
+    }
+  });
+  document.getElementById('optNoHyphens').addEventListener('change', function() {
+    var main = document.getElementById('mainUuid').textContent;
+    if (main) showMain();
+    if (bulkUuids.length) {
+      bulkUuids = bulkUuids.map(function() { return formatUuid(crypto.randomUUID()); });
+      sessionCount += bulkUuids.length;
+      document.getElementById('sessionCount').textContent = sessionCount;
+      renderBulk();
+    }
+  });
+
+  // Generate initial UUID on load
+  showMain();
+})();
+</script>
+</body>
+</html>

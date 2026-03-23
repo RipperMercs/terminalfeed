@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Formatter & Validator — TerminalFeed Tools</title>
+  <meta name="description" content="Free online JSON formatter, validator, and minifier. Syntax highlighting, error detection with line numbers, keyboard shortcuts. Runs entirely in your browser — no data sent to any server.">
+  <meta name="keywords" content="json formatter, json validator, json minifier, json beautifier, json pretty print, online json tool">
+  <link rel="canonical" href="https://terminalfeed.io/tools/json">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="JSON Formatter & Validator — TerminalFeed Tools">
+  <meta property="og:description" content="Free online JSON formatter and validator with syntax highlighting. Runs locally in your browser.">
+  <meta property="og:url" content="https://terminalfeed.io/tools/json">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:site_name" content="TerminalFeed">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JSON Formatter & Validator — TerminalFeed Tools">
+  <meta name="twitter:description" content="Free online JSON formatter and validator with syntax highlighting. Runs locally in your browser.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "JSON Formatter & Validator",
+    "description": "Free online JSON formatter, validator, and minifier with syntax highlighting. Runs entirely in your browser.",
+    "url": "https://terminalfeed.io/tools/json",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      background: #0A0A0C;
+      color: #D4D2CB;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #4E4D49;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back:hover { color: #5DCAA5; }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #5DCAA5;
+      letter-spacing: 1px;
+    }
+
+    .badge {
+      font-size: 10px;
+      color: #EF9F27;
+      border: 1px solid #EF9F2744;
+      background: #EF9F2710;
+      padding: 3px 10px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .input-section { margin-bottom: 12px; }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      background: #0E0E12;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      color: #D4D2CB;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 16px;
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
+      transition: border-color 0.2s;
+    }
+    textarea::placeholder { color: #4E4D49; }
+    textarea:focus { border-color: #5DCAA5; }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px 18px;
+      border: 1px solid #1A1A22;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #111116;
+      color: #D4D2CB;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #1A1A22; border-color: #2A2A34; }
+
+    .btn-primary {
+      background: #5DCAA5;
+      color: #0A0A0C;
+      border-color: #5DCAA5;
+      font-weight: 600;
+    }
+    .btn-primary:hover { background: #4AB892; border-color: #4AB892; }
+
+    .shortcut-hint {
+      font-size: 10px;
+      color: #4E4D49;
+      margin-left: 4px;
+    }
+
+    .output-section {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .output-label {
+      font-size: 11px;
+      color: #4E4D49;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .output {
+      background: #0E0E12;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 16px;
+      min-height: 160px;
+      max-height: 500px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .output .json-key { color: #60A5FA; }
+    .output .json-string { color: #4ADE80; }
+    .output .json-number { color: #EF9F27; }
+    .output .json-bool, .output .json-null { color: #A78BFA; }
+    .output .json-bracket { color: #D4D2CB; }
+    .output .json-colon { color: #4E4D49; }
+    .output .json-comma { color: #4E4D49; }
+
+    .error-msg {
+      color: #F87171;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding: 10px 16px;
+      background: #0E0E12;
+      border: 1px solid #1A1A22;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #4E4D49;
+    }
+
+    .status-item { white-space: nowrap; }
+
+    .status-valid { color: #5DCAA5; }
+    .status-invalid { color: #F87171; }
+
+    .footer {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px 32px;
+      font-size: 11px;
+      color: #4E4D49;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .footer a {
+      color: #4E4D49;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer a:hover { color: #5DCAA5; }
+    .footer .sep { color: #1A1A22; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1A1A22; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2A2A34; }
+
+    @media (max-width: 600px) {
+      .container { padding: 20px 14px 28px; }
+      textarea { min-height: 160px; font-size: 12px; padding: 12px; }
+      .output { font-size: 12px; padding: 12px; max-height: 400px; }
+      .header h1 { font-size: 15px; }
+      .btn { padding: 7px 14px; font-size: 11px; }
+      .status-bar { gap: 12px; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="/tools" class="back">&larr; back to tools</a>
+
+    <div class="header">
+      <h1>>_ JSON FORMATTER</h1>
+      <span class="badge">&#9889; runs locally</span>
+    </div>
+
+    <div class="input-section">
+      <textarea id="jsonInput" placeholder="Paste your JSON here..." spellcheck="false"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="formatJSON()" title="Ctrl+Enter">Format</button>
+      <button class="btn" onclick="minifyJSON()">Minify</button>
+      <button class="btn" onclick="validateJSON()">Validate</button>
+      <button class="btn" onclick="copyOutput()">Copy</button>
+      <button class="btn" onclick="clearAll()">Clear</button>
+      <span class="shortcut-hint">Ctrl+Enter to format</span>
+    </div>
+
+    <div class="output-section">
+      <div class="output-label">Output</div>
+      <div class="output" id="jsonOutput"></div>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      <span class="status-item" id="statusValidity">--</span>
+      <span class="status-item" id="statusChars">0 chars</span>
+      <span class="status-item" id="statusLines">0 lines</span>
+      <span class="status-item" id="statusDepth">depth: 0</span>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/tools">&larr; All Tools</a>
+    <span class="sep">|</span>
+    <a href="/">TerminalFeed Home</a>
+    <span class="sep">|</span>
+    <span>&copy; TerminalFeed.io</span>
+  </footer>
+
+  <script>
+    const input = document.getElementById('jsonInput');
+    const output = document.getElementById('jsonOutput');
+    const statusValidity = document.getElementById('statusValidity');
+    const statusChars = document.getElementById('statusChars');
+    const statusLines = document.getElementById('statusLines');
+    const statusDepth = document.getElementById('statusDepth');
+
+    let lastFormattedText = '';
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        formatJSON();
+      }
+    });
+
+    // Update char/line count on input
+    input.addEventListener('input', updateInputStats);
+
+    function updateInputStats() {
+      const val = input.value;
+      statusChars.textContent = val.length + ' chars';
+      statusLines.textContent = (val ? val.split('\n').length : 0) + ' lines';
+    }
+
+    function getMaxDepth(obj, current) {
+      current = current || 0;
+      if (obj === null || typeof obj !== 'object') return current;
+      let max = current + 1;
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          const d = getMaxDepth(obj[i], current + 1);
+          if (d > max) max = d;
+        }
+      } else {
+        const keys = Object.keys(obj);
+        for (let i = 0; i < keys.length; i++) {
+          const d = getMaxDepth(obj[keys[i]], current + 1);
+          if (d > max) max = d;
+        }
+      }
+      return max;
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function syntaxHighlight(json) {
+      // Tokenize the formatted JSON string and wrap in spans
+      // We process character by character to handle all cases
+      let result = '';
+      let i = 0;
+      const len = json.length;
+
+      while (i < len) {
+        const ch = json[i];
+
+        // Whitespace — pass through
+        if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') {
+          result += ch;
+          i++;
+          continue;
+        }
+
+        // Brackets and braces
+        if (ch === '{' || ch === '}' || ch === '[' || ch === ']') {
+          result += '<span class="json-bracket">' + ch + '</span>';
+          i++;
+          continue;
+        }
+
+        // Comma
+        if (ch === ',') {
+          result += '<span class="json-comma">,</span>';
+          i++;
+          continue;
+        }
+
+        // Colon
+        if (ch === ':') {
+          result += '<span class="json-colon">:</span>';
+          i++;
+          continue;
+        }
+
+        // String
+        if (ch === '"') {
+          let str = '"';
+          i++;
+          while (i < len) {
+            const c = json[i];
+            str += c;
+            if (c === '\\') {
+              i++;
+              if (i < len) {
+                str += json[i];
+                i++;
+              }
+              continue;
+            }
+            if (c === '"') {
+              i++;
+              break;
+            }
+            i++;
+          }
+
+          const escaped = escapeHTML(str);
+
+          // Determine if this string is a key (followed by colon)
+          let j = i;
+          while (j < len && (json[j] === ' ' || json[j] === '\t')) j++;
+          if (j < len && json[j] === ':') {
+            result += '<span class="json-key">' + escaped + '</span>';
+          } else {
+            result += '<span class="json-string">' + escaped + '</span>';
+          }
+          continue;
+        }
+
+        // Numbers
+        if (ch === '-' || (ch >= '0' && ch <= '9')) {
+          let num = '';
+          while (i < len && /[0-9eE.+\-]/.test(json[i])) {
+            num += json[i];
+            i++;
+          }
+          result += '<span class="json-number">' + escapeHTML(num) + '</span>';
+          continue;
+        }
+
+        // true
+        if (json.substr(i, 4) === 'true') {
+          result += '<span class="json-bool">true</span>';
+          i += 4;
+          continue;
+        }
+
+        // false
+        if (json.substr(i, 5) === 'false') {
+          result += '<span class="json-bool">false</span>';
+          i += 5;
+          continue;
+        }
+
+        // null
+        if (json.substr(i, 4) === 'null') {
+          result += '<span class="json-null">null</span>';
+          i += 4;
+          continue;
+        }
+
+        // Fallback
+        result += escapeHTML(ch);
+        i++;
+      }
+
+      return result;
+    }
+
+    function parseError(e, raw) {
+      // Try to extract position info from the error message
+      let msg = e.message;
+      // Most browsers: "... at position 123" or "... at line X column Y"
+      const posMatch = msg.match(/position\s+(\d+)/i);
+      const lineColMatch = msg.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+
+      let detail = '';
+      if (lineColMatch) {
+        detail = ' (line ' + lineColMatch[1] + ', column ' + lineColMatch[2] + ')';
+      } else if (posMatch) {
+        const pos = parseInt(posMatch[1], 10);
+        // Calculate line and column from position
+        let line = 1, col = 1;
+        for (let i = 0; i < pos && i < raw.length; i++) {
+          if (raw[i] === '\n') { line++; col = 1; } else { col++; }
+        }
+        detail = ' (line ' + line + ', column ' + col + ', position ' + pos + ')';
+      }
+
+      return msg + detail;
+    }
+
+    function formatJSON() {
+      const raw = input.value.trim();
+      if (!raw) {
+        output.innerHTML = '<span class="error-msg">No input provided.</span>';
+        statusValidity.textContent = '--';
+        statusValidity.className = 'status-item';
+        statusDepth.textContent = 'depth: 0';
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        const formatted = JSON.stringify(parsed, null, 2);
+        lastFormattedText = formatted;
+        output.innerHTML = syntaxHighlight(formatted);
+        statusValidity.textContent = 'valid';
+        statusValidity.className = 'status-item status-valid';
+        statusDepth.textContent = 'depth: ' + getMaxDepth(parsed);
+        updateInputStats();
+      } catch (e) {
+        output.innerHTML = '<span class="error-msg">Invalid JSON\n\n' + escapeHTML(parseError(e, raw)) + '</span>';
+        statusValidity.textContent = 'invalid';
+        statusValidity.className = 'status-item status-invalid';
+        lastFormattedText = '';
+      }
+    }
+
+    function minifyJSON() {
+      const raw = input.value.trim();
+      if (!raw) {
+        output.innerHTML = '<span class="error-msg">No input provided.</span>';
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        const minified = JSON.stringify(parsed);
+        lastFormattedText = minified;
+        output.innerHTML = syntaxHighlight(minified);
+        statusValidity.textContent = 'valid';
+        statusValidity.className = 'status-item status-valid';
+        statusDepth.textContent = 'depth: ' + getMaxDepth(parsed);
+        updateInputStats();
+      } catch (e) {
+        output.innerHTML = '<span class="error-msg">Invalid JSON\n\n' + escapeHTML(parseError(e, raw)) + '</span>';
+        statusValidity.textContent = 'invalid';
+        statusValidity.className = 'status-item status-invalid';
+        lastFormattedText = '';
+      }
+    }
+
+    function validateJSON() {
+      const raw = input.value.trim();
+      if (!raw) {
+        output.innerHTML = '<span class="error-msg">No input provided.</span>';
+        statusValidity.textContent = '--';
+        statusValidity.className = 'status-item';
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        const depth = getMaxDepth(parsed);
+        let entryCount = 0;
+        if (Array.isArray(parsed)) {
+          entryCount = parsed.length;
+        } else if (typeof parsed === 'object' && parsed !== null) {
+          entryCount = Object.keys(parsed).length;
+        }
+        output.innerHTML = '<span class="status-valid">Valid JSON</span>\n\n'
+          + 'Type: ' + (Array.isArray(parsed) ? 'Array' : typeof parsed) + '\n'
+          + 'Top-level entries: ' + entryCount + '\n'
+          + 'Max nesting depth: ' + depth + '\n'
+          + 'Minified size: ' + JSON.stringify(parsed).length + ' chars';
+        statusValidity.textContent = 'valid';
+        statusValidity.className = 'status-item status-valid';
+        statusDepth.textContent = 'depth: ' + depth;
+        updateInputStats();
+      } catch (e) {
+        output.innerHTML = '<span class="error-msg">Invalid JSON\n\n' + escapeHTML(parseError(e, raw)) + '</span>';
+        statusValidity.textContent = 'invalid';
+        statusValidity.className = 'status-item status-invalid';
+      }
+    }
+
+    function copyOutput() {
+      if (!lastFormattedText) {
+        // Try to copy the raw text content of output
+        const text = output.textContent;
+        if (text) {
+          navigator.clipboard.writeText(text);
+        }
+        return;
+      }
+      navigator.clipboard.writeText(lastFormattedText).then(function() {
+        const btn = document.querySelectorAll('.btn')[3];
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = original; }, 1200);
+      });
+    }
+
+    function clearAll() {
+      input.value = '';
+      output.innerHTML = '';
+      lastFormattedText = '';
+      statusValidity.textContent = '--';
+      statusValidity.className = 'status-item';
+      statusChars.textContent = '0 chars';
+      statusLines.textContent = '0 lines';
+      statusDepth.textContent = 'depth: 0';
+      input.focus();
+    }
+  </script>
+
+</body>
+</html>

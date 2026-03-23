@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base64 Encode &amp; Decode — TerminalFeed Tools</title>
+<meta name="description" content="Encode and decode Base64 strings instantly in your browser. Supports full Unicode/UTF-8. No data leaves your machine.">
+<meta name="keywords" content="base64, encode, decode, converter, tool, online, utf-8, unicode">
+<link rel="canonical" href="https://terminalfeed.io/tools/base64">
+<meta property="og:title" content="Base64 Encode & Decode — TerminalFeed Tools">
+<meta property="og:description" content="Encode and decode Base64 strings instantly in your browser. Supports full Unicode/UTF-8.">
+<meta property="og:url" content="https://terminalfeed.io/tools/base64">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Base64 Encode & Decode — TerminalFeed Tools">
+<meta name="twitter:description" content="Encode and decode Base64 strings instantly in your browser. Supports full Unicode/UTF-8.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Base64 Encode & Decode",
+  "url": "https://terminalfeed.io/tools/base64",
+  "description": "Encode and decode Base64 strings instantly in your browser. Supports full Unicode/UTF-8. No data leaves your machine.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+  .back-link a { color: #4E4D49; }
+  .back-link a:hover { color: #5DCAA5; }
+  .container { max-width: 960px; width: 100%; }
+  .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; }
+  .header h1 span { color: #5DCAA5; }
+  .badge {
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(93,202,165,0.25);
+    white-space: nowrap;
+  }
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .workspace { grid-template-columns: 1fr; }
+    .controls-col { flex-direction: row !important; justify-content: center; }
+  }
+  .panel { display: flex; flex-direction: column; gap: 0.4rem; }
+  .panel label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    background: #111114;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.85rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: #5DCAA5; }
+  textarea.error { border-color: #F87171; }
+  .char-count { font-size: 0.7rem; color: #4E4D49; text-align: right; }
+  .controls-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding-top: 1.2rem;
+  }
+  button {
+    background: rgba(93,202,165,0.12);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+  button:active { transform: scale(0.97); }
+  .btn-copy {
+    background: rgba(93,202,165,0.06);
+    border-color: rgba(93,202,165,0.15);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.8rem;
+  }
+  .live-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #4E4D49;
+    margin-bottom: 0.5rem;
+  }
+  .live-toggle input[type="checkbox"] { accent-color: #5DCAA5; }
+  .error-msg { color: #F87171; font-size: 0.75rem; min-height: 1.1em; }
+  footer {
+    margin-top: auto;
+    padding-top: 3rem;
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-align: center;
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> BASE64</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+
+  <div class="live-toggle">
+    <input type="checkbox" id="liveMode" checked>
+    <label for="liveMode">Live mode (encode/decode as you type)</label>
+  </div>
+
+  <div class="workspace">
+    <div class="panel">
+      <label for="inputArea">Input</label>
+      <textarea id="inputArea" placeholder="Type or paste text here..."></textarea>
+      <div class="char-count"><span id="inputCount">0</span> chars</div>
+    </div>
+
+    <div class="controls-col">
+      <button id="btnEncode">Encode &rarr;</button>
+      <button id="btnDecode">&larr; Decode</button>
+      <button class="btn-copy" id="btnCopy">Copy Output</button>
+    </div>
+
+    <div class="panel">
+      <label for="outputArea">Output</label>
+      <textarea id="outputArea" placeholder="Result appears here..." readonly></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="error-msg" id="errorMsg"></span>
+        <span class="char-count"><span id="outputCount">0</span> chars</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="/tools">Tools</a>
+  <a href="/">TerminalFeed.io</a>
+</footer>
+
+<script>
+(function() {
+  const inputArea = document.getElementById('inputArea');
+  const outputArea = document.getElementById('outputArea');
+  const inputCount = document.getElementById('inputCount');
+  const outputCount = document.getElementById('outputCount');
+  const errorMsg = document.getElementById('errorMsg');
+  const liveMode = document.getElementById('liveMode');
+  let lastDirection = 'encode';
+
+  function utf8ToBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  function base64ToUtf8(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function encode() {
+    lastDirection = 'encode';
+    errorMsg.textContent = '';
+    outputArea.classList.remove('error');
+    try {
+      outputArea.value = utf8ToBase64(inputArea.value);
+    } catch (e) {
+      errorMsg.textContent = 'Encoding error: ' + e.message;
+      outputArea.classList.add('error');
+    }
+    updateCounts();
+  }
+
+  function decode() {
+    lastDirection = 'decode';
+    errorMsg.textContent = '';
+    outputArea.classList.remove('error');
+    const val = inputArea.value.trim();
+    if (!val) { outputArea.value = ''; updateCounts(); return; }
+    try {
+      outputArea.value = base64ToUtf8(val);
+    } catch (e) {
+      errorMsg.textContent = 'Invalid Base64 input';
+      outputArea.classList.add('error');
+      outputArea.value = '';
+    }
+    updateCounts();
+  }
+
+  function updateCounts() {
+    inputCount.textContent = inputArea.value.length;
+    outputCount.textContent = outputArea.value.length;
+  }
+
+  document.getElementById('btnEncode').addEventListener('click', encode);
+  document.getElementById('btnDecode').addEventListener('click', decode);
+
+  inputArea.addEventListener('input', function() {
+    if (!liveMode.checked) { updateCounts(); return; }
+    if (lastDirection === 'decode') decode(); else encode();
+  });
+
+  document.getElementById('btnCopy').addEventListener('click', function() {
+    if (!outputArea.value) return;
+    navigator.clipboard.writeText(outputArea.value).then(function() {
+      var btn = document.getElementById('btnCopy');
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Copy Output'; }, 1500);
+    });
+  });
+
+  updateCounts();
+})();
+</script>
+</body>
+</html>

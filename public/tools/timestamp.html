@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unix Timestamp Converter — TerminalFeed Tools</title>
+<meta name="description" content="Convert Unix timestamps to human-readable dates and back. Live clock, relative time, ISO 8601, milliseconds. Runs entirely in your browser.">
+<meta name="keywords" content="unix timestamp converter, epoch converter, timestamp to date, date to timestamp, unix time">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://terminalfeed.io/tools/timestamp">
+
+<meta property="og:title" content="Unix Timestamp Converter — TerminalFeed Tools">
+<meta property="og:description" content="Convert Unix timestamps to human-readable dates and back. Runs locally in your browser.">
+<meta property="og:url" content="https://terminalfeed.io/tools/timestamp">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Unix Timestamp Converter — TerminalFeed Tools">
+<meta name="twitter:description" content="Convert Unix timestamps to human-readable dates and back. Runs locally in your browser.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Unix Timestamp Converter",
+  "url": "https://terminalfeed.io/tools/timestamp",
+  "description": "Convert Unix timestamps to human-readable dates and back. Live clock, relative time, ISO 8601, milliseconds.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 720px;
+    width: 100%;
+  }
+
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #4E4D49;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: #5DCAA5; text-decoration: none; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .page-header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #D4D2CB;
+    letter-spacing: 0.5px;
+  }
+  .badge {
+    font-size: 0.7rem;
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .section {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #1A1A22;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4E4D49;
+    margin-bottom: 1rem;
+  }
+
+  .live-clock {
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .live-clock .label {
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.5rem;
+  }
+  .live-clock .timestamp {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #5DCAA5;
+    letter-spacing: 2px;
+  }
+  .live-clock .millis {
+    font-size: 1rem;
+    color: #4E4D49;
+    margin-top: 0.25rem;
+  }
+  .live-clock .copy-row {
+    margin-top: 0.75rem;
+  }
+
+  .btn {
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.25);
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn:hover {
+    background: rgba(93,202,165,0.2);
+    border-color: rgba(93,202,165,0.4);
+  }
+  .btn.active, .btn.copied {
+    background: rgba(93,202,165,0.25);
+    color: #fff;
+  }
+
+  .quick-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  input[type="number"], input[type="date"], input[type="time"] {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus {
+    border-color: #5DCAA5;
+  }
+  input[type="date"], input[type="time"] {
+    color-scheme: dark;
+  }
+
+  .result-grid {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(26,26,34,0.6);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-label {
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .result-value {
+    font-size: 0.9rem;
+    color: #D4D2CB;
+    text-align: right;
+    word-break: break-all;
+  }
+  .result-value.green { color: #5DCAA5; }
+  .result-value.amber { color: #EF9F27; }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+  .input-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
+  }
+  .date-time-row {
+    display: flex;
+    gap: 0.75rem;
+  }
+  .date-time-row > div { flex: 1; }
+
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #1A1A22;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #4E4D49;
+  }
+  .footer a { color: #4E4D49; }
+  .footer a:hover { color: #5DCAA5; }
+  .footer .sep { margin: 0 0.5rem; }
+
+  @media (max-width: 500px) {
+    .page-header h1 { font-size: 1.1rem; }
+    .live-clock .timestamp { font-size: 1.6rem; }
+    .date-time-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="/tools" class="back-link">← back to tools</a>
+
+  <div class="page-header">
+    <h1>&gt;_ TIMESTAMP CONVERTER</h1>
+    <span class="badge">⚡ runs locally</span>
+  </div>
+
+  <!-- Live Clock -->
+  <div class="section live-clock">
+    <div class="label">Current Unix Timestamp</div>
+    <div class="timestamp" id="liveSec"></div>
+    <div class="millis" id="liveMs"></div>
+    <div class="copy-row">
+      <button class="btn" id="copyLiveBtn" onclick="copyLive()">Copy</button>
+    </div>
+  </div>
+
+  <!-- Timestamp → Human -->
+  <div class="section">
+    <div class="section-title">Timestamp → Human Date</div>
+    <div class="input-group">
+      <label for="tsInput">Unix timestamp (seconds or milliseconds)</label>
+      <input type="number" id="tsInput" placeholder="e.g. 1711123200" oninput="convertToHuman()">
+    </div>
+    <div class="quick-buttons">
+      <button class="btn" onclick="setQuick(0)">Now</button>
+      <button class="btn" onclick="setQuick(3600)">+1 hour</button>
+      <button class="btn" onclick="setQuick(86400)">+1 day</button>
+      <button class="btn" onclick="setQuick(604800)">+1 week</button>
+    </div>
+    <div class="result-grid" id="tsResults" style="display:none;">
+      <div class="result-row">
+        <span class="result-label">Local Time</span>
+        <span class="result-value" id="rLocal"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">UTC</span>
+        <span class="result-value" id="rUtc"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">ISO 8601</span>
+        <span class="result-value" id="rIso"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Relative</span>
+        <span class="result-value amber" id="rRelative"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Seconds</span>
+        <span class="result-value green" id="rSeconds"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Milliseconds</span>
+        <span class="result-value green" id="rMillis"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Human → Timestamp -->
+  <div class="section">
+    <div class="section-title">Human Date → Timestamp</div>
+    <div class="date-time-row">
+      <div class="input-group">
+        <label for="dateInput">Date</label>
+        <input type="date" id="dateInput" oninput="convertToTimestamp()">
+      </div>
+      <div class="input-group">
+        <label for="timeInput">Time</label>
+        <input type="time" id="timeInput" step="1" oninput="convertToTimestamp()">
+      </div>
+    </div>
+    <div class="result-grid" id="dtResults" style="display:none;">
+      <div class="result-row">
+        <span class="result-label">Unix Timestamp (s)</span>
+        <span class="result-value green" id="dSeconds"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Unix Timestamp (ms)</span>
+        <span class="result-value green" id="dMillis"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">ISO 8601</span>
+        <span class="result-value" id="dIso"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="/tools">Tools</a>
+    <span class="sep">·</span>
+    <a href="/">TerminalFeed.io</a>
+  </div>
+</div>
+
+<script>
+// Live clock
+function tickClock() {
+  var now = Date.now();
+  document.getElementById('liveSec').textContent = Math.floor(now / 1000);
+  document.getElementById('liveMs').textContent = now + ' ms';
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+function copyLive() {
+  var ts = Math.floor(Date.now() / 1000).toString();
+  navigator.clipboard.writeText(ts).then(function() {
+    var btn = document.getElementById('copyLiveBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// Quick buttons
+function setQuick(offset) {
+  var ts = Math.floor(Date.now() / 1000) + offset;
+  document.getElementById('tsInput').value = ts;
+  convertToHuman();
+}
+
+// Relative time
+function relativeTime(date) {
+  var now = Date.now();
+  var diffMs = now - date.getTime();
+  var abs = Math.abs(diffMs);
+  var suffix = diffMs >= 0 ? ' ago' : ' from now';
+
+  if (abs < 60000) return Math.floor(abs / 1000) + ' seconds' + suffix;
+  if (abs < 3600000) return Math.floor(abs / 60000) + ' minutes' + suffix;
+  if (abs < 86400000) return Math.floor(abs / 3600000) + ' hours' + suffix;
+  if (abs < 2592000000) return Math.floor(abs / 86400000) + ' days' + suffix;
+  if (abs < 31536000000) return Math.floor(abs / 2592000000) + ' months' + suffix;
+  return Math.floor(abs / 31536000000) + ' years' + suffix;
+}
+
+// Timestamp → Human
+function convertToHuman() {
+  var raw = document.getElementById('tsInput').value.trim();
+  var results = document.getElementById('tsResults');
+  if (!raw) { results.style.display = 'none'; return; }
+
+  var num = parseInt(raw, 10);
+  if (isNaN(num)) { results.style.display = 'none'; return; }
+
+  // Detect ms vs s: if > 1e12, treat as milliseconds
+  var ms = num > 1e12 ? num : num * 1000;
+  var sec = num > 1e12 ? Math.floor(num / 1000) : num;
+  var d = new Date(ms);
+
+  if (isNaN(d.getTime())) { results.style.display = 'none'; return; }
+
+  document.getElementById('rLocal').textContent = d.toLocaleString();
+  document.getElementById('rUtc').textContent = d.toUTCString();
+  document.getElementById('rIso').textContent = d.toISOString();
+  document.getElementById('rRelative').textContent = relativeTime(d);
+  document.getElementById('rSeconds').textContent = sec;
+  document.getElementById('rMillis').textContent = ms;
+  results.style.display = 'grid';
+}
+
+// Human → Timestamp
+function convertToTimestamp() {
+  var dateVal = document.getElementById('dateInput').value;
+  var timeVal = document.getElementById('timeInput').value || '00:00:00';
+  var results = document.getElementById('dtResults');
+
+  if (!dateVal) { results.style.display = 'none'; return; }
+
+  var d = new Date(dateVal + 'T' + timeVal);
+  if (isNaN(d.getTime())) { results.style.display = 'none'; return; }
+
+  document.getElementById('dSeconds').textContent = Math.floor(d.getTime() / 1000);
+  document.getElementById('dMillis').textContent = d.getTime();
+  document.getElementById('dIso').textContent = d.toISOString();
+  results.style.display = 'grid';
+}
+
+// Init date input with today
+(function() {
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = String(now.getMonth() + 1).padStart(2, '0');
+  var day = String(now.getDate()).padStart(2, '0');
+  document.getElementById('dateInput').value = y + '-' + m + '-' + day;
+  var h = String(now.getHours()).padStart(2, '0');
+  var min = String(now.getMinutes()).padStart(2, '0');
+  var sec = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('timeInput').value = h + ':' + min + ':' + sec;
+  convertToTimestamp();
+})();
+</script>
+</body>
+</html>

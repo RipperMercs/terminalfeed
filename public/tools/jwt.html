@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JWT Decoder — TerminalFeed Tools</title>
+<meta name="description" content="Decode and inspect JWT tokens instantly. View header, payload, and claims with expiration checking. Runs entirely in your browser — tokens never leave your machine.">
+<meta name="keywords" content="jwt decoder, jwt parser, json web token, jwt debugger, jwt inspector">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://terminalfeed.io/tools/jwt">
+
+<meta property="og:title" content="JWT Decoder — TerminalFeed Tools">
+<meta property="og:description" content="Decode and inspect JWT tokens instantly. Runs locally in your browser — tokens never leave your machine.">
+<meta property="og:url" content="https://terminalfeed.io/tools/jwt">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JWT Decoder — TerminalFeed Tools">
+<meta name="twitter:description" content="Decode and inspect JWT tokens instantly. Runs locally in your browser.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "JWT Decoder",
+  "url": "https://terminalfeed.io/tools/jwt",
+  "description": "Decode and inspect JWT tokens. View header, payload, claims, and expiration status. Runs entirely in your browser.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 760px;
+    width: 100%;
+  }
+
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #4E4D49;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: #5DCAA5; text-decoration: none; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .page-header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #D4D2CB;
+    letter-spacing: 0.5px;
+  }
+  .badge {
+    font-size: 0.7rem;
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .section {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #1A1A22;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4E4D49;
+    margin-bottom: 1rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #0A0A0C;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    border-radius: 4px;
+    padding: 0.8rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  textarea:focus { border-color: #5DCAA5; }
+  textarea::placeholder { color: #4E4D49; }
+
+  .disclaimer {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: #EF9F27;
+  }
+
+  .error-msg {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.25);
+    border-radius: 4px;
+    color: #F87171;
+    font-size: 0.85rem;
+    display: none;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    display: none;
+  }
+  .status-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .status-item .s-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4E4D49;
+    margin-bottom: 0.3rem;
+  }
+  .status-item .s-value {
+    font-size: 0.85rem;
+    color: #D4D2CB;
+    word-break: break-all;
+  }
+  .s-value.green { color: #5DCAA5; }
+  .s-value.red { color: #F87171; }
+  .s-value.amber { color: #EF9F27; }
+
+  /* JSON display */
+  .json-block {
+    background: #0A0A0C;
+    border: 1px solid #1A1A22;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .json-key { color: #6CB6FF; }
+  .json-string { color: #5DCAA5; }
+  .json-number { color: #EF9F27; }
+  .json-bool { color: #EF9F27; }
+  .json-null { color: #4E4D49; }
+
+  .claim-note {
+    font-size: 0.75rem;
+    color: #4E4D49;
+    font-style: italic;
+  }
+  .claim-note.expired { color: #F87171; }
+  .claim-note.valid { color: #5DCAA5; }
+
+  .sig-block {
+    background: #0A0A0C;
+    border: 1px solid #1A1A22;
+    border-radius: 4px;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #4E4D49;
+    word-break: break-all;
+    line-height: 1.6;
+  }
+  .sig-note {
+    margin-top: 0.5rem;
+    font-size: 0.72rem;
+    color: #4E4D49;
+    font-style: italic;
+  }
+
+  .decoded-sections { display: none; }
+
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #1A1A22;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #4E4D49;
+  }
+  .footer a { color: #4E4D49; }
+  .footer a:hover { color: #5DCAA5; }
+  .footer .sep { margin: 0 0.5rem; }
+
+  @media (max-width: 500px) {
+    .page-header h1 { font-size: 1.1rem; }
+    .status-bar { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="/tools" class="back-link">← back to tools</a>
+
+  <div class="page-header">
+    <h1>&gt;_ JWT DECODER</h1>
+    <span class="badge">⚡ runs locally</span>
+  </div>
+
+  <!-- Input -->
+  <div class="section">
+    <div class="section-title">Paste JWT Token</div>
+    <textarea id="jwtInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U" spellcheck="false"></textarea>
+    <div class="disclaimer">⚠ This tool does not verify signatures. Decoding happens entirely in your browser — tokens never leave your machine.</div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar">
+    <div class="status-item">
+      <div class="s-label">Algorithm</div>
+      <div class="s-value" id="sAlg">—</div>
+    </div>
+    <div class="status-item">
+      <div class="s-label">Issued At</div>
+      <div class="s-value" id="sIat">—</div>
+    </div>
+    <div class="status-item">
+      <div class="s-label">Expires At</div>
+      <div class="s-value" id="sExp">—</div>
+    </div>
+    <div class="status-item">
+      <div class="s-label">Expired?</div>
+      <div class="s-value" id="sExpired">—</div>
+    </div>
+  </div>
+
+  <!-- Decoded sections -->
+  <div class="decoded-sections" id="decoded">
+    <!-- Header -->
+    <div class="section">
+      <div class="section-title">Header</div>
+      <div class="json-block" id="headerJson"></div>
+    </div>
+
+    <!-- Payload -->
+    <div class="section">
+      <div class="section-title">Payload</div>
+      <div class="json-block" id="payloadJson"></div>
+    </div>
+
+    <!-- Signature -->
+    <div class="section">
+      <div class="section-title">Signature</div>
+      <div class="sig-block" id="sigBlock"></div>
+      <div class="sig-note">Signature verification requires the secret key — this tool only decodes.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="/tools">Tools</a>
+    <span class="sep">·</span>
+    <a href="/">TerminalFeed.io</a>
+  </div>
+</div>
+
+<script>
+var textarea = document.getElementById('jwtInput');
+var errorMsg = document.getElementById('errorMsg');
+var statusBar = document.getElementById('statusBar');
+var decoded = document.getElementById('decoded');
+
+textarea.addEventListener('input', decodeJWT);
+textarea.addEventListener('paste', function() { setTimeout(decodeJWT, 0); });
+
+// Time claim keys
+var TIME_CLAIMS = { exp: 'Expires', iat: 'Issued At', nbf: 'Not Before' };
+
+function base64UrlDecode(str) {
+  // Replace URL-safe chars
+  var s = str.replace(/-/g, '+').replace(/_/g, '/');
+  // Pad
+  while (s.length % 4) s += '=';
+  return atob(s);
+}
+
+function syntaxHighlight(obj, timeClaims) {
+  var json = JSON.stringify(obj, null, 2);
+  var now = Math.floor(Date.now() / 1000);
+
+  // Process line by line for claim annotations
+  var lines = json.split('\n');
+  var result = [];
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    // Highlight JSON syntax
+    var highlighted = line
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"([^"]+)"(\s*:)/g, '<span class="json-key">"$1"</span>$2')
+      .replace(/:\s*"([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+      .replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+      .replace(/:\s*(true|false)/g, ': <span class="json-bool">$1</span>')
+      .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
+
+    result.push(highlighted);
+
+    // Check if this line has a time claim
+    if (timeClaims) {
+      for (var key in TIME_CLAIMS) {
+        var match = line.match(new RegExp('"' + key + '"\\s*:\\s*(\\d+)'));
+        if (match) {
+          var ts = parseInt(match[1], 10);
+          var d = new Date(ts * 1000);
+          var label = d.toLocaleString() + ' UTC';
+          var cls = 'claim-note';
+          if (key === 'exp') {
+            cls += ts < now ? ' expired' : ' valid';
+            label += ts < now ? ' (EXPIRED)' : ' (valid)';
+          }
+          result.push(line.replace(/\S.*/, '') + '<span class="' + cls + '">  // ' + label + '</span>');
+        }
+      }
+    }
+  }
+
+  return result.join('\n');
+}
+
+function decodeJWT() {
+  var token = textarea.value.trim();
+
+  if (!token) {
+    errorMsg.style.display = 'none';
+    statusBar.style.display = 'none';
+    decoded.style.display = 'none';
+    return;
+  }
+
+  var parts = token.split('.');
+  if (parts.length !== 3) {
+    showError('Invalid JWT: expected 3 parts separated by dots, got ' + parts.length);
+    return;
+  }
+
+  var header, payload;
+
+  try {
+    header = JSON.parse(base64UrlDecode(parts[0]));
+  } catch (e) {
+    showError('Failed to decode header: ' + e.message);
+    return;
+  }
+
+  try {
+    payload = JSON.parse(base64UrlDecode(parts[1]));
+  } catch (e) {
+    showError('Failed to decode payload: ' + e.message);
+    return;
+  }
+
+  errorMsg.style.display = 'none';
+
+  // Render header
+  document.getElementById('headerJson').innerHTML = syntaxHighlight(header, false);
+
+  // Render payload
+  document.getElementById('payloadJson').innerHTML = syntaxHighlight(payload, true);
+
+  // Render signature
+  document.getElementById('sigBlock').textContent = parts[2];
+
+  // Status bar
+  var now = Math.floor(Date.now() / 1000);
+
+  document.getElementById('sAlg').textContent = header.alg || '—';
+  document.getElementById('sAlg').className = 's-value';
+
+  if (payload.iat) {
+    document.getElementById('sIat').textContent = new Date(payload.iat * 1000).toLocaleString();
+    document.getElementById('sIat').className = 's-value';
+  } else {
+    document.getElementById('sIat').textContent = '—';
+    document.getElementById('sIat').className = 's-value';
+  }
+
+  if (payload.exp) {
+    var expDate = new Date(payload.exp * 1000);
+    document.getElementById('sExp').textContent = expDate.toLocaleString();
+    document.getElementById('sExp').className = 's-value';
+
+    var isExpired = payload.exp < now;
+    document.getElementById('sExpired').textContent = isExpired ? 'Yes' : 'No';
+    document.getElementById('sExpired').className = 's-value ' + (isExpired ? 'red' : 'green');
+  } else {
+    document.getElementById('sExp').textContent = '—';
+    document.getElementById('sExp').className = 's-value';
+    document.getElementById('sExpired').textContent = '—';
+    document.getElementById('sExpired').className = 's-value';
+  }
+
+  statusBar.style.display = 'grid';
+  decoded.style.display = 'block';
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.style.display = 'block';
+  statusBar.style.display = 'none';
+  decoded.style.display = 'none';
+}
+</script>
+</body>
+</html>

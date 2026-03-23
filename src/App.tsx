@@ -1154,10 +1154,11 @@ function App() {
           <span className="logoCursor" />
           <span className="topTerminals">{terminalsOnline} online</span>
           <a href="/live" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
+          <a href="/tools" className="liveBriefingLink toolsLink">TOOLS</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (
-            <span className="lockTip">click to unlock &amp; rearrange tabs →</span>
+            <span className="lockTip">CLICK TO UNLOCK &amp; REARRANGE TABS →</span>
           )}
           <button
             className={`lockBtn ${layout.isOrganizing ? 'lockBtnActive' : ''}`}
@@ -1419,6 +1420,7 @@ function App() {
           <a href="/features" className="footerLink">Features</a>
           <a href="/developers" className="footerLink">API</a>
           <a href="/changelog" className="footerLink">Changelog</a>
+          <a href="/tools" className="footerLink">Tools</a>
           {/* WiFi link — uncomment after AdSense approval */}
           {/* <a href="/wifi" className="footerLink">WiFi</a> */}
           <a href="/privacy" className="footerLink">Privacy</a>

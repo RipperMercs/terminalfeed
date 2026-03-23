@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regex Tester — TerminalFeed Tools</title>
+<meta name="description" content="Free online regex tester with live matching, capture group highlighting, and quick patterns. Runs 100% in your browser — nothing leaves your machine.">
+<meta name="keywords" content="regex tester, regular expression, regex online, regex matcher, regex pattern tester, developer tools">
+<link rel="canonical" href="https://terminalfeed.io/tools/regex">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Regex Tester — TerminalFeed Tools">
+<meta property="og:description" content="Free online regex tester with live matching, capture group highlighting, and quick patterns. Runs 100% in your browser.">
+<meta property="og:url" content="https://terminalfeed.io/tools/regex">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Regex Tester — TerminalFeed Tools">
+<meta name="twitter:description" content="Free online regex tester with live matching, capture group highlighting, and quick patterns.">
+<meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Regex Tester — TerminalFeed Tools",
+  "description": "Free online regex tester with live matching, capture group highlighting, and quick patterns. Runs entirely in your browser.",
+  "url": "https://terminalfeed.io/tools/regex",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0A0A0C;
+    --bg-card: #111114;
+    --border: #1A1A22;
+    --border-hover: #5DCAA5;
+    --text: #D4D2CB;
+    --text-dim: #4E4D49;
+    --text-mid: #7A7A72;
+    --green: #5DCAA5;
+    --green-dim: rgba(93, 202, 165, 0.10);
+    --green-glow: rgba(93, 202, 165, 0.25);
+    --red: #F87171;
+    --amber: #EF9F27;
+    --blue: #60A5FA;
+    --purple: #A78BFA;
+    --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(26, 26, 34, 0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26, 26, 34, 0.10) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  a { color: var(--green); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* Top bar */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10, 10, 12, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .back-link {
+    font-size: 13px;
+    color: var(--text-mid);
+    transition: color 0.2s;
+  }
+
+  .back-link:hover {
+    color: var(--green);
+    text-decoration: none;
+  }
+
+  /* Header */
+  .header {
+    padding: 48px 0 12px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 16px;
+    background: var(--green-dim);
+    border: 1px solid rgba(93, 202, 165, 0.18);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 0.5px;
+  }
+
+  /* Sections */
+  .section {
+    margin-top: 28px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* Pattern input row */
+  .pattern-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .pattern-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0 14px;
+    transition: border-color 0.2s;
+  }
+
+  .pattern-wrap:focus-within {
+    border-color: var(--green);
+    box-shadow: 0 0 12px var(--green-dim);
+  }
+
+  .pattern-wrap.error {
+    border-color: var(--red);
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.15);
+  }
+
+  .pattern-slash {
+    color: var(--text-dim);
+    font-size: 16px;
+    user-select: none;
+    margin-right: 4px;
+  }
+
+  .pattern-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 0;
+  }
+
+  .pattern-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Flags */
+  .flags-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .flag-btn {
+    padding: 8px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .flag-btn:hover {
+    border-color: var(--text-mid);
+    color: var(--text-mid);
+  }
+
+  .flag-btn.active {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* Test string textarea */
+  .test-textarea {
+    width: 100%;
+    min-height: 140px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 14px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  .test-textarea:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 12px var(--green-dim);
+  }
+
+  .test-textarea::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Quick patterns */
+  .quick-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .quick-btn {
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-mid);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .quick-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+
+  /* Error display */
+  .error-msg {
+    display: none;
+    padding: 10px 14px;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    border-radius: 6px;
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  .error-msg.visible {
+    display: block;
+  }
+
+  /* Results: highlighted text */
+  .results-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 60px;
+    color: var(--text);
+  }
+
+  .results-box .hl {
+    background: rgba(93, 202, 165, 0.22);
+    border-bottom: 2px solid var(--green);
+    border-radius: 2px;
+    padding: 1px 0;
+  }
+
+  .results-box .hl-g1 {
+    background: rgba(96, 165, 250, 0.22);
+    border-bottom: 2px solid var(--blue);
+  }
+
+  .results-box .hl-g2 {
+    background: rgba(167, 139, 250, 0.22);
+    border-bottom: 2px solid var(--purple);
+  }
+
+  .results-box .hl-g3 {
+    background: rgba(239, 159, 39, 0.22);
+    border-bottom: 2px solid var(--amber);
+  }
+
+  .results-box .hl-g4 {
+    background: rgba(248, 113, 113, 0.22);
+    border-bottom: 2px solid var(--red);
+  }
+
+  .no-matches {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* Match details table */
+  .match-table-wrap {
+    overflow-x: auto;
+    margin-top: 12px;
+  }
+
+  .match-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .match-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .match-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  .match-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .match-table .val { color: var(--green); }
+  .match-table .grp1 { color: var(--blue); }
+  .match-table .grp2 { color: var(--purple); }
+  .match-table .grp3 { color: var(--amber); }
+  .match-table .grp4 { color: var(--red); }
+  .match-table .idx { color: var(--text-mid); }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    margin-top: 20px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-mid);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .status-dot.valid { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+  .status-dot.invalid { background: var(--red); box-shadow: 0 0 6px rgba(248, 113, 113, 0.4); }
+  .status-dot.idle { background: var(--text-dim); }
+
+  /* Footer */
+  .footer {
+    padding: 40px 0 32px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    margin-top: 40px;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+
+  .footer-links a {
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover {
+    color: var(--green);
+    text-decoration: none;
+  }
+
+  .footer-copy {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header { padding: 36px 0 8px; }
+    .header h1 { font-size: 20px; letter-spacing: 1px; }
+    .pattern-row { flex-direction: column; }
+    .flags-row { flex-wrap: wrap; }
+    .status-bar { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <a href="/tools" class="back-link">&larr; back to tools</a>
+  </div>
+
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <h1>&gt;_ REGEX TESTER</h1>
+      <span class="badge">&#9889; runs locally</span>
+    </div>
+
+    <!-- Pattern input -->
+    <div class="section">
+      <div class="section-label">Pattern</div>
+      <div class="pattern-row">
+        <div class="pattern-wrap" id="patternWrap">
+          <span class="pattern-slash">/</span>
+          <input type="text" class="pattern-input" id="patternInput" placeholder="enter regex pattern..." spellcheck="false" autocomplete="off">
+          <span class="pattern-slash">/</span>
+        </div>
+        <div class="flags-row">
+          <button class="flag-btn active" data-flag="g" title="Global">g</button>
+          <button class="flag-btn" data-flag="i" title="Case-insensitive">i</button>
+          <button class="flag-btn" data-flag="m" title="Multiline">m</button>
+          <button class="flag-btn" data-flag="s" title="DotAll">s</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick patterns -->
+    <div class="quick-row">
+      <button class="quick-btn" data-pattern="email">Email</button>
+      <button class="quick-btn" data-pattern="url">URL</button>
+      <button class="quick-btn" data-pattern="ip">IP Address</button>
+      <button class="quick-btn" data-pattern="phone">Phone Number</button>
+      <button class="quick-btn" data-pattern="date">Date</button>
+    </div>
+
+    <!-- Error display -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- Test string -->
+    <div class="section">
+      <div class="section-label">Test String</div>
+      <textarea class="test-textarea" id="testInput" placeholder="enter test string..." spellcheck="false"></textarea>
+    </div>
+
+    <!-- Results: highlighted matches -->
+    <div class="section">
+      <div class="section-label">Matches</div>
+      <div class="results-box" id="resultsBox"><span class="no-matches">matches will appear here...</span></div>
+    </div>
+
+    <!-- Match details table -->
+    <div class="section" id="detailsSection" style="display:none;">
+      <div class="section-label">Match Details</div>
+      <div class="match-table-wrap">
+        <table class="match-table" id="matchTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Index</th>
+              <th>Value</th>
+              <th>Groups</th>
+            </tr>
+          </thead>
+          <tbody id="matchBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-dot idle" id="statusDot"></span>
+        <span id="statusText">idle</span>
+      </div>
+      <div class="status-item">
+        <span id="matchCountText">0 matches</span>
+      </div>
+      <div class="status-item">
+        <span id="execTimeText">0 ms</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="/tools">Tools</a>
+        <a href="/">Home</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 TerminalFeed.io</p>
+    </footer>
+
+  </div>
+
+<script>
+(function() {
+  const patternInput = document.getElementById('patternInput');
+  const patternWrap = document.getElementById('patternWrap');
+  const testInput = document.getElementById('testInput');
+  const resultsBox = document.getElementById('resultsBox');
+  const errorMsg = document.getElementById('errorMsg');
+  const detailsSection = document.getElementById('detailsSection');
+  const matchBody = document.getElementById('matchBody');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const matchCountText = document.getElementById('matchCountText');
+  const execTimeText = document.getElementById('execTimeText');
+
+  const flagBtns = document.querySelectorAll('.flag-btn');
+  const quickBtns = document.querySelectorAll('.quick-btn');
+
+  const groupColors = ['grp1', 'grp2', 'grp3', 'grp4'];
+  const hlGroupClasses = ['hl-g1', 'hl-g2', 'hl-g3', 'hl-g4'];
+
+  // Quick pattern definitions
+  const quickPatterns = {
+    email: {
+      pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+      test: 'Contact us at hello@terminalfeed.io or support@example.com\nInvalid: not-an-email, @missing.user, user@.com'
+    },
+    url: {
+      pattern: 'https?://[\\w.-]+(?:\\.[a-zA-Z]{2,})(?:/[^\\s]*)?',
+      test: 'Visit https://terminalfeed.io/tools or http://example.com/path?q=1\nNot a URL: ftp://other.com, just some text here'
+    },
+    ip: {
+      pattern: '\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b',
+      test: 'Server IPs: 192.168.1.1, 10.0.0.255, 172.16.0.1\nInvalid: 999.999.999.999, 256.1.1.1'
+    },
+    phone: {
+      pattern: '\\+?1?[-.\\s]?\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}',
+      test: 'Call (555) 123-4567 or +1-800-555-0199\nMobile: 555.867.5309, 5551234567'
+    },
+    date: {
+      pattern: '(\\d{4})[/-](\\d{1,2})[/-](\\d{1,2})',
+      test: 'Dates: 2026-03-22, 2025/12/01, 2024-1-9\nNot matched: 22-03-2026, March 22 2026'
+    }
+  };
+
+  // Flags state
+  function getFlags() {
+    let flags = '';
+    flagBtns.forEach(btn => {
+      if (btn.classList.contains('active')) flags += btn.dataset.flag;
+    });
+    return flags;
+  }
+
+  // Toggle flag buttons
+  flagBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      runMatch();
+    });
+  });
+
+  // Quick pattern buttons
+  quickBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.pattern;
+      const qp = quickPatterns[key];
+      if (!qp) return;
+      patternInput.value = qp.pattern;
+      testInput.value = qp.test;
+      // Ensure global flag is on for demos
+      const gBtn = document.querySelector('.flag-btn[data-flag="g"]');
+      if (!gBtn.classList.contains('active')) gBtn.classList.add('active');
+      runMatch();
+    });
+  });
+
+  // Escape HTML for safe display
+  function esc(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Main match function
+  function runMatch() {
+    const patternStr = patternInput.value;
+    const testStr = testInput.value;
+
+    // Reset states
+    errorMsg.classList.remove('visible');
+    errorMsg.textContent = '';
+    patternWrap.classList.remove('error');
+
+    // Empty state
+    if (!patternStr || !testStr) {
+      resultsBox.innerHTML = '<span class="no-matches">matches will appear here...</span>';
+      detailsSection.style.display = 'none';
+      statusDot.className = 'status-dot idle';
+      statusText.textContent = 'idle';
+      matchCountText.textContent = '0 matches';
+      execTimeText.textContent = '0 ms';
+      return;
+    }
+
+    // Try to compile regex
+    let regex;
+    try {
+      regex = new RegExp(patternStr, getFlags());
+    } catch (e) {
+      patternWrap.classList.add('error');
+      errorMsg.textContent = e.message;
+      errorMsg.classList.add('visible');
+      resultsBox.innerHTML = '<span class="no-matches">fix pattern error above</span>';
+      detailsSection.style.display = 'none';
+      statusDot.className = 'status-dot invalid';
+      statusText.textContent = 'invalid pattern';
+      matchCountText.textContent = '0 matches';
+      execTimeText.textContent = '0 ms';
+      return;
+    }
+
+    // Execute matching
+    const t0 = performance.now();
+    const matches = [];
+    let match;
+    const isGlobal = regex.global;
+
+    // Safety: prevent infinite loops on zero-length matches
+    const MAX_MATCHES = 5000;
+
+    if (isGlobal) {
+      regex.lastIndex = 0;
+      while ((match = regex.exec(testStr)) !== null && matches.length < MAX_MATCHES) {
+        matches.push({ index: match.index, value: match[0], groups: Array.from(match).slice(1) });
+        if (match[0].length === 0) regex.lastIndex++;
+      }
+    } else {
+      match = regex.exec(testStr);
+      if (match) {
+        matches.push({ index: match.index, value: match[0], groups: Array.from(match).slice(1) });
+      }
+    }
+
+    const elapsed = (performance.now() - t0).toFixed(2);
+
+    // Update status bar
+    statusDot.className = 'status-dot valid';
+    statusText.textContent = 'valid pattern';
+    matchCountText.textContent = matches.length + (matches.length === 1 ? ' match' : ' matches');
+    execTimeText.textContent = elapsed + ' ms';
+
+    // Build highlighted results
+    if (matches.length === 0) {
+      resultsBox.innerHTML = '<span class="no-matches">no matches found</span>';
+      detailsSection.style.display = 'none';
+      return;
+    }
+
+    // Build highlighted HTML
+    let html = '';
+    let lastIndex = 0;
+
+    // Sort matches by index (they should already be sorted)
+    matches.sort((a, b) => a.index - b.index);
+
+    for (const m of matches) {
+      // Text before match
+      if (m.index > lastIndex) {
+        html += esc(testStr.slice(lastIndex, m.index));
+      }
+
+      // The match itself — check for captured groups to color them
+      if (m.groups.length > 0 && m.groups.some(g => g !== undefined)) {
+        // We need to find group positions within the match.
+        // Since JS regex doesn't give group indices in all environments,
+        // we highlight the full match with subgroup coloring where possible.
+        // For simplicity: if the full match equals concatenation of groups, color groups.
+        // Otherwise highlight the full match with base highlight.
+        html += buildGroupHighlight(m, testStr);
+      } else {
+        html += '<span class="hl">' + esc(m.value) + '</span>';
+      }
+
+      lastIndex = m.index + m.value.length;
+    }
+
+    // Remaining text
+    if (lastIndex < testStr.length) {
+      html += esc(testStr.slice(lastIndex));
+    }
+
+    resultsBox.innerHTML = html;
+
+    // Build match details table
+    matchBody.innerHTML = '';
+    matches.forEach((m, i) => {
+      const tr = document.createElement('tr');
+
+      const tdNum = document.createElement('td');
+      tdNum.textContent = i + 1;
+      tdNum.className = 'idx';
+      tr.appendChild(tdNum);
+
+      const tdIdx = document.createElement('td');
+      tdIdx.textContent = m.index;
+      tdIdx.className = 'idx';
+      tr.appendChild(tdIdx);
+
+      const tdVal = document.createElement('td');
+      tdVal.textContent = m.value;
+      tdVal.className = 'val';
+      tr.appendChild(tdVal);
+
+      const tdGroups = document.createElement('td');
+      if (m.groups.length > 0 && m.groups.some(g => g !== undefined)) {
+        m.groups.forEach((g, gi) => {
+          if (g === undefined) return;
+          const span = document.createElement('span');
+          span.className = groupColors[gi % groupColors.length];
+          span.textContent = '$' + (gi + 1) + ': ' + g;
+          tdGroups.appendChild(span);
+          if (gi < m.groups.length - 1) {
+            tdGroups.appendChild(document.createTextNode('  '));
+          }
+        });
+      } else {
+        tdGroups.style.color = 'var(--text-dim)';
+        tdGroups.textContent = '--';
+      }
+      tr.appendChild(tdGroups);
+
+      matchBody.appendChild(tr);
+    });
+
+    detailsSection.style.display = 'block';
+  }
+
+  // Build highlighted HTML for a match with capture groups
+  function buildGroupHighlight(m, testStr) {
+    // Use indices if available (RegExp.prototype.exec with 'd' flag)
+    // Fallback: try to locate groups within the match string
+    const fullMatch = m.value;
+    const groups = m.groups;
+
+    // Attempt a simple approach: try to find each group within the full match
+    // and color them. This is a best-effort since JS doesn't always give indices.
+    // We try to greedily locate each group in order within the full match.
+    let result = '';
+    let pos = 0;
+    let colored = new Array(fullMatch.length).fill(-1); // -1 = no group
+
+    for (let gi = 0; gi < groups.length; gi++) {
+      const g = groups[gi];
+      if (g === undefined) continue;
+      const idx = fullMatch.indexOf(g, pos);
+      if (idx !== -1) {
+        for (let c = idx; c < idx + g.length; c++) {
+          colored[c] = gi;
+        }
+        pos = idx + g.length;
+      }
+    }
+
+    // Build HTML character by character, merging runs
+    let i = 0;
+    while (i < fullMatch.length) {
+      const gIdx = colored[i];
+      if (gIdx === -1) {
+        // Find run of non-group chars
+        let j = i;
+        while (j < fullMatch.length && colored[j] === -1) j++;
+        result += '<span class="hl">' + esc(fullMatch.slice(i, j)) + '</span>';
+        i = j;
+      } else {
+        // Find run of same group
+        let j = i;
+        while (j < fullMatch.length && colored[j] === gIdx) j++;
+        const cls = hlGroupClasses[gIdx % hlGroupClasses.length];
+        result += '<span class="hl ' + cls + '">' + esc(fullMatch.slice(i, j)) + '</span>';
+        i = j;
+      }
+    }
+
+    return result;
+  }
+
+  // Live matching on input
+  patternInput.addEventListener('input', runMatch);
+  testInput.addEventListener('input', runMatch);
+})();
+</script>
+
+</body>
+</html>
