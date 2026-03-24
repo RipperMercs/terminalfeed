@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TerminalFeed Clean — Lightweight PC Cleanup for Windows</title>
+<meta name="description" content="Free, transparent system cleanup tool for Windows. No spyware, no bloat, no subscriptions. Scan temp files, manage startup programs, find duplicates, reclaim disk space.">
+<link rel="canonical" href="https://terminalfeed.io/clean">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://terminalfeed.io/clean">
+<meta property="og:title" content="TerminalFeed Clean">
+<meta property="og:description" content="Free, transparent system cleanup tool for Windows. No spyware, no bloat, no subscriptions. Scan temp files, manage startup programs, find duplicates, reclaim disk space.">
+<meta property="og:image" content="https://terminalfeed.io/og-clean.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TerminalFeed Clean — Lightweight PC Cleanup for Windows">
+<meta name="twitter:description" content="Free, transparent system cleanup tool for Windows. No spyware, no bloat, no subscriptions. Scan temp files, manage startup programs, find duplicates, reclaim disk space.">
+<meta name="twitter:image" content="https://terminalfeed.io/og-clean.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "TerminalFeed Clean",
+  "url": "https://terminalfeed.io/clean",
+  "description": "Free, transparent system cleanup tool for Windows. No spyware, no bloat, no subscriptions.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "offers": [
+    {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free version"
+    },
+    {
+      "@type": "Offer",
+      "price": "4.99",
+      "priceCurrency": "USD",
+      "description": "Premium — one-time purchase"
+    }
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "Pizza Robot Studios LLC"
+  }
+}
+</script>
+<style>
+/* ═══════════════════════════════════════════
+   TerminalFeed Clean — Landing Page Styles
+   Scoped: all styles target .clean-page
+   ═══════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --clean-bg: #0a0a0a;
+  --clean-bg-card: #111111;
+  --clean-green: #00ff41;
+  --clean-green-dim: #00cc33;
+  --clean-green-muted: #006622;
+  --clean-border: #1a3a1a;
+  --clean-glow: #00ff4133;
+  --clean-glow-solid: #00ff4120;
+  --clean-amber: #ff6600;
+  --clean-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--clean-bg);
+  color: var(--clean-green-dim);
+  font-family: var(--clean-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Blink cursor animation ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor {
+  animation: blink 1s step-end infinite;
+  color: var(--clean-green);
+}
+
+/* ── Layout ── */
+.clean-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+section {
+  padding: 60px 0;
+}
+
+/* ── Hero ── */
+.hero {
+  padding-top: 80px;
+  text-align: center;
+}
+
+.hero-brand {
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--clean-green-muted);
+  margin-bottom: 12px;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--clean-green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+.hero-tagline {
+  font-size: 18px;
+  color: var(--clean-green-dim);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.hero-desc {
+  color: var(--clean-green-muted);
+  font-size: 13px;
+  line-height: 1.8;
+  max-width: 480px;
+  margin: 0 auto 32px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 28px;
+  font-family: var(--clean-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 1px solid var(--clean-border);
+  border-radius: 3px;
+  color: var(--clean-green);
+  background: transparent;
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--clean-glow-solid);
+  border-color: var(--clean-green);
+}
+
+.btn-primary {
+  border-color: var(--clean-green-dim);
+  padding: 14px 32px;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  border-color: var(--clean-green);
+  box-shadow: 0 0 12px var(--clean-glow);
+}
+
+.hero-meta {
+  font-size: 11px;
+  color: var(--clean-green-muted);
+  letter-spacing: 1px;
+}
+
+/* ── Terminal Demo ── */
+.demo {
+  display: flex;
+  justify-content: center;
+}
+
+.terminal {
+  width: 100%;
+  max-width: 620px;
+  border: 1px solid var(--clean-border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--clean-bg);
+}
+
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--clean-bg-card);
+  border-bottom: 1px solid var(--clean-border);
+  font-size: 11px;
+  color: var(--clean-green-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.terminal-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--clean-border);
+  background: transparent;
+}
+
+.terminal-body {
+  padding: 20px;
+  font-size: 12px;
+  line-height: 1.9;
+  min-height: 240px;
+}
+
+.terminal-body .line {
+  opacity: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--clean-green-dim);
+}
+
+.terminal-body .line.highlight {
+  color: var(--clean-green);
+  font-weight: 600;
+}
+
+/* Staggered line appearance via CSS animation */
+@keyframes typeIn {
+  from { opacity: 0; max-width: 0; }
+  to { opacity: 1; max-width: 800px; }
+}
+
+.terminal-body .line:nth-child(1) { animation: typeIn 0.4s ease forwards 0.5s; }
+.terminal-body .line:nth-child(2) { animation: typeIn 0.4s ease forwards 1.2s; }
+.terminal-body .line:nth-child(3) { animation: typeIn 0.4s ease forwards 1.9s; }
+.terminal-body .line:nth-child(4) { animation: typeIn 0.4s ease forwards 2.6s; }
+.terminal-body .line:nth-child(5) { animation: typeIn 0.4s ease forwards 3.3s; }
+.terminal-body .line:nth-child(6) { animation: typeIn 0.4s ease forwards 4.0s; }
+.terminal-body .line:nth-child(7) { animation: typeIn 0.4s ease forwards 4.7s; }
+.terminal-body .line:nth-child(8) { animation: typeIn 0.4s ease forwards 5.4s; }
+
+/* Progress bar fill */
+@keyframes fillBar {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.progress-track {
+  display: inline-block;
+  width: 180px;
+  height: 12px;
+  border: 1px solid var(--clean-border);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  position: relative;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--clean-green);
+  width: 0;
+  animation: fillBar 1.2s ease forwards 4.7s;
+}
+
+/* ── Features Grid ── */
+.features-heading {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--clean-green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.feature-card {
+  background: var(--clean-bg-card);
+  border: 1px solid var(--clean-border);
+  border-radius: 4px;
+  padding: 24px;
+  transition: box-shadow 150ms ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 0 8px var(--clean-glow);
+}
+
+.feature-card h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--clean-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  font-size: 12px;
+  color: var(--clean-green-dim);
+  line-height: 1.7;
+}
+
+.badge-premium {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--clean-amber);
+  border: 1px solid var(--clean-amber);
+  border-radius: 2px;
+  padding: 1px 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+  letter-spacing: 1px;
+}
+
+/* ── Trust Section ── */
+.trust {
+  text-align: left;
+}
+
+.trust-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--clean-green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.trust-sub {
+  color: var(--clean-green-dim);
+  font-size: 13px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.trust-list {
+  list-style: none;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.trust-list li {
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--clean-green-dim);
+  line-height: 1.7;
+}
+
+.trust-list li::before {
+  content: "\2713";
+  color: var(--clean-green);
+  font-weight: 700;
+  margin-right: 12px;
+}
+
+/* ── Free vs Premium ── */
+.pricing-heading {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--clean-green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.pricing-col {
+  background: var(--clean-bg-card);
+  border: 1px solid var(--clean-border);
+  border-radius: 4px;
+  padding: 28px 24px;
+}
+
+.pricing-col.premium {
+  border-color: var(--clean-green-dim);
+}
+
+.pricing-col h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--clean-green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.pricing-col .price {
+  font-size: 12px;
+  color: var(--clean-green-muted);
+  margin-bottom: 20px;
+}
+
+.pricing-col ul {
+  list-style: none;
+}
+
+.pricing-col ul li {
+  font-size: 12px;
+  color: var(--clean-green-dim);
+  padding: 5px 0;
+  line-height: 1.6;
+}
+
+.pricing-col ul li::before {
+  content: "\2713";
+  color: var(--clean-green);
+  margin-right: 10px;
+  font-weight: 600;
+}
+
+.pricing-col.premium ul li.coming-soon {
+  color: var(--clean-green-muted);
+}
+
+.pricing-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Footer ── */
+.clean-footer {
+  text-align: center;
+  padding: 40px 0 60px;
+  border-top: 1px solid var(--clean-border);
+  font-size: 11px;
+  color: var(--clean-green-muted);
+  line-height: 2;
+}
+
+.clean-footer a {
+  color: var(--clean-green-muted);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.clean-footer a:hover {
+  color: var(--clean-green-dim);
+}
+
+.clean-footer .footer-links {
+  margin-top: 8px;
+}
+
+.clean-footer .footer-links a {
+  margin: 0 10px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .hero { padding-top: 48px; }
+  .hero-title { font-size: 24px; }
+  .hero-tagline { font-size: 15px; }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn, .btn-primary {
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pricing-buttons .btn {
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  .terminal-body {
+    padding: 14px;
+    font-size: 11px;
+    overflow-x: auto;
+  }
+
+  section {
+    padding: 40px 0;
+  }
+}
+</style>
+</head>
+<body>
+<div class="clean-page">
+
+  <!-- ════════ HERO ════════ -->
+  <section class="hero">
+    <div class="hero-brand">&gt; terminalfeed</div>
+    <h1 class="hero-title">CLEAN<span class="cursor">_</span></h1>
+    <p class="hero-tagline">Your PC. Cleaned. No BS.</p>
+    <p class="hero-desc">
+      Lightweight system cleanup for Windows.<br>
+      No spyware. No bloat. No subscriptions.<br>
+      Just a fast, honest tool that works.
+    </p>
+    <div class="hero-buttons">
+      <a href="#" class="btn btn-primary">&gt; DOWNLOAD FREE</a>
+      <a href="#" class="btn">&gt; GET PREMIUM &mdash; $4.99</a>
+    </div>
+    <p class="hero-meta">Windows 10/11 &nbsp;|&nbsp; ~15 MB &nbsp;|&nbsp; v1.0.0</p>
+  </section>
+
+  <!-- ════════ TERMINAL DEMO ════════ -->
+  <section class="demo">
+    <div class="terminal">
+      <div class="terminal-titlebar">
+        <div class="terminal-dots">
+          <span></span><span></span><span></span>
+        </div>
+        TerminalFeed Clean
+      </div>
+      <div class="terminal-body">
+        <div class="line">&gt; Initializing TerminalFeed Clean v1.0.0...</div>
+        <div class="line">&gt; Scanning %TEMP%... 847 files (2.3 GB)</div>
+        <div class="line">&gt; Scanning Chrome Cache... 234 files (1.1 GB)</div>
+        <div class="line">&gt; Scanning Prefetch... 89 files (340 MB)</div>
+        <div class="line highlight">&gt; SCAN COMPLETE: 3.7 GB reclaimable</div>
+        <div class="line">&gt; Cleaning... <span class="progress-track"><span class="progress-fill"></span></span> 100%</div>
+        <div class="line highlight">&gt; Done. 3.7 GB freed in 4.2 seconds.</div>
+        <div class="line">&gt; <span class="cursor">_</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ FEATURES GRID ════════ -->
+  <section>
+    <h2 class="features-heading">&gt; FEATURES</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3>&gt; TEMP &amp; CACHE CLEANER</h3>
+        <p>Scans Windows temp, browser caches, crash dumps, and update leftovers. You see exactly what gets deleted &mdash; always.</p>
+      </div>
+      <div class="feature-card">
+        <h3>&gt; STARTUP MANAGER</h3>
+        <p>See everything that runs at boot. Disable the bloat. Keep what matters. System-critical items are protected.</p>
+      </div>
+      <div class="feature-card">
+        <h3>&gt; DUPLICATE FINDER</h3>
+        <p>Finds duplicate files by content &mdash; not just name. Fast 3-phase scan: size grouping, partial hash, full hash.</p>
+      </div>
+      <div class="feature-card">
+        <h3>&gt; LARGE FILE SCANNER <span class="badge-premium">PREMIUM</span></h3>
+        <p>Find what's eating your disk. Sort by size, type, or date. Treemap view shows exactly where space went.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ TRUST SECTION ════════ -->
+  <section class="trust">
+    <h2 class="trust-heading">&gt; WHY TRUST CLEAN?</h2>
+    <p class="trust-sub">Most "PC cleaners" are the malware. We built the opposite.</p>
+    <ul class="trust-list">
+      <li>Zero telemetry &mdash; no data leaves your machine</li>
+      <li>Every deletion logged &mdash; full transparency</li>
+      <li>You approve everything &mdash; nothing happens silently</li>
+      <li>No background processes &mdash; runs only when you run it</li>
+      <li>Tiny footprint &mdash; under 15 MB installed</li>
+      <li>Built with Rust &mdash; fast, safe, no runtime bloat</li>
+      <li>Made by Pizza Robot Studios &mdash; a real indie studio, not an ad farm</li>
+    </ul>
+  </section>
+
+  <!-- ════════ FREE vs PREMIUM ════════ -->
+  <section>
+    <h2 class="pricing-heading">&gt; FREE vs PREMIUM</h2>
+    <div class="pricing-grid">
+      <div class="pricing-col">
+        <h3>FREE</h3>
+        <p class="price">$0 forever</p>
+        <ul>
+          <li>Temp/cache cleanup</li>
+          <li>Startup manager</li>
+          <li>Duplicate scan (view only)</li>
+          <li>Large file list view</li>
+          <li>1 full scan per day</li>
+          <li>Ad-supported</li>
+        </ul>
+      </div>
+      <div class="pricing-col premium">
+        <h3>PREMIUM</h3>
+        <p class="price">$4.99 &mdash; one-time purchase</p>
+        <ul>
+          <li>Everything in Free</li>
+          <li>Remove all ads</li>
+          <li>Duplicate file deletion</li>
+          <li>Large file treemap + actions</li>
+          <li>Unlimited full scans</li>
+          <li class="coming-soon">Scheduled cleanup (coming soon)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pricing-buttons">
+      <a href="#" class="btn btn-primary">&gt; DOWNLOAD FREE</a>
+      <a href="#" class="btn">&gt; GET PREMIUM &mdash; $4.99 ONE TIME</a>
+    </div>
+  </section>
+
+  <!-- ════════ FOOTER ════════ -->
+  <footer class="clean-footer">
+    <div>TerminalFeed Clean &mdash; by Pizza Robot Studios LLC</div>
+    <div class="footer-links">
+      <a href="/">terminalfeed.io</a>
+      <a href="mailto:evan@pizzarobotstudios.com">evan@pizzarobotstudios.com</a>
+      <a href="/privacy">Privacy Policy</a>
+    </div>
+    <div>&copy; 2026 Pizza Robot Studios LLC</div>
+  </footer>
+
+</div>
+</body>
+</html>
