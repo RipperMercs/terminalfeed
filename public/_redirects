@@ -1,3 +1,6 @@
+# Product page redirects
+/clean /cleaner 301
+
 # Language rewrites — serve the same HTML file for translated URLs
 # Spanish
 /es/tools /tools/index.html 200
