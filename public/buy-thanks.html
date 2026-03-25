@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchase Complete — TerminalFeed Cleaner Premium</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --bg-card: #111111;
+  --green: #00ff41;
+  --green-dim: #00cc33;
+  --green-muted: #006622;
+  --border: #1a3a1a;
+  --glow: #00ff4133;
+  --glow-solid: #00ff4120;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 255, 65, 0.08) 0%, transparent 45%),
+    linear-gradient(180deg, #0d120d 0%, #060a06 25%, #0a0a0a 50%, #060a06 75%, #0d120d 100%);
+  color: var(--green-dim);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.check {
+  font-size: 48px;
+  color: var(--green);
+  margin-bottom: 24px;
+  line-height: 1;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--green-dim);
+  margin-bottom: 8px;
+}
+
+.key-note {
+  font-size: 13px;
+  color: var(--green-muted);
+  margin-bottom: 40px;
+}
+
+.steps-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.steps {
+  list-style: none;
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto 40px;
+}
+
+.steps li {
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--green-dim);
+  line-height: 1.7;
+}
+
+.steps li span.num {
+  color: var(--green);
+  font-weight: 700;
+  margin-right: 10px;
+}
+
+.download-note {
+  font-size: 12px;
+  color: var(--green-muted);
+  margin-bottom: 16px;
+}
+
+.btn-download {
+  display: inline-block;
+  padding: 14px 32px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 1px solid var(--green-dim);
+  border-radius: 3px;
+  color: var(--green);
+  background: transparent;
+  transition: all 150ms ease;
+  margin-bottom: 40px;
+}
+
+.btn-download:hover {
+  background: var(--glow-solid);
+  border-color: var(--green);
+  box-shadow: 0 0 12px var(--glow);
+}
+
+.help {
+  font-size: 11px;
+  color: var(--green-muted);
+}
+
+.help a {
+  color: var(--green-muted);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.help a:hover { color: var(--green-dim); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="check">&#10003;</div>
+  <h1 class="title">&gt; PURCHASE COMPLETE</h1>
+  <p class="subtitle">Thank you for supporting TerminalFeed Cleaner.</p>
+  <p class="key-note">Your license key has been sent to your email.</p>
+
+  <h2 class="steps-heading">&gt; NEXT STEPS</h2>
+  <ol class="steps">
+    <li><span class="num">1.</span> Check your email for the license key</li>
+    <li><span class="num">2.</span> Open TerminalFeed Cleaner</li>
+    <li><span class="num">3.</span> Go to Settings &rarr; Activate License</li>
+    <li><span class="num">4.</span> Paste your key &rarr; done</li>
+  </ol>
+
+  <p class="download-note">If you haven't downloaded the app yet:</p>
+  <a href="/cleaner" class="btn-download">&gt; DOWNLOAD TERMINALFEED CLEANER</a>
+
+  <p class="help">Need help? <a href="mailto:evan@pizzarobotstudios.com">evan@pizzarobotstudios.com</a></p>
+
+</div>
+</body>
+</html>

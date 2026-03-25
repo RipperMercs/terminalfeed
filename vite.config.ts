@@ -9,8 +9,13 @@ export default defineConfig({
       name: 'static-page-rewrites',
       configureServer(server) {
         server.middlewares.use((req, _res, next) => {
-          if (req.url === '/cleaner') {
-            req.url = '/cleaner.html'
+          const rewrites: Record<string, string> = {
+            '/cleaner': '/cleaner.html',
+            '/buy': '/buy.html',
+            '/buy/thanks': '/buy-thanks.html',
+          }
+          if (req.url && rewrites[req.url]) {
+            req.url = rewrites[req.url]
           }
           next()
         })
