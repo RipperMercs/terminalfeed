@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Generator — Create QR Codes Free Online | TerminalFeed</title>
+<meta name="description" content="Generate QR codes instantly from any text or URL. Download as PNG or SVG. Adjustable size and colors. Free, no sign-up, 100% client-side. No data leaves your browser.">
+<meta name="keywords" content="QR code generator, create QR code free, QR code maker, generate QR code online, QR code from URL, QR code from text">
+<link rel="canonical" href="https://terminalfeed.io/tools/qr">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/qr">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/qr">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/qr">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/qr">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/qr">
+<meta property="og:title" content="QR Code Generator — Create QR Codes Free | TerminalFeed">
+<meta property="og:description" content="Generate QR codes from any text or URL. Download as PNG/SVG. 100% client-side.">
+<meta property="og:url" content="https://terminalfeed.io/tools/qr">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "QR Code Generator",
+  "url": "https://terminalfeed.io/tools/qr",
+  "description": "Generate QR codes from any text or URL. Download as PNG or SVG. 100% client-side.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+a { color: #5DCAA5; text-decoration: none; } a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; } .back-link a:hover { color: #5DCAA5; }
+.container { max-width: 960px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; } .header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; margin-bottom: 1.5rem; }
+@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+.input-col { display: flex; flex-direction: column; gap: 1rem; }
+.input-col label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+textarea { width: 100%; min-height: 120px; background: #111114; color: #D4D2CB; border: 1px solid #1A1A22; border-radius: 6px; padding: 0.85rem; font-family: inherit; font-size: 0.85rem; resize: vertical; outline: none; }
+textarea:focus { border-color: #5DCAA5; }
+.options { display: flex; flex-direction: column; gap: 0.8rem; }
+.opt-row { display: flex; align-items: center; gap: 0.6rem; }
+.opt-row label { font-size: 0.75rem; color: #4E4D49; min-width: 70px; }
+.opt-row input[type="range"] { flex: 1; accent-color: #5DCAA5; }
+.opt-row input[type="color"] { width: 36px; height: 30px; border: 1px solid #1A1A22; border-radius: 4px; cursor: pointer; background: none; padding: 0; }
+.opt-row .val { font-size: 0.78rem; color: #5DCAA5; min-width: 40px; text-align: center; }
+.qr-col { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.qr-preview { background: #fff; border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: center; }
+.qr-preview canvas { display: block; }
+.download-btns { display: flex; gap: 0.5rem; }
+.download-btns button { background: rgba(93,202,165,0.12); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.3); padding: 0.45rem 0.8rem; border-radius: 5px; font-family: inherit; font-size: 0.78rem; cursor: pointer; }
+.download-btns button:hover { background: rgba(93,202,165,0.22); }
+.presets { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.presets button { background: rgba(93,202,165,0.08); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.2); padding: 0.3rem 0.6rem; border-radius: 4px; font-family: inherit; font-size: 0.7rem; cursor: pointer; }
+.presets button:hover { background: rgba(93,202,165,0.2); }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+</style>
+</head>
+<body data-page="tools-qr">
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> QR CODE</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+  <div class="layout">
+    <div class="input-col">
+      <div>
+        <label for="qrInput">Text or URL</label>
+        <textarea id="qrInput" placeholder="Enter text or URL to encode...">https://terminalfeed.io</textarea>
+      </div>
+      <div class="presets">
+        <button data-val="https://">URL</button>
+        <button data-val="mailto:">Email</button>
+        <button data-val="tel:+">Phone</button>
+        <button data-val="WIFI:T:WPA;S:MyNetwork;P:MyPassword;;">WiFi</button>
+        <button data-val="BEGIN:VCARD&#10;VERSION:3.0&#10;FN:John Doe&#10;TEL:+1234567890&#10;EMAIL:john@example.com&#10;END:VCARD">vCard</button>
+      </div>
+      <div class="options">
+        <div class="opt-row">
+          <label>Size</label>
+          <input type="range" id="sizeSlider" min="128" max="512" value="256" step="16">
+          <span class="val" id="sizeVal">256</span>
+        </div>
+        <div class="opt-row">
+          <label>FG Color</label>
+          <input type="color" id="fgColor" value="#000000">
+        </div>
+        <div class="opt-row">
+          <label>BG Color</label>
+          <input type="color" id="bgColor" value="#ffffff">
+        </div>
+      </div>
+    </div>
+    <div class="qr-col">
+      <div class="qr-preview" id="qrPreview">
+        <canvas id="qrCanvas"></canvas>
+      </div>
+      <div class="download-btns">
+        <button id="dlPng">Download PNG</button>
+        <button id="dlSvg">Download SVG</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="seo-content">
+    <h2>QR Code Generator &mdash; Create QR Codes Online Free</h2>
+    <h3>What Is a QR Code?</h3>
+    <p>A QR (Quick Response) code is a two-dimensional barcode that stores data as a pattern of black and white squares. QR codes can encode URLs, text, contact information, WiFi credentials, and more. They are scanned using smartphone cameras and are ubiquitous in payments, marketing, authentication, and logistics.</p>
+    <h3>What Can You Encode?</h3>
+    <p>This generator supports plain text, URLs, email addresses (<code>mailto:</code>), phone numbers (<code>tel:</code>), WiFi network credentials, and vCard contact cards. Use the preset buttons to get started with common formats.</p>
+    <h3>Privacy</h3>
+    <p>QR codes are generated <strong>100% client-side</strong> in your browser. No data is sent to any server. Your text never leaves your machine.</p>
+  </div>
+</div>
+<footer>
+  <a href="/">Home</a><a href="/live">Live</a><a href="/tools">Tools</a><a href="/agent">Agents</a><a href="/radio">Radio</a><a href="/wifi">WiFi</a><a href="/developers">API</a><a href="/about">About</a><a href="/features">Features</a>
+</footer>
+<script>
+// QR Code generator — pure JS implementation (QR Code Model 2, ISO/IEC 18004)
+(function(){
+  // Minimal QR encoder supporting byte mode up to version 10
+  const EC_L=1;
+  const GF=new Uint8Array(256),GL=new Int16Array(256);
+  (function(){let v=1;for(let i=0;i<255;i++){GF[i]=v;GL[v]=i;v<<=1;if(v&256)v^=285;}})();
+  function gfMul(a,b){if(!a||!b)return 0;return GF[(GL[a]+GL[b])%255];}
+  function polyMul(p,q){const r=new Uint8Array(p.length+q.length-1);for(let i=0;i<p.length;i++)for(let j=0;j<q.length;j++)r[i+j]^=gfMul(p[i],q[j]);return r;}
+
+  // Version/EC capacity table (version 1-10, EC level L only for simplicity)
+  const CAPS=[0,17,32,53,78,106,134,154,192,230,271];
+
+  function getVersion(len){for(let v=1;v<=10;v++)if(CAPS[v]>=len)return v;return 10;}
+  function getSize(v){return v*4+17;}
+
+  // EC codewords per block for versions 1-10 at EC level L
+  const EC_CW=[0,7,10,15,20,26,18,20,24,30,18];
+  const NUM_BLOCKS=[0,1,1,1,1,1,2,2,2,2,4];
+
+  function rsEncode(data,ecLen){
+    let gen=new Uint8Array([1]);
+    for(let i=0;i<ecLen;i++)gen=polyMul(gen,new Uint8Array([1,GF[i]]));
+    const msg=new Uint8Array(data.length+ecLen);
+    msg.set(data);
+    for(let i=0;i<data.length;i++){
+      const c=msg[i];if(!c)continue;
+      for(let j=0;j<gen.length;j++)msg[i+j]^=gfMul(gen[j],c);
+    }
+    return msg.slice(data.length);
+  }
+
+  function makeQR(text){
+    const data=new TextEncoder().encode(text);
+    const ver=getVersion(data.length);
+    const size=getSize(ver);
+    const totalCW=CAPS[ver]+EC_CW[ver]*NUM_BLOCKS[ver];
+
+    // Build data codewords: byte mode
+    const bits=[];
+    function pushBits(val,len){for(let i=len-1;i>=0;i--)bits.push((val>>i)&1);}
+    pushBits(4,4); // mode: byte
+    pushBits(data.length, ver<=9?8:16);
+    for(const b of data)pushBits(b,8);
+    // Terminator
+    const dataCW=CAPS[ver];
+    while(bits.length<dataCW*8&&bits.length<dataCW*8)bits.push(0);
+    while(bits.length%8)bits.push(0);
+    // Pad codewords
+    const pads=[0xEC,0x11];let pi=0;
+    while(bits.length<dataCW*8){pushBits(pads[pi],8);pi^=1;}
+
+    const codewords=new Uint8Array(dataCW);
+    for(let i=0;i<dataCW;i++){
+      let v=0;for(let j=0;j<8;j++)v=(v<<1)|(bits[i*8+j]||0);
+      codewords[i]=v;
+    }
+
+    // EC codewords
+    const ecPerBlock=EC_CW[ver];
+    const blocks=NUM_BLOCKS[ver];
+    const blockSize=Math.floor(dataCW/blocks);
+    const allData=[];const allEc=[];
+    for(let b=0;b<blocks;b++){
+      const start=b*blockSize;
+      const bData=codewords.slice(start,start+blockSize);
+      allData.push(bData);
+      allEc.push(rsEncode(bData,ecPerBlock));
+    }
+
+    // Interleave
+    const final=[];
+    const maxDataLen=Math.max(...allData.map(d=>d.length));
+    for(let i=0;i<maxDataLen;i++)for(let b=0;b<blocks;b++)if(i<allData[b].length)final.push(allData[b][i]);
+    for(let i=0;i<ecPerBlock;i++)for(let b=0;b<blocks;b++)final.push(allEc[b][i]);
+
+    // Create matrix
+    const grid=Array.from({length:size},()=>new Int8Array(size)); // 0=white, 1=black, -1=unset
+    const reserved=Array.from({length:size},()=>new Uint8Array(size));
+
+    function setModule(r,c,v){if(r>=0&&r<size&&c>=0&&c<size){grid[r][c]=v?1:0;reserved[r][c]=1;}}
+
+    // Finder patterns
+    function finderPattern(r,c){
+      for(let dr=-1;dr<=7;dr++)for(let dc=-1;dc<=7;dc++){
+        const rr=r+dr,cc=c+dc;
+        if(rr<0||rr>=size||cc<0||cc>=size)continue;
+        const inOuter=(dr>=0&&dr<=6&&dc>=0&&dc<=6);
+        const inInner=(dr>=2&&dr<=4&&dc>=2&&dc<=4);
+        const onBorder=(dr===0||dr===6||dc===0||dc===6);
+        setModule(rr,cc,inInner||(inOuter&&onBorder));
+      }
+    }
+    finderPattern(0,0);
+    finderPattern(0,size-7);
+    finderPattern(size-7,0);
+
+    // Timing patterns
+    for(let i=8;i<size-8;i++){
+      setModule(6,i,i%2===0);
+      setModule(i,6,i%2===0);
+    }
+
+    // Dark module
+    setModule(size-8,8,1);
+
+    // Reserve format info areas
+    for(let i=0;i<9;i++){setModule(8,i,0);reserved[8][i]=1;setModule(i,8,0);reserved[i][8]=1;}
+    for(let i=0;i<8;i++){setModule(8,size-1-i,0);reserved[8][size-1-i]=1;setModule(size-1-i,8,0);reserved[size-1-i][8]=1;}
+
+    // Alignment pattern for versions >= 2
+    if(ver>=2){
+      const pos=[6,ver*4+10];
+      for(const ar of pos)for(const ac of pos){
+        if(reserved[ar]&&reserved[ar][ac])continue;
+        for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+          const v=(Math.abs(dr)===2||Math.abs(dc)===2||(dr===0&&dc===0));
+          setModule(ar+dr,ac+dc,v);
+        }
+      }
+    }
+
+    // Place data
+    const dataBits=[];
+    for(const b of final)for(let i=7;i>=0;i--)dataBits.push((b>>i)&1);
+
+    let bitIdx=0;
+    for(let col=size-1;col>=0;col-=2){
+      if(col===6)col=5;
+      for(let row=0;row<size;row++){
+        for(let c=0;c<2;c++){
+          const cc=col-c;
+          const actualRow=((Math.floor((size-1-col)/2))%2===0)?(size-1-row):row;
+          if(!reserved[actualRow][cc]){
+            grid[actualRow][cc]=(bitIdx<dataBits.length)?dataBits[bitIdx]:0;
+            bitIdx++;
+          }
+        }
+      }
+    }
+
+    // Apply mask 0 (checkerboard)
+    for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+      if(!reserved[r][c]&&(r+c)%2===0)grid[r][c]^=1;
+    }
+
+    // Format info (mask 0, EC level L = 01, mask 000) -> format bits with BCH
+    const formatBits=[1,1,1,0,1,1,1,1,1,0,0,0,1,0,0];
+    // Top-left
+    let fi=0;
+    for(let i=0;i<=5;i++)grid[8][i]=formatBits[fi++];
+    grid[8][7]=formatBits[fi++];grid[8][8]=formatBits[fi++];grid[7][8]=formatBits[fi++];
+    for(let i=5;i>=0;i--)grid[i][8]=formatBits[fi++];
+    // Bottom-left + top-right
+    fi=0;
+    for(let i=size-1;i>=size-8;i--)grid[i][8]=formatBits[fi++];
+    for(let i=size-8;i<size;i++)grid[8][i]=formatBits[fi++];
+
+    return {grid,size};
+  }
+
+  // Render
+  const qrInput=document.getElementById('qrInput');
+  const canvas=document.getElementById('qrCanvas');
+  const ctx=canvas.getContext('2d');
+  const sizeSlider=document.getElementById('sizeSlider');
+  const sizeVal=document.getElementById('sizeVal');
+  const fgColor=document.getElementById('fgColor');
+  const bgColor=document.getElementById('bgColor');
+
+  function render(){
+    const text=qrInput.value||' ';
+    const pxSize=parseInt(sizeSlider.value);
+    sizeVal.textContent=pxSize;
+
+    try{
+      const{grid,size}=makeQR(text);
+      const scale=Math.floor(pxSize/size);
+      const actualSize=scale*size;
+      canvas.width=actualSize;
+      canvas.height=actualSize;
+
+      ctx.fillStyle=bgColor.value;
+      ctx.fillRect(0,0,actualSize,actualSize);
+      ctx.fillStyle=fgColor.value;
+      for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+        if(grid[r][c])ctx.fillRect(c*scale,r*scale,scale,scale);
+      }
+      document.getElementById('qrPreview').style.background=bgColor.value;
+    }catch(e){
+      canvas.width=pxSize;canvas.height=pxSize;
+      ctx.fillStyle='#111';ctx.fillRect(0,0,pxSize,pxSize);
+      ctx.fillStyle='#F87171';ctx.font='14px monospace';ctx.textAlign='center';
+      ctx.fillText('Text too long',pxSize/2,pxSize/2);
+    }
+  }
+
+  qrInput.addEventListener('input',render);
+  sizeSlider.addEventListener('input',render);
+  fgColor.addEventListener('input',render);
+  bgColor.addEventListener('input',render);
+
+  document.querySelectorAll('.presets button').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      qrInput.value=this.dataset.val.replace(/&#10;/g,'\n');
+      render();
+      qrInput.focus();
+      qrInput.setSelectionRange(qrInput.value.length,qrInput.value.length);
+    });
+  });
+
+  document.getElementById('dlPng').addEventListener('click',function(){
+    const a=document.createElement('a');
+    a.download='qr-code.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+  });
+
+  document.getElementById('dlSvg').addEventListener('click',function(){
+    const text=qrInput.value||' ';
+    try{
+      const{grid,size}=makeQR(text);
+      let svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+size+' '+size+'">';
+      svg+='<rect width="'+size+'" height="'+size+'" fill="'+bgColor.value+'"/>';
+      for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+        if(grid[r][c])svg+='<rect x="'+c+'" y="'+r+'" width="1" height="1" fill="'+fgColor.value+'"/>';
+      }
+      svg+='</svg>';
+      const blob=new Blob([svg],{type:'image/svg+xml'});
+      const a=document.createElement('a');
+      a.download='qr-code.svg';
+      a.href=URL.createObjectURL(blob);
+      a.click();
+    }catch(e){}
+  });
+
+  render();
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>

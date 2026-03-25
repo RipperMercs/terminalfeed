@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Encoder &amp; Decoder — Percent Encoding Online Free | TerminalFeed</title>
+<meta name="description" content="Encode and decode URLs instantly. Convert special characters to percent-encoded format. Parse URL components. Free online tool, 100% client-side.">
+<meta name="keywords" content="URL encoder, URL decoder, percent encoding, encodeURIComponent, URL encode online, decode URL, URL parser">
+<link rel="canonical" href="https://terminalfeed.io/tools/url">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/url">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/url">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/url">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/url">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/url">
+<meta property="og:title" content="URL Encoder & Decoder — Free Online Tool | TerminalFeed">
+<meta property="og:description" content="Encode and decode URLs. Parse URL components. 100% client-side.">
+<meta property="og:url" content="https://terminalfeed.io/tools/url">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "URL Encoder & Decoder",
+  "url": "https://terminalfeed.io/tools/url",
+  "description": "Encode and decode URLs. Parse URL components. 100% client-side.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+a { color: #5DCAA5; text-decoration: none; } a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; } .back-link a:hover { color: #5DCAA5; }
+.container { max-width: 960px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; } .header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.workspace { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 700px) { .workspace { grid-template-columns: 1fr; } .controls-col { flex-direction: row !important; justify-content: center; } }
+.panel { display: flex; flex-direction: column; gap: 0.4rem; }
+.panel label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+textarea { width: 100%; min-height: 180px; background: #111114; color: #D4D2CB; border: 1px solid #1A1A22; border-radius: 6px; padding: 0.85rem; font-family: inherit; font-size: 0.82rem; resize: vertical; outline: none; line-height: 1.5; }
+textarea:focus { border-color: #5DCAA5; }
+.controls-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; padding-top: 1.2rem; }
+button { background: rgba(93,202,165,0.12); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.3); padding: 0.5rem 1rem; border-radius: 5px; font-family: inherit; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+.btn-copy { background: rgba(93,202,165,0.06); border-color: rgba(93,202,165,0.15); font-size: 0.75rem; padding: 0.35rem 0.8rem; }
+.error-msg { color: #F87171; font-size: 0.75rem; min-height: 1.1em; }
+.toggle-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #4E4D49; margin-bottom: 1rem; }
+.toggle-row input { accent-color: #5DCAA5; }
+/* URL parser */
+.parser { margin-top: 1rem; }
+.parser h3 { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+.parse-row { display: flex; gap: 0; margin-bottom: 0.4rem; border: 1px solid #1A1A22; border-radius: 5px; overflow: hidden; }
+.parse-label { background: #111114; color: #4E4D49; font-size: 0.72rem; padding: 0.5rem 0.7rem; min-width: 90px; font-weight: 600; border-right: 1px solid #1A1A22; }
+.parse-value { flex: 1; padding: 0.5rem 0.7rem; font-size: 0.78rem; color: #D4D2CB; background: #0D0D10; word-break: break-all; }
+.parse-value.empty { color: #4E4D49; font-style: italic; }
+.params-table { width: 100%; border-collapse: collapse; margin-top: 0.6rem; }
+.params-table th { text-align: left; padding: 0.4rem 0.6rem; font-size: 0.7rem; color: #5DCAA5; border-bottom: 1px solid #1A1A22; }
+.params-table td { padding: 0.4rem 0.6rem; font-size: 0.78rem; border-bottom: 1px solid #1A1A22; word-break: break-all; }
+.params-table td:first-child { color: #5DCAA5; }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+</style>
+</head>
+<body data-page="tools-url">
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> URL ENCODE</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="liveMode" checked>
+    <label for="liveMode">Live mode (encode/decode as you type)</label>
+  </div>
+  <div class="workspace">
+    <div class="panel">
+      <label for="inputArea">Decoded (Plain Text)</label>
+      <textarea id="inputArea" placeholder="Type or paste text/URL here...">https://terminalfeed.io/tools?q=hello world&lang=en&special=foo@bar#section</textarea>
+    </div>
+    <div class="controls-col">
+      <button id="btnEncode">Encode &rarr;</button>
+      <button id="btnDecode">&larr; Decode</button>
+      <button class="btn-copy" id="btnCopy">Copy Output</button>
+    </div>
+    <div class="panel">
+      <label for="outputArea">Encoded</label>
+      <textarea id="outputArea" placeholder="Result appears here..." readonly></textarea>
+      <span class="error-msg" id="errorMsg"></span>
+    </div>
+  </div>
+
+  <div class="parser" id="parserSection">
+    <h3>URL Parser</h3>
+    <div id="parserOutput"></div>
+  </div>
+</div>
+<div class="container">
+  <div class="seo-content">
+    <h2>URL Encoder &amp; Decoder &mdash; Percent Encoding Online</h2>
+    <h3>What Is URL Encoding?</h3>
+    <p>URL encoding (also called percent encoding) replaces unsafe characters in a URL with a <code>%</code> followed by two hexadecimal digits. For example, a space becomes <code>%20</code>, and <code>@</code> becomes <code>%40</code>. This ensures URLs are valid and can be safely transmitted over the internet, since URLs can only contain a limited set of ASCII characters.</p>
+    <h3>When Do You Need URL Encoding?</h3>
+    <p>You need URL encoding when building query strings with user input, constructing API URLs with special characters, encoding redirect URLs, building OAuth callback URLs, or any time you need to include characters like spaces, ampersands, or hash symbols in a URL parameter.</p>
+    <h3>encodeURIComponent vs encodeURI</h3>
+    <p><code>encodeURIComponent()</code> encodes everything except <code>A-Z a-z 0-9 - _ . ! ~ * ' ( )</code>. It's used for encoding individual URL parameters. <code>encodeURI()</code> preserves characters that have special meaning in URLs (like <code>:</code>, <code>/</code>, <code>?</code>, <code>#</code>). This tool uses <code>encodeURIComponent</code> for maximum safety.</p>
+    <h3>Privacy</h3>
+    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server.</p>
+  </div>
+</div>
+<footer>
+  <a href="/">Home</a><a href="/live">Live</a><a href="/tools">Tools</a><a href="/agent">Agents</a><a href="/radio">Radio</a><a href="/wifi">WiFi</a><a href="/developers">API</a><a href="/about">About</a><a href="/features">Features</a>
+</footer>
+<script>
+(function(){
+  const inputArea=document.getElementById('inputArea');
+  const outputArea=document.getElementById('outputArea');
+  const errorMsg=document.getElementById('errorMsg');
+  const liveMode=document.getElementById('liveMode');
+  const parserOutput=document.getElementById('parserOutput');
+  let lastDir='encode';
+
+  function encode(){
+    lastDir='encode';
+    errorMsg.textContent='';
+    try{
+      outputArea.value=encodeURIComponent(inputArea.value);
+    }catch(e){
+      errorMsg.textContent='Encoding error: '+e.message;
+    }
+    parseUrl(inputArea.value);
+  }
+
+  function decode(){
+    lastDir='decode';
+    errorMsg.textContent='';
+    try{
+      outputArea.value=decodeURIComponent(inputArea.value.replace(/\+/g,' '));
+    }catch(e){
+      errorMsg.textContent='Invalid encoded input: '+e.message;
+    }
+    parseUrl(outputArea.value);
+  }
+
+  function parseUrl(str){
+    try{
+      const url=new URL(str);
+      let html='';
+      const parts=[
+        ['Protocol',url.protocol],
+        ['Host',url.host],
+        ['Hostname',url.hostname],
+        ['Port',url.port||'(default)'],
+        ['Pathname',url.pathname],
+        ['Search',url.search],
+        ['Hash',url.hash],
+        ['Origin',url.origin],
+      ];
+      for(const[label,val]of parts){
+        html+='<div class="parse-row"><div class="parse-label">'+label+'</div><div class="parse-value'+(val?'':' empty')+'">'+(val||'none')+'</div></div>';
+      }
+      // Query params
+      if(url.searchParams&&[...url.searchParams].length>0){
+        html+='<table class="params-table"><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>';
+        url.searchParams.forEach((v,k)=>{
+          html+='<tr><td>'+k+'</td><td>'+v+'</td></tr>';
+        });
+        html+='</tbody></table>';
+      }
+      parserOutput.innerHTML=html;
+    }catch{
+      parserOutput.innerHTML='<div style="color:#4E4D49;font-size:0.78rem;padding:0.5rem 0;">Enter a valid URL to see parsed components</div>';
+    }
+  }
+
+  document.getElementById('btnEncode').addEventListener('click',encode);
+  document.getElementById('btnDecode').addEventListener('click',decode);
+  document.getElementById('btnCopy').addEventListener('click',function(){
+    if(!outputArea.value)return;
+    navigator.clipboard.writeText(outputArea.value).then(()=>{
+      this.textContent='Copied!';
+      setTimeout(()=>{this.textContent='Copy Output';},1500);
+    });
+  });
+
+  inputArea.addEventListener('input',function(){
+    if(!liveMode.checked)return;
+    if(lastDir==='decode')decode();else encode();
+  });
+
+  encode();
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML Entity Encoder &amp; Decoder — Free Online Tool | TerminalFeed</title>
+<meta name="description" content="Encode and decode HTML entities instantly. Convert special characters to HTML entities and back. Supports named and numeric entities. Free, 100% client-side.">
+<meta name="keywords" content="HTML entity encoder, HTML entity decoder, HTML special characters, HTML entities, encode HTML, decode HTML entities, HTML escape">
+<link rel="canonical" href="https://terminalfeed.io/tools/html-entity">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/html-entity">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/html-entity">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/html-entity">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/html-entity">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/html-entity">
+<meta property="og:title" content="HTML Entity Encoder & Decoder | TerminalFeed">
+<meta property="og:description" content="Encode and decode HTML entities. Convert special characters. 100% client-side.">
+<meta property="og:url" content="https://terminalfeed.io/tools/html-entity">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "HTML Entity Encoder & Decoder",
+  "url": "https://terminalfeed.io/tools/html-entity",
+  "description": "Encode and decode HTML entities. Convert special characters to HTML entities and back.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+a { color: #5DCAA5; text-decoration: none; } a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; } .back-link a:hover { color: #5DCAA5; }
+.container { max-width: 960px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; } .header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.workspace { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 700px) { .workspace { grid-template-columns: 1fr; } .controls-col { flex-direction: row !important; justify-content: center; } }
+.panel { display: flex; flex-direction: column; gap: 0.4rem; }
+.panel label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+textarea { width: 100%; min-height: 200px; background: #111114; color: #D4D2CB; border: 1px solid #1A1A22; border-radius: 6px; padding: 0.85rem; font-family: inherit; font-size: 0.82rem; resize: vertical; outline: none; line-height: 1.5; }
+textarea:focus { border-color: #5DCAA5; }
+.controls-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; padding-top: 1.2rem; }
+button { background: rgba(93,202,165,0.12); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.3); padding: 0.5rem 1rem; border-radius: 5px; font-family: inherit; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+.btn-copy { background: rgba(93,202,165,0.06); border-color: rgba(93,202,165,0.15); font-size: 0.75rem; padding: 0.35rem 0.8rem; }
+.toggle-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #4E4D49; margin-bottom: 1rem; }
+.toggle-row input { accent-color: #5DCAA5; }
+.char-count { font-size: 0.7rem; color: #4E4D49; text-align: right; }
+/* Reference table */
+.ref-section { margin-top: 1.5rem; }
+.ref-section h3 { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+.ref-table { width: 100%; border-collapse: collapse; }
+.ref-table th { text-align: left; padding: 0.5rem 0.6rem; font-size: 0.7rem; color: #5DCAA5; border-bottom: 2px solid #1A1A22; background: #111114; }
+.ref-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid #1A1A22; font-size: 0.78rem; }
+.ref-table td:first-child { color: #5DCAA5; font-size: 1.1rem; }
+.ref-table td:nth-child(2) { color: #4ADE80; }
+.ref-table tr:hover td { background: rgba(93,202,165,0.03); }
+.ref-wrap { border: 1px solid #1A1A22; border-radius: 6px; overflow: hidden; max-height: 400px; overflow-y: auto; }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+</style>
+</head>
+<body data-page="tools-html-entity">
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> HTML ENTITIES</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="liveMode" checked>
+    <label for="liveMode">Live mode</label>
+    <span style="margin-left:1rem;">
+      <input type="checkbox" id="encodeAll">
+      <label for="encodeAll">Encode all characters (not just special)</label>
+    </span>
+  </div>
+  <div class="workspace">
+    <div class="panel">
+      <label for="inputArea">Plain Text / HTML</label>
+      <textarea id="inputArea" placeholder="Type or paste HTML here..."><div class="hello">Tom & Jerry's "Adventure" — 100% fun © 2026</div></textarea>
+      <div class="char-count"><span id="inputCount">0</span> chars</div>
+    </div>
+    <div class="controls-col">
+      <button id="btnEncode">Encode &rarr;</button>
+      <button id="btnDecode">&larr; Decode</button>
+      <button class="btn-copy" id="btnCopy">Copy Output</button>
+    </div>
+    <div class="panel">
+      <label for="outputArea">Encoded / Decoded</label>
+      <textarea id="outputArea" placeholder="Result appears here..." readonly></textarea>
+      <div class="char-count"><span id="outputCount">0</span> chars</div>
+    </div>
+  </div>
+
+  <div class="ref-section">
+    <h3>Common HTML Entities Reference</h3>
+    <div class="ref-wrap">
+      <table class="ref-table" id="refTable">
+        <thead><tr><th>Char</th><th>Entity</th><th>Numeric</th><th>Description</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="seo-content">
+    <h2>HTML Entity Encoder &amp; Decoder</h2>
+    <h3>What Are HTML Entities?</h3>
+    <p>HTML entities are special codes used to display reserved characters in HTML. Characters like <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, and <code>&quot;</code> have special meaning in HTML, so they must be encoded as entities (<code>&amp;lt;</code>, <code>&amp;gt;</code>, <code>&amp;amp;</code>, <code>&amp;quot;</code>) when you want to display them as literal text.</p>
+    <h3>Why Encode HTML?</h3>
+    <p>Encoding HTML entities prevents <strong>XSS (Cross-Site Scripting)</strong> attacks by ensuring user input is rendered as text, not executable HTML or JavaScript. It's also necessary when displaying code samples, embedding user-generated content, or working with special characters like copyright symbols, em dashes, and mathematical operators.</p>
+    <h3>Privacy</h3>
+    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server.</p>
+  </div>
+</div>
+<footer>
+  <a href="/">Home</a><a href="/live">Live</a><a href="/tools">Tools</a><a href="/agent">Agents</a><a href="/radio">Radio</a><a href="/wifi">WiFi</a><a href="/developers">API</a><a href="/about">About</a><a href="/features">Features</a>
+</footer>
+<script>
+(function(){
+  const inputArea=document.getElementById('inputArea');
+  const outputArea=document.getElementById('outputArea');
+  const inputCount=document.getElementById('inputCount');
+  const outputCount=document.getElementById('outputCount');
+  const liveMode=document.getElementById('liveMode');
+  const encodeAll=document.getElementById('encodeAll');
+  let lastDir='encode';
+
+  const ENTITIES=[
+    ['&','&amp;','&#38;','Ampersand'],
+    ['<','&lt;','&#60;','Less than'],
+    ['>','&gt;','&#62;','Greater than'],
+    ['"','&quot;','&#34;','Double quote'],
+    ["'",'&apos;','&#39;','Single quote / apostrophe'],
+    ['\u00a0','&nbsp;','&#160;','Non-breaking space'],
+    ['\u00a9','&copy;','&#169;','Copyright'],
+    ['\u00ae','&reg;','&#174;','Registered'],
+    ['\u2122','&trade;','&#8482;','Trademark'],
+    ['\u2014','&mdash;','&#8212;','Em dash'],
+    ['\u2013','&ndash;','&#8211;','En dash'],
+    ['\u2026','&hellip;','&#8230;','Ellipsis'],
+    ['\u00ab','&laquo;','&#171;','Left double angle quote'],
+    ['\u00bb','&raquo;','&#187;','Right double angle quote'],
+    ['\u201c','&ldquo;','&#8220;','Left double quote'],
+    ['\u201d','&rdquo;','&#8221;','Right double quote'],
+    ['\u2018','&lsquo;','&#8216;','Left single quote'],
+    ['\u2019','&rsquo;','&#8217;','Right single quote'],
+    ['\u00b0','&deg;','&#176;','Degree'],
+    ['\u00b1','&plusmn;','&#177;','Plus-minus'],
+    ['\u00d7','&times;','&#215;','Multiplication'],
+    ['\u00f7','&divide;','&#247;','Division'],
+    ['\u2260','&ne;','&#8800;','Not equal'],
+    ['\u2264','&le;','&#8804;','Less or equal'],
+    ['\u2265','&ge;','&#8805;','Greater or equal'],
+    ['\u221e','&infin;','&#8734;','Infinity'],
+    ['\u2190','&larr;','&#8592;','Left arrow'],
+    ['\u2192','&rarr;','&#8594;','Right arrow'],
+    ['\u2191','&uarr;','&#8593;','Up arrow'],
+    ['\u2193','&darr;','&#8595;','Down arrow'],
+    ['\u2194','&harr;','&#8596;','Left-right arrow'],
+    ['\u00a3','&pound;','&#163;','Pound'],
+    ['\u20ac','&euro;','&#8364;','Euro'],
+    ['\u00a5','&yen;','&#165;','Yen'],
+    ['\u00a2','&cent;','&#162;','Cent'],
+    ['\u2022','&bull;','&#8226;','Bullet'],
+    ['\u2020','&dagger;','&#8224;','Dagger'],
+    ['\u2021','&Dagger;','&#8225;','Double dagger'],
+    ['\u00b6','&para;','&#182;','Paragraph'],
+    ['\u00a7','&sect;','&#167;','Section'],
+  ];
+
+  // Populate reference table
+  const tbody=document.querySelector('#refTable tbody');
+  ENTITIES.forEach(([ch,named,numeric,desc])=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+ch+'</td><td>'+named+'</td><td>'+numeric+'</td><td>'+desc+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  function encode(){
+    lastDir='encode';
+    const text=inputArea.value;
+    if(encodeAll.checked){
+      outputArea.value=[...text].map(c=>'&#'+c.codePointAt(0)+';').join('');
+    }else{
+      outputArea.value=text
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+    updateCounts();
+  }
+
+  function decode(){
+    lastDir='decode';
+    const el=document.createElement('textarea');
+    el.innerHTML=inputArea.value;
+    outputArea.value=el.value;
+    updateCounts();
+  }
+
+  function updateCounts(){
+    inputCount.textContent=inputArea.value.length;
+    outputCount.textContent=outputArea.value.length;
+  }
+
+  document.getElementById('btnEncode').addEventListener('click',encode);
+  document.getElementById('btnDecode').addEventListener('click',decode);
+  encodeAll.addEventListener('change',function(){if(lastDir==='encode')encode();});
+
+  inputArea.addEventListener('input',function(){
+    if(!liveMode.checked){updateCounts();return;}
+    if(lastDir==='decode')decode();else encode();
+  });
+
+  document.getElementById('btnCopy').addEventListener('click',function(){
+    if(!outputArea.value)return;
+    navigator.clipboard.writeText(outputArea.value).then(()=>{
+      this.textContent='Copied!';
+      setTimeout(()=>{this.textContent='Copy Output';},1500);
+    });
+  });
+
+  encode();
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>
