@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAML ↔ JSON Converter &amp; Validator — Free Online Tool | TerminalFeed</title>
+<meta name="description" content="Convert YAML to JSON and JSON to YAML instantly. Validate YAML syntax with error highlighting. Free online tool. 100% client-side, no data leaves your browser.">
+<meta name="keywords" content="yaml to json, json to yaml, yaml validator, yaml converter, yaml parser online, yaml syntax checker, json yaml converter">
+<link rel="canonical" href="https://terminalfeed.io/tools/yaml">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/yaml">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/yaml">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/yaml">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/yaml">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/yaml">
+<meta property="og:title" content="YAML ↔ JSON Converter & Validator | TerminalFeed">
+<meta property="og:description" content="Convert between YAML and JSON. Validate YAML syntax. 100% client-side.">
+<meta property="og:url" content="https://terminalfeed.io/tools/yaml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "YAML ↔ JSON Converter",
+  "url": "https://terminalfeed.io/tools/yaml",
+  "description": "Convert YAML to JSON and JSON to YAML. Validate YAML syntax. 100% client-side.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+a { color: #5DCAA5; text-decoration: none; } a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; } .back-link a:hover { color: #5DCAA5; }
+.container { max-width: 960px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; } .header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.workspace { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 700px) { .workspace { grid-template-columns: 1fr; } .controls-col { flex-direction: row !important; justify-content: center; } }
+.panel { display: flex; flex-direction: column; gap: 0.4rem; }
+.panel label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+textarea { width: 100%; min-height: 300px; background: #111114; color: #D4D2CB; border: 1px solid #1A1A22; border-radius: 6px; padding: 0.85rem; font-family: inherit; font-size: 0.82rem; resize: vertical; outline: none; tab-size: 2; line-height: 1.5; }
+textarea:focus { border-color: #5DCAA5; }
+textarea.error { border-color: #F87171; }
+.controls-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; padding-top: 1.2rem; }
+button { background: rgba(93,202,165,0.12); color: #5DCAA5; border: 1px solid rgba(93,202,165,0.3); padding: 0.5rem 1rem; border-radius: 5px; font-family: inherit; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+.btn-copy { background: rgba(93,202,165,0.06); border-color: rgba(93,202,165,0.15); font-size: 0.75rem; padding: 0.35rem 0.8rem; }
+.error-msg { color: #F87171; font-size: 0.75rem; min-height: 1.1em; }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+</style>
+</head>
+<body data-page="tools-yaml">
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> YAML &harr; JSON</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+  <div class="workspace">
+    <div class="panel">
+      <label for="yamlArea">YAML</label>
+      <textarea id="yamlArea" placeholder="Paste YAML here...">name: terminalfeed
+version: 2.0
+features:
+  - dashboard
+  - tools
+  - radio
+config:
+  theme: dark
+  port: 3000
+  debug: false
+tags:
+  env: production
+  region: us-east-1</textarea>
+    </div>
+    <div class="controls-col">
+      <button id="btnToJson">YAML &rarr; JSON</button>
+      <button id="btnToYaml">JSON &rarr; YAML</button>
+      <button id="btnValidate">Validate YAML</button>
+      <button class="btn-copy" id="btnCopyYaml">Copy YAML</button>
+      <button class="btn-copy" id="btnCopyJson">Copy JSON</button>
+    </div>
+    <div class="panel">
+      <label for="jsonArea">JSON</label>
+      <textarea id="jsonArea" placeholder="JSON output appears here..."></textarea>
+      <span class="error-msg" id="errorMsg"></span>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="seo-content">
+    <h2>YAML &harr; JSON Converter &amp; Validator</h2>
+    <h3>What Is YAML?</h3>
+    <p>YAML (YAML Ain't Markup Language) is a human-readable data serialization format. It is widely used for configuration files in tools like Docker Compose, Kubernetes, Ansible, GitHub Actions, and CI/CD pipelines. YAML uses indentation to define structure, making it cleaner to read than JSON for configuration purposes.</p>
+    <h3>Why Convert Between YAML and JSON?</h3>
+    <p>Many APIs and tools accept JSON but configuration is written in YAML (or vice versa). Converting between formats is a daily task for DevOps engineers and backend developers. This tool handles the conversion instantly with proper formatting and error reporting.</p>
+    <h3>Privacy</h3>
+    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server.</p>
+  </div>
+</div>
+<footer>
+  <a href="/">Home</a><a href="/live">Live</a><a href="/tools">Tools</a><a href="/agent">Agents</a><a href="/radio">Radio</a><a href="/wifi">WiFi</a><a href="/developers">API</a><a href="/about">About</a><a href="/features">Features</a>
+</footer>
+<script>
+(function(){
+  const yamlArea=document.getElementById('yamlArea'),jsonArea=document.getElementById('jsonArea'),errorMsg=document.getElementById('errorMsg');
+
+  // Minimal YAML parser (handles common subset: scalars, lists, maps, nested)
+  function parseYaml(str){
+    const lines=str.split('\n');
+    const root={};
+    const stack=[{obj:root,indent:-1}];
+    let currentArray=null;
+
+    for(let i=0;i<lines.length;i++){
+      const raw=lines[i];
+      if(!raw.trim()||raw.trim().startsWith('#'))continue;
+      const indent=raw.search(/\S/);
+      const line=raw.trim();
+
+      // Pop stack to find parent at correct indent
+      while(stack.length>1&&stack[stack.length-1].indent>=indent){
+        stack.pop();
+      }
+      const parent=stack[stack.length-1].obj;
+
+      // Array item
+      if(line.startsWith('- ')){
+        const val=line.slice(2).trim();
+        // Find the key this array belongs to
+        if(Array.isArray(parent)){
+          const parsed=parseScalar(val);
+          if(val.includes(': ')){
+            const obj={};
+            const [k,...rest]=val.split(': ');
+            obj[k.trim()]=parseScalar(rest.join(': ').trim());
+            parent.push(obj);
+          } else {
+            parent.push(parsed);
+          }
+        }
+        continue;
+      }
+
+      // Key: value
+      const colonIdx=line.indexOf(':');
+      if(colonIdx>0){
+        const key=line.slice(0,colonIdx).trim();
+        const valStr=line.slice(colonIdx+1).trim();
+
+        if(!valStr){
+          // Check if next line is array or nested map
+          const nextLine=i+1<lines.length?lines[i+1]:'';
+          const nextTrimmed=nextLine.trim();
+          const nextIndent=nextLine.search(/\S/);
+          if(nextTrimmed.startsWith('- ')){
+            parent[key]=[];
+            stack.push({obj:parent[key],indent:nextIndent-2});
+          } else {
+            parent[key]={};
+            stack.push({obj:parent[key],indent:indent});
+          }
+        } else {
+          parent[key]=parseScalar(valStr);
+        }
+      }
+    }
+    return root;
+  }
+
+  function parseScalar(s){
+    if(s==='true'||s==='True'||s==='TRUE')return true;
+    if(s==='false'||s==='False'||s==='FALSE')return false;
+    if(s==='null'||s==='~'||s==='Null')return null;
+    if(/^-?\d+$/.test(s))return parseInt(s,10);
+    if(/^-?\d+\.\d+$/.test(s))return parseFloat(s);
+    if((s.startsWith('"')&&s.endsWith('"'))||(s.startsWith("'")&&s.endsWith("'")))return s.slice(1,-1);
+    return s;
+  }
+
+  // JSON to YAML serializer
+  function toYaml(obj,indent){
+    indent=indent||0;
+    const pad='  '.repeat(indent);
+    let out='';
+    if(Array.isArray(obj)){
+      for(const item of obj){
+        if(typeof item==='object'&&item!==null&&!Array.isArray(item)){
+          const keys=Object.keys(item);
+          out+=pad+'- '+keys[0]+': '+formatScalar(item[keys[0]])+'\n';
+          for(let k=1;k<keys.length;k++){
+            out+=pad+'  '+keys[k]+': '+formatScalar(item[keys[k]])+'\n';
+          }
+        } else {
+          out+=pad+'- '+formatScalar(item)+'\n';
+        }
+      }
+    } else if(typeof obj==='object'&&obj!==null){
+      for(const[key,val]of Object.entries(obj)){
+        if(typeof val==='object'&&val!==null){
+          out+=pad+key+':\n'+toYaml(val,indent+1);
+        } else {
+          out+=pad+key+': '+formatScalar(val)+'\n';
+        }
+      }
+    }
+    return out;
+  }
+
+  function formatScalar(v){
+    if(v===null)return'null';
+    if(typeof v==='boolean')return v?'true':'false';
+    if(typeof v==='number')return String(v);
+    if(typeof v==='string'){
+      if(/[:{}\[\],&*#?|>!%@`]/.test(v)||v.includes(': ')||v===''||v==='true'||v==='false'||v==='null'||/^\d/.test(v))
+        return'"'+v.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+      return v;
+    }
+    return String(v);
+  }
+
+  document.getElementById('btnToJson').addEventListener('click',function(){
+    errorMsg.textContent='';
+    yamlArea.classList.remove('error');
+    jsonArea.classList.remove('error');
+    try{
+      const parsed=parseYaml(yamlArea.value);
+      jsonArea.value=JSON.stringify(parsed,null,2);
+    }catch(e){
+      errorMsg.textContent='YAML parse error: '+e.message;
+      yamlArea.classList.add('error');
+    }
+  });
+
+  document.getElementById('btnToYaml').addEventListener('click',function(){
+    errorMsg.textContent='';
+    yamlArea.classList.remove('error');
+    jsonArea.classList.remove('error');
+    try{
+      const parsed=JSON.parse(jsonArea.value);
+      yamlArea.value=toYaml(parsed).trim();
+    }catch(e){
+      errorMsg.textContent='JSON parse error: '+e.message;
+      jsonArea.classList.add('error');
+    }
+  });
+
+  document.getElementById('btnValidate').addEventListener('click',function(){
+    errorMsg.textContent='';
+    yamlArea.classList.remove('error');
+    try{
+      parseYaml(yamlArea.value);
+      errorMsg.style.color='#4ADE80';
+      errorMsg.textContent='Valid YAML';
+      setTimeout(()=>{errorMsg.textContent='';errorMsg.style.color='';},2000);
+    }catch(e){
+      errorMsg.style.color='';
+      errorMsg.textContent='Invalid YAML: '+e.message;
+      yamlArea.classList.add('error');
+    }
+  });
+
+  document.getElementById('btnCopyYaml').addEventListener('click',function(){
+    navigator.clipboard.writeText(yamlArea.value).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy YAML';},1500);});
+  });
+  document.getElementById('btnCopyJson').addEventListener('click',function(){
+    navigator.clipboard.writeText(jsonArea.value).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy JSON';},1500);});
+  });
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>

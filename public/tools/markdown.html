@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Editor &amp; Preview — Free Online Tool | TerminalFeed</title>
+<meta name="description" content="Write and preview Markdown in real time. GitHub-flavored Markdown with live side-by-side preview. Export to HTML. Free, no sign-up, 100% client-side.">
+<meta name="keywords" content="markdown editor online, markdown preview, markdown to html, github markdown, markdown viewer, GFM editor, markdown tool">
+<link rel="canonical" href="https://terminalfeed.io/tools/markdown">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/markdown">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/markdown">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/markdown">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/markdown">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/markdown">
+<meta property="og:title" content="Markdown Editor & Preview — Free Online Tool | TerminalFeed">
+<meta property="og:description" content="Write Markdown with live side-by-side preview. GitHub-flavored. Export to HTML.">
+<meta property="og:url" content="https://terminalfeed.io/tools/markdown">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Markdown Editor & Preview | TerminalFeed">
+<meta name="twitter:description" content="Write and preview Markdown in real time. GitHub-flavored.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Markdown Editor & Preview",
+  "url": "https://terminalfeed.io/tools/markdown",
+  "description": "Write and preview Markdown with live side-by-side rendering. GitHub-flavored Markdown. Export to HTML.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0A0A0C;
+  color: #D4D2CB;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+a { color: #5DCAA5; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 1200px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; }
+.back-link a:hover { color: #5DCAA5; }
+.container { max-width: 1200px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; }
+.header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.toolbar { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.toolbar button {
+  background: rgba(93,202,165,0.12);
+  color: #5DCAA5;
+  border: 1px solid rgba(93,202,165,0.3);
+  padding: 0.4rem 0.7rem;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.toolbar button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+.editor-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid #1A1A22;
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 500px;
+}
+@media (max-width: 700px) { .editor-wrap { grid-template-columns: 1fr; min-height: auto; } }
+.editor-pane { display: flex; flex-direction: column; }
+.pane-label {
+  font-size: 0.7rem;
+  color: #4E4D49;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 0.8rem;
+  background: #111114;
+  border-bottom: 1px solid #1A1A22;
+}
+textarea#mdInput {
+  flex: 1;
+  width: 100%;
+  min-height: 460px;
+  background: #0D0D10;
+  color: #D4D2CB;
+  border: none;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: none;
+  outline: none;
+  line-height: 1.6;
+  tab-size: 2;
+}
+.preview-pane {
+  border-left: 1px solid #1A1A22;
+  overflow: auto;
+  max-height: 500px;
+}
+@media (max-width: 700px) { .preview-pane { border-left: none; border-top: 1px solid #1A1A22; max-height: 400px; } }
+#preview {
+  padding: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #D4D2CB;
+}
+#preview h1 { font-size: 1.6rem; margin: 0.8em 0 0.4em; color: #5DCAA5; border-bottom: 1px solid #1A1A22; padding-bottom: 0.3em; }
+#preview h2 { font-size: 1.3rem; margin: 0.7em 0 0.35em; color: #D4D2CB; border-bottom: 1px solid #1A1A22; padding-bottom: 0.2em; }
+#preview h3 { font-size: 1.1rem; margin: 0.6em 0 0.3em; color: #D4D2CB; }
+#preview h4, #preview h5, #preview h6 { font-size: 1rem; margin: 0.5em 0 0.2em; color: #7A7A72; }
+#preview p { margin: 0.5em 0; }
+#preview code { background: #151518; padding: 2px 6px; border-radius: 3px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85em; color: #4ADE80; }
+#preview pre { background: #111114; border: 1px solid #1A1A22; border-radius: 6px; padding: 0.8rem; overflow-x: auto; margin: 0.6em 0; }
+#preview pre code { background: none; padding: 0; color: #D4D2CB; }
+#preview blockquote { border-left: 3px solid #5DCAA5; padding-left: 1rem; margin: 0.5em 0; color: #7A7A72; }
+#preview ul, #preview ol { padding-left: 1.5rem; margin: 0.5em 0; }
+#preview li { margin: 0.2em 0; }
+#preview table { border-collapse: collapse; width: 100%; margin: 0.6em 0; }
+#preview th, #preview td { border: 1px solid #1A1A22; padding: 0.4rem 0.6rem; text-align: left; font-size: 0.85rem; }
+#preview th { background: #111114; color: #5DCAA5; }
+#preview hr { border: none; border-top: 1px solid #1A1A22; margin: 1em 0; }
+#preview a { color: #5DCAA5; }
+#preview img { max-width: 100%; border-radius: 4px; }
+#preview strong { color: #E0DED8; }
+#preview input[type="checkbox"] { accent-color: #5DCAA5; margin-right: 0.4em; }
+#preview .task-list-item { list-style: none; margin-left: -1.2rem; }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+</style>
+</head>
+<body data-page="tools-markdown">
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> MARKDOWN</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+
+  <div class="toolbar">
+    <button id="btnCopyHtml">Copy HTML</button>
+    <button id="btnCopyMd">Copy Markdown</button>
+    <button id="btnClear">Clear</button>
+  </div>
+
+  <div class="editor-wrap">
+    <div class="editor-pane">
+      <div class="pane-label">Markdown</div>
+      <textarea id="mdInput"># Hello World
+
+Welcome to the **TerminalFeed Markdown Editor**. Start typing to see a live preview.
+
+## Features
+
+- **Bold**, *italic*, ~~strikethrough~~
+- [Links](https://terminalfeed.io)
+- `inline code` and code blocks
+- Tables, blockquotes, lists
+- Task lists with checkboxes
+
+## Code Block
+
+```javascript
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+```
+
+## Table
+
+| Feature | Status |
+|---------|--------|
+| Live Preview | ✅ |
+| GFM Support | ✅ |
+| Export HTML | ✅ |
+
+> "The best tools are the ones that get out of your way." — Every developer ever
+
+---
+
+### Task List
+
+- [x] Build markdown editor
+- [x] Add live preview
+- [ ] Take over the world</textarea>
+    </div>
+    <div class="editor-pane preview-pane">
+      <div class="pane-label">Preview</div>
+      <div id="preview"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- AdSense placeholder -->
+  <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
+
+  <div class="seo-content">
+    <h2>Markdown Editor &amp; Preview &mdash; Write Markdown Online</h2>
+    <h3>What Is Markdown?</h3>
+    <p>Markdown is a lightweight markup language created by John Gruber in 2004. It lets you write formatted text using a plain text editor with simple syntax like <code># headings</code>, <code>**bold**</code>, <code>*italic*</code>, and <code>[links](url)</code>. Markdown is used for README files, documentation, blog posts, comments on GitHub, Stack Overflow, Reddit, and countless other platforms.</p>
+    <h3>GitHub-Flavored Markdown (GFM)</h3>
+    <p>This editor supports GitHub-Flavored Markdown, which extends standard Markdown with features like <strong>tables</strong>, <strong>task lists</strong> (checkboxes), <strong>strikethrough</strong> (<code>~~text~~</code>), <strong>fenced code blocks</strong> with language hints, and <strong>autolinks</strong>.</p>
+    <h3>Privacy</h3>
+    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server. Your Markdown content never leaves your browser.</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/">Home</a>
+  <a href="/live">Live</a>
+  <a href="/tools">Tools</a>
+  <a href="/agent">Agents</a>
+  <a href="/radio">Radio</a>
+  <a href="/wifi">WiFi</a>
+  <a href="/developers">API</a>
+  <a href="/about">About</a>
+  <a href="/features">Features</a>
+</footer>
+
+<script>
+(function() {
+  const mdInput = document.getElementById('mdInput');
+  const preview = document.getElementById('preview');
+
+  // Lightweight Markdown parser (GFM subset)
+  function parseMd(md) {
+    let html = md;
+
+    // Escape HTML
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Fenced code blocks
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+      return '<pre><code class="lang-' + lang + '">' + code.trim() + '</code></pre>';
+    });
+
+    // Inline code (must come after fenced blocks)
+    html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+    // Headings
+    html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+    html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+    html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+    // Horizontal rules
+    html = html.replace(/^---+$/gm, '<hr>');
+
+    // Blockquotes
+    html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Bold + italic combos
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+    // Links and images
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Tables
+    html = html.replace(/^(\|.+\|)\n(\|[\s:-]+\|)\n((?:\|.+\|\n?)*)/gm, function(_, header, sep, body) {
+      const ths = header.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
+      const rows = body.trim().split('\n').map(row => {
+        const tds = row.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('');
+        return '<tr>' + tds + '</tr>';
+      }).join('');
+      return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + rows + '</tbody></table>';
+    });
+
+    // Task lists
+    html = html.replace(/^- \[x\]\s+(.+)$/gm, '<li class="task-list-item"><input type="checkbox" checked disabled> $1</li>');
+    html = html.replace(/^- \[ \]\s+(.+)$/gm, '<li class="task-list-item"><input type="checkbox" disabled> $1</li>');
+
+    // Unordered lists
+    html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, function(match) {
+      return '<ul>' + match + '</ul>';
+    });
+
+    // Ordered lists
+    html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+
+    // Paragraphs — wrap remaining plain text lines
+    html = html.replace(/^(?!<[a-z/]|$)(.+)$/gm, '<p>$1</p>');
+
+    // Clean up extra paragraph wrapping
+    html = html.replace(/<p><(h[1-6]|ul|ol|li|pre|blockquote|table|hr|img)/g, '<$1');
+    html = html.replace(/<\/(h[1-6]|ul|ol|li|pre|blockquote|table)><\/p>/g, '</$1>');
+
+    return html;
+  }
+
+  function render() {
+    preview.innerHTML = parseMd(mdInput.value);
+  }
+
+  mdInput.addEventListener('input', render);
+
+  // Tab key support
+  mdInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+      this.selectionStart = this.selectionEnd = start + 2;
+      render();
+    }
+  });
+
+  document.getElementById('btnCopyHtml').addEventListener('click', function() {
+    navigator.clipboard.writeText(preview.innerHTML).then(() => {
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy HTML'; }, 1500);
+    });
+  });
+
+  document.getElementById('btnCopyMd').addEventListener('click', function() {
+    navigator.clipboard.writeText(mdInput.value).then(() => {
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy Markdown'; }, 1500);
+    });
+  });
+
+  document.getElementById('btnClear').addEventListener('click', function() {
+    mdInput.value = '';
+    preview.innerHTML = '';
+  });
+
+  render();
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>
