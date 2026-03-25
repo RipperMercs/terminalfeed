@@ -63,15 +63,16 @@
 }
 
 :root {
-  --clean-bg: #0a0a0a;
-  --clean-bg-card: #111111;
-  --clean-green: #00ff41;
-  --clean-green-dim: #00cc33;
-  --clean-green-muted: #006622;
-  --clean-border: #1a3a1a;
-  --clean-glow: #00ff4133;
-  --clean-glow-solid: #00ff4120;
+  --clean-bg: #0f1923;
+  --clean-bg-card: #1a2535;
+  --clean-green: #5b9bd5;
+  --clean-green-dim: #7a8899;
+  --clean-green-muted: #2d4a6a;
+  --clean-border: #253545;
+  --clean-glow: rgba(91, 155, 213, 0.2);
+  --clean-glow-solid: rgba(91, 155, 213, 0.1);
   --clean-amber: #ff6600;
+  --clean-text: #c0c8d4;
   --clean-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
 }
 
@@ -81,10 +82,6 @@ html {
 
 body {
   background: var(--clean-bg);
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(0, 255, 65, 0.08) 0%, transparent 45%),
-    linear-gradient(180deg, #0d120d 0%, #060a06 25%, #0a0a0a 50%, #060a06 75%, #0d120d 100%);
   color: var(--clean-green-dim);
   font-family: var(--clean-mono);
   font-size: 14px;
@@ -132,7 +129,7 @@ section {
 .hero-title {
   font-size: 32px;
   font-weight: 700;
-  color: var(--clean-green);
+  color: var(--clean-text);
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 24px;

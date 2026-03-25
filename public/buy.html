@@ -46,14 +46,16 @@
 }
 
 :root {
-  --bg: #0a0a0a;
-  --bg-card: #111111;
-  --green: #00ff41;
-  --green-dim: #00cc33;
-  --green-muted: #006622;
-  --border: #1a3a1a;
-  --glow: #00ff4133;
-  --glow-solid: #00ff4120;
+  --bg: #0f1923;
+  --bg-card: #1a2535;
+  --accent: #5b9bd5;
+  --accent-dim: #4a7faa;
+  --accent-muted: #2d4a6a;
+  --text: #c0c8d4;
+  --text-dim: #7a8899;
+  --border: #253545;
+  --glow: rgba(91, 155, 213, 0.2);
+  --glow-solid: rgba(91, 155, 213, 0.1);
   --gold: #ffd700;
   --gold-bg: rgba(255, 215, 0, 0.08);
   --gold-border: rgba(255, 215, 0, 0.25);
@@ -64,11 +66,7 @@ html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(0, 255, 65, 0.08) 0%, transparent 45%),
-    linear-gradient(180deg, #0d120d 0%, #060a06 25%, #0a0a0a 50%, #060a06 75%, #0d120d 100%);
-  color: var(--green-dim);
+  color: var(--text-dim);
   font-family: var(--mono);
   font-size: 14px;
   line-height: 1.6;
@@ -81,7 +79,7 @@ body {
   50% { opacity: 0; }
 }
 
-.cursor { animation: blink 1s step-end infinite; color: var(--green); }
+.cursor { animation: blink 1s step-end infinite; color: var(--accent); }
 
 .page {
   max-width: 600px;
@@ -91,28 +89,26 @@ body {
 
 /* ── Header ── */
 .header {
-  padding: 24px 0;
-  text-align: center;
-  position: relative;
+  padding: 24px 0 0;
 }
 
 .back-link {
-  position: absolute;
-  left: 0;
-  top: 28px;
+  display: inline-block;
   font-size: 11px;
-  color: var(--green-muted);
+  color: var(--accent-muted);
   text-decoration: none;
   transition: color 150ms ease;
+  margin-bottom: 16px;
 }
 
-.back-link:hover { color: var(--green-dim); }
+.back-link:hover { color: var(--accent-dim); }
 
 .header-title {
   font-size: 11px;
-  color: var(--green-muted);
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 2px;
+  text-align: center;
 }
 
 /* ── Product Card ── */
@@ -142,20 +138,20 @@ body {
 .product-title {
   font-size: 22px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 12px;
 }
 
 .product-sub {
-  color: var(--green-dim);
+  color: var(--text-dim);
   font-size: 13px;
   margin-bottom: 4px;
 }
 
 .product-sub-detail {
-  color: var(--green-muted);
+  color: var(--accent-muted);
   font-size: 12px;
   margin-bottom: 28px;
 }
@@ -171,13 +167,13 @@ body {
 .price-amount {
   font-size: 32px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent);
   line-height: 1.2;
 }
 
 .price-label {
   font-size: 11px;
-  color: var(--green-dim);
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 2px;
 }
@@ -192,9 +188,9 @@ body {
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 2px;
-  border: 1px solid var(--green-dim);
+  border: 1px solid var(--accent-dim);
   border-radius: 3px;
-  color: var(--green);
+  color: var(--accent);
   background: transparent;
   transition: all 150ms ease;
   cursor: pointer;
@@ -203,13 +199,13 @@ body {
 
 .btn-buy:hover {
   background: var(--glow-solid);
-  border-color: var(--green);
+  border-color: var(--accent);
   box-shadow: 0 0 12px var(--glow);
 }
 
 .checkout-note {
   font-size: 11px;
-  color: var(--green-muted);
+  color: var(--text-dim);
   line-height: 1.6;
 }
 
@@ -219,7 +215,7 @@ section { padding: 24px 0; }
 .section-heading {
   font-size: 14px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 20px;
@@ -233,13 +229,13 @@ section { padding: 24px 0; }
 .included-list li {
   padding: 6px 0;
   font-size: 13px;
-  color: var(--green-dim);
+  color: var(--text-dim);
   line-height: 1.7;
 }
 
 .included-list li::before {
   content: "\2713";
-  color: var(--green);
+  color: var(--accent);
   font-weight: 700;
   margin-right: 12px;
 }
@@ -252,20 +248,20 @@ section { padding: 24px 0; }
 .free-list li {
   padding: 5px 0;
   font-size: 12px;
-  color: var(--green-muted);
+  color: var(--accent-muted);
   line-height: 1.7;
 }
 
 .free-list li::before {
   content: "\2192";
-  color: var(--green-muted);
+  color: var(--accent-muted);
   margin-right: 10px;
 }
 
 /* ── Trust ── */
 .trust-text {
   font-size: 13px;
-  color: var(--green-dim);
+  color: var(--text-dim);
   line-height: 1.8;
 }
 
@@ -277,7 +273,7 @@ section { padding: 24px 0; }
 .faq-q {
   font-size: 13px;
   font-weight: 600;
-  color: var(--green);
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 8px;
@@ -285,7 +281,7 @@ section { padding: 24px 0; }
 
 .faq-a {
   font-size: 12px;
-  color: var(--green-dim);
+  color: var(--text-dim);
   line-height: 1.8;
 }
 
@@ -304,9 +300,9 @@ section { padding: 24px 0; }
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 2px;
-  border: 1px solid var(--green-dim);
+  border: 1px solid var(--accent-dim);
   border-radius: 3px;
-  color: var(--green);
+  color: var(--accent);
   background: transparent;
   transition: all 150ms ease;
   cursor: pointer;
@@ -315,7 +311,7 @@ section { padding: 24px 0; }
 
 .btn-buy-bottom:hover {
   background: var(--glow-solid);
-  border-color: var(--green);
+  border-color: var(--accent);
   box-shadow: 0 0 12px var(--glow);
 }
 
@@ -325,17 +321,17 @@ section { padding: 24px 0; }
   padding: 32px 0 48px;
   border-top: 1px solid var(--border);
   font-size: 11px;
-  color: var(--green-muted);
+  color: var(--text-dim);
   line-height: 2;
 }
 
 .footer a {
-  color: var(--green-muted);
+  color: var(--text-dim);
   text-decoration: none;
   transition: color 150ms ease;
 }
 
-.footer a:hover { color: var(--green-dim); }
+.footer a:hover { color: var(--accent-dim); }
 
 .footer-links { margin-top: 4px; }
 .footer-links a { margin: 0 10px; }
@@ -345,7 +341,6 @@ section { padding: 24px 0; }
   .product-card { padding: 28px 20px; }
   .product-title { font-size: 18px; }
   .price-amount { font-size: 28px; }
-  .back-link { position: static; display: block; margin-bottom: 12px; }
 }
 </style>
 </head>
