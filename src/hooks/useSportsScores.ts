@@ -20,12 +20,32 @@ export interface GameScore {
   situation: string; // "Top 7th", "Q4 2:14", "2nd & 7", etc
 }
 
-const LEAGUES = [
-  { key: 'nba', sport: 'basketball', league: 'nba', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' },
-  { key: 'nfl', sport: 'football', league: 'nfl', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' },
-  { key: 'mlb', sport: 'baseball', league: 'mlb', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' },
-  { key: 'nhl', sport: 'hockey', league: 'nhl', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' },
-];
+// Leagues rotate by month so off-season sports don't clutter the ticker
+function getActiveLeagues() {
+  const month = new Date().getMonth(); // 0-indexed
+  const leagues: { key: string; sport: string; league: string; url: string }[] = [];
+
+  // NBA: Oct (9) – Jun (5)
+  if (month >= 9 || month <= 5) {
+    leagues.push({ key: 'nba', sport: 'basketball', league: 'nba', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' });
+  }
+  // NHL: Oct (9) – Jun (5)
+  if (month >= 9 || month <= 5) {
+    leagues.push({ key: 'nhl', sport: 'hockey', league: 'nhl', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' });
+  }
+  // MLB: Mar (2) – Oct (9)
+  if (month >= 2 && month <= 9) {
+    leagues.push({ key: 'mlb', sport: 'baseball', league: 'mlb', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' });
+  }
+  // NFL: Sep (8) – Feb (1)
+  if (month >= 8 || month <= 1) {
+    leagues.push({ key: 'nfl', sport: 'football', league: 'nfl', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' });
+  }
+
+  return leagues;
+}
+
+const LEAGUES = getActiveLeagues();
 
 const SUMMARY_POLL_MS = 15_000; // 15s — fast enough for live play-by-play
 const CACHE_KEY = 'sports_scores';
