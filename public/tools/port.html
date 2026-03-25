@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Common Network Ports Reference — TCP/UDP Port List | TerminalFeed</title>
+<meta name="description" content="Searchable reference of common network ports. Find what service runs on any port. TCP/UDP, service names, descriptions, and security notes. Free online tool.">
+<meta name="keywords" content="common ports list, port 443, port 80, port 22, what port is MySQL, network ports reference, TCP UDP ports, port lookup, port number list">
+<link rel="canonical" href="https://terminalfeed.io/tools/port">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/port">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/port">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/port">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/port">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/port">
+<meta property="og:title" content="Common Network Ports Reference | TerminalFeed">
+<meta property="og:description" content="Searchable reference of common network ports. TCP/UDP services, descriptions, security notes.">
+<meta property="og:url" content="https://terminalfeed.io/tools/port">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Common Network Ports Reference",
+  "url": "https://terminalfeed.io/tools/port",
+  "description": "Searchable reference of common TCP/UDP network ports with service names and security notes.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+a { color: #5DCAA5; text-decoration: none; } a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; } .back-link a:hover { color: #5DCAA5; }
+.container { max-width: 960px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; } .header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.search-bar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.search-bar input {
+  flex: 1;
+  min-width: 200px;
+  background: #111114;
+  color: #D4D2CB;
+  border: 1px solid #1A1A22;
+  border-radius: 6px;
+  padding: 0.65rem 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+.search-bar input:focus { border-color: #5DCAA5; }
+.search-bar input::placeholder { color: #4E4D49; }
+.filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.filters button {
+  background: rgba(93,202,165,0.08);
+  color: #5DCAA5;
+  border: 1px solid rgba(93,202,165,0.2);
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.filters button:hover { background: rgba(93,202,165,0.2); }
+.filters button.active { background: rgba(93,202,165,0.25); border-color: #5DCAA5; }
+.port-count { font-size: 0.72rem; color: #4E4D49; margin-bottom: 0.8rem; }
+.port-table { width: 100%; border-collapse: collapse; }
+.port-table th {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.72rem;
+  color: #5DCAA5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #1A1A22;
+  background: #111114;
+  position: sticky;
+  top: 0;
+}
+.port-table td {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid #1A1A22;
+  font-size: 0.8rem;
+  vertical-align: top;
+}
+.port-table tr:hover td { background: rgba(93,202,165,0.03); }
+.port-num { color: #5DCAA5; font-weight: 600; }
+.port-proto { color: #4E4D49; font-size: 0.72rem; }
+.port-service { color: #D4D2CB; font-weight: 500; }
+.port-desc { color: #7A7A72; font-size: 0.78rem; }
+.port-safe { font-size: 0.68rem; padding: 0.15rem 0.4rem; border-radius: 3px; }
+.safe-yes { background: rgba(74,222,128,0.1); color: #4ADE80; }
+.safe-caution { background: rgba(250,204,21,0.1); color: #FACC15; }
+.safe-no { background: rgba(248,113,113,0.1); color: #F87171; }
+.table-wrap { overflow-x: auto; border: 1px solid #1A1A22; border-radius: 6px; max-height: 600px; overflow-y: auto; }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+</style>
+</head>
+<body data-page="tools-port">
+<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
+<div class="container">
+  <div class="header">
+    <h1><span>&gt;_</span> PORTS</h1>
+    <span class="badge">&#9889; reference</span>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by port number, service, or keyword..." autofocus>
+  </div>
+  <div class="filters">
+    <button class="active" data-cat="all">All</button>
+    <button data-cat="web">Web</button>
+    <button data-cat="database">Database</button>
+    <button data-cat="mail">Mail</button>
+    <button data-cat="remote">Remote</button>
+    <button data-cat="file">File Transfer</button>
+    <button data-cat="dev">Development</button>
+    <button data-cat="messaging">Messaging</button>
+  </div>
+  <div class="port-count" id="portCount"></div>
+
+  <div class="table-wrap">
+    <table class="port-table">
+      <thead><tr><th>Port</th><th>Protocol</th><th>Service</th><th>Description</th><th>Expose?</th></tr></thead>
+      <tbody id="portBody"></tbody>
+    </table>
+  </div>
+</div>
+<div class="container">
+  <div class="seo-content">
+    <h2>Common Network Ports Reference</h2>
+    <h3>What Are Network Ports?</h3>
+    <p>A network port is a numbered endpoint for communication. When a computer sends or receives data over a network, it uses port numbers to route traffic to the correct application. Ports range from 0 to 65535. Ports 0-1023 are "well-known" ports assigned to common services by IANA.</p>
+    <h3>TCP vs UDP</h3>
+    <p><strong>TCP</strong> (Transmission Control Protocol) provides reliable, ordered delivery of data. Used for web, email, file transfer, and most applications. <strong>UDP</strong> (User Datagram Protocol) is faster but unreliable &mdash; used for DNS, streaming, gaming, and VoIP.</p>
+    <h3>Privacy</h3>
+    <p>This is a static reference page. No data is sent to any server.</p>
+  </div>
+</div>
+<footer>
+  <a href="/">Home</a><a href="/live">Live</a><a href="/tools">Tools</a><a href="/agent">Agents</a><a href="/radio">Radio</a><a href="/wifi">WiFi</a><a href="/developers">API</a><a href="/about">About</a><a href="/features">Features</a>
+</footer>
+<script>
+(function(){
+  // s=safe, c=caution, n=no
+  const PORTS=[
+    {port:20,proto:'TCP',service:'FTP Data',desc:'File Transfer Protocol data channel',cat:'file',safe:'n'},
+    {port:21,proto:'TCP',service:'FTP',desc:'File Transfer Protocol control',cat:'file',safe:'n'},
+    {port:22,proto:'TCP',service:'SSH',desc:'Secure Shell — encrypted remote access',cat:'remote',safe:'c'},
+    {port:23,proto:'TCP',service:'Telnet',desc:'Unencrypted remote terminal (deprecated)',cat:'remote',safe:'n'},
+    {port:25,proto:'TCP',service:'SMTP',desc:'Simple Mail Transfer Protocol',cat:'mail',safe:'c'},
+    {port:53,proto:'TCP/UDP',service:'DNS',desc:'Domain Name System',cat:'web',safe:'c'},
+    {port:67,proto:'UDP',service:'DHCP Server',desc:'Dynamic Host Configuration Protocol',cat:'web',safe:'n'},
+    {port:68,proto:'UDP',service:'DHCP Client',desc:'DHCP client requests',cat:'web',safe:'n'},
+    {port:80,proto:'TCP',service:'HTTP',desc:'Hypertext Transfer Protocol (unencrypted web)',cat:'web',safe:'c'},
+    {port:110,proto:'TCP',service:'POP3',desc:'Post Office Protocol v3',cat:'mail',safe:'n'},
+    {port:123,proto:'UDP',service:'NTP',desc:'Network Time Protocol',cat:'web',safe:'c'},
+    {port:143,proto:'TCP',service:'IMAP',desc:'Internet Message Access Protocol',cat:'mail',safe:'n'},
+    {port:161,proto:'UDP',service:'SNMP',desc:'Simple Network Management Protocol',cat:'web',safe:'n'},
+    {port:389,proto:'TCP',service:'LDAP',desc:'Lightweight Directory Access Protocol',cat:'remote',safe:'n'},
+    {port:443,proto:'TCP',service:'HTTPS',desc:'HTTP Secure — encrypted web traffic (TLS/SSL)',cat:'web',safe:'s'},
+    {port:445,proto:'TCP',service:'SMB',desc:'Server Message Block — Windows file sharing',cat:'file',safe:'n'},
+    {port:465,proto:'TCP',service:'SMTPS',desc:'SMTP over TLS (implicit)',cat:'mail',safe:'s'},
+    {port:587,proto:'TCP',service:'SMTP Submission',desc:'Mail submission with STARTTLS',cat:'mail',safe:'s'},
+    {port:636,proto:'TCP',service:'LDAPS',desc:'LDAP over TLS',cat:'remote',safe:'s'},
+    {port:993,proto:'TCP',service:'IMAPS',desc:'IMAP over TLS',cat:'mail',safe:'s'},
+    {port:995,proto:'TCP',service:'POP3S',desc:'POP3 over TLS',cat:'mail',safe:'s'},
+    {port:1433,proto:'TCP',service:'MSSQL',desc:'Microsoft SQL Server',cat:'database',safe:'n'},
+    {port:1521,proto:'TCP',service:'Oracle DB',desc:'Oracle Database listener',cat:'database',safe:'n'},
+    {port:2049,proto:'TCP/UDP',service:'NFS',desc:'Network File System',cat:'file',safe:'n'},
+    {port:3000,proto:'TCP',service:'Dev Server',desc:'Node.js, React, Rails dev servers',cat:'dev',safe:'n'},
+    {port:3306,proto:'TCP',service:'MySQL',desc:'MySQL / MariaDB database',cat:'database',safe:'n'},
+    {port:3389,proto:'TCP',service:'RDP',desc:'Remote Desktop Protocol (Windows)',cat:'remote',safe:'n'},
+    {port:4200,proto:'TCP',service:'Angular',desc:'Angular CLI dev server',cat:'dev',safe:'n'},
+    {port:5000,proto:'TCP',service:'Flask/Dev',desc:'Python Flask, Docker Registry',cat:'dev',safe:'n'},
+    {port:5432,proto:'TCP',service:'PostgreSQL',desc:'PostgreSQL database',cat:'database',safe:'n'},
+    {port:5672,proto:'TCP',service:'RabbitMQ',desc:'AMQP message broker',cat:'messaging',safe:'n'},
+    {port:5900,proto:'TCP',service:'VNC',desc:'Virtual Network Computing remote desktop',cat:'remote',safe:'n'},
+    {port:6379,proto:'TCP',service:'Redis',desc:'Redis in-memory data store',cat:'database',safe:'n'},
+    {port:6443,proto:'TCP',service:'Kubernetes API',desc:'Kubernetes API server (HTTPS)',cat:'dev',safe:'c'},
+    {port:8080,proto:'TCP',service:'HTTP Proxy',desc:'HTTP alternative, proxies, Tomcat',cat:'web',safe:'c'},
+    {port:8443,proto:'TCP',service:'HTTPS Alt',desc:'HTTPS alternative port',cat:'web',safe:'s'},
+    {port:8888,proto:'TCP',service:'Jupyter',desc:'Jupyter Notebook server',cat:'dev',safe:'n'},
+    {port:9090,proto:'TCP',service:'Prometheus',desc:'Prometheus monitoring',cat:'dev',safe:'n'},
+    {port:9200,proto:'TCP',service:'Elasticsearch',desc:'Elasticsearch REST API',cat:'database',safe:'n'},
+    {port:9418,proto:'TCP',service:'Git',desc:'Git protocol (unauthenticated)',cat:'dev',safe:'n'},
+    {port:11211,proto:'TCP/UDP',service:'Memcached',desc:'Memcached caching system',cat:'database',safe:'n'},
+    {port:27017,proto:'TCP',service:'MongoDB',desc:'MongoDB database',cat:'database',safe:'n'},
+    {port:1883,proto:'TCP',service:'MQTT',desc:'Message Queuing Telemetry Transport (IoT)',cat:'messaging',safe:'n'},
+    {port:8883,proto:'TCP',service:'MQTT/TLS',desc:'MQTT over TLS',cat:'messaging',safe:'s'},
+    {port:5173,proto:'TCP',service:'Vite',desc:'Vite dev server',cat:'dev',safe:'n'},
+    {port:3001,proto:'TCP',service:'Next.js',desc:'Next.js alternate dev port',cat:'dev',safe:'n'},
+    {port:4000,proto:'TCP',service:'Phoenix',desc:'Elixir Phoenix dev server',cat:'dev',safe:'n'},
+    {port:8000,proto:'TCP',service:'Django/PHP',desc:'Django, PHP built-in server',cat:'dev',safe:'n'},
+    {port:9000,proto:'TCP',service:'PHP-FPM',desc:'PHP FastCGI Process Manager',cat:'dev',safe:'n'},
+    {port:2375,proto:'TCP',service:'Docker',desc:'Docker daemon (unencrypted)',cat:'dev',safe:'n'},
+    {port:2376,proto:'TCP',service:'Docker TLS',desc:'Docker daemon (TLS encrypted)',cat:'dev',safe:'c'},
+    {port:5601,proto:'TCP',service:'Kibana',desc:'Kibana dashboard for Elasticsearch',cat:'dev',safe:'n'},
+    {port:15672,proto:'TCP',service:'RabbitMQ Mgmt',desc:'RabbitMQ management web UI',cat:'messaging',safe:'n'},
+  ].sort((a,b)=>a.port-b.port);
+
+  const searchInput=document.getElementById('searchInput');
+  const portBody=document.getElementById('portBody');
+  const portCount=document.getElementById('portCount');
+  let activeFilter='all';
+
+  function render(){
+    const q=searchInput.value.toLowerCase().trim();
+    const filtered=PORTS.filter(p=>{
+      if(activeFilter!=='all'&&p.cat!==activeFilter)return false;
+      if(!q)return true;
+      return String(p.port).includes(q)||p.service.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)||p.proto.toLowerCase().includes(q);
+    });
+
+    portCount.textContent=filtered.length+' ports';
+
+    portBody.innerHTML=filtered.map(p=>{
+      const safeClass=p.safe==='s'?'safe-yes':p.safe==='c'?'safe-caution':'safe-no';
+      const safeText=p.safe==='s'?'Safe':p.safe==='c'?'Caution':'No';
+      return '<tr><td><span class="port-num">'+p.port+'</span></td><td><span class="port-proto">'+p.proto+'</span></td><td><span class="port-service">'+p.service+'</span></td><td><span class="port-desc">'+p.desc+'</span></td><td><span class="port-safe '+safeClass+'">'+safeText+'</span></td></tr>';
+    }).join('');
+  }
+
+  searchInput.addEventListener('input',render);
+
+  document.querySelectorAll('.filters button').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      activeFilter=this.dataset.cat;
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>
