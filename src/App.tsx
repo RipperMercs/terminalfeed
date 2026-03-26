@@ -1160,6 +1160,8 @@ function App() {
           <a href="/agent" target="_blank" rel="noopener noreferrer" className="liveBriefingLink agentLink">AGENTS</a>
           <span className="topNavDivider">|</span>
           <a href="/radio" target="_blank" rel="noopener noreferrer" className="liveBriefingLink radioLink">RADIO</a>
+          <span className="topNavDivider">|</span>
+          <a href="/wifi" target="_blank" rel="noopener noreferrer" className="liveBriefingLink wifiLink">WIFI</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (

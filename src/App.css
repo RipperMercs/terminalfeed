@@ -126,6 +126,11 @@
   margin-left: 0;
 }
 
+.wifiLink {
+  color: #34D399;
+  margin-left: 0;
+}
+
 .liveDot {
   display: inline-block;
   width: 5px;
