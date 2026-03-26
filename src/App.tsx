@@ -1163,7 +1163,7 @@ function App() {
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (
-            <span className="lockTip">CLICK TO UNLOCK &amp; REARRANGE TABS →</span>
+            <span className="lockTip">CLICK TO UNLOCK →</span>
           )}
           <button
             className={`lockBtn ${layout.isOrganizing ? 'lockBtnActive' : ''}`}
