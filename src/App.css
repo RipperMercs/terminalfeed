@@ -2309,7 +2309,7 @@
 /* ── Lock Tip ── */
 .lockTip {
   font-size: 10px;
-  color: rgba(248, 113, 113, 0.6);
+  color: rgba(74, 222, 128, 0.6);
   letter-spacing: 0.5px;
   margin-right: 8px;
   animation: lockTipPulse 2s ease-in-out infinite;
