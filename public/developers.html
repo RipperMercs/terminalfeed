@@ -56,7 +56,7 @@
   <span class="badge badge-amber">100K REQUESTS/DAY</span>
 
   <p>Base URL: <span class="inline-code">https://terminalfeed.io/api</span></p>
-  <p>All responses are JSON. CORS is enabled — call from any domain, any app, any AI agent. Please keep individual endpoint calls to 1 per 30 seconds.</p>
+  <p>All responses are JSON. CORS is enabled, so call from any domain, any app, any AI agent. Please keep individual endpoint calls to 1 per 30 seconds. For a deep dive into the data sources behind these endpoints, read <a href="/blog/free-apis-2026">30+ Free APIs Every Developer Should Know in 2026</a>.</p>
 
   <h2>Quick Start</h2>
 
@@ -174,7 +174,7 @@
       <span class="method">GET</span>
       <span class="path">/api/fear-greed</span>
     </div>
-    <p>Crypto Fear &amp; Greed Index. 0 = Extreme Fear, 100 = Extreme Greed.</p>
+    <p>Crypto Fear &amp; Greed Index. 0 = Extreme Fear, 100 = Extreme Greed. See our <a href="/blog/fear-greed-guide">complete guide to reading the Fear &amp; Greed Index</a>.</p>
     <p class="cache">Cache: 5 minutes</p>
     <pre><code>{
   <span class="json-key">"data"</span>: {
@@ -242,7 +242,7 @@
       <span class="method">GET</span>
       <span class="path">/api/predictions</span>
     </div>
-    <p>Top Polymarket prediction markets with current yes/no probabilities and trading volume in USD.</p>
+    <p>Top Polymarket prediction markets with current yes/no probabilities and trading volume in USD. Learn how to interpret the odds in our guide: <a href="/blog/prediction-markets">Prediction Markets Explained</a>.</p>
     <p class="cache">Cache: 60 seconds</p>
     <pre><code>{
   <span class="json-key">"data"</span>: [
