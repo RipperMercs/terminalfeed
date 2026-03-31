@@ -247,6 +247,16 @@
   .seo-content th {
     color: #C8C8C0;
   }
+  .tool-intro {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #8A8880;
+    line-height: 1.7;
+  }
 </style>
 </head>
 <body data-page="tools-uuid">
@@ -255,6 +265,10 @@
   <div class="header">
     <h1><span>&gt;_</span> <span data-i18n="uuid_title">UUID GENERATOR</span></h1>
     <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
+  </div>
+
+  <div class="tool-intro">
+    UUIDs (Universally Unique Identifiers) are 128-bit identifiers used throughout software development for database primary keys, session tokens, API request tracking, and distributed system coordination. Version 4 UUIDs are randomly generated and have a collision probability so low it's effectively zero. Our generator creates cryptographically random v4 UUIDs using the Web Crypto API, ensuring true randomness suitable for production use. Generate single UUIDs or bulk batches of up to 1,000 at a time. Each UUID follows the standard 8-4-4-4-12 hexadecimal format and is fully compliant with RFC 4122. Click any generated UUID to copy it instantly.
   </div>
 
   <div class="single-uuid" id="singleDisplay" title="Click to copy">
@@ -325,6 +339,7 @@
   <a href="/radio">Radio</a>
   <a href="/wifi">WiFi</a>
   <a href="/developers">API</a>
+  <a href="/blog">Blog</a>
   <a href="/about">About</a>
   <a href="/features">Features</a>
 </footer>

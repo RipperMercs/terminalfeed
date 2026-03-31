@@ -1162,6 +1162,8 @@ function App() {
           <a href="/radio" target="_blank" rel="noopener noreferrer" className="liveBriefingLink radioLink">RADIO</a>
           <span className="topNavDivider">|</span>
           <a href="/wifi" target="_blank" rel="noopener noreferrer" className="liveBriefingLink wifiLink">WIFI</a>
+          <span className="topNavDivider">|</span>
+          <a href="/blog" target="_blank" rel="noopener noreferrer" className="liveBriefingLink blogLink">BLOG</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (
@@ -1431,6 +1433,7 @@ function App() {
           <a href="/agent" className="footerLink">Agents</a>
           <a href="/cleaner" className="footerLink">Disk Cleaner</a>
           <a href="/radio" className="footerLink">Radio</a>
+          <a href="/blog" className="footerLink">Blog</a>
           {/* WiFi link — uncomment after AdSense approval */}
           {/* <a href="/wifi" className="footerLink">WiFi</a> */}
           <a href="/privacy" className="footerLink">Privacy</a>

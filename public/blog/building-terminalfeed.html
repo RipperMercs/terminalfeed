@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How I Built a Real-Time Dashboard with 30+ Live Data Feeds | TerminalFeed Blog</title>
+  <meta name="description" content="The story of building TerminalFeed from scratch. From the first API call to serving thousands of users. Technical decisions, mistakes, lessons learned.">
+  <link rel="canonical" href="https://terminalfeed.io/blog/building-terminalfeed">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How I Built a Real-Time Dashboard with 30+ Live Data Feeds | TerminalFeed Blog">
+  <meta property="og:description" content="The story of building TerminalFeed from scratch. From the first API call to serving thousands of users. Technical decisions, mistakes, lessons learned.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/building-terminalfeed">
+  <meta property="og:site_name" content="TerminalFeed">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How I Built a Real-Time Dashboard with 30+ Live Data Feeds">
+  <meta name="twitter:description" content="The story of building TerminalFeed from scratch. From the first API call to serving thousands of users.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How I Built a Real-Time Dashboard with 30+ Live Data Feeds",
+    "description": "The story of building TerminalFeed from scratch. From the first API call to serving thousands of users. Technical decisions, mistakes, lessons learned.",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "datePublished": "2026-03-20",
+    "dateModified": "2026-03-20",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/building-terminalfeed",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+      line-height: 1.7;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 32px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    .article-header { margin-bottom: 40px; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta {
+      font-size: 11px;
+      color: #4E4D49;
+    }
+    .article-meta span { margin-right: 12px; }
+
+    .article-body { margin-top: 40px; }
+    .article-body h2 {
+      font-size: 15px;
+      color: #4ADE80;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .article-body p {
+      font-size: 13px;
+      color: #D4D2CB;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .article-body a {
+      color: #5DCAA5;
+      text-decoration: none;
+    }
+    .article-body a:hover {
+      text-decoration: underline;
+    }
+    .dimmed { color: #8A8880; }
+
+    .article-cta {
+      margin-top: 48px;
+      padding: 24px;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .article-cta p {
+      font-size: 13px;
+      color: #8A8880;
+      margin-bottom: 12px;
+    }
+    .article-cta a {
+      display: inline-block;
+      font-size: 12px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 8px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin: 4px;
+      font-weight: 500;
+    }
+    .article-cta a:hover { opacity: 0.9; }
+    .article-cta a.secondary {
+      background: transparent;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA540;
+    }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">&larr; back to blog</a>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">BUILDING</span>
+        <span class="article-tag">STORY</span>
+      </div>
+      <h1>How I Built a Real-Time Dashboard with 30+ Live Data Feeds</h1>
+      <div class="article-meta">
+        <span>By Ripper</span>
+        <span>March 2026</span>
+        <span>10 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <h2>The idea</h2>
+
+      <p>It started with a simple need. I wanted something on my second monitor. Not a static wallpaper, not a YouTube video on loop, but a living dashboard. Something that showed me what was happening in the world at a glance. Bitcoin price, stock market movement, breaking news, earthquakes, weather, all of it. In one place. With a dark terminal aesthetic that matched the rest of my dev setup.</p>
+
+      <p>I looked at what existed. Bloomberg terminals cost $24,000 a year. TradingView is great for charts but locks you into finance. News sites are cluttered with pop-ups and cookie banners. Nothing combined multiple data streams into a single, quiet, always-on display. So I decided to build it myself. One dark page, a grid of panels, each showing a different live feed. No accounts, no paywalls, no clutter. Just data in monospaced type on a black background.</p>
+
+      <h2>The first version</h2>
+
+      <p>The first version was embarrassingly simple. A single Next.js page deployed on Cloudflare Pages. Two panels: a Bitcoin price widget pulling from CoinGecko's free API, and a Hacker News feed using their Firebase endpoint. The styling was rough. The layout was broken on mobile. But it worked, and I found myself actually leaving it open on my second screen. That was the signal. If I used it, someone else would too.</p>
+
+      <p>So I kept adding panels. One API at a time. CoinGecko for crypto prices. USGS for earthquakes (they have an excellent GeoJSON feed). Open-Meteo for weather, which is completely free with no API key required. Each integration taught me something new about rate limits, response formats, and caching strategies. The panel count grew from 2 to 5 to 10 to 20. Fear and Greed Index, NASA near-Earth objects, Wikipedia recent changes, Reddit, GitHub trending. Every addition made the whole thing more useful.</p>
+
+      <h2>The CORS problem</h2>
+
+      <p>The biggest technical challenge early on was CORS. If you have ever tried to fetch data from a third-party API directly in the browser, you know the pain. Many APIs block cross-origin requests. The browser throws a cryptic error, and your dashboard panel shows nothing but a red error state.</p>
+
+      <p>My first attempt at solving this was embarrassing: free CORS proxy services. They worked for about a week, then went down or started injecting ads. The real solution was Cloudflare Workers. I built a single Worker that sits between the browser and every external API, fetches data server-side, caches responses at the edge, and serves them with proper CORS headers.</p>
+
+      <p>This architecture solved more than just CORS. Instead of every visitor hitting 30+ external APIs simultaneously, they hit my Worker, which returns cached responses almost instantly. The dashboard loads in under a second because all data is already at the edge. Crypto prices refresh every 30 seconds. Earthquake data every 5 minutes. NASA data hourly. Each endpoint gets a TTL matching how often the underlying data actually changes.</p>
+
+      <h2>Making it feel alive</h2>
+
+      <p>Early on, the dashboard had a problem. It was technically functional but emotionally flat. A grid of static numbers on a dark background felt like a spreadsheet, not a living system. So I started adding micro-animations, and they changed everything.</p>
+
+      <p>Price flash animations were first. When a crypto price updates, the number briefly flashes green or red depending on direction. Your peripheral vision catches the flash even when you are focused on something else. That is exactly what a second-monitor dashboard needs: ambient awareness without demanding attention.</p>
+
+      <p>Then came pulsing live indicators (small green dots that confirm a feed is active), new items sliding in with glow effects, Wikipedia edits streaming via Server-Sent Events, and a faint matrix rain animation behind the main grid. None of these animations are flashy. They are quiet. The dashboard should feel like a living organism breathing steadily in the corner of your screen, occasionally drawing your eye when something changes. Not screaming at you. Just present.</p>
+
+      <h2>The API platform</h2>
+
+      <p>When I built the Cloudflare Worker to proxy and cache API calls, I did not plan to make it public. But the cached responses sitting at the edge were genuinely useful on their own. So I opened them up as a <a href="/developers">public API</a>. The flagship endpoint, <code>/api/briefing</code>, returns a complete world snapshot in a single JSON response. Crypto prices, market indices, top news, weather, earthquake activity. One call, everything you need. No API key, no authentication.</p>
+
+      <p>The API found its audience in an unexpected place: AI agents. After I added an <code>llms.txt</code> file, language model agents started discovering TerminalFeed and using the briefing endpoint to ground themselves in current world state. One HTTP request instead of scraping ten different sources. Suddenly TerminalFeed was not just a website for humans. It was infrastructure for machines that need to understand the world.</p>
+
+      <h2>The tools expansion</h2>
+
+      <p>Adding <a href="/tools">developer tools</a> was a natural extension. The core audience was already developers who came for the dashboard. They regularly needed to format JSON, test a regex, generate a UUID, or decode a JWT. Why send them to some ad-infested tool site when I could build those utilities right into TerminalFeed?</p>
+
+      <p>Each tool is a standalone page with its own SEO metadata, built in the same terminal aesthetic. JSON formatter, diff checker, hash generator, Base64 encoder, cron expression builder, color converter, and more. They all run entirely in the browser. Your data never leaves your machine.</p>
+
+      <p>The strategy is simple. Each tool page captures organic search traffic for queries like "json formatter online" or "sha256 hash generator." A developer finds the tool through Google, uses it, discovers the dashboard. Some stick around. The tools are both useful on their own and a funnel to the main product. At last count, TerminalFeed has over 20 developer tools, and I keep adding more based on what I personally need. If I find myself visiting another site to do something that could live on TerminalFeed, that is a signal to build it.</p>
+
+      <h2>What I learned</h2>
+
+      <p>Building TerminalFeed taught me a lot about what works on the internet. The biggest lesson: simplicity wins. Every time.</p>
+
+      <p>Every feature that tried to be clever failed. Fancy interactive panels with custom controls nobody understood. A settings page with dozens of options nobody configured. Clever ideas solving problems people did not actually have. Every feature that just worked (reliably, fast, no signup required) succeeded. A panel showing the Bitcoin price. A tool that formats JSON. Simple things, done well, available instantly.</p>
+
+      <p>The site people leave open on their second monitor is not the one with the most features. It is the one that never breaks. Reliability is the feature. Speed is the feature. Not asking for an email address is the feature.</p>
+
+      <p>If you are building something similar, here is what I would tell you. Start with one data source you personally care about. Make it update in real time. Put it on a dark background. Stare at it for a week. If you keep it open, you are onto something. Then add a second panel. Let the product grow organically from your own usage. Do not plan 30 panels on day one. Plan one, and let the next 29 reveal themselves.</p>
+
+      <p>TerminalFeed started as a personal project for my second monitor. It became a <a href="/">dashboard</a>, an <a href="/developers">API platform</a>, and a <a href="/tools">developer toolkit</a>. I did not plan that. I just kept building the thing I wanted to use.</p>
+
+      <p class="dimmed" style="margin-top: 32px; font-size: 12px;">That is probably the best advice I can give. Build what you want to use, and keep shipping.</p>
+
+    </article>
+
+    <div class="article-cta">
+      <p>Explore TerminalFeed</p>
+      <a href="/">Open Dashboard</a>
+      <a href="/developers" class="secondary">API Docs</a>
+      <a href="/tools" class="secondary">Dev Tools</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

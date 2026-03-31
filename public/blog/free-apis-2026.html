@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>30+ Free APIs Every Developer Should Know in 2026 | TerminalFeed Blog</title>
+  <meta name="description" content="A comprehensive guide to 30+ free APIs for crypto, news, weather, space, security, and more. Endpoints, rate limits, and honest reviews from the team that built TerminalFeed.">
+  <meta property="og:title" content="30+ Free APIs Every Developer Should Know in 2026 | TerminalFeed Blog">
+  <meta property="og:description" content="A comprehensive guide to 30+ free APIs for crypto, news, weather, space, security, and more. Endpoints, rate limits, and honest reviews from the team that built TerminalFeed.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/free-apis-2026">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/free-apis-2026">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "30+ Free APIs Every Developer Should Know in 2026",
+    "description": "A comprehensive guide to 30+ free APIs for crypto, news, weather, space, security, and more. Endpoints, rate limits, and honest reviews from the team that built TerminalFeed.",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "datePublished": "2026-03-22",
+    "dateModified": "2026-03-22",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/free-apis-2026",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    .article-header { margin-bottom: 32px; }
+    .article-tags { margin-bottom: 12px; }
+    .tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 16px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 15px;
+      color: #4ADE80;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1E1E24;
+      letter-spacing: 1px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; }
+    .article-body a:hover { text-decoration: underline; }
+
+    .api-card {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s ease;
+    }
+    .api-card:hover { border-color: #5DCAA540; }
+    .api-name {
+      font-size: 14px;
+      color: #4ADE80;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .api-desc {
+      font-size: 12px;
+      color: #D4D2CB;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .api-details {
+      font-size: 11px;
+      color: #8A8880;
+      line-height: 1.8;
+    }
+    .api-details code {
+      background: #1A1A1F;
+      color: #5DCAA5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+    }
+    .api-review {
+      font-size: 11px;
+      color: #D4D2CB;
+      margin-top: 6px;
+      font-style: italic;
+    }
+    .label {
+      color: #4E4D49;
+    }
+
+    .closing-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 32px;
+    }
+    .closing-box h3 {
+      font-size: 14px;
+      color: #4ADE80;
+      margin-bottom: 10px;
+    }
+    .closing-box p {
+      font-size: 12px;
+      color: #D4D2CB;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+    .closing-box a { color: #5DCAA5; text-decoration: none; }
+    .closing-box a:hover { text-decoration: underline; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">&larr; back to blog</a>
+
+    <div class="article-header">
+      <div class="article-tags">
+        <span class="tag">DEV</span>
+        <span class="tag">APIs</span>
+      </div>
+      <h1>30+ Free APIs Every Developer Should Know in 2026</h1>
+      <div class="article-meta">By Ripper &middot; March 2026 &middot; 12 min read</div>
+    </div>
+
+    <div class="article-body">
+      <p>We built TerminalFeed entirely on free APIs. Every data feed you see on the dashboard, from real-time Bitcoin prices to earthquake alerts to the ISS tracker, runs on publicly available endpoints that cost us exactly zero dollars. Here is every single one we use, organized by category, with endpoints, rate limits, whether you need a key, and our honest take on each.</p>
+
+      <p>This is not a theoretical list. These are APIs we hit thousands of times a day in production. If something is listed here, it works.</p>
+
+      <!-- CRYPTO & FINANCE -->
+      <h2>> CRYPTO &amp; FINANCE</h2>
+
+      <div class="api-card">
+        <div class="api-name">Binance WebSocket Streams</div>
+        <div class="api-desc">Real-time crypto prices, order book depth, trade streams, and candlestick data via WebSocket.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>wss://stream.binance.com:9443/ws/</code><br>
+          <span class="label">Rate Limit:</span> 5 connections per IP, 1024 streams per connection<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">The best free source for live crypto price data. Period. Sub-second latency, rock solid uptime.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">CoinGecko</div>
+        <div class="api-desc">Market data, coin metadata, historical prices, trending coins, exchange data, and global market stats.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.coingecko.com/api/v3/</code><br>
+          <span class="label">Rate Limit:</span> 30 requests/min on the free tier<br>
+          <span class="label">Key Required:</span> No (for basic endpoints)
+        </div>
+        <div class="api-review">The most complete free crypto API available. Covers everything from prices to NFT floor data.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">CoinCap</div>
+        <div class="api-desc">Real-time market data for 2,000+ cryptocurrencies via REST and WebSocket.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.coincap.io/v2/assets</code><br>
+          <span class="label">Rate Limit:</span> 200 requests/min<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Clean, simple, and fast. Great alternative if CoinGecko rate limits are a problem.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Alternative.me (Fear &amp; Greed Index)</div>
+        <div class="api-desc">Crypto Fear &amp; Greed Index, historical values, and market sentiment data.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.alternative.me/fng/</code><br>
+          <span class="label">Rate Limit:</span> Generous, no documented cap<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Simple and reliable. One endpoint, one purpose, always works.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Mempool.space</div>
+        <div class="api-desc">Bitcoin mempool data, fee estimates, block info, address lookups, and Lightning Network stats.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>mempool.space/api/</code><br>
+          <span class="label">Rate Limit:</span> Generous for reasonable use<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">The gold standard for Bitcoin network data. Nothing else comes close for mempool and fee analysis.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Frankfurter</div>
+        <div class="api-desc">Foreign exchange rates sourced from the European Central Bank. Supports 30+ currencies.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.frankfurter.app/latest</code><br>
+          <span class="label">Rate Limit:</span> No documented limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Lightweight, fast, and backed by ECB data. Perfect for currency conversion widgets.</div>
+      </div>
+
+      <!-- NEWS & SOCIAL -->
+      <h2>> NEWS &amp; SOCIAL</h2>
+
+      <div class="api-card">
+        <div class="api-name">Hacker News (Firebase API)</div>
+        <div class="api-desc">Top stories, new stories, best stories, comments, and user data from Hacker News.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>hacker-news.firebaseio.com/v0/</code><br>
+          <span class="label">Rate Limit:</span> Firebase-level scalability<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Real-time and rock solid. Built on Firebase, so it handles any load you throw at it.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Reddit RSS/JSON</div>
+        <div class="api-desc">Subreddit feeds, post data, and comments in JSON format by appending .json to any subreddit URL.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>reddit.com/r/{subreddit}/.json</code><br>
+          <span class="label">Rate Limit:</span> ~60 requests/min (unofficial)<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Rate limited and occasionally flaky, but it works for basic feed aggregation without OAuth.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Bluesky (AT Protocol)</div>
+        <div class="api-desc">Public social data, user profiles, posts, and feeds from the Bluesky network.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>public.api.bsky.app</code><br>
+          <span class="label">Rate Limit:</span> 3,000 requests/5 min for public endpoints<br>
+          <span class="label">Key Required:</span> No (for public data)
+        </div>
+        <div class="api-review">Growing fast. The public API is generous and the data is interesting for trend analysis.</div>
+      </div>
+
+      <!-- WORLD DATA -->
+      <h2>> WORLD DATA</h2>
+
+      <div class="api-card">
+        <div class="api-name">USGS Earthquake Feeds</div>
+        <div class="api-desc">Global seismic data in GeoJSON format, updated every minute. Magnitude, location, depth, and tsunami alerts.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>earthquake.usgs.gov/earthquakes/feed/v1.0/summary/</code><br>
+          <span class="label">Rate Limit:</span> No limit (static feeds updated every 60s)<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Updated every minute, perfectly structured, and extremely reliable. One of our favorite feeds.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Open-Meteo</div>
+        <div class="api-desc">Weather forecasts, historical weather data, air quality, marine, and climate data for any location on Earth.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.open-meteo.com/v1/forecast</code><br>
+          <span class="label">Rate Limit:</span> 10,000 requests/day free<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">The best free weather API, period. No key, generous limits, global coverage, and excellent docs.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">GDACS (Global Disaster Alerting)</div>
+        <div class="api-desc">Global disaster alerts covering earthquakes, floods, tropical cyclones, droughts, and volcanic activity.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>gdacs.org/xml/rss.xml</code> (RSS feed)<br>
+          <span class="label">Rate Limit:</span> No limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Covers natural disasters globally. RSS format is old school but the data is invaluable.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Seismic Portal (EMSC)</div>
+        <div class="api-desc">European seismic data with a real-time WebSocket stream for earthquake events worldwide.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>seismicportal.eu</code> (WebSocket + REST)<br>
+          <span class="label">Rate Limit:</span> No documented limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">The WebSocket stream is great for real-time earthquake monitoring alongside USGS data.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">NASA APOD</div>
+        <div class="api-desc">Astronomy Picture of the Day. High-resolution space imagery with expert explanations, updated daily.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.nasa.gov/planetary/apod</code><br>
+          <span class="label">Rate Limit:</span> 1,000 requests/hr<br>
+          <span class="label">Key Required:</span> Yes (free, takes 30 seconds to get)
+        </div>
+        <div class="api-review">Beautiful daily content. The free API key signup is instant. Worth it for any dashboard or app.</div>
+      </div>
+
+      <!-- DEV & TECH -->
+      <h2>> DEV &amp; TECH</h2>
+
+      <div class="api-card">
+        <div class="api-name">GitHub API</div>
+        <div class="api-desc">Repository data, trending repos, user profiles, commit history, issues, and pull requests.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.github.com</code><br>
+          <span class="label">Rate Limit:</span> 60 req/hr unauthenticated, 5,000 req/hr with token<br>
+          <span class="label">Key Required:</span> No (but recommended)
+        </div>
+        <div class="api-review">Essential. The 60 req/hr unauthenticated limit is tight, so generate a personal access token.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Stack Exchange API</div>
+        <div class="api-desc">Questions, answers, tags, users, and trending content from Stack Overflow and the entire SE network.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.stackexchange.com/2.3/</code><br>
+          <span class="label">Rate Limit:</span> 300 req/day without key, 10,000 with free key<br>
+          <span class="label">Key Required:</span> No (but helps significantly)
+        </div>
+        <div class="api-review">Good for surfacing trending questions and popular tags. The free key is worth the 2 minutes.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Statuspage APIs</div>
+        <div class="api-desc">Service status for major platforms (GitHub, Cloudflare, Discord, Vercel, etc.) via their public status pages.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>{service}.statuspage.io/api/v2/status.json</code><br>
+          <span class="label">Rate Limit:</span> No documented limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Useful for monitoring dashboards. Most major services expose this. Just find their status URL.</div>
+      </div>
+
+      <!-- SPACE -->
+      <h2>> SPACE</h2>
+
+      <div class="api-card">
+        <div class="api-name">Open Notify</div>
+        <div class="api-desc">Current ISS position (latitude/longitude) and the number of astronauts currently in space.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.open-notify.org/iss-now.json</code><br>
+          <span class="label">Rate Limit:</span> No documented limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Fun and simple. Two endpoints, both return clean JSON. Great for starter projects.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">The Space Devs (Launch Library 2)</div>
+        <div class="api-desc">Rocket launches (upcoming and historical), space events, astronaut bios, and space station data.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>ll.thespacedevs.com/2.3.0/</code><br>
+          <span class="label">Rate Limit:</span> 15 req/hr on free tier<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">The most comprehensive launch data available. The 15 req/hr limit means you need to cache aggressively.</div>
+      </div>
+
+      <!-- SECURITY -->
+      <h2>> SECURITY</h2>
+
+      <div class="api-card">
+        <div class="api-name">URLhaus (abuse.ch)</div>
+        <div class="api-desc">Database of malware distribution URLs, payloads, and threat indicators maintained by the community.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>urlhaus-api.abuse.ch/v1/</code><br>
+          <span class="label">Rate Limit:</span> No documented limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Essential for security monitoring. The data quality is excellent and it updates constantly.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">ThreatFox (abuse.ch)</div>
+        <div class="api-desc">Indicators of Compromise (IOCs) database covering malware, C2 servers, and threat intelligence feeds.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>threatfox-api.abuse.ch/api/v1/</code><br>
+          <span class="label">Rate Limit:</span> No documented limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Solid threat intel feed. Pairs well with URLhaus for a complete picture of active threats.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">CISA KEV (Known Exploited Vulnerabilities)</div>
+        <div class="api-desc">The official US government catalog of vulnerabilities that are actively being exploited in the wild.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json</code><br>
+          <span class="label">Rate Limit:</span> No limit (static JSON file)<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Official US government source. If a CVE is on this list, it is being exploited right now. Take it seriously.</div>
+      </div>
+
+      <!-- PREDICTION MARKETS -->
+      <h2>> PREDICTION MARKETS</h2>
+
+      <div class="api-card">
+        <div class="api-name">Polymarket (Gamma API)</div>
+        <div class="api-desc">Prediction market data including active markets, odds, volume, and resolution criteria.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>gamma-api.polymarket.com</code><br>
+          <span class="label">Rate Limit:</span> Generous for reasonable use<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Fascinating data source. Real money on the line makes these odds more honest than polls.</div>
+      </div>
+
+      <!-- ENTERTAINMENT -->
+      <h2>> ENTERTAINMENT</h2>
+
+      <div class="api-card">
+        <div class="api-name">SteamSpy</div>
+        <div class="api-desc">Steam game statistics including player counts, ownership estimates, playtime, and genre tags.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>steamspy.com/api.php</code><br>
+          <span class="label">Rate Limit:</span> ~4 req/sec<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Fun data for gaming dashboards. Player count trends are surprisingly addictive to watch.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">Dog CEO</div>
+        <div class="api-desc">Random dog images by breed, sub-breed listings, and breed-specific photo galleries.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>dog.ceo/api/breeds/image/random</code><br>
+          <span class="label">Rate Limit:</span> No limit<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Instant mood booster. We use it for our 404 page. Zero regrets.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">The Cat API</div>
+        <div class="api-desc">Random cat images, breed info, and categorized cat photos. The feline equivalent of Dog CEO.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.thecatapi.com/v1/images/search</code><br>
+          <span class="label">Rate Limit:</span> 10 req/min without key<br>
+          <span class="label">Key Required:</span> Free key available
+        </div>
+        <div class="api-review">Similar to Dog CEO but with breed data included. The free key removes rate limits entirely.</div>
+      </div>
+
+      <!-- REFERENCE -->
+      <h2>> REFERENCE</h2>
+
+      <div class="api-card">
+        <div class="api-name">Wikimedia APIs</div>
+        <div class="api-desc">"On This Day" historical events, Wikipedia recent changes SSE stream, and page content APIs.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>api.wikimedia.org</code> + <code>stream.wikimedia.org/v2/stream/recentchange</code><br>
+          <span class="label">Rate Limit:</span> Generous<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Wikipedia's live edit stream is mesmerizing. Watch the world update an encyclopedia in real time.</div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-name">ZenQuotes</div>
+        <div class="api-desc">Random inspirational and motivational quotes with author attribution.</div>
+        <div class="api-details">
+          <span class="label">Endpoint:</span> <code>zenquotes.io/api/random</code><br>
+          <span class="label">Rate Limit:</span> 5 req/30 sec<br>
+          <span class="label">Key Required:</span> No
+        </div>
+        <div class="api-review">Good for dashboard widgets and loading screens. Simple, clean, and always available.</div>
+      </div>
+
+      <!-- CLOSING -->
+      <div class="closing-box">
+        <h3>> One API to Rule Them All</h3>
+        <p>Here is the thing: calling 30+ APIs individually is a pain. We know because we do it. That is why we built the TerminalFeed Briefing API, which aggregates all of these data sources into a single, clean JSON response.</p>
+        <p>One call to <code>/api/briefing</code> gives you crypto prices, fear and greed, earthquake data, ISS position, top Hacker News stories, weather, security alerts, and more. All normalized, all cached, all free.</p>
+        <p>Check out our <a href="/developers">Developer API docs</a> to get started. No key required for basic access.</p>
+        <p>If you are building a dashboard, a Discord bot, an AI agent, or just want to play with real-time data, start there. You can always break out to the individual APIs listed above when you need more granular control.</p>
+        <p>Happy building.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>
