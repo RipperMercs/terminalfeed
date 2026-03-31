@@ -217,6 +217,7 @@ footer {
 .seo-content table { width: 100%; border-collapse: collapse; margin: 12px 0; }
 .seo-content th, .seo-content td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #1A1A22; font-size: 12px; }
 .seo-content th { color: #C8C8C0; }
+.tool-intro { margin-bottom: 24px; padding: 16px 20px; background: #111114; border: 1px solid #1A1A22; border-radius: 6px; font-size: 13px; color: #8A8880; line-height: 1.7; }
 </style>
 </head>
 <body data-page="tools-cron">
@@ -225,6 +226,10 @@ footer {
   <div class="header">
     <h1><span>&gt;_</span> CRON</h1>
     <span class="badge">&#9889; runs locally</span>
+  </div>
+
+  <div class="tool-intro">
+    Cron expressions are the standard way to schedule recurring tasks on Unix-based systems, CI/CD pipelines, cloud functions, and job schedulers. The five-field format (minute, hour, day of month, month, day of week) is compact but can be tricky to read and write correctly. Our Cron Expression Tool translates cron syntax into plain English instantly, so you can verify your schedule before deploying. Type any cron expression to see a human-readable explanation and the next scheduled run times. Use the preset buttons for common schedules, or build custom expressions with the interactive field selector. The tool supports standard five-field cron syntax used by crontab, GitHub Actions, AWS CloudWatch, and most scheduling systems.
   </div>
 
   <div class="cron-input-row">
@@ -321,6 +326,7 @@ footer {
   <a href="/radio">Radio</a>
   <a href="/wifi">WiFi</a>
   <a href="/developers">API</a>
+  <a href="/blog">Blog</a>
   <a href="/about">About</a>
   <a href="/features">Features</a>
 </footer>

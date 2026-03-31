@@ -287,6 +287,16 @@
     .page-header h1 { font-size: 1.1rem; }
     .status-bar { grid-template-columns: 1fr 1fr; }
   }
+  .tool-intro {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #8A8880;
+    line-height: 1.7;
+  }
 </style>
 </head>
 <body data-page="tools-jwt">
@@ -296,6 +306,10 @@
   <div class="page-header">
     <h1>&gt;_ <span data-i18n="jwt_title">JWT DECODER</span></h1>
     <span class="badge" data-i18n="runs_locally">⚡ runs locally</span>
+  </div>
+
+  <div class="tool-intro">
+    JSON Web Tokens (JWTs) are the standard method for securely transmitting authentication and authorization data between services. A JWT consists of three parts: a header specifying the algorithm, a payload containing claims (user data, permissions, expiration), and a signature ensuring the token hasn't been tampered with. Our decoder splits any JWT into its readable components instantly, helping developers debug authentication flows, verify token contents, and understand token structure. Paste any JWT to see the decoded header, payload, and signature. The tool automatically detects the algorithm, highlights expiration times, and flags expired tokens. Everything runs locally in your browser, so your tokens are never transmitted anywhere.
   </div>
 
   <!-- Input -->
@@ -409,6 +423,8 @@
     <a href="/wifi">WiFi</a>
     <span class="sep">·</span>
     <a href="/developers">API</a>
+    <span class="sep">·</span>
+    <a href="/blog">Blog</a>
     <span class="sep">·</span>
     <a href="/about">About</a>
     <span class="sep">·</span>

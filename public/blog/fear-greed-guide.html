@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is the Crypto Fear & Greed Index and How to Actually Use It | TerminalFeed Blog</title>
+  <meta name="description" content="The Fear & Greed Index is one of the most watched indicators in crypto. Learn what it measures, what moves it, and how experienced traders interpret it.">
+  <meta property="og:title" content="What is the Crypto Fear & Greed Index and How to Actually Use It">
+  <meta property="og:description" content="The Fear & Greed Index is one of the most watched indicators in crypto. Learn what it measures, what moves it, and how experienced traders interpret it.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/fear-greed-guide">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/fear-greed-guide">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "What is the Crypto Fear & Greed Index and How to Actually Use It",
+    "description": "The Fear & Greed Index is one of the most watched indicators in crypto. Learn what it measures, what moves it, and how experienced traders interpret it.",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "datePublished": "2026-03-15",
+    "dateModified": "2026-03-15",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/fear-greed-guide",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 12px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: #111114;
+      color: #5DCAA5;
+      border: 1px solid #1E1E24;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+    .data-table td {
+      padding: 10px 12px;
+      border: 1px solid #1E1E24;
+      color: #D4D2CB;
+    }
+    .data-table tr:hover td { background: #111114; }
+
+    /* Callout Box */
+    .callout {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #5DCAA5;
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .callout strong { color: #F0EDE6; }
+
+    /* Zone Table */
+    .zone-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 12px;
+    }
+    .zone-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: #111114;
+      color: #5DCAA5;
+      border: 1px solid #1E1E24;
+      font-weight: 400;
+    }
+    .zone-table td {
+      padding: 10px 12px;
+      border: 1px solid #1E1E24;
+      color: #D4D2CB;
+    }
+    .zone-extreme-fear { color: #EF4444; }
+    .zone-fear { color: #F59E0B; }
+    .zone-neutral { color: #8A8880; }
+    .zone-greed { color: #22C55E; }
+    .zone-extreme-greed { color: #5DCAA5; }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+      .data-table, .zone-table { font-size: 11px; }
+      .data-table th, .data-table td,
+      .zone-table th, .zone-table td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">&larr; back to blog</a>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">CRYPTO</span>
+        <span class="article-tag">GUIDE</span>
+      </div>
+      <h1>What is the Crypto Fear & Greed Index and How to Actually Use It</h1>
+      <div class="article-meta">
+        <span>By Ripper</span>
+        <span>March 2026</span>
+        <span>6 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>If you spend any time watching crypto markets, you have probably seen the Fear & Greed Index. It is one of the most shared, most screenshotted, and most misunderstood indicators in the space. Every time Bitcoin drops 10% in a week, someone posts the index showing "Extreme Fear" alongside a caption like "time to buy." Every time BTC rips to a new high, someone posts "Extreme Greed" with a warning to sell.</p>
+
+      <p>But what does the number actually measure? Where does the data come from? And more importantly, how do experienced traders actually use it? This guide covers all of it.</p>
+
+      <h2>What is the Fear & Greed Index?</h2>
+
+      <p>The Crypto Fear & Greed Index is a daily metric that measures overall market sentiment on a scale from 0 to 100. A reading of 0 represents "Extreme Fear," meaning the market is deeply pessimistic. A reading of 100 represents "Extreme Greed," meaning traders are euphoric and likely overleveraged.</p>
+
+      <p>The index is published by <strong>Alternative.me</strong> and has been running since early 2018. It aggregates data from six different sources to produce a single number that represents how the crypto market is feeling at any given moment. Think of it as a thermometer for market psychology.</p>
+
+      <p>The reason it gets so much attention is simple: it provides a quick, digestible snapshot. You do not need to analyze order books, scan social media yourself, or track on-chain flows. One number tells you whether the crowd is panicking or getting reckless. That said, one number also leaves out a lot of context, which is why understanding the inputs matters.</p>
+
+      <h2>What Data Goes Into It?</h2>
+
+      <p>The index is not based on a single metric. It pulls from six weighted data sources, each capturing a different dimension of market sentiment.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Weight</th>
+            <th>What It Measures</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Volatility</strong></td>
+            <td>25%</td>
+            <td>Current BTC price swings compared to 30-day and 90-day moving averages. Higher volatility signals fear.</td>
+          </tr>
+          <tr>
+            <td><strong>Market Momentum / Volume</strong></td>
+            <td>25%</td>
+            <td>Current buying volume and momentum compared to historical averages. High buying volume in an uptrend signals greed.</td>
+          </tr>
+          <tr>
+            <td><strong>Social Media</strong></td>
+            <td>15%</td>
+            <td>Crypto hashtag volume and engagement rates on X (formerly Twitter) and Reddit. Spikes in chatter often correlate with greed.</td>
+          </tr>
+          <tr>
+            <td><strong>Surveys</strong></td>
+            <td>15%</td>
+            <td>Periodic polling of crypto investors on market outlook. Currently paused but historically included.</td>
+          </tr>
+          <tr>
+            <td><strong>Bitcoin Dominance</strong></td>
+            <td>10%</td>
+            <td>BTC's share of total crypto market cap. Rising dominance suggests investors are fleeing altcoins for safety, signaling fear.</td>
+          </tr>
+          <tr>
+            <td><strong>Google Trends</strong></td>
+            <td>10%</td>
+            <td>Search volume for Bitcoin-related queries. Surges in searches like "Bitcoin crash" indicate fear, while "buy Bitcoin" indicates greed.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The combination of these sources is what makes the index useful. No single data point tells the full story, but together they paint a reasonably accurate picture of crowd psychology. It is worth noting that the survey component has been paused for some time, so the other five sources carry the effective weight.</p>
+
+      <h2>How to Read the Zones</h2>
+
+      <p>The index breaks down into five distinct zones, each with different implications for the market.</p>
+
+      <table class="zone-table">
+        <thead>
+          <tr>
+            <th>Range</th>
+            <th>Zone</th>
+            <th>What It Signals</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="zone-extreme-fear">0 to 24</span></td>
+            <td><strong>Extreme Fear</strong></td>
+            <td>Market is deeply pessimistic. Historically, this has been a strong buying opportunity for long-term holders.</td>
+          </tr>
+          <tr>
+            <td><span class="zone-fear">25 to 49</span></td>
+            <td><strong>Fear</strong></td>
+            <td>Sentiment is negative but not at panic levels. Caution is widespread.</td>
+          </tr>
+          <tr>
+            <td><span class="zone-neutral">50</span></td>
+            <td><strong>Neutral</strong></td>
+            <td>Market is undecided. Neither fear nor greed dominates.</td>
+          </tr>
+          <tr>
+            <td><span class="zone-greed">51 to 74</span></td>
+            <td><strong>Greed</strong></td>
+            <td>Optimism is building. Traders are confident, leverage is increasing.</td>
+          </tr>
+          <tr>
+            <td><span class="zone-extreme-greed">75 to 100</span></td>
+            <td><strong>Extreme Greed</strong></td>
+            <td>Market is euphoric. Historically, this has preceded corrections and pullbacks.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Warren Buffett's famous rule applies here:</strong> "Be fearful when others are greedy, and greedy when others are fearful." The Fear & Greed Index essentially quantifies this principle. When the number is very low, the crowd is scared and assets may be undervalued. When the number is very high, everyone is buying in and a correction could be near.
+      </div>
+
+      <p>A few historical examples help illustrate this. In June 2022, during the Terra/Luna collapse, the index dropped to 6. Bitcoin was trading near $17,000. In November 2021, just before the market topped out, the index was sitting at 84. Bitcoin was near $69,000 and about to begin an 18-month decline. The pattern is not perfect, but the extremes tend to be meaningful.</p>
+
+      <h2>How Experienced Traders Actually Use It</h2>
+
+      <p>Here is where it gets practical. Most people treat the Fear & Greed Index like a buy/sell signal. Experienced traders treat it as context, not a trigger.</p>
+
+      <p><strong>Contrarian positioning.</strong> The most common approach is to use the index as a contrarian indicator. When the reading drops below 20, contrarian traders start looking for accumulation opportunities. When it pushes above 80, they consider taking profits or reducing exposure. The logic is straightforward: extreme sentiment usually corrects itself.</p>
+
+      <p><strong>Confirmation, not initiation.</strong> Smart traders rarely open a position based on the Fear & Greed Index alone. Instead, they use it to confirm signals from other tools. If on-chain data shows whales accumulating, the RSI is oversold, and the Fear & Greed Index reads 15, that is a much stronger signal than any one of those in isolation.</p>
+
+      <p><strong>Duration awareness.</strong> One of the biggest mistakes people make is treating Extreme Fear as an instant buy signal. During the 2022 bear market, the index stayed below 25 for weeks at a time. Buying the first reading of Extreme Fear in May 2022 meant catching a falling knife that did not bottom until November. The index tells you the market is scared, but it does not tell you when the bottom is in.</p>
+
+      <p><strong>Timeframe context.</strong> Day traders and long-term holders should interpret the index differently. A reading of 20 is meaningful for someone with a 1-year horizon. For a scalper watching 5-minute candles, it is background noise. The index updates daily, so it is best suited for swing trades and longer-term positioning.</p>
+
+      <p>The bottom line: treat it as one signal among many. Combine it with price action, volume, on-chain metrics, and macro context. No single indicator should drive your decisions.</p>
+
+      <h2>What Does It Look Like Right Now?</h2>
+
+      <p>You can see the live Crypto Fear & Greed Index on the <a href="/">TerminalFeed dashboard</a>. The Fear & Greed panel updates multiple times daily and displays both the current reading and its historical trend, so you can see whether sentiment is shifting or holding steady.</p>
+
+      <p>On TerminalFeed, the index sits alongside other critical data points: live BTC price and market metrics, <a href="/">prediction market odds from Polymarket and Kalshi</a>, on-chain Bitcoin network data, and macro indicators. This combination gives you the full picture that the Fear & Greed Index alone cannot provide.</p>
+
+      <p>If you are building tools or running AI agents, the Fear & Greed data is also available through the <a href="/developers">TerminalFeed API</a> at the <code>/api/fear-greed</code> endpoint. AI agents and automated systems can access the same data programmatically, making it easy to incorporate sentiment into trading bots, dashboards, or research pipelines.</p>
+
+      <div class="cta-box">
+        <p>See the live Fear & Greed Index alongside 30+ real-time data feeds.</p>
+        <a href="/" class="cta-link">Open TerminalFeed Dashboard</a>
+      </div>
+
+      <p>The Fear & Greed Index is not a crystal ball. It will not tell you where Bitcoin is going next week. But it will tell you how the market feels right now, and in a space driven by emotion and narrative, that is genuinely useful information. Read it, combine it with other data, and make your own decisions. That is how experienced traders use it.</p>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

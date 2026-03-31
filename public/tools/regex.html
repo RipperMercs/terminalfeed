@@ -509,6 +509,16 @@
     .flags-row { flex-wrap: wrap; }
     .status-bar { flex-direction: column; gap: 8px; }
   }
+  .tool-intro {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #8A8880;
+    line-height: 1.7;
+  }
 </style>
 </head>
 <body data-page="tools-regex">
@@ -524,6 +534,10 @@
     <div class="header">
       <h1>&gt;_ <span data-i18n="regex_title">REGEX TESTER</span></h1>
       <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
+    </div>
+
+    <div class="tool-intro">
+      Regular expressions (regex) are powerful pattern-matching sequences used for text searching, validation, and transformation across virtually every programming language. From email validation to log parsing to data extraction, regex is an essential developer skill. Our real-time regex tester lets you write patterns and instantly see matches highlighted in your test string, supporting JavaScript regex syntax with global, case-insensitive, and multiline flags. The tool shows match count, capture groups, and match indices as you type. It also includes a quick reference for common regex patterns and special characters. Whether you're building form validation, parsing log files, or extracting data from text, test your patterns here before committing them to code.
     </div>
 
     <!-- Pattern input -->
@@ -649,6 +663,7 @@
         <a href="/radio">Radio</a>
         <a href="/wifi">WiFi</a>
         <a href="/developers">API</a>
+        <a href="/blog">Blog</a>
         <a href="/about">About</a>
         <a href="/features">Features</a>
       </div>

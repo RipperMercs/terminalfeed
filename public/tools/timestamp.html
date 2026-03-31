@@ -295,6 +295,16 @@
     .live-clock .timestamp { font-size: 1.6rem; }
     .date-time-row { flex-direction: column; }
   }
+  .tool-intro {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #8A8880;
+    line-height: 1.7;
+  }
 </style>
 </head>
 <body data-page="tools-timestamp">
@@ -304,6 +314,10 @@
   <div class="page-header">
     <h1>&gt;_ <span data-i18n="timestamp_title">TIMESTAMP CONVERTER</span></h1>
     <span class="badge" data-i18n="runs_locally">⚡ runs locally</span>
+  </div>
+
+  <div class="tool-intro">
+    Unix timestamps represent time as the number of seconds since January 1, 1970 (the Unix epoch). They're used universally in databases, APIs, log files, and programming languages because they're timezone-independent and easy to compare mathematically. Converting between human-readable dates and Unix timestamps is a daily task for developers working with APIs, databases, and log analysis. Our converter handles both directions: paste a Unix timestamp to see the human-readable date in multiple formats, or select a date and time to get the corresponding Unix timestamp. The tool also shows the current Unix time as a live counter, supports millisecond precision, and displays relative time (e.g., "3 hours ago"). All conversions happen instantly in your browser.
   </div>
 
   <!-- Live Clock -->
@@ -437,6 +451,8 @@
     <a href="/wifi">WiFi</a>
     <span class="sep">·</span>
     <a href="/developers">API</a>
+    <span class="sep">·</span>
+    <a href="/blog">Blog</a>
     <span class="sep">·</span>
     <a href="/about">About</a>
     <span class="sep">·</span>
