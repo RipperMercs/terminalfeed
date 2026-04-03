@@ -26,55 +26,124 @@
 <body>
   <a href="/" class="back">&larr; back to terminal</a>
   <h1>>_ Changelog</h1>
+  <p style="font-size:12px;color:#4E4D49;margin-bottom:32px;line-height:1.7;">A running log of everything shipped on TerminalFeed. New panels, tools, API endpoints, and improvements. The site is updated almost daily. For the full story behind the project, read <a href="/blog/building-terminalfeed">how TerminalFeed was built</a>.</p>
+
+  <div class="entry">
+    <div class="date">April 2, 2026</div>
+    <ul class="items">
+      <li>Launched full <a href="/blog">blog section</a> with five long-form articles covering crypto analysis, API guides, prediction markets, and the story behind building TerminalFeed</li>
+      <li>Added weekly Originals editorial series starting with <a href="/blog/originals/week-1">Week 1 dispatch</a></li>
+      <li>Cross-linked blog articles with <a href="/about">About</a>, <a href="/features">Features</a>, and <a href="/developers">Developers</a> pages for better site navigation and content discovery</li>
+      <li>Expanded tool descriptions across all 21 developer tool pages with use-case guides, best practices, and related links</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 28, 2026</div>
+    <ul class="items">
+      <li>Added 5 more developer tools: <a href="/tools/qr">QR Code Generator</a>, <a href="/tools/lorem">Lorem Ipsum Generator</a>, <a href="/tools/http">HTTP Status Code Reference</a>, <a href="/tools/url">URL Encoder/Decoder</a>, and <a href="/tools/html-entity">HTML Entity Encoder</a></li>
+      <li>All tool pages now have SEO content sections with explanations, use cases, and privacy notes. Previously some tools had zero text content below the widget, which could look thin to search engines</li>
+      <li>Added bottom ad slot placeholders to all 34 sub-pages in preparation for AdSense</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 25, 2026</div>
+    <ul class="items">
+      <li>Added 10 new developer tools in one batch: <a href="/tools/diff">Diff Viewer</a>, <a href="/tools/cron">Cron Builder</a>, <a href="/tools/hash">Hash Generator</a>, <a href="/tools/color">Color Converter</a>, <a href="/tools/api">API Tester</a>, <a href="/tools/markdown">Markdown Preview</a>, <a href="/tools/yaml">YAML/JSON Converter</a>, <a href="/tools/chmod">Chmod Calculator</a>, <a href="/tools/port">Port Reference</a>, and <a href="/tools/password">Password Generator</a></li>
+      <li>All tools run 100% client-side with zero server calls. Your data never leaves the browser</li>
+      <li>Renamed "Tools" to "Dev Tools" in the navigation to better describe the section</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 23, 2026</div>
+    <ul class="items">
+      <li>Added multi-language support for Spanish (<a href="/es/tools">/es</a>), Portuguese (<a href="/pt/tools">/pt</a>), and German (<a href="/de/tools">/de</a>) across all tool pages, agent tracker, and radio</li>
+      <li>Language switcher added to bottom-right corner of every translated page</li>
+      <li>Proper hreflang tags for SEO so Google serves the right language to each user</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 21, 2026</div>
+    <ul class="items">
+      <li>Launched <a href="/wifi">WiFi Speed Test</a> with download/upload measurement, latency testing, jitter detection, and network diagnostics. Full diagnostic report runs entirely in the browser</li>
+      <li>SEO overhaul across all pages: keyword-rich titles, full navigation footers, updated sitemap</li>
+      <li>Submitted all pages individually to Google Search Console for indexing</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 20, 2026</div>
+    <ul class="items">
+      <li>Launched <a href="/radio">Terminal Radio</a> with lo-fi, ambient, and electronic streams from SomaFM. Features a now-playing display, volume control, and RYKARD artist spotlight section</li>
+      <li>Added <a href="/agent">AI Agent Tracker</a> with 34 AI agents across 7 categories. Each agent has live status checks, category filters, and links to official sites</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 18, 2026</div>
+    <ul class="items">
+      <li>Launched <a href="/tools">Developer Tools</a> suite with the first 6 client-side utilities: <a href="/tools/json">JSON Formatter</a>, <a href="/tools/base64">Base64 Encoder</a>, <a href="/tools/uuid">UUID Generator</a>, <a href="/tools/timestamp">Unix Timestamp Converter</a>, <a href="/tools/jwt">JWT Decoder</a>, and <a href="/tools/regex">Regex Tester</a></li>
+      <li>Each tool is a standalone page that works offline with no external dependencies</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 17, 2026</div>
+    <ul class="items">
+      <li>Launched <a href="/live">/live real-time world briefing</a> page. Auto-refreshes every 5 minutes with data from across the dashboard. Designed for AI agents and RSS-style consumption via the <a href="/developers">/api/briefing endpoint</a></li>
+      <li>Added Humans in Space panel showing current ISS crew from Open Notify API</li>
+      <li>Added This Day in History panel pulling from Wikimedia</li>
+      <li>Merged Whale Watch transactions into the BTC Network panel to reduce clutter</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="date">March 15, 2026</div>
+    <ul class="items">
+      <li>Added TCG Market Watch panel showing Pokemon, Magic: The Gathering, and Yu-Gi-Oh card prices</li>
+      <li>Added Flight Radar, Cloud Status, and XKCD panels</li>
+      <li>Internet Pulse panel now includes aggregate DNS health checks</li>
+      <li>Added lock tip hint for new users to discover the tab rearranging feature</li>
+      <li>Panel organize mode now uses flex-wrap for more predictable positioning</li>
+      <li>Auto-rotating sports ticker that drops off-season leagues automatically based on calendar</li>
+    </ul>
+  </div>
 
   <div class="entry">
     <div class="date">March 14, 2026</div>
     <ul class="items">
-      <li>Added Whale Watch panel — large BTC transactions from mempool</li>
-      <li>Redesigned Markets + Crypto as biggest movers (gainers/losers)</li>
-      <li>Added Wikipedia live edit stream (SSE real-time)</li>
-      <li>Added Global Disaster Alerts (GDACS — UN/EU)</li>
-      <li>Added GitHub live events stream</li>
-      <li>Added Forex heatmap — 15 currency pairs</li>
-      <li>Added Solar Weather from NASA DONKI</li>
-      <li>Added Product Hunt trending</li>
-      <li>Added World Clocks — 8 cities with business hours</li>
-      <li>Added Trending Books from Open Library</li>
-      <li>Added Show/Ask HN community panel</li>
-      <li>Added Wikipedia Featured Article of the day</li>
-      <li>Added AI Model Leaderboard (ELO rankings)</li>
-      <li>Added donation leaderboard powered by mempool.space</li>
-      <li>Sports scores moved to scrolling ticker bar</li>
-      <li>Self-healing API system — failed panels auto-hide and recover</li>
-      <li>Smart auto-curation based on real-time data activity</li>
-      <li>Panel organize mode with swap arrows</li>
-      <li>Layout export/import/share via URL</li>
-      <li>Animated weather visuals (rain, snow, sun, thunder)</li>
-      <li>TradingView chart replaces custom canvas chart</li>
-      <li>2600 culture easter eggs in source code</li>
-      <li>Tightened all API polling intervals</li>
-      <li>GPU-accelerated ticker animations</li>
-      <li>Mobile responsive layout with scroll-to-top button</li>
+      <li>Massive expansion: dashboard grew from 15 to 30+ panels in a single day</li>
+      <li>Added Whale Watch panel showing large BTC transactions streamed from mempool.space</li>
+      <li>Redesigned Markets and Crypto panels as "biggest movers" sorted by 24h change (gainers and losers)</li>
+      <li>Added Wikipedia live edit stream via Server-Sent Events from Wikimedia. Edits flow in real-time, throttled to 3s on mobile</li>
+      <li>Added Global Disaster Alerts from GDACS (the UN/EU early warning system)</li>
+      <li>Added GitHub live events stream showing real-time coding activity across public repos</li>
+      <li>Added Forex heatmap tracking 15 major currency pairs</li>
+      <li>Added World Clocks showing 8 cities with business hours indicators</li>
+      <li>Added Trending Books from Open Library, AI Model Leaderboard with ELO rankings, and Show/Ask HN community panel</li>
+      <li>Sports scores moved from static panel to scrolling ticker bar at the top of the page</li>
+      <li>Built self-healing API system: if a data source fails, the panel shows stale cache or auto-hides. Panels recover automatically when the source comes back</li>
+      <li>Added panel organize mode with drag-and-drop (desktop) and swap arrows (mobile). Layouts save to localStorage automatically</li>
+      <li>Animated weather visuals with rain, snow, sun, and thunder effects. Palm trees for LA. Disabled on mobile for performance</li>
+      <li>Replaced custom canvas chart with TradingView widget for BTC price history</li>
+      <li>GPU-accelerated ticker animations for smoother scrolling at 60fps</li>
+      <li>Full mobile responsive layout with scroll-to-top button and doubled polling intervals to save bandwidth</li>
+      <li>Added 2600 culture easter eggs: type "2600" for a 2600 Hz tone and teal flash, "matrix" for rain animation, "warp" for star streaks</li>
     </ul>
   </div>
 
   <div class="entry">
     <div class="date">March 13, 2026</div>
     <ul class="items">
-      <li>Initial launch with 15+ real-time panels</li>
-      <li>Bitcoin price with WebSocket (CoinCap + Binance fallback)</li>
-      <li>Stock market via Finnhub WebSocket</li>
-      <li>BTC Network panel powered by mempool.space</li>
-      <li>Tech/AI news from Hacker News</li>
-      <li>Reddit tech feed via RSS</li>
-      <li>GitHub trending repos</li>
-      <li>Earthquake monitor from USGS</li>
-      <li>Space launches tracking</li>
-      <li>Weather with IP-based geolocation</li>
-      <li>Dev/Ops status monitoring</li>
-      <li>Fear & Greed index</li>
-      <li>PWA support with service worker</li>
-      <li>Full SEO with structured data</li>
+      <li>Initial launch of TerminalFeed.io. Dark terminal aesthetic with CSS columns layout, JetBrains Mono typography, and teal accent color scheme</li>
+      <li>Launched with 15 real-time data panels: BTC Price (Binance WebSocket with 1s updates), Stock Market (Finnhub), BTC Network (mempool.space), Tech/AI News (Hacker News), Reddit tech feed, GitHub trending repos, Earthquake monitor (USGS), Space launches, Weather with geolocation, Dev/Ops status for major platforms, Fear and Greed Index, Crypto market overview, Prediction Markets (Polymarket), Steam top games, and NASA Astronomy Picture of the Day</li>
+      <li>Built Cloudflare Worker API backend handling all /api/* routes with in-memory caching and 8-second timeouts on external calls</li>
+      <li>PWA support with service worker for offline fallback</li>
+      <li>Full SEO with structured JSON-LD data, Open Graph tags, Twitter cards, and sitemap</li>
+      <li>Submitted to Google Search Console with property verification via Cloudflare DNS</li>
     </ul>
   </div>
 

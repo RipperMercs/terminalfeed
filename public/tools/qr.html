@@ -121,13 +121,35 @@ footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49
 </div>
 <div class="container">
   <div class="seo-content">
-    <h2>QR Code Generator &mdash; Create QR Codes Online Free</h2>
+    <h2>QR Code Generator: How QR Codes Work and How to Use Them</h2>
     <h3>What Is a QR Code?</h3>
-    <p>A QR (Quick Response) code is a two-dimensional barcode that stores data as a pattern of black and white squares. QR codes can encode URLs, text, contact information, WiFi credentials, and more. They are scanned using smartphone cameras and are ubiquitous in payments, marketing, authentication, and logistics.</p>
+    <p>A QR (Quick Response) code is a two-dimensional barcode that stores data as a grid of black and white squares called "modules." Originally invented in 1994 by Denso Wave for tracking automotive parts, QR codes have become one of the most widely used data formats in the world. They appear on restaurant menus, boarding passes, payment terminals, product packaging, and authentication screens.</p>
+    <p>QR codes are scanned using smartphone cameras (both iOS and Android have built-in scanners) and can encode up to 4,296 alphanumeric characters. They include built-in error correction, meaning they remain scannable even when partially obscured or damaged.</p>
+
     <h3>What Can You Encode?</h3>
-    <p>This generator supports plain text, URLs, email addresses (<code>mailto:</code>), phone numbers (<code>tel:</code>), WiFi network credentials, and vCard contact cards. Use the preset buttons to get started with common formats.</p>
+    <p>This generator supports several standard QR data formats:</p>
+    <p><strong>URLs:</strong> The most common use case. Encode any web address and users can visit it by pointing their camera at the code. Great for linking to landing pages, product pages, or app download links.</p>
+    <p><strong>WiFi credentials:</strong> Using the format <code>WIFI:T:WPA;S:NetworkName;P:Password;;</code>, you can create a QR code that lets guests join your WiFi network with a single scan. No more spelling out long passwords.</p>
+    <p><strong>vCards:</strong> Encode contact information (name, phone, email, company) so people can add you to their contacts by scanning the code. Useful on business cards and conference badges.</p>
+    <p><strong>Email and phone:</strong> The <code>mailto:</code> and <code>tel:</code> prefixes create codes that open the email client or phone dialer with the address or number pre-filled.</p>
+
+    <h3>Tips for Creating Better QR Codes</h3>
+    <p><strong>Keep the data short.</strong> Shorter data produces simpler QR codes with larger modules, which are easier to scan from a distance or at an angle. For URLs, use a link shortener if the original is very long.</p>
+    <p><strong>Maintain good contrast.</strong> QR scanners work by detecting the difference between dark and light modules. Stick with dark foreground on light background for best results. Avoid using mid-tone colors for either.</p>
+    <p><strong>Size matters for print.</strong> A QR code should be at least 2cm x 2cm for close-range scanning (table tents, business cards). For posters or signs scanned from a distance, increase size proportionally. The general rule is 10:1, so a code scanned from 10 feet away should be at least 1 foot wide.</p>
+    <p><strong>Always test before printing.</strong> Generate the code, then scan it with your phone before sending it to print. Test with different phones if possible, since scanner quality varies.</p>
+
+    <h3>PNG vs SVG Downloads</h3>
+    <p>This tool offers both formats. <strong>PNG</strong> is a raster format, best for quick use in presentations, social media posts, or documents where the size is already known. <strong>SVG</strong> is a vector format that scales to any size without losing quality, making it the right choice for print materials, large signage, or any context where the final display size is unknown.</p>
+
+    <h3>Common Use Cases</h3>
+    <p>Developers often use QR codes for mobile app deep links, two-factor authentication setup (encoding <code>otpauth://</code> URIs), linking to API documentation, or encoding configuration data for IoT devices. Businesses use them for contactless menus, event check-in, inventory tracking, and payment processing.</p>
+
+    <h3>Related Tools</h3>
+    <p>Encoding URLs? The <a href="/tools/url">URL Encoder</a> helps you build properly formatted URLs before generating the code. Working with structured data? Try the <a href="/tools/json">JSON Formatter</a> or the <a href="/tools/base64">Base64 Encoder</a>.</p>
+
     <h3>Privacy</h3>
-    <p>QR codes are generated <strong>100% client-side</strong> in your browser. No data is sent to any server. Your text never leaves your machine.</p>
+    <p>QR codes are generated <strong>entirely in your browser</strong> using a pure JavaScript implementation. No data is sent to any server. Your text, URLs, and WiFi credentials never leave your machine.</p>
   </div>
 </div>
 <!-- Bottom Ad Slot -->  <div style="max-width:960px;width:100%;margin:32px auto 0;padding:0 20px;text-align:center;">    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="horizontal" data-full-width-responsive="true"></ins>    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->    <div style="border:1px dashed #1A1A22;padding:14px;color:#4E4D49;font-size:11px;font-family:monospace;">Sponsored</div>  </div>

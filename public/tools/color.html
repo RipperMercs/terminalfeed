@@ -329,19 +329,31 @@ footer {
   <!-- <div class="ad-slot" style="margin:32px 0;text-align:center;"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins></div> -->
 
   <div class="seo-content">
-    <h2>Color Converter &mdash; HEX, RGB, HSL &amp; Contrast Checker</h2>
+    <h2>Color Converter: HEX, RGB, HSL and Contrast Checker</h2>
 
-    <h3>What Is a Color Converter?</h3>
-    <p>A color converter translates color values between different formats used in web development and design. The most common formats are <strong>HEX</strong> (e.g., <code>#5DCAA5</code>), <strong>RGB</strong> (e.g., <code>rgb(93, 202, 165)</code>), and <strong>HSL</strong> (e.g., <code>hsl(160, 49%, 58%)</code>). Each format represents the same color in a different way.</p>
+    <h3>Understanding Color Formats</h3>
+    <p>Web development uses several color formats, each with different strengths. <strong>HEX</strong> codes (like <code>#5DCAA5</code>) are the most compact and widely recognized. They represent red, green, and blue channels as two-digit hexadecimal values. <strong>RGB</strong> (like <code>rgb(93, 202, 165)</code>) uses decimal values from 0 to 255 for each channel, which many developers find more intuitive for programmatic color manipulation. <strong>HSL</strong> (like <code>hsl(160, 49%, 58%)</code>) describes color in terms of hue (the color wheel angle), saturation (vividness), and lightness (brightness). HSL is the most useful format for design work because adjusting a single value creates predictable, harmonious results.</p>
 
-    <h3>WCAG Contrast Ratios</h3>
-    <p>The Web Content Accessibility Guidelines (WCAG) define minimum contrast ratios between text and background colors. <strong>AA</strong> requires at least 4.5:1 for normal text and 3:1 for large text. <strong>AAA</strong> requires 7:1 for normal text and 4.5:1 for large text. Meeting these ratios ensures your content is readable by users with visual impairments.</p>
+    <h3>When to Use Each Format</h3>
+    <p><strong>HEX</strong> is best for static CSS values and design handoffs. It is compact and universally supported. Use it when you need a simple color reference. <strong>RGB/RGBA</strong> is ideal when you need transparency (the alpha channel) or when generating colors dynamically in JavaScript, since the channels map directly to integer math. <strong>HSL/HSLA</strong> is the best choice for building color systems and themes. Need a lighter shade? Increase the lightness. Need a muted version? Decrease the saturation. Need a complementary color? Add 180 to the hue. This makes HSL far more practical for design systems than HEX or RGB.</p>
 
-    <h3>How to Use This Tool</h3>
-    <p>Enter any color value (HEX, RGB, or HSL) in the input field, or use the color picker. All formats update instantly. Set a background color to check WCAG contrast ratios. Click any swatch in the palette section to set it as the active color.</p>
+    <h3>WCAG Contrast and Accessibility</h3>
+    <p>The Web Content Accessibility Guidelines (WCAG) define minimum contrast ratios between foreground and background colors. <strong>Level AA</strong> requires at least 4.5:1 for normal text and 3:1 for large text (18px bold or 24px regular). <strong>Level AAA</strong> requires 7:1 for normal text and 4.5:1 for large text.</p>
+    <p>These ratios exist because approximately 300 million people worldwide have some form of color vision deficiency. Meeting WCAG AA is legally required in many jurisdictions (including ADA compliance in the US and EAA in the EU). Beyond compliance, good contrast simply makes your content easier to read for everyone, including users on low-quality screens or in bright sunlight.</p>
+    <p>This tool calculates the contrast ratio between your selected foreground and background colors in real time, showing whether the combination passes AA and AAA at both normal and large text sizes.</p>
+
+    <h3>Building a Color Palette</h3>
+    <p>A consistent color palette is the foundation of good UI design. Start with a primary brand color, then generate variations by adjusting HSL values: lighter tints (higher lightness), darker shades (lower lightness), and muted tones (lower saturation). Most design systems define 5 to 10 shades per color (50, 100, 200 ... 900), similar to Tailwind CSS.</p>
+    <p>When choosing colors for data visualization, ensure adjacent colors are distinguishable even for color-blind users. Avoid relying solely on red/green distinctions. Test your palette with a color blindness simulator.</p>
+
+    <h3>CSS Color Tips</h3>
+    <p>Modern CSS supports all three formats plus <code>oklch()</code> and <code>color()</code> for wider gamut displays. CSS custom properties (variables) make it easy to build a theming system: define your colors as <code>--color-primary: #5DCAA5</code> in your root, then reference them everywhere with <code>var(--color-primary)</code>. For dark mode, swap the variable values rather than overriding individual styles.</p>
+
+    <h3>Related Tools</h3>
+    <p>Working on a web project? The <a href="/tools/markdown">Markdown Preview</a> helps with formatted content. The <a href="/tools/json">JSON Formatter</a> is useful for design token files. For more on building web interfaces, see our <a href="/blog/building-terminalfeed">story of building TerminalFeed</a>, which covers the design decisions behind this site's dark terminal aesthetic.</p>
 
     <h3>Privacy</h3>
-    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server.</p>
+    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server. Your color values never leave your browser.</p>
   </div>
 </div>
 

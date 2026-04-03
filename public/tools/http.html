@@ -103,11 +103,34 @@ footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49
 </div>
 <div class="container">
   <div class="seo-content">
-    <h2>HTTP Status Codes &mdash; Complete Reference</h2>
+    <h2>HTTP Status Codes: A Complete Developer Reference</h2>
+
     <h3>What Are HTTP Status Codes?</h3>
-    <p>HTTP status codes are three-digit numbers returned by a web server in response to a client's request. They indicate whether the request was successful, redirected, resulted in a client error, or caused a server error. Understanding status codes is essential for debugging APIs, troubleshooting web applications, and interpreting server logs.</p>
-    <h3>Categories</h3>
-    <p><strong>1xx (Informational)</strong> &mdash; Request received, processing. <strong>2xx (Success)</strong> &mdash; Request succeeded. <strong>3xx (Redirection)</strong> &mdash; Further action needed. <strong>4xx (Client Error)</strong> &mdash; Bad request from client. <strong>5xx (Server Error)</strong> &mdash; Server failed to fulfill a valid request.</p>
+    <p>HTTP status codes are three-digit numbers returned by a web server in the response to every client request. They are defined by the HTTP specification (RFC 9110) and tell the client whether the request succeeded, was redirected, contained an error, or caused a server failure. Understanding these codes is essential for debugging APIs, building reliable web applications, interpreting server logs, and setting up proper error handling.</p>
+
+    <h3>The Five Categories</h3>
+    <p><strong>1xx (Informational):</strong> The server received the request and is continuing to process it. These are interim responses. The most common is <code>101 Switching Protocols</code>, which you see during WebSocket upgrades, and <code>103 Early Hints</code>, used for preloading resources.</p>
+    <p><strong>2xx (Success):</strong> The request was received, understood, and accepted. <code>200 OK</code> is the standard success response. <code>201 Created</code> confirms a new resource was created (typical after a POST). <code>204 No Content</code> means success with no response body (common for DELETE).</p>
+    <p><strong>3xx (Redirection):</strong> The client needs to take additional action to complete the request, usually following a redirect. The key distinction is between <code>301</code> (permanent, search engines transfer SEO) and <code>302</code>/<code>307</code> (temporary, search engines keep the original URL).</p>
+    <p><strong>4xx (Client Error):</strong> The request contains an error on the client side. <code>400 Bad Request</code> means malformed syntax. <code>401 Unauthorized</code> means missing or invalid authentication. <code>403 Forbidden</code> means the server understood the request but refuses to authorize it. <code>404 Not Found</code> means the resource does not exist. <code>429 Too Many Requests</code> means you are being rate-limited.</p>
+    <p><strong>5xx (Server Error):</strong> The server failed to fulfill a valid request. <code>500 Internal Server Error</code> is a generic catch-all. <code>502 Bad Gateway</code> means a proxy or load balancer received an invalid response from an upstream server. <code>503 Service Unavailable</code> means the server is temporarily overloaded or down for maintenance.</p>
+
+    <h3>Status Codes Every Developer Should Memorize</h3>
+    <p><code>200</code>, <code>201</code>, <code>204</code>: The success trio. Know which one to return for each HTTP method.</p>
+    <p><code>301</code> vs <code>302</code> vs <code>307</code>: Permanent vs temporary redirects. Getting this wrong can hurt SEO or break form submissions.</p>
+    <p><code>400</code>, <code>401</code>, <code>403</code>, <code>404</code>: The client error essentials. Use the right one: 401 means "who are you?" and 403 means "I know who you are, but you are not allowed."</p>
+    <p><code>429</code>: Rate limiting. When you receive this, check the <code>Retry-After</code> header and implement exponential backoff.</p>
+    <p><code>500</code>, <code>502</code>, <code>503</code>: Server errors. As a client, retry with backoff. As a server operator, check logs immediately.</p>
+
+    <h3>Debugging Tips</h3>
+    <p>When an API returns an unexpected status code, check these things in order: (1) Is the URL correct, including trailing slashes? (2) Is the HTTP method correct (GET vs POST vs PUT)? (3) Is the <code>Content-Type</code> header set correctly? (4) Is the authentication token valid and not expired? (5) Are you hitting a rate limit? The "How to Fix" column in the table above gives specific guidance for each code.</p>
+    <p>Use your browser's developer tools (Network tab) or a tool like the <a href="/tools/api">API Request Tester</a> to inspect the full response, including headers. Status codes alone often do not tell the full story; the response body usually contains a more specific error message.</p>
+
+    <h3>Related Tools</h3>
+    <p>Test API endpoints directly with the <a href="/tools/api">API Request Tester</a>. Decode authentication tokens with the <a href="/tools/jwt">JWT Decoder</a>. Build properly encoded URLs with the <a href="/tools/url">URL Encoder</a>. For a comprehensive list of free APIs to practice with, see <a href="/blog/free-apis-2026">30+ Free APIs for Developers in 2026</a>.</p>
+
+    <h3>Privacy</h3>
+    <p>This is a static reference page. Everything runs in your browser. No data is sent anywhere.</p>
   </div>
 </div>
 <!-- Bottom Ad Slot -->  <div style="max-width:960px;width:100%;margin:32px auto 0;padding:0 20px;text-align:center;">    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="horizontal" data-full-width-responsive="true"></ins>    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->    <div style="border:1px dashed #1A1A22;padding:14px;color:#4E4D49;font-size:11px;font-family:monospace;">Sponsored</div>  </div>
