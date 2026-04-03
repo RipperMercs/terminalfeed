@@ -110,15 +110,36 @@ footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49
 </div>
 <div class="container">
   <div class="seo-content">
-    <h2>URL Encoder &amp; Decoder &mdash; Percent Encoding Online</h2>
+    <h2>URL Encoder and Decoder: A Guide to Percent Encoding</h2>
     <h3>What Is URL Encoding?</h3>
-    <p>URL encoding (also called percent encoding) replaces unsafe characters in a URL with a <code>%</code> followed by two hexadecimal digits. For example, a space becomes <code>%20</code>, and <code>@</code> becomes <code>%40</code>. This ensures URLs are valid and can be safely transmitted over the internet, since URLs can only contain a limited set of ASCII characters.</p>
-    <h3>When Do You Need URL Encoding?</h3>
-    <p>You need URL encoding when building query strings with user input, constructing API URLs with special characters, encoding redirect URLs, building OAuth callback URLs, or any time you need to include characters like spaces, ampersands, or hash symbols in a URL parameter.</p>
+    <p>URL encoding (also called percent encoding) replaces characters that are not allowed in URLs with a <code>%</code> followed by two hexadecimal digits representing the character's byte value. For example, a space becomes <code>%20</code>, an ampersand becomes <code>%26</code>, and <code>@</code> becomes <code>%40</code>.</p>
+    <p>This exists because URLs can only contain a limited set of ASCII characters: letters, digits, and a handful of special characters like <code>-</code>, <code>_</code>, <code>.</code>, and <code>~</code>. Everything else, including spaces, international characters, and symbols with special URL meaning, must be encoded to be safely transmitted across the internet.</p>
+
+    <h3>When You Need URL Encoding</h3>
+    <p><strong>Building query strings with user input:</strong> If a search term contains spaces or special characters (<code>shoes & boots</code>), the query parameter must be encoded: <code>?q=shoes%20%26%20boots</code>. Without encoding, the <code>&</code> would be interpreted as a parameter separator.</p>
+    <p><strong>API requests:</strong> When constructing API URLs that include dynamic values (file paths, usernames, filter values), encoding prevents malformed requests. This is especially important when passing JSON, base64, or other structured data as URL parameters.</p>
+    <p><strong>OAuth and redirect URLs:</strong> OAuth flows require a <code>redirect_uri</code> parameter that itself is a URL. That inner URL must be percent-encoded so the outer URL remains valid. Forgetting this step is one of the most common OAuth integration bugs.</p>
+    <p><strong>Internationalized content:</strong> Non-ASCII characters (accented letters, CJK characters, emoji) are encoded as their UTF-8 byte sequences. The character "cafe" with an accent becomes <code>caf%C3%A9</code>.</p>
+
     <h3>encodeURIComponent vs encodeURI</h3>
-    <p><code>encodeURIComponent()</code> encodes everything except <code>A-Z a-z 0-9 - _ . ! ~ * ' ( )</code>. It's used for encoding individual URL parameters. <code>encodeURI()</code> preserves characters that have special meaning in URLs (like <code>:</code>, <code>/</code>, <code>?</code>, <code>#</code>). This tool uses <code>encodeURIComponent</code> for maximum safety.</p>
+    <p>JavaScript provides two encoding functions with an important difference:</p>
+    <p><code>encodeURIComponent()</code> encodes everything except <code>A-Z a-z 0-9 - _ . ! ~ * ' ( )</code>. Use this for encoding <strong>individual parameter values</strong>. It encodes characters like <code>/</code>, <code>:</code>, <code>?</code>, <code>&</code>, and <code>#</code> that have special meaning in URLs.</p>
+    <p><code>encodeURI()</code> preserves URL structure characters (<code>:</code>, <code>/</code>, <code>?</code>, <code>#</code>, <code>&</code>). Use this when encoding a <strong>complete URL</strong> where you want the structure to remain intact but need to handle special characters in the path or query values.</p>
+    <p>This tool uses <code>encodeURIComponent</code> for maximum safety, since it is the correct choice for the vast majority of encoding tasks.</p>
+
+    <h3>The URL Parser</h3>
+    <p>Below the encoder/decoder, you will find a URL parser that breaks any valid URL into its component parts: protocol, host, port, pathname, query parameters, and hash fragment. This is useful for debugging API endpoints, verifying redirect URLs, and understanding complex URLs with multiple query parameters.</p>
+
+    <h3>Common Encoding Mistakes</h3>
+    <p><strong>Double encoding:</strong> Running <code>encodeURIComponent</code> twice turns <code>%20</code> into <code>%2520</code>. If your URL contains literal <code>%</code> characters where it should not, double encoding is usually the culprit.</p>
+    <p><strong>Encoding the entire URL:</strong> Encoding slashes and colons in the protocol and path makes the URL invalid. Only encode the parts that need it (parameter values, path segments with special characters).</p>
+    <p><strong>Forgetting <code>+</code> vs <code>%20</code>:</strong> In query strings, some systems use <code>+</code> for spaces (HTML form encoding) while others expect <code>%20</code> (RFC 3986). This tool's decoder handles both, converting <code>+</code> to spaces automatically.</p>
+
+    <h3>Related Tools</h3>
+    <p>Working with encoded data? The <a href="/tools/base64">Base64 Encoder</a> handles binary-to-text encoding. The <a href="/tools/html-entity">HTML Entity Encoder</a> covers HTML-specific escaping. For testing API endpoints with encoded URLs, try the <a href="/tools/api">API Request Tester</a>. For a deeper look at free APIs you can build on, see <a href="/blog/free-apis-2026">30+ Free APIs for Developers in 2026</a>.</p>
+
     <h3>Privacy</h3>
-    <p>This tool runs <strong>100% client-side</strong>. No data is sent to any server.</p>
+    <p>All encoding and decoding happens <strong>entirely in your browser</strong>. No data is sent to any server. Your URLs and text never leave your machine.</p>
   </div>
 </div>
 <!-- Bottom Ad Slot -->  <div style="max-width:960px;width:100%;margin:32px auto 0;padding:0 20px;text-align:center;">    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="horizontal" data-full-width-responsive="true"></ins>    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->    <div style="border:1px dashed #1A1A22;padding:14px;color:#4E4D49;font-size:11px;font-family:monospace;">Sponsored</div>  </div>

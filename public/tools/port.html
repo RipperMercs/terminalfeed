@@ -146,13 +146,33 @@ footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49
 </div>
 <div class="container">
   <div class="seo-content">
-    <h2>Common Network Ports Reference</h2>
+    <h2>Common Network Ports: A Developer's Reference Guide</h2>
     <h3>What Are Network Ports?</h3>
-    <p>A network port is a numbered endpoint for communication. When a computer sends or receives data over a network, it uses port numbers to route traffic to the correct application. Ports range from 0 to 65535. Ports 0-1023 are "well-known" ports assigned to common services by IANA.</p>
-    <h3>TCP vs UDP</h3>
-    <p><strong>TCP</strong> (Transmission Control Protocol) provides reliable, ordered delivery of data. Used for web, email, file transfer, and most applications. <strong>UDP</strong> (User Datagram Protocol) is faster but unreliable &mdash; used for DNS, streaming, gaming, and VoIP.</p>
+    <p>A network port is a numbered endpoint that identifies a specific process or service on a computer. When data travels across a network, the port number tells the operating system which application should receive it. Think of an IP address as a street address and the port number as the apartment number.</p>
+    <p>Port numbers range from 0 to 65,535. They are divided into three ranges: <strong>Well-known ports</strong> (0 to 1023) are assigned by IANA to standard services like HTTP, SSH, and DNS. <strong>Registered ports</strong> (1024 to 49151) are used by specific applications like MySQL, PostgreSQL, and Redis. <strong>Dynamic ports</strong> (49152 to 65535) are assigned temporarily by the OS for client-side connections.</p>
+
+    <h3>TCP vs UDP: When It Matters</h3>
+    <p><strong>TCP</strong> (Transmission Control Protocol) guarantees delivery. It establishes a connection, confirms receipt of every packet, and retransmits anything lost. This makes it the right choice for web traffic (HTTP/HTTPS), email (SMTP), file transfers (FTP), and database connections where every byte counts.</p>
+    <p><strong>UDP</strong> (User Datagram Protocol) prioritizes speed over reliability. Packets are sent without confirmation, which means lower latency but no guarantee of delivery. This is ideal for DNS lookups, video streaming, online gaming, VoIP calls, and any situation where a dropped packet is less harmful than a delayed one.</p>
+
+    <h3>Ports Every Developer Should Know</h3>
+    <p><code>22</code> (SSH): Secure remote access to servers. If you deploy to any Linux server, you use this port. Keep it protected with key-based auth and fail2ban.</p>
+    <p><code>80</code> and <code>443</code> (HTTP and HTTPS): The backbone of the web. Port 80 handles unencrypted traffic, while 443 handles TLS-encrypted connections. Modern best practice is to redirect all port 80 traffic to 443.</p>
+    <p><code>3000</code>, <code>5173</code>, <code>8080</code> (Dev servers): These are the defaults for Node.js, Vite, and various proxy servers. Knowing these saves time when debugging "port already in use" errors during local development.</p>
+    <p><code>3306</code>, <code>5432</code>, <code>6379</code>, <code>27017</code> (Databases): MySQL, PostgreSQL, Redis, and MongoDB respectively. These should never be exposed to the public internet. Always bind them to localhost or use a firewall.</p>
+
+    <h3>Security Best Practices</h3>
+    <p>The "Expose?" column in the table above reflects real-world security guidance. Ports marked "No" should never be accessible from the public internet without strong justification. Database ports are the most common offender: exposed MongoDB and Redis instances have led to massive data breaches because they often lack authentication by default.</p>
+    <p>Use a firewall (like <code>ufw</code> on Ubuntu or security groups on AWS) to restrict access to only the ports your application needs. Run <code>netstat -tlnp</code> or <code>ss -tlnp</code> on your server periodically to see what is actually listening.</p>
+
+    <h3>Debugging Port Issues</h3>
+    <p>If a service will not start because the port is already in use, find the process with <code>lsof -i :PORT</code> on macOS/Linux or <code>netstat -ano | findstr :PORT</code> on Windows. You can also test if a remote port is reachable with <code>telnet hostname port</code> or <code>nc -zv hostname port</code>.</p>
+
+    <h3>Related Tools</h3>
+    <p>For more networking and security tools, try the <a href="/tools/password">Password Generator</a> for securing services, the <a href="/tools/hash">Hash Generator</a> for checksums, or the <a href="/tools/chmod">Chmod Calculator</a> for setting file permissions on your server. For a broader look at free APIs you can build on, check out <a href="/blog/free-apis-2026">30+ Free APIs for Developers in 2026</a>.</p>
+
     <h3>Privacy</h3>
-    <p>This is a static reference page. No data is sent to any server.</p>
+    <p>This is a static reference page. Everything runs in your browser. No data is sent anywhere.</p>
   </div>
 </div>
 <!-- Bottom Ad Slot -->  <div style="max-width:960px;width:100%;margin:32px auto 0;padding:0 20px;text-align:center;">    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="horizontal" data-full-width-responsive="true"></ins>    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->    <div style="border:1px dashed #1A1A22;padding:14px;color:#4E4D49;font-size:11px;font-family:monospace;">Sponsored</div>  </div>
