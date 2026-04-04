@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 4: Building in Public, Waiting on Google, and Why Patience is the Hardest Skill | TerminalFeed Originals</title>
+  <meta name="description" content="350 daily users with zero marketing. AdSense still pending. A team page goes live. Week 4 of building TerminalFeed in public, and the irony of waiting for permission to grow.">
+  <meta property="og:title" content="Week 4: Building in Public, Waiting on Google, and Why Patience is the Hardest Skill">
+  <meta property="og:description" content="350 daily users, zero marketing, and Google still says 'getting ready.' Week 4 dispatch from the terminal.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/originals/week-4">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-04-04">
+  <meta property="article:author" content="Ripper">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/originals/week-4">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Week 4: Building in Public, Waiting on Google, and Why Patience is the Hardest Skill",
+    "description": "350 daily users with zero marketing. AdSense still pending. Week 4 of building TerminalFeed in public.",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "datePublished": "2026-04-04",
+    "dateModified": "2026-04-04",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/originals/week-4",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .tag-original {
+      color: #EF9F27 !important;
+      border-color: #EF9F2730 !important;
+      background: #EF9F2710 !important;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .callout {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #EF9F27;
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .callout strong { color: #F0EDE6; }
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+    .author-box {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 36px;
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .author-box strong { color: #F0EDE6; }
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">&larr; back to blog</a>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag tag-original">ORIGINAL</span>
+        <span class="article-tag">WEEKLY</span>
+        <span class="article-tag">FOUNDER FRIDAY</span>
+      </div>
+      <h1>Week 4: Building in Public, Waiting on Google, and Why Patience is the Hardest Skill</h1>
+      <div class="article-meta">
+        <span>By Ripper</span>
+        <span>Founder & Editor-in-Chief</span>
+        <span>April 4, 2026</span>
+        <span>4 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Four weeks in. TerminalFeed has 350+ daily visitors. Over 12,000 API requests hitting the Worker every day. Ten original articles published. A full <a href="/team">editorial team</a> with named writers covering different beats. Seven live developer tools, thirteen more in the pipeline. A dashboard with 30+ real-time data panels that people actually leave open on their second monitors all day.</p>
+
+      <p>And we have not done a single piece of marketing. Not one Reddit post. Not one Show HN submission. Not one tweet announcing the launch. All 350 of those daily users found us through Google Search, word of mouth, or the kind of random internet discovery that only happens when you build something genuinely useful.</p>
+
+      <h2>The Google Situation</h2>
+
+      <p>AdSense has rejected us twice. The first time was fair: we had a dashboard with no written content. "Low value content" when there are zero articles is hard to argue with. So we built a blog. We wrote five in-depth articles. We added tool descriptions. We expanded the about page. We submitted again.</p>
+
+      <p>Rejected again. Same reason. "Low value content."</p>
+
+      <p>The irony is thick. The site has more original content than half the AdSense-approved blogs I can find on the first page of Google. But Google's review process is what it is: algorithmic, opaque, and frustratingly disconnected from reality. So we keep building.</p>
+
+      <p>This week we launched a team page, started a daily content calendar with different authors covering different beats, and pushed the article count from 5 to 10+. The content is not filler. Pulse writes real market analysis. zer0day wrote an 800-word history of phone phreaking that I would read even if I had nothing to do with this site. Node is reviewing API testing tools with the kind of practical detail that actually helps developers pick the right one. Signal is covering the AI agent landscape with insights pulled directly from our own agent tracking data.</p>
+
+      <div class="callout">
+        <strong>The lesson:</strong> Google's approval process does not measure quality. It measures signals of quality. Named authors, publication frequency, content depth, site structure, internal linking. You can have the most useful site on the internet and still get rejected if you do not check the right boxes. So you check the boxes. And you keep building.
+      </div>
+
+      <h2>What 350 Users With Zero Marketing Tells You</h2>
+
+      <p>The encouraging part is the organic growth. 350 daily visitors finding the site through search alone means the product works. People search for things like "live crypto dashboard" or "free API testing" or "earthquake monitor" and they find TerminalFeed and they stay. The average session time is over 4 minutes. For a data dashboard that is supposed to be a passive second monitor, 4 minutes of active engagement is strong.</p>
+
+      <p>The API usage tells a similar story. 12,000+ requests per day means developers and AI agents are actively building on top of our data. The <code>/api/briefing</code> endpoint alone gets hundreds of daily calls. People are integrating TerminalFeed data into their own projects, their bots, their research pipelines. That is the kind of usage that sustains a platform long-term.</p>
+
+      <p>When the marketing push finally happens (after AdSense approves, whenever that is), we are starting from a position of strength. The product is stable, the content is substantial, the data is real, and we already have a proven organic audience. Marketing will be fuel, not a cold start.</p>
+
+      <h2>What is Next</h2>
+
+      <p>The daily content schedule is now running. Market Monday, Tool Tuesday, Wire Wednesday, Data Thursday, Founder Friday. Each day, a new article from a different voice on the team. This is not a sprint. It is the beginning of a cadence that makes TerminalFeed a living publication, not just a dashboard with a blog attached.</p>
+
+      <p>On the tools side, the diff viewer and cron expression builder are next in the pipeline. On the dashboard, I am working on a few panel improvements and considering adding a global market hours visualization. The API Worker is getting more resilient with every iteration.</p>
+
+      <p>And we wait. We wait for Google to see what we have built and recognize it for what it is. In the meantime, we ship. Because the best thing you can do while waiting for permission is build something that does not need it.</p>
+
+      <p>See you next Friday.</p>
+
+      <div class="cta-box">
+        <p>Follow the build journey and explore the dashboard.</p>
+        <a href="/" class="cta-link">Open TerminalFeed</a>
+      </div>
+
+      <div class="author-box">
+        <strong>Ripper</strong> is the founder and editor-in-chief of TerminalFeed. He writes the weekly Originals dispatch every Friday.
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>
