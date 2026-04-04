@@ -1,0 +1,23 @@
+{
+  "name": "terminalfeed-api",
+  "main": "src/worker.js",
+  "workers_dev": true,
+  "compatibility_date": "2026-03-15",
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true
+    }
+  },
+  "routes": [
+    {
+      "pattern": "terminalfeed.io/api/*",
+      "zone_name": "terminalfeed.io"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "0 14 * * *"
+    ]
+  }
+}
