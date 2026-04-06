@@ -55,9 +55,6 @@ export const ALL_PANELS = [
   { id: 'trending-movies', label: 'Trending Movies', defaultSpan: 1 },
   // Bottom: Fun/lifestyle
   { id: 'npm-trends', label: 'NPM Trends', defaultSpan: 1 },
-  { id: 'ad-1', label: 'Sponsored', defaultSpan: 1 },
-  { id: 'ad-2', label: 'Sponsored', defaultSpan: 1 },
-  { id: 'ad-3', label: 'Sponsored', defaultSpan: 1 },
   { id: 'fitness', label: 'Fitness', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
 { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
@@ -212,8 +209,6 @@ export function useLayoutManager(): LayoutManager {
   const isCollapsed = useCallback((id: string) => collapsedPanels.has(id), [collapsedPanels]);
 
   const toggleHidden = useCallback((id: string) => {
-    // Ad panels cannot be hidden
-    if (id.startsWith('ad-')) return;
     // Lock scroll position so masonry reflow doesn't jump the page
     const scrollY = window.scrollY;
     setHiddenPanels(prev => {
@@ -251,7 +246,6 @@ export function useLayoutManager(): LayoutManager {
   }, [showToast]);
 
   const swapPanels = useCallback((panelId: string, direction: 'left' | 'right' | 'up' | 'down', cols: number) => {
-    if (panelId.startsWith('ad-')) return; // ad panels are position-locked
     setPanelOrderState(prev => {
       // Work with visible panels only for position calculation
       const visible = prev.filter(id => !hiddenPanels.has(id));

@@ -332,15 +332,6 @@
       color: #5DCAA5;
     }
 
-    /* Ad placeholder */
-    .ad-slot {
-      grid-column: 1 / -1;
-      min-height: 90px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
     /* Footer */
     .page-footer {
       margin-top: auto;
@@ -463,13 +454,9 @@
 
     <div class="agent-grid" id="agent-grid"></div>
 
-    <!-- AdSense placeholder: ad slot between agent card rows -->
-    <!-- <div class="ad-slot"><ins class="adsbygoogle" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="XXXXXXX"></ins></div> -->
-
     <div class="last-updated" id="last-updated">Last status check: --</div>
   </div>
 
-<!-- Bottom Ad Slot -->  <div style="max-width:960px;width:100%;margin:32px auto 0;padding:0 20px;text-align:center;">    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-7224757913262984" data-ad-slot="" data-ad-format="horizontal" data-full-width-responsive="true"></ins>    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->    <div style="border:1px dashed #1A1A22;padding:14px;color:#4E4D49;font-size:11px;font-family:monospace;">Sponsored</div>  </div>
   <footer class="page-footer">
     <div class="footer-links">
       <a href="/" data-i18n="footer_home">Home</a>
@@ -1007,17 +994,8 @@
       }
 
       let html = "";
-      const adIndex = 9; // insert ad placeholder after 9th card
-      filtered.forEach((agent, i) => {
+      filtered.forEach((agent) => {
         html += renderCard(agent);
-        if (i === adIndex - 1) {
-          html += `
-            <div class="ad-slot">
-              <!-- AdSense ad slot placeholder: mid-grid placement -->
-              <!-- <ins class="adsbygoogle" style="display:block" data-ad-format="fluid" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="XXXXXXX"></ins> -->
-            </div>
-          `;
-        }
       });
       grid.innerHTML = html;
     }
