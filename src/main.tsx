@@ -22,6 +22,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
+// Remove static SEO content now that React is taking over
+document.getElementById('seo-content')?.remove();
+
 // No StrictMode — it double-mounts components which causes
 // duplicate WebSocket connections and race conditions
 createRoot(document.getElementById('root')!).render(

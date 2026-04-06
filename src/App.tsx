@@ -65,7 +65,6 @@ import { useFooterQuote } from './hooks/useFooterQuote';
 import { useFlightRadar } from './hooks/useFlightRadar';
 import { useTCGMarket } from './hooks/useTCGMarket';
 import { useCloudStatus } from './hooks/useCloudStatus';
-import { AdPanel } from './components/AdPanel';
 import './App.css';
 
 function App() {
@@ -649,24 +648,6 @@ function App() {
         ))}
       </div>
     </>),
-    'ad-1': (<>
-      <PanelHead panelId="ad-1" layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Sponsored</span></div>
-      </PanelHead>
-      <AdPanel slotId="ad-1" />
-    </>),
-    'ad-2': (<>
-      <PanelHead panelId="ad-2" layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Sponsored</span></div>
-      </PanelHead>
-      <AdPanel slotId="ad-2" />
-    </>),
-    'ad-3': (<>
-      <PanelHead panelId="ad-3" layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Sponsored</span></div>
-      </PanelHead>
-      <AdPanel slotId="ad-3" />
-    </>),
     'fitness': (<>
       <PanelHead panelId="fitness" isStale={panelHealth.isStale('fitness')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">Fitness</span><span className="panelTag" style={{ color: 'var(--green)' }}>LIVE</span></div>
@@ -680,7 +661,7 @@ function App() {
       <img src="https://images.pexels.com/photos/1653877/pexels-photo-1653877.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Peak fitness performance" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
       <div style={{ padding: '6px 0 0', fontSize: 8, color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
         <span>this one's for you, rupture</span>
-        <span>sponsored by carbs</span>
+        <span>powered by carbs</span>
       </div>
     </>),
     'museum-art': (<>
@@ -1277,71 +1258,19 @@ function App() {
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
       <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
-        {/* Ads inject at fixed positions; user panels flow around them */}
         {(() => {
-          // Build user panel list (no ads) and inject ads at fixed slot positions
           const userPanels = layout.panelOrder.filter(id =>
-            !id.startsWith('ad-') && layout.isVisible(id) && id !== 'support'
+            layout.isVisible(id) && id !== 'support'
           );
-          // Fixed ad positions: after every 10 user panels
-          const AD_SLOTS: { position: number; id: 'ad-1' | 'ad-2' | 'ad-3' }[] = [
-            { position: 0, id: 'ad-1' },
-            { position: 17, id: 'ad-2' },
-            { position: 34, id: 'ad-3' },
-          ];
-          // Merge: insert ads at their fixed positions
-          const merged: string[] = [];
-          let adIdx = 0;
-          for (let i = 0; i < userPanels.length; i++) {
-            // Insert any ads that belong at this position
-            while (adIdx < AD_SLOTS.length && merged.length === AD_SLOTS[adIdx].position) {
-              merged.push(AD_SLOTS[adIdx].id);
-              adIdx++;
-            }
-            merged.push(userPanels[i]);
-          }
-          // Append remaining ads if the feed is short
-          while (adIdx < AD_SLOTS.length) {
-            merged.push(AD_SLOTS[adIdx].id);
-            adIdx++;
-          }
 
-          // Ensure no two ad panels are adjacent — shift ads down if needed
-          for (let i = 1; i < merged.length; i++) {
-            if (merged[i].startsWith('ad-') && merged[i - 1].startsWith('ad-')) {
-              // Find the next non-ad panel after this position to swap with
-              let swapIdx = -1;
-              for (let j = i + 1; j < merged.length; j++) {
-                if (!merged[j].startsWith('ad-')) { swapIdx = j; break; }
-              }
-              if (swapIdx !== -1) {
-                // Move the non-ad panel between the two ads
-                const [nonAd] = merged.splice(swapIdx, 1);
-                merged.splice(i, 0, nonAd);
-              }
-              // If no non-ad panel found after, try before
-              else {
-                for (let j = i - 2; j >= 0; j--) {
-                  if (!merged[j].startsWith('ad-')) { swapIdx = j; break; }
-                }
-                if (swapIdx !== -1) {
-                  const [nonAd] = merged.splice(swapIdx, 1);
-                  merged.splice(i - 1, 0, nonAd);
-                }
-              }
-            }
-          }
-
-          return merged.map((id, idx) => {
-            const isAd = id.startsWith('ad-');
+          return userPanels.map((id, idx) => {
             const panelDef = ALL_PANELS.find(p => p.id === id);
             if (!panelDef) return null;
             const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
             const content = panelRegistry[id as keyof typeof panelRegistry];
             if (!content) return null;
 
-            // Ad panels are never draggable
-            const dragProps = layout.isOrganizing && !isAd ? {
+            const dragProps = layout.isOrganizing ? {
               draggable: true,
               onDragStart: (e: React.DragEvent) => {
                 e.dataTransfer.setData('text/plain', id);

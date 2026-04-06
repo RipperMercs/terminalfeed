@@ -41,15 +41,12 @@ export function PanelManager({ layout, onClose }: Props) {
   };
 
   // Build ordered list: saved order first, then any new panels not in order
-  // Filter out ad panels — users can't toggle or reorder ads
   const orderedPanels = [...layout.panelOrder]
-    .filter(id => !id.startsWith('ad-'))
     .map(id => ALL_PANELS.find(p => p.id === id))
     .filter(Boolean) as typeof ALL_PANELS[number][];
 
   // Add any panels that aren't in the saved order (new panels)
   for (const p of ALL_PANELS) {
-    if (p.id.startsWith('ad-')) continue;
     if (!orderedPanels.find(op => op.id === p.id)) {
       orderedPanels.push(p);
     }
