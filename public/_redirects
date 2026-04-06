@@ -2,38 +2,41 @@
 /clean /cleaner 301
 
 # Language rewrites — serve the same HTML file for translated URLs
+# Use clean URL paths (not .html) so Cloudflare Pages HTML normalization
+# does not convert these 200 rewrites into 307 redirects.
+
 # Spanish
-/es/tools /tools/index.html 200
-/es/tools/ /tools/index.html 200
-/es/tools/json /tools/json.html 200
-/es/tools/base64 /tools/base64.html 200
-/es/tools/uuid /tools/uuid.html 200
-/es/tools/timestamp /tools/timestamp.html 200
-/es/tools/jwt /tools/jwt.html 200
-/es/tools/regex /tools/regex.html 200
-/es/agent /agent.html 200
-/es/radio /radio.html 200
+/es/tools /tools/ 200
+/es/tools/ /tools/ 200
+/es/tools/json /tools/json 200
+/es/tools/base64 /tools/base64 200
+/es/tools/uuid /tools/uuid 200
+/es/tools/timestamp /tools/timestamp 200
+/es/tools/jwt /tools/jwt 200
+/es/tools/regex /tools/regex 200
+/es/agent /agent 200
+/es/radio /radio 200
 
 # Portuguese
-/pt/tools /tools/index.html 200
-/pt/tools/ /tools/index.html 200
-/pt/tools/json /tools/json.html 200
-/pt/tools/base64 /tools/base64.html 200
-/pt/tools/uuid /tools/uuid.html 200
-/pt/tools/timestamp /tools/timestamp.html 200
-/pt/tools/jwt /tools/jwt.html 200
-/pt/tools/regex /tools/regex.html 200
-/pt/agent /agent.html 200
-/pt/radio /radio.html 200
+/pt/tools /tools/ 200
+/pt/tools/ /tools/ 200
+/pt/tools/json /tools/json 200
+/pt/tools/base64 /tools/base64 200
+/pt/tools/uuid /tools/uuid 200
+/pt/tools/timestamp /tools/timestamp 200
+/pt/tools/jwt /tools/jwt 200
+/pt/tools/regex /tools/regex 200
+/pt/agent /agent 200
+/pt/radio /radio 200
 
 # German
-/de/tools /tools/index.html 200
-/de/tools/ /tools/index.html 200
-/de/tools/json /tools/json.html 200
-/de/tools/base64 /tools/base64.html 200
-/de/tools/uuid /tools/uuid.html 200
-/de/tools/timestamp /tools/timestamp.html 200
-/de/tools/jwt /tools/jwt.html 200
-/de/tools/regex /tools/regex.html 200
-/de/agent /agent.html 200
-/de/radio /radio.html 200
+/de/tools /tools/ 200
+/de/tools/ /tools/ 200
+/de/tools/json /tools/json 200
+/de/tools/base64 /tools/base64 200
+/de/tools/uuid /tools/uuid 200
+/de/tools/timestamp /tools/timestamp 200
+/de/tools/jwt /tools/jwt 200
+/de/tools/regex /tools/regex 200
+/de/agent /agent 200
+/de/radio /radio 200
