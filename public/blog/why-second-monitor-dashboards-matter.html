@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Your Second Monitor Should Be a Dashboard, Not a Distraction | TerminalFeed Blog</title>
+  <meta name="description" content="Most developers waste their second monitor on Slack or YouTube. Here's why a real-time dashboard is the highest-value use of that screen real estate, and how to set one up.">
+  <meta property="og:title" content="Why Your Second Monitor Should Be a Dashboard, Not a Distraction">
+  <meta property="og:description" content="Most developers waste their second monitor on Slack or YouTube. Here's why a real-time dashboard is the highest-value use of that screen real estate, and how to set one up.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/why-second-monitor-dashboards-matter">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/why-second-monitor-dashboards-matter">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Why Your Second Monitor Should Be a Dashboard, Not a Distraction",
+    "description": "Most developers waste their second monitor on Slack or YouTube. Here's why a real-time dashboard is the highest-value use of that screen real estate, and how to set one up.",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "datePublished": "2026-04-07",
+    "dateModified": "2026-04-07",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/why-second-monitor-dashboards-matter",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+
+    /* Callout Box */
+    .callout {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #5DCAA5;
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .callout strong { color: #F0EDE6; }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">&larr; back to blog</a>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">PRODUCTIVITY</span>
+        <span class="article-tag">BUILDING</span>
+      </div>
+      <h1>Why Your Second Monitor Should Be a Dashboard, Not a Distraction</h1>
+      <div class="article-meta">
+        <span>By Ripper</span>
+        <span>April 2026</span>
+        <span>6 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>There's a quiet productivity tax most developers pay every day, and it has nothing to do with their tools or workflow. It's their second monitor.</p>
+
+      <p>I've watched dozens of dev setups over the years. The pattern is almost universal. The main monitor runs an IDE, terminal, and browser tabs for the project at hand. The second monitor runs Slack. Or email. Or YouTube. Or a documentation tab that hasn't been touched in three hours. Sometimes all four, fighting for attention.</p>
+
+      <p>The problem isn't that any of these are bad. The problem is that they all demand active attention. Slack pings. Email lights up. YouTube autoplays the next video. Each one creates a tiny interruption that pulls focus away from the work happening on the main monitor. Studies have measured the cost of context switching at around 23 minutes to fully refocus after a single interruption. If your second monitor pings you every 10 minutes, you're never in flow.</p>
+
+      <p>The fix isn't to close the second monitor. It's to put something on it that doesn't demand a response.</p>
+
+      <h2>What belongs on a second monitor</h2>
+
+      <p>The right content for a second monitor follows three rules. It updates passively, so you never have to interact with it. It conveys information at a glance, so you don't have to read it carefully. And it stays interesting enough to glance at occasionally without being interesting enough to stare at.</p>
+
+      <p>Real-time data dashboards check all three boxes. A live feed of cryptocurrency prices, stock movers, breaking news headlines, and system status updates flows past your peripheral vision. When something important happens, you notice. When nothing's happening, you ignore it. Your brain is trained to detect change, so a dashboard with mostly stable values and occasional updates is the perfect background companion for focused work.</p>
+
+      <p>Compare that to Slack. Every message demands a decision: read now, read later, respond, ignore. Your brain has to evaluate each one. With a dashboard, there's nothing to decide. The data updates itself. You glance over when you want to.</p>
+
+      <h2>The information density problem</h2>
+
+      <p>The other reason most second-monitor setups fail is information density. A typical news website shows you maybe four or five stories above the fold, surrounded by ads and navigation. A typical Slack workspace shows you one or two channels at a time. A typical YouTube page shows you one video. The second monitor, that beautiful 27-inch slab of pixels, gets used to display almost no actual information.</p>
+
+      <p>A well-designed dashboard inverts this. Thirty data feeds, all visible at once, all updating in real-time, all in the field of view. No clicks required to see more. No tabs to switch between. The information density justifies the screen real estate.</p>
+
+      <p>This is why I built TerminalFeed in the first place. I wanted to put the entire state of the world on my second monitor: Bitcoin price, stock indices, breaking tech news, recent earthquakes, prediction market odds, weather, and a dozen other feeds. And I wanted it to look like it belonged on a developer's desk. Dark background. Monospace fonts. No ads, no popups, no email signup, no notifications. Just data.</p>
+
+      <h2>The terminal aesthetic isn't just nostalgia</h2>
+
+      <p>The dark monospace look isn't decoration. It's functional. Dark backgrounds reduce eye strain during long viewing sessions, which matters when something is on your second monitor for 8 hours a day. Monospace fonts make numerical data align naturally, so you can scan columns of prices and timestamps without your eyes jumping around. Minimal UI chrome means more pixels for actual data and fewer pixels wasted on bezels, headers, and decoration.</p>
+
+      <p>There's also a cultural signal. Developers spent the formative years of their careers staring at terminals. The aesthetic communicates competence and respect for the user. A dashboard that looks like a Bloomberg Terminal says "this is for serious people who care about data." A dashboard that looks like a marketing landing page says "this is for tourists."</p>
+
+      <div class="callout">
+        <strong>The goal isn't to react to every number.</strong> It's to internalize what "normal" looks like so that abnormal readings catch your eye. Once you know Bitcoin typically moves 2-3% in a day, a 10% move grabs your attention without you actively monitoring it. The dashboard does the watching. You just glance.
+      </div>
+
+      <h2>How to set up your second monitor today</h2>
+
+      <p>If you're reading this from a browser tab, here's the simplest possible upgrade. Open <a href="/">TerminalFeed</a> in a new browser window. Drag it to your second monitor. Press F to enter full-screen mode. Done. Your second monitor is now showing 30+ real-time data feeds with no chrome, no distractions, and no demands on your attention.</p>
+
+      <p>If you want to go further, install Firefox or Chrome as a second instance, set TerminalFeed as the homepage, and have it launch on system startup. Now every time you boot your machine, your second monitor automatically becomes a command center.</p>
+
+      <p>If you want to go even further, pair the dashboard with the ambient radio at <a href="/radio">terminalfeed.io/radio</a>. Lo-fi instrumental music in the background, real-time data in the foreground, your IDE on the main monitor. That's the developer setup I use every day, and it's the closest thing I've found to a focus environment that actually works.</p>
+
+      <div class="cta-box">
+        <p>Turn your second monitor into a real-time command center. 30+ live data feeds, zero distractions.</p>
+        <a href="/" class="cta-link">Open TerminalFeed Dashboard</a>
+      </div>
+
+      <p>The second monitor is a piece of expensive hardware that most people use to display Slack. There's a better option.</p>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>
