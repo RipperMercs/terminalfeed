@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How API Rate Limits Actually Work (And How to Work Around Them) | TerminalFeed Blog</title>
+  <meta name="description" content="Rate limits are the invisible wall every API developer hits eventually. Here's how they actually work, why they exist, and the patterns that let you build reliable systems on top of rate-limited APIs.">
+  <meta property="og:title" content="How API Rate Limits Actually Work (And How to Work Around Them)">
+  <meta property="og:description" content="Rate limits are the invisible wall every API developer hits eventually. Here's how they actually work, why they exist, and the patterns that let you build reliable systems on top of rate-limited APIs.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/api-rate-limits-explained">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/api-rate-limits-explained">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How API Rate Limits Actually Work (And How to Work Around Them)",
+    "description": "Rate limits are the invisible wall every API developer hits eventually. Here's how they actually work, why they exist, and the patterns that let you build reliable systems on top of rate-limited APIs.",
+    "author": {
+      "@type": "Person",
+      "name": "Node"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "datePublished": "2026-04-07",
+    "dateModified": "2026-04-07",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/api-rate-limits-explained",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+
+    /* Callout Box */
+    .callout {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #5DCAA5;
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .callout strong { color: #F0EDE6; }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">&larr; back to blog</a>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">APIs</span>
+        <span class="article-tag">DEV</span>
+        <span class="article-tag">TUTORIAL</span>
+      </div>
+      <h1>How API Rate Limits Actually Work (And How to Work Around Them)</h1>
+      <div class="article-meta">
+        <span>By Node</span>
+        <span>April 2026</span>
+        <span>8 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>The first time you hit a rate limit, it feels like a betrayal. Your code was working perfectly. You ran it again to test something. Suddenly every request returns a 429 error and your application is broken. You wait a few minutes, run it again, and everything works. What just happened?</p>
+
+      <p>Welcome to rate limits. Every public API has them, and understanding how they work is one of the most important skills for any developer who builds on third-party services.</p>
+
+      <h2>What a rate limit actually is</h2>
+
+      <p>A rate limit is a rule the API provider enforces to protect their infrastructure from being overwhelmed by any single client. The simplest version is "you can make X requests per Y time period." For example, the GitHub API allows authenticated users 5,000 requests per hour. The Twitter API has separate limits for different endpoints, ranging from 15 requests per 15 minutes to 300 requests per 15 minutes. The CoinGecko free tier allows around 30 calls per minute.</p>
+
+      <p>When you exceed the limit, the API stops accepting your requests until the time window resets. The standard response is HTTP status <code>429 Too Many Requests</code>. Most APIs include headers in their responses telling you how many requests you have remaining and when the limit resets. Reading these headers is the difference between hitting walls blindly and gracefully managing your usage.</p>
+
+      <h2>Why rate limits exist</h2>
+
+      <p>Rate limits exist for three reasons, and understanding them helps you respect them.</p>
+
+      <p><strong>First, infrastructure cost.</strong> Every API call consumes server resources: CPU, memory, database queries, network bandwidth. A single bad actor sending millions of requests can cost the provider real money and degrade service for everyone else. Rate limits cap each user's resource consumption to a sustainable level.</p>
+
+      <p><strong>Second, abuse prevention.</strong> Without rate limits, scraping becomes trivial. Anyone could clone an entire dataset in minutes, bypassing whatever business model the provider built around their data. Rate limits make scraping possible but slow, which preserves the value of the underlying service.</p>
+
+      <p><strong>Third, fairness.</strong> If one user could send 10 million requests per hour, they would crowd out smaller users who only need to send a few hundred. Rate limits ensure that everyone gets a fair share of available capacity.</p>
+
+      <p>These reasons aren't arbitrary. They're the same reasons any shared resource has rules. Rate limits aren't a punishment. They're how the API stays available for everyone.</p>
+
+      <h2>The patterns that let you build reliably</h2>
+
+      <p>Once you understand why rate limits exist, the patterns for working with them become obvious.</p>
+
+      <p><strong>Caching.</strong> The most important pattern. If your application needs Bitcoin price data, you don't need to call the price API every time a user loads your page. Call it once every 30 seconds, store the result, and serve the cached value to all users. Suddenly an API that allows 30 requests per minute can serve thousands of users per minute. This is exactly how TerminalFeed works under the hood. Every external API call is cached in a <a href="/developers">Cloudflare Worker</a>, and visitors get the cached response instantly without ever touching the upstream API.</p>
+
+      <p><strong>Exponential backoff.</strong> When you hit a 429 error, don't immediately retry. Wait, then retry. If you hit it again, wait longer. The standard formula is to double your wait time after each failure (1 second, 2 seconds, 4 seconds, 8 seconds) up to some maximum. This gives the API time to recover and prevents you from hammering it during an outage.</p>
+
+      <p><strong>Request batching.</strong> Many APIs let you fetch multiple items in a single request. Instead of calling the user lookup endpoint 100 times for 100 users, call the bulk lookup endpoint once with 100 IDs. One request instead of 100. Most rate limits count requests, not items returned, so batching is essentially free quota.</p>
+
+      <p><strong>Queue management.</strong> If you have a burst of work to do (say, syncing 10,000 records) don't try to do it all at once. Put the work in a queue and process it at a sustainable rate. Most messaging libraries (BullMQ, SQS, etc.) have built-in rate limiting that respects your API's limits automatically.</p>
+
+      <div class="callout">
+        <strong>Real-world example:</strong> The TerminalFeed API Worker handles 12,000+ requests per day from visitors, but only makes a fraction of that in upstream API calls. Every endpoint has a cache TTL (30 seconds for crypto prices, 5 minutes for news, 15 minutes for economic data). Stale cache is returned on failure, so visitors never see an error even when an upstream API is down or rate-limited.
+      </div>
+
+      <h2>The headers that tell you everything</h2>
+
+      <p>Most modern APIs include rate limit information in their response headers. The convention is:</p>
+
+      <ul>
+        <li><code>X-RateLimit-Limit</code>: how many requests you can make in the current window</li>
+        <li><code>X-RateLimit-Remaining</code>: how many you have left</li>
+        <li><code>X-RateLimit-Reset</code>: when the limit resets, usually as a Unix timestamp</li>
+      </ul>
+
+      <p>If you're not reading these headers, you're flying blind. The remaining count tells you exactly how close you are to hitting the wall. The reset timestamp tells you exactly when you can start making requests again. Build your code around these values and you'll never be surprised.</p>
+
+      <p>Some APIs use slightly different header names. GitHub uses <code>X-RateLimit-Limit</code>. Twitter uses <code>x-rate-limit-limit</code> (lowercase). Discord uses <code>X-RateLimit-Bucket</code> and includes additional metadata about which endpoint the limit applies to. Read the documentation for whatever API you're using and respect what they tell you.</p>
+
+      <h2>When rate limits become a real problem</h2>
+
+      <p>Sometimes a free tier really isn't enough. You're building a product, your traffic is growing, and the rate limits become a bottleneck. At this point you have three options.</p>
+
+      <p><strong>Option one: pay for a higher tier.</strong> Most APIs have paid plans with significantly higher limits. If your business model depends on the API, paying for it is usually the right move.</p>
+
+      <p><strong>Option two: aggressive caching.</strong> Cache as much as possible, refresh less frequently, and serve stale data when fresh data isn't available. The TerminalFeed Worker uses this pattern extensively. Every endpoint has a cache TTL and falls back to stale data if the upstream API fails.</p>
+
+      <p><strong>Option three: switch providers or self-host.</strong> Some data is available from multiple sources. Bitcoin price is published by Binance, Coinbase, Kraken, CoinGecko, CoinCap, and dozens of other exchanges and aggregators. If one provider's limits are too restrictive, try another. For some data types (RSS feeds, public datasets, blockchain data), self-hosting is feasible and removes the rate limit entirely.</p>
+
+      <div class="cta-box">
+        <p>See how TerminalFeed handles 20+ rate-limited APIs with smart caching. Full API docs and code examples.</p>
+        <a href="/developers" class="cta-link">View the TerminalFeed API</a>
+      </div>
+
+      <p>Rate limits aren't a problem to fight. They're a constraint to design around. The developers who build the most reliable systems on top of public APIs are the ones who internalize the limits, respect them, and architect their code to work within them. Once you stop treating rate limits as an obstacle and start treating them as a design parameter, they become invisible.</p>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>
