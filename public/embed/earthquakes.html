@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earthquake Counter Widget | TerminalFeed</title>
+  <meta name="description" content="Live earthquake count in the last 24 hours. Embeddable widget from TerminalFeed.">
+  <link rel="canonical" href="https://terminalfeed.io/embed/earthquakes">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace}
+    body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+    body.theme-light{background:#FFF;color:#1A1A1E}
+    .widget{width:100%;height:100%;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;position:relative}
+    .label{font-size:10px;letter-spacing:2px;opacity:0.5;margin-bottom:6px}
+    .value{font-size:26px;font-weight:600;line-height:1;color:#EF9F27}
+    .sub{font-size:11px;margin-top:5px;opacity:0.6}
+    .footer{position:absolute;bottom:5px;right:10px;font-size:8px;opacity:0.35}
+    .footer a{color:inherit;text-decoration:none}
+    .footer a:hover{opacity:1}
+    .pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;margin-right:5px;animation:pulse 2s ease infinite;vertical-align:middle}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="label"><span class="pulse"></span>EARTHQUAKES (24H)</div>
+    <div class="value" id="count">--</div>
+    <div class="sub" id="largest">loading...</div>
+    <div class="footer"><a href="https://terminalfeed.io" target="_blank" rel="noopener">terminalfeed.io</a></div>
+  </div>
+  <script>
+    var params=new URLSearchParams(window.location.search);
+    document.body.className='theme-'+(params.get('theme')||'dark');
+    function load(){
+      fetch('https://terminalfeed.io/api/earthquake').then(function(r){return r.json()}).then(function(d){
+        try{
+          var quakes=d.features||d.data||[];
+          document.getElementById('count').textContent=quakes.length;
+          if(quakes.length>0){
+            var sorted=quakes.slice().sort(function(a,b){
+              var ma=(a.properties&&a.properties.mag)||a.mag||0;
+              var mb=(b.properties&&b.properties.mag)||b.mag||0;
+              return mb-ma;
+            });
+            var top=sorted[0];
+            var mag=(top.properties&&top.properties.mag)||top.mag||'?';
+            var place=(top.properties&&top.properties.place)||top.place||'Unknown';
+            if(place.length>40)place=place.substring(0,40)+'...';
+            document.getElementById('largest').textContent='Largest: M'+mag+' / '+place;
+          }
+        }catch(e){document.getElementById('count').textContent='--'}
+      }).catch(function(){document.getElementById('count').textContent='--'});
+    }
+    load();setInterval(load,120000);
+  </script>
+</body>
+</html>

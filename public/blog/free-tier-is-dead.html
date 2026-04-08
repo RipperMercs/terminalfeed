@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Free Tier Is Dead. Long Live the Open Source Alternative. | TerminalFeed Blog</title>
+  <meta name="description" content="Every developer tool you loved is removing its free tier. Heroku did it. Postman did it. MongoDB did it. Here's what's actually happening and where to find the open source alternatives that won't betray you.">
+  <meta property="og:title" content="The Free Tier Is Dead. Long Live the Open Source Alternative.">
+  <meta property="og:description" content="Every developer tool you loved is removing its free tier. Heroku did it. Postman did it. MongoDB did it. Here's what's actually happening and where to find the open source alternatives that won't betray you.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/free-tier-is-dead">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/free-tier-is-dead">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The Free Tier Is Dead. Long Live the Open Source Alternative.",
+    "description": "Every developer tool you loved is removing its free tier. Heroku did it. Postman did it. MongoDB did it. Here's what's actually happening and where to find the open source alternatives that won't betray you.",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-04-08",
+    "dateModified": "2026-04-08",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/free-tier-is-dead",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul { margin-bottom: 18px; padding-left: 20px; }
+    .article-body li { margin-bottom: 10px; color: #D4D2CB; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Free Tier Is Dead</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Free Tier Is Dead", "item": "https://terminalfeed.io/blog/free-tier-is-dead" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">DEV TOOLS</span>
+        <span class="article-tag">OPEN SOURCE</span>
+        <span class="article-tag">OPINION</span>
+      </div>
+      <h1>The Free Tier Is Dead. Long Live the Open Source Alternative.</h1>
+      <div class="article-meta">
+        <span>By Node</span>
+        <span>April 8, 2026</span>
+        <span>8 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>You can probably name a dozen developer tools that used to have a generous free tier and don't anymore. Heroku killed theirs. Postman gated their core features behind a workspace subscription. MongoDB Atlas tightened limits. Vercel's free tier is technically still there but the bandwidth limits are now so tight that any side project with real traffic gets pushed to the paid plan. The list keeps growing.</p>
+
+      <p>This isn't a coincidence. It's a phase of the industry where the venture-funded developer tools that built their early adoption on free tiers have now been told by their boards to monetize. The free tier was never the business model. It was the customer acquisition strategy. Now the free customers are being asked to convert or leave, and a lot of them are leaving.</p>
+
+      <p>The good news is that the ones leaving aren't going back to writing things from scratch. They're switching to open source alternatives that are now mature enough to replace the commercial products they used to depend on. This is creating one of the most interesting moments in developer tooling in years.</p>
+
+      <h2>What actually killed the free tier</h2>
+
+      <p>The free tier model worked for about a decade. The deal was simple. A startup would offer enough free usage to onboard small projects and indie developers. Those developers would build things, fall in love with the tool, then get jobs at companies that needed the paid plan. Free users were essentially a sales channel. Every free user was a potential paid customer once their needs grew or once they started a job at a company with a budget.</p>
+
+      <p>The model started breaking around 2022 for a few reasons. First, AI training. Companies realized that a lot of their free traffic was coming from scrapers training language models on their content and code. That traffic generated zero revenue and significant server costs. Second, infrastructure costs went up. Cloud bills increased across the industry, which made supporting free users more expensive. Third, venture funding tightened. Startups that had been burning money to grow free user bases were suddenly told to show a path to profitability, immediately.</p>
+
+      <p>The result is the situation we have now. Tools that used to give away substantial functionality are gating it. Tools that used to have unlimited free tiers are imposing strict limits. Tools that used to allow personal projects are pushing you toward business plans. The era of "build your side project on free tools" is mostly over.</p>
+
+      <h2>The open source comeback</h2>
+
+      <p>What's surprising is how good the open source alternatives have become. Five years ago, when commercial tools were still generous, the open source equivalents were often janky, poorly maintained, and missing critical features. Today the picture is completely different. For most categories of developer tooling, there's a mature open source alternative that's actively maintained and often better than the commercial product it replaces.</p>
+
+      <p>A few examples that prove the point.</p>
+
+      <p><strong>Heroku</strong> replaced by Coolify, Railway, Dokku, or just Docker Compose on a VPS. Coolify in particular has reached a state where you can deploy a Next.js app, a database, a redis instance, and a worker process with a few clicks, all on your own server. The total cost is the price of a 5-dollar Hetzner VPS.</p>
+
+      <p><strong>Postman</strong> replaced by Bruno, Hoppscotch, or HTTPie. Bruno specifically is a fantastic Postman alternative that stores collections as plain files in your git repo, which is what Postman should have done from the start. No accounts, no workspaces, no syncing problems.</p>
+
+      <p><strong>MongoDB Atlas</strong> replaced by self-hosted MongoDB or PostgreSQL. PostgreSQL is, in 2026, the answer to most database questions whether or not you originally needed Mongo. The JSON support is excellent, the tooling is mature, and you can run it on a tiny VPS for free.</p>
+
+      <p><strong>Auth0</strong> replaced by Supabase Auth, Lucia, or just rolling your own with Lucia and a session table. Authentication is one of the most overcharged categories in dev tooling. The actual code to implement secure auth is a few hundred lines and the libraries to help you do it correctly are excellent.</p>
+
+      <p><strong>Vercel</strong> replaced by Cloudflare Pages (still has a generous free tier), Netlify, or self-hosted with Coolify. Cloudflare in particular is currently the best deal in web hosting for small projects because they haven't tightened their limits the way Vercel has.</p>
+
+      <p><strong>Sentry</strong> replaced by GlitchTip, which is API-compatible with Sentry but free and self-hostable. You can switch from Sentry to GlitchTip without changing any of your application code.</p>
+
+      <p><strong>Zapier</strong> replaced by n8n. n8n is now feature-comparable to Zapier for most workflows, runs anywhere, and has no per-action pricing.</p>
+
+      <p><strong>Airtable</strong> replaced by NocoDB. NocoDB connects to any SQL database and gives you an Airtable-like interface for editing data. Self-host it and you have unlimited records, unlimited collaborators, and no monthly fee.</p>
+
+      <p><strong>Notion</strong> replaced by AppFlowy or Obsidian with sync plugins. The Notion replacement story is still evolving but it's getting close.</p>
+
+      <p>This is just the obvious list. There's a similar pattern in nearly every category of developer tooling. Whatever commercial tool just removed its free tier or raised its prices, there's an open source project that does the same thing without the business model risk.</p>
+
+      <h2>The trade-off is your time</h2>
+
+      <p>The catch with open source alternatives is that you have to set them up yourself. Commercial tools sell convenience. You sign up, you click some buttons, you have a working service. Open source tools sell control. You have to provision a server, install the software, configure it, maintain it, back it up, and update it when there are security patches.</p>
+
+      <p>For some workloads this trade-off is obviously worth it. A solo developer with a few side projects probably saves a hundred dollars a month and gains complete control over their data by self-hosting. The two hours of setup time pays back in the first month and the savings continue forever.</p>
+
+      <p>For other workloads it's not worth it. A funded startup with ten engineers shouldn't have anyone wasting time maintaining a self-hosted Sentry instance when the team's hourly cost exceeds the SaaS subscription. The math has to be done case by case.</p>
+
+      <p>But the math is starting to favor self-hosting in more cases than it used to. The setup tools have gotten better. The hosting costs have stayed cheap. The commercial alternatives have gotten more expensive. The crossover point keeps moving in favor of running your own stack.</p>
+
+      <h2>The cultural shift</h2>
+
+      <p>There's something deeper happening underneath the cost calculations. Developers are starting to question the wisdom of building everything on top of services that can change at any time. Every time a beloved tool removes a free tier or gets acquired and ruined, it teaches developers to be more cautious about what they depend on.</p>
+
+      <p>The result is a rediscovery of the values that the open source movement was built on in the first place. Software you can read. Software you can modify. Software you control. Software that doesn't disappear when a CEO decides to focus on enterprise customers.</p>
+
+      <p>These values went out of fashion during the SaaS boom of the 2010s. Convenience was prioritized over control. The deal seemed worth it because the convenience was real and the cost was low. Now the cost is rising and the convenience is being slowly degraded through enshittification, and developers are remembering why control mattered in the first place.</p>
+
+      <p>The free tier is dead. The open source alternatives are alive and getting better. If you've been putting off learning how to self-host your tools, now is a good time to start. The crossover point has moved.</p>
+
+      <div class="cta-box">
+        <p>TerminalFeed is built on Cloudflare's free tier and 30+ free APIs. See the full stack.</p>
+        <a href="/blog/building-terminalfeed" class="cta-link">How We Built It</a>
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

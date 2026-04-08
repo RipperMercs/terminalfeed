@@ -33,6 +33,17 @@
   "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+    { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://terminalfeed.io/tools" },
+    { "@type": "ListItem", "position": 3, "name": "chmod Calculator", "item": "https://terminalfeed.io/tools/chmod" }
+  ]
+}
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
@@ -157,11 +168,17 @@ footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49
 .seo-content table { width: 100%; border-collapse: collapse; margin: 12px 0; }
 .seo-content th, .seo-content td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #1A1A22; font-size: 12px; }
 .seo-content th { color: #C8C8C0; }
+.breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+.breadcrumbs a { color: #4E4D49; text-decoration: none; }
+.breadcrumbs a:hover { color: #5DCAA5; }
+.breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
 </style>
 </head>
 <body data-page="tools-chmod">
-<div class="back-link"><a href="/tools">&larr; back to tools</a></div>
 <div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/tools">Tools</a><span class="bc-sep">&rsaquo;</span><span>chmod Calculator</span>
+  </nav>
   <div class="header">
     <h1><span>&gt;_</span> CHMOD</h1>
     <span class="badge">&#9889; runs locally</span>

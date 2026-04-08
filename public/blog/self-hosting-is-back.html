@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Hosting Is Having a Moment Again: Here's Why | TerminalFeed Blog</title>
+  <meta name="description" content="After two decades of moving everything to the cloud, developers are quietly building homelabs and self-hosting their own services again. The reasons are more interesting than nostalgia.">
+  <meta property="og:title" content="Self-Hosting Is Having a Moment Again: Here's Why">
+  <meta property="og:description" content="After two decades of moving everything to the cloud, developers are quietly building homelabs and self-hosting their own services again. The reasons are more interesting than nostalgia.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/self-hosting-is-back">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/self-hosting-is-back">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Self-Hosting Is Having a Moment Again: Here's Why",
+    "description": "After two decades of moving everything to the cloud, developers are quietly building homelabs and self-hosting their own services again. The reasons are more interesting than nostalgia.",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-04-07",
+    "dateModified": "2026-04-07",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/self-hosting-is-back",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Self-Hosting Is Back</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Self-Hosting Is Back", "item": "https://terminalfeed.io/blog/self-hosting-is-back" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">SELF HOSTING</span>
+        <span class="article-tag">HOMELAB</span>
+        <span class="article-tag">OPEN SOURCE</span>
+      </div>
+      <h1>Self-Hosting Is Having a Moment Again: Here's Why</h1>
+      <div class="article-meta">
+        <span>By Node</span>
+        <span>April 7, 2026</span>
+        <span>7 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Something strange has been happening on r/selfhosted, r/homelab, and the various Discord servers where developers talk about their personal infrastructure. The activity has been climbing for years. The questions have gotten more sophisticated. The hardware purchases have gotten more serious. After almost two decades of every developer dutifully moving their stuff to the cloud, a significant slice of the developer population is quietly moving it back.</p>
+
+      <p>This isn't a fringe movement anymore. It's not just retired sysadmins running Plex servers in their basements. It's working developers (people who use AWS at their day jobs) building serious infrastructure at home and self-hosting services they used to pay for. The reasons are worth understanding because they tell you something about where the industry is heading.</p>
+
+      <h2>The cloud bill that broke the camel's back</h2>
+
+      <p>The first reason is the simplest. Cloud bills got expensive. A small startup that spends 500 dollars a month on AWS is doing fine. A small startup that spends 5,000 dollars a month is starting to question its life choices. A small startup that spends 50,000 dollars a month (and there are many of these) is paying more for cloud infrastructure than it would cost to hire a full-time engineer to manage their own.</p>
+
+      <p>The cloud was sold as cheaper, but for many workloads it's only cheaper at small scale or extremely large scale. The middle tier, too big for free tiers and too small for negotiated enterprise pricing, gets crushed. A lot of the engineers building at this middle tier started doing the math and realized they could buy a few used servers, host them in a colocation facility, and save 80 to 90 percent of their monthly cloud spend.</p>
+
+      <p>The same math works at the personal level. A developer paying 30 dollars a month for a managed Postgres database, 10 dollars a month for object storage, 15 dollars a month for hosting, 8 dollars a month for transactional email, and another 20 for various other services is spending 80 dollars a month on infrastructure. That's almost a thousand dollars a year. For a thousand dollars you can buy a used Dell PowerEdge server, a UPS, and have change left over. The server lasts for years.</p>
+
+      <h2>Sovereignty and control</h2>
+
+      <p>The second reason is more philosophical and harder to put a number on. People are tired of their data living on someone else's computer. They're tired of services they depend on getting acquired and ruined, or being shut down without warning, or quietly changing their terms of service in ways that make the tool unusable for the original purpose.</p>
+
+      <p>Every developer over thirty has a long list of dead services they used to rely on. Google Reader. Heroku's free tier. Tumblr. Sunsetted Google products too numerous to count. Twitter's API changes. Reddit's API changes. The pattern is consistent: you build your workflow around a service, the service makes a business decision that breaks your workflow, you start over.</p>
+
+      <p>Self-hosting solves this completely. If you self-host your RSS reader, nobody can shut it down. If you self-host your photo storage, nobody can scan your photos for ads. If you self-host your password manager, nobody can have a data breach that exposes your credentials. The services you control will keep working as long as you keep them running. There's no vendor lock-in because you are the vendor.</p>
+
+      <p>This is especially appealing for developers because we tend to be the kind of people who value control. We picked careers where we get to tell computers exactly what to do. Then we spent twenty years giving up that control to managed services in exchange for convenience. Some people are starting to wonder if the trade was worth it.</p>
+
+      <h2>The tooling has gotten incredibly good</h2>
+
+      <p>The third reason is purely practical. Self-hosting in 2026 is dramatically easier than it was in 2010. The open source community has spent the last decade building tools that make it possible to run sophisticated services with very little operational overhead.</p>
+
+      <p>Docker and Docker Compose let you run any application as a single command. You don't need to worry about dependency conflicts or installation procedures or environment setup. The application comes packaged with everything it needs. Want to run a self-hosted RSS reader? <code>docker compose up -d</code> and you have one. Want to run a self-hosted password manager? Same thing. Want to run a self-hosted git server? Same thing.</p>
+
+      <p>Reverse proxies like Caddy and Traefik handle automatic HTTPS certificates from Let's Encrypt with zero configuration. You no longer have to know how to generate a certificate signing request or configure nginx to renew SSL certs. You just point Caddy at your service and it works. This was hard in 2014. It's effortless in 2026.</p>
+
+      <p>Tools like Cloudflare Tunnels let you expose self-hosted services to the internet without opening ports on your home router. Your service can live on a Raspberry Pi in your closet and be accessible from anywhere in the world without you ever touching your firewall. The security model is excellent and the setup takes about ten minutes.</p>
+
+      <p>The applications themselves have gotten dramatically better too. Self-hosted alternatives to commercial services used to be janky open source projects with bad UIs. Now many of them are actively better than the commercial versions they replace. Vaultwarden replaces Bitwarden. Immich replaces Google Photos. Nextcloud replaces Google Drive. Jellyfin replaces Plex (which itself replaces Netflix for many use cases). PiHole gives you network-wide ad blocking that no commercial service offers. The list keeps growing.</p>
+
+      <h2>What people are actually self-hosting</h2>
+
+      <p>The current wave of self-hosting isn't about running Linux From Scratch on dusty hardware. People are running serious services with good UIs and reliable uptimes. The most common things in 2026 homelab setups:</p>
+
+      <ul>
+        <li><strong>Photo storage and backup</strong> with Immich or PhotoPrism, replacing Google Photos and Apple iCloud</li>
+        <li><strong>Network-wide ad blocking</strong> with PiHole or AdGuard Home</li>
+        <li><strong>Personal VPN</strong> with WireGuard or Tailscale, allowing secure remote access to home services</li>
+        <li><strong>Password manager</strong> with Vaultwarden</li>
+        <li><strong>RSS reader</strong> with Miniflux or FreshRSS</li>
+        <li><strong>Note-taking</strong> with Joplin Server or Obsidian sync</li>
+        <li><strong>Self-hosted git</strong> with Gitea or Forgejo</li>
+        <li><strong>Home automation</strong> with Home Assistant</li>
+        <li><strong>Personal monitoring</strong> with Grafana and Prometheus</li>
+        <li><strong>Backup solutions</strong> with Restic or Kopia</li>
+      </ul>
+
+      <p>Each of these replaces a commercial service that costs somewhere between five and fifty dollars a month. Run all of them on a single homelab server and you're saving a few hundred dollars a year while gaining complete control over your data.</p>
+
+      <h2>The downsides are real but manageable</h2>
+
+      <p>Self-hosting isn't free. The cost is your time. You become responsible for backups, updates, security patches, hardware maintenance, and troubleshooting when things break. If your home internet goes down, your services go down. If your hard drive dies, you'd better have a backup.</p>
+
+      <p>But these downsides are smaller than they used to be. Modern self-hosted applications mostly handle their own updates. Docker images get pushed automatically. Backup tools like Restic make encrypted offsite backups straightforward. UPS units handle brief power outages. The total time investment for a well-set-up homelab is probably one or two hours a month after the initial setup.</p>
+
+      <p>For a lot of developers, that's a price worth paying. Two hours a month to control your own infrastructure, save real money, and stop worrying about which cloud service is going to die next. The math is starting to make sense to a lot of people.</p>
+
+      <h2>Where this is heading</h2>
+
+      <p>I don't think self-hosting will ever fully replace cloud computing. There are workloads where the cloud genuinely is cheaper and easier: anything that needs to scale rapidly, anything that requires global distribution, anything that's mission critical for a business. The cloud isn't going anywhere.</p>
+
+      <p>But I do think the pendulum is swinging back from "everything in the cloud" to a more balanced approach where personal and small-business workloads live on owned hardware, and only the things that genuinely benefit from cloud infrastructure stay there. The default for the last decade was "move it to the cloud unless you have a reason not to." The new default for the next decade might be "host it yourself unless you have a reason to use the cloud."</p>
+
+      <p>If you've never set up a homelab, try it with a single service. Pick one cloud subscription you'd like to stop paying for. Find the self-hosted alternative. Run it on a Raspberry Pi or an old laptop. See if you can live with it for a month. You might be surprised how good it feels to own your own infrastructure again.</p>
+
+      <div class="cta-box">
+        <p>Track GitHub trending repos, dev/ops status, and more on the TerminalFeed dashboard.</p>
+        <a href="/" class="cta-link">Open TerminalFeed Dashboard</a>
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

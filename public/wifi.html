@@ -12,6 +12,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+    { "@type": "ListItem", "position": 2, "name": "WiFi Speed Test", "item": "https://terminalfeed.io/wifi" }
+  ]
+}
+</script>
 <style>
   :root {
     --bg: #080808;
@@ -102,6 +112,10 @@
     text-decoration: none;
   }
   .back-link:hover { color: var(--green); }
+  .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+  .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+  .breadcrumbs a:hover { color: #5DCAA5; }
+  .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
 
   .status-pill {
     display: flex; align-items: center; gap: 5px;
@@ -575,7 +589,9 @@
     <div class="logo-text">TerminalFeed <span>/ wifi</span></div>
   </a>
   <div class="top-bar-right">
-    <a href="/" class="back-link">&larr; back to terminal</a>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>WiFi Speed Test</span>
+    </nav>
     <div class="status-pill online" id="statusPill">
       <div class="status-dot"></div>
       <span id="statusText">Ready</span>

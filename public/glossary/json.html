@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is JSON? - TerminalFeed Glossary</title>
+  <meta name="description" content="JSON (JavaScript Object Notation) is a lightweight text format for storing and transmitting structured data. Learn how JSON works and where developers use it.">
+  <meta property="og:title" content="What is JSON? - TerminalFeed Glossary">
+  <meta property="og:description" content="JSON is a lightweight text format for storing and transmitting structured data between applications.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/json">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/json">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "JSON",
+    "description": "JavaScript Object Notation: a lightweight text format for storing and transmitting structured data.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/json"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "JSON", "item": "https://terminalfeed.io/glossary/json" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #1A1A1E; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #F0EDE6; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>JSON</span>
+    </nav>
+
+    <h1>JSON</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>JSON (JavaScript Object Notation) is a lightweight, human-readable text format for representing structured data. It uses key-value pairs and ordered lists, making it the default data exchange format for web APIs.</p>
+
+    <h2>How it works</h2>
+    <p>A JSON document is built from two structures: objects (collections of key-value pairs wrapped in curly braces) and arrays (ordered lists wrapped in square brackets). Values can be strings, numbers, booleans, null, objects, or arrays. For example: <code>{"name": "Bitcoin", "price": 84500, "up": true}</code>.</p>
+    <p>Despite having "JavaScript" in its name, JSON is language-independent. Every major programming language has built-in support for parsing and generating JSON. When you call a <a href="/glossary/rest">REST API</a>, the server almost always returns a JSON response. Your code parses that JSON into native data structures (objects, dictionaries, or maps depending on the language) and works with it from there.</p>
+    <p>JSON's popularity comes from its simplicity. Compared to XML (its predecessor for data interchange), JSON is less verbose and easier for both humans and machines to read. It does have limitations: no support for comments, no date type, and no way to reference other parts of the document. For configuration files where comments are helpful, developers sometimes use <a href="/glossary/yaml">YAML</a> instead.</p>
+
+    <h2>Why it matters</h2>
+    <p>JSON is everywhere. API responses, configuration files, database documents, log entries, and inter-service messages all commonly use JSON. If you are building software that consumes external data, you will work with JSON constantly. Knowing how to read, write, validate, and format JSON is a core developer skill.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>Every TerminalFeed <a href="/developers">API endpoint</a> returns JSON. You can use our <a href="/tools/json">JSON Formatter and Validator</a> tool to paste, format, and validate any JSON payload. It is one of the most-used tools on the site.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/rest">REST</a></li>
+        <li><a href="/glossary/yaml">YAML</a></li>
+        <li><a href="/glossary/jwt">JWT</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

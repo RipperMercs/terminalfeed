@@ -25,12 +25,17 @@
     "description": "The story of building TerminalFeed from scratch. From the first API call to serving thousands of users. Technical decisions, mistakes, lessons learned.",
     "author": {
       "@type": "Person",
-      "name": "Ripper"
+      "name": "Ripper",
+      "url": "https://terminalfeed.io/team"
     },
     "publisher": {
       "@type": "Organization",
       "name": "TerminalFeed",
-      "url": "https://terminalfeed.io"
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
     },
     "datePublished": "2026-03-20",
     "dateModified": "2026-03-20",
@@ -143,11 +148,29 @@
     footer.footer a { color: #4E4D49; text-decoration: none; }
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
   </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
 </head>
 <body>
   <div class="container">
-    <a href="/blog" class="back">&larr; back to blog</a>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Building TerminalFeed</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Building TerminalFeed", "item": "https://terminalfeed.io/blog/building-terminalfeed" }
+      ]
+    }
+    </script>
 
     <header class="article-header">
       <div class="article-tags">

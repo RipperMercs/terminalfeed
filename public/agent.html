@@ -56,6 +56,16 @@
     "dateModified": "2026-03-22T00:00:00Z"
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "AI Agents", "item": "https://terminalfeed.io/agent" }
+    ]
+  }
+  </script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,13 +82,10 @@
     a { color: #5DCAA5; text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    .back-link {
-      padding: 16px 24px;
-      font-size: 13px;
-      color: #4E4D49;
-      transition: color 0.2s;
-    }
-    .back-link:hover { color: #5DCAA5; text-decoration: none; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; padding: 16px 24px 0; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
 
     .container {
       max-width: 1400px;
@@ -408,7 +415,9 @@
 </head>
 <body data-page="agent">
 
-  <a href="/" class="back-link" data-i18n="back_terminal">&larr; back to terminal</a>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>AI Agents</span>
+  </nav>
 
   <div class="container">
     <header class="header">

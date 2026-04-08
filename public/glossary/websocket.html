@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is a WebSocket? - TerminalFeed Glossary</title>
+  <meta name="description" content="WebSocket is a protocol that enables persistent, two-way communication between a browser and a server over a single connection. Learn how WebSockets power live data.">
+  <meta property="og:title" content="What is a WebSocket? - TerminalFeed Glossary">
+  <meta property="og:description" content="WebSocket is a protocol enabling persistent two-way communication between a browser and a server.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/websocket">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/websocket">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "WebSocket",
+    "description": "A protocol that enables persistent two-way communication between a browser and a server.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/websocket"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "WebSocket", "item": "https://terminalfeed.io/glossary/websocket" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>WebSocket</span>
+    </nav>
+
+    <h1>WebSocket</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>WebSocket is a communication protocol that provides a persistent, full-duplex (two-way) connection between a client (usually a browser) and a server. Unlike regular HTTP requests, a WebSocket connection stays open, allowing data to flow in both directions in real time.</p>
+
+    <h2>How it works</h2>
+    <p>A WebSocket connection begins with a standard HTTP request called the "handshake." The client sends an upgrade request, and if the server supports WebSockets, it responds with a 101 status code, switching protocols. From that point on, the connection remains open, and both sides can send messages at any time without the overhead of establishing new connections.</p>
+    <p>With traditional HTTP, the client must initiate every exchange. If you want live updates, you have to keep asking the server ("polling"), which wastes bandwidth and adds latency. WebSockets eliminate this pattern: the server pushes new data to the client the moment it is available. This makes WebSockets ideal for live price feeds, chat applications, multiplayer games, and any scenario where millisecond-level freshness matters.</p>
+    <p>WebSocket messages can be text or binary, and the protocol has built-in ping/pong frames to keep the connection alive. If the connection drops, the client typically reconnects automatically. Server-Sent Events (SSE) are a simpler alternative for one-way server-to-client streaming.</p>
+
+    <h2>Why it matters</h2>
+    <p>WebSockets power the real-time web. Without them, live dashboards, collaborative editors, and instant messaging would rely on inefficient polling. For developers building data-intensive applications, understanding when to use WebSockets versus <a href="/glossary/rest">REST</a> or SSE is a key architectural decision.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The <a href="/">TerminalFeed dashboard</a> uses WebSocket connections for several live panels: the BTC Price panel streams from Binance's WebSocket API, the Earthquake panel connects to Seismic Portal, and the Wikipedia Live Edits panel uses SSE from Wikimedia. These connections provide sub-second updates without constant polling.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/rest">REST</a></li>
+        <li><a href="/glossary/json">JSON</a></li>
+        <li><a href="/glossary/cors">CORS</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

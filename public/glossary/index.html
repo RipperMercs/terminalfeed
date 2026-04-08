@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Glossary - TerminalFeed</title>
+  <meta name="description" content="A plain-language glossary of crypto, development, networking, security, AI, and market terms. 50 definitions written for builders and traders.">
+  <meta property="og:title" content="Tech Glossary - TerminalFeed">
+  <meta property="og:description" content="A plain-language glossary of crypto, development, networking, security, AI, and market terms.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTermSet",
+    "name": "TerminalFeed Tech Glossary",
+    "description": "A plain-language glossary of crypto, development, networking, security, AI, and market terms.",
+    "url": "https://terminalfeed.io/glossary",
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 24px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .header { margin-bottom: 32px; }
+    .header h1 {
+      font-size: 14px;
+      color: #5DCAA5;
+      letter-spacing: 3px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    .header p { font-size: 13px; color: #8A8880; line-height: 1.6; }
+    .search-box {
+      width: 100%;
+      padding: 12px 16px;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      color: #F0EDE6;
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: 32px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .search-box::placeholder { color: #4E4D49; }
+    .search-box:focus { border-color: #5DCAA5; }
+    .category { margin-bottom: 32px; }
+    .category-title {
+      font-size: 11px;
+      color: #4ADE80;
+      letter-spacing: 2px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1E1E24;
+    }
+    .term-list { list-style: none; }
+    .term-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #1A1A1E;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .term-item:last-child { border-bottom: none; }
+    .term-name {
+      color: #5DCAA5;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .term-name:hover { border-bottom: 1px solid #5DCAA5; }
+    .term-desc { font-size: 12px; color: #8A8880; line-height: 1.5; }
+    .no-results {
+      display: none;
+      text-align: center;
+      padding: 40px 0;
+      color: #4E4D49;
+      font-size: 13px;
+    }
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .term-item { flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Glossary</span>
+    </nav>
+
+    <div class="header">
+      <h1>>_ TECH GLOSSARY</h1>
+      <p>Plain-language definitions for crypto, development, networking, security, AI, and market terms. 50 terms and growing.</p>
+    </div>
+
+    <input type="text" class="search-box" id="glossary-search" placeholder="> search terms..." aria-label="Search glossary terms">
+
+    <div id="glossary-categories">
+
+      <div class="category" data-category="cryptocurrency">
+        <div class="category-title">CRYPTOCURRENCY</div>
+        <ul class="term-list">
+          <li class="term-item" data-term="bitcoin"><a class="term-name" href="/glossary/bitcoin">Bitcoin</a><span class="term-desc">The first decentralized cryptocurrency, running on a proof-of-work blockchain since 2009.</span></li>
+          <li class="term-item" data-term="blockchain"><a class="term-name" href="/glossary/blockchain">Blockchain</a><span class="term-desc">A distributed ledger that records transactions across many computers in tamper-resistant blocks.</span></li>
+          <li class="term-item" data-term="mempool"><a class="term-name" href="/glossary/mempool">Mempool</a><span class="term-desc">The waiting room for unconfirmed transactions before they are added to a block.</span></li>
+          <li class="term-item" data-term="hashrate"><a class="term-name" href="/glossary/hashrate">Hashrate</a><span class="term-desc">The total computational power being used to mine and secure a blockchain network.</span></li>
+          <li class="term-item" data-term="fear-and-greed-index"><a class="term-name" href="/glossary/fear-and-greed-index">Fear and Greed Index</a><span class="term-desc">A sentiment indicator that scores crypto market emotion from 0 (extreme fear) to 100 (extreme greed).</span></li>
+          <li class="term-item" data-term="halving"><a class="term-name" href="/glossary/halving">Halving</a><span class="term-desc">A scheduled event that cuts Bitcoin's block reward in half roughly every four years.</span></li>
+          <li class="term-item" data-term="gas-fees"><a class="term-name" href="/glossary/gas-fees">Gas Fees</a><span class="term-desc">Transaction fees paid to validators on networks like Ethereum for processing operations.</span></li>
+          <li class="term-item" data-term="mining-pool"><a class="term-name" href="/glossary/mining-pool">Mining Pool</a><span class="term-desc">A group of miners who combine computational resources and share block rewards proportionally.</span></li>
+          <li class="term-item" data-term="satoshi"><a class="term-name" href="/glossary/satoshi">Satoshi</a><span class="term-desc">The smallest unit of Bitcoin, equal to 0.00000001 BTC, named after Bitcoin's creator.</span></li>
+          <li class="term-item" data-term="lightning-network"><a class="term-name" href="/glossary/lightning-network">Lightning Network</a><span class="term-desc">A layer-2 payment protocol that enables fast, low-cost Bitcoin transactions off-chain.</span></li>
+          <li class="term-item" data-term="defi"><a class="term-name" href="/glossary/defi">DeFi</a><span class="term-desc">Decentralized finance: financial services built on blockchain without traditional intermediaries.</span></li>
+          <li class="term-item" data-term="stablecoin"><a class="term-name" href="/glossary/stablecoin">Stablecoin</a><span class="term-desc">A cryptocurrency pegged to a stable asset like the US dollar to reduce price volatility.</span></li>
+          <li class="term-item" data-term="cold-storage"><a class="term-name" href="/glossary/cold-storage">Cold Storage</a><span class="term-desc">Keeping cryptocurrency private keys completely offline to protect against hacking.</span></li>
+          <li class="term-item" data-term="smart-contract"><a class="term-name" href="/glossary/smart-contract">Smart Contract</a><span class="term-desc">Self-executing code deployed on a blockchain that runs automatically when conditions are met.</span></li>
+          <li class="term-item" data-term="whale"><a class="term-name" href="/glossary/whale">Whale</a><span class="term-desc">An individual or entity holding a large enough amount of cryptocurrency to move market prices.</span></li>
+        </ul>
+      </div>
+
+      <div class="category" data-category="development">
+        <div class="category-title">DEVELOPMENT</div>
+        <ul class="term-list">
+          <li class="term-item" data-term="api"><a class="term-name" href="/glossary/api">API</a><span class="term-desc">Application Programming Interface: a set of rules that lets software applications communicate with each other.</span></li>
+          <li class="term-item" data-term="rest"><a class="term-name" href="/glossary/rest">REST</a><span class="term-desc">Representational State Transfer: an architectural style for building web APIs using standard HTTP methods.</span></li>
+          <li class="term-item" data-term="graphql"><a class="term-name" href="/glossary/graphql">GraphQL</a><span class="term-desc">A query language for APIs that lets clients request exactly the data they need in a single call.</span></li>
+          <li class="term-item" data-term="json"><a class="term-name" href="/glossary/json">JSON</a><span class="term-desc">JavaScript Object Notation: a lightweight text format for storing and transmitting structured data.</span></li>
+          <li class="term-item" data-term="yaml"><a class="term-name" href="/glossary/yaml">YAML</a><span class="term-desc">A human-readable data serialization format often used for configuration files.</span></li>
+          <li class="term-item" data-term="base64"><a class="term-name" href="/glossary/base64">Base64</a><span class="term-desc">An encoding scheme that converts binary data into ASCII text for safe transmission over text-only channels.</span></li>
+          <li class="term-item" data-term="jwt"><a class="term-name" href="/glossary/jwt">JWT</a><span class="term-desc">JSON Web Token: a compact, self-contained token used for authentication and secure data exchange.</span></li>
+          <li class="term-item" data-term="oauth"><a class="term-name" href="/glossary/oauth">OAuth</a><span class="term-desc">An authorization framework that lets apps access user data from third-party services without sharing passwords.</span></li>
+          <li class="term-item" data-term="regex"><a class="term-name" href="/glossary/regex">Regex</a><span class="term-desc">Regular expressions: a pattern-matching language for searching and manipulating text strings.</span></li>
+          <li class="term-item" data-term="uuid"><a class="term-name" href="/glossary/uuid">UUID</a><span class="term-desc">Universally Unique Identifier: a 128-bit label used to identify resources without a central registry.</span></li>
+          <li class="term-item" data-term="hash-function"><a class="term-name" href="/glossary/hash-function">Hash Function</a><span class="term-desc">A mathematical function that converts input data into a fixed-size string of characters, used for verification.</span></li>
+          <li class="term-item" data-term="http-status-code"><a class="term-name" href="/glossary/http-status-code">HTTP Status Code</a><span class="term-desc">A three-digit number returned by a server to indicate the result of a client's request.</span></li>
+          <li class="term-item" data-term="cors"><a class="term-name" href="/glossary/cors">CORS</a><span class="term-desc">Cross-Origin Resource Sharing: a browser security mechanism controlling which domains can access an API.</span></li>
+          <li class="term-item" data-term="websocket"><a class="term-name" href="/glossary/websocket">WebSocket</a><span class="term-desc">A protocol that enables persistent two-way communication between a browser and a server.</span></li>
+          <li class="term-item" data-term="api-rate-limiting"><a class="term-name" href="/glossary/api-rate-limiting">API Rate Limiting</a><span class="term-desc">Throttling the number of API requests a client can make within a given time window.</span></li>
+        </ul>
+      </div>
+
+      <div class="category" data-category="networking">
+        <div class="category-title">NETWORKING</div>
+        <ul class="term-list">
+          <li class="term-item" data-term="dns"><a class="term-name" href="/glossary/dns">DNS</a><span class="term-desc">Domain Name System: the internet's phonebook that translates domain names into IP addresses.</span></li>
+          <li class="term-item" data-term="ssl-tls"><a class="term-name" href="/glossary/ssl-tls">SSL/TLS</a><span class="term-desc">Encryption protocols that secure data in transit between a browser and a server (the lock icon).</span></li>
+          <li class="term-item" data-term="cdn"><a class="term-name" href="/glossary/cdn">CDN</a><span class="term-desc">Content Delivery Network: a global network of servers that delivers cached content from the closest location.</span></li>
+          <li class="term-item" data-term="ip-address"><a class="term-name" href="/glossary/ip-address">IP Address</a><span class="term-desc">A numerical label assigned to every device on a network, used for routing data packets.</span></li>
+          <li class="term-item" data-term="port"><a class="term-name" href="/glossary/port">Port</a><span class="term-desc">A numbered endpoint on a networked device that directs traffic to specific services or applications.</span></li>
+        </ul>
+      </div>
+
+      <div class="category" data-category="security">
+        <div class="category-title">SECURITY</div>
+        <ul class="term-list">
+          <li class="term-item" data-term="encryption"><a class="term-name" href="/glossary/encryption">Encryption</a><span class="term-desc">The process of converting readable data into an unreadable format that can only be decoded with a key.</span></li>
+          <li class="term-item" data-term="two-factor-authentication"><a class="term-name" href="/glossary/two-factor-authentication">Two-Factor Authentication</a><span class="term-desc">A login method requiring two different forms of verification, such as a password plus a phone code.</span></li>
+          <li class="term-item" data-term="phishing"><a class="term-name" href="/glossary/phishing">Phishing</a><span class="term-desc">A social engineering attack that tricks people into revealing passwords, keys, or sensitive data.</span></li>
+          <li class="term-item" data-term="zero-day"><a class="term-name" href="/glossary/zero-day">Zero-Day</a><span class="term-desc">A software vulnerability that is exploited before the vendor knows about it or has released a patch.</span></li>
+          <li class="term-item" data-term="csrf"><a class="term-name" href="/glossary/csrf">CSRF</a><span class="term-desc">Cross-Site Request Forgery: an attack that tricks a user's browser into making unwanted requests.</span></li>
+        </ul>
+      </div>
+
+      <div class="category" data-category="ai-machine-learning">
+        <div class="category-title">AI &amp; MACHINE LEARNING</div>
+        <ul class="term-list">
+          <li class="term-item" data-term="large-language-model"><a class="term-name" href="/glossary/large-language-model">Large Language Model</a><span class="term-desc">An AI system trained on massive text datasets that can generate, summarize, and reason about language.</span></li>
+          <li class="term-item" data-term="ai-agent"><a class="term-name" href="/glossary/ai-agent">AI Agent</a><span class="term-desc">An autonomous AI system that can take actions, use tools, and complete multi-step tasks on its own.</span></li>
+          <li class="term-item" data-term="embeddings"><a class="term-name" href="/glossary/embeddings">Embeddings</a><span class="term-desc">Numerical vector representations of text, images, or data that capture semantic meaning for AI models.</span></li>
+          <li class="term-item" data-term="llms-txt"><a class="term-name" href="/glossary/llms-txt">llms.txt</a><span class="term-desc">A standardized file that websites publish to help AI agents discover and understand their content and APIs.</span></li>
+          <li class="term-item" data-term="prompt-engineering"><a class="term-name" href="/glossary/prompt-engineering">Prompt Engineering</a><span class="term-desc">The practice of crafting inputs to large language models to get more accurate, useful outputs.</span></li>
+        </ul>
+      </div>
+
+      <div class="category" data-category="markets">
+        <div class="category-title">MARKETS</div>
+        <ul class="term-list">
+          <li class="term-item" data-term="prediction-market"><a class="term-name" href="/glossary/prediction-market">Prediction Market</a><span class="term-desc">A platform where users trade contracts on the outcome of real-world events, revealing crowd probabilities.</span></li>
+          <li class="term-item" data-term="polymarket"><a class="term-name" href="/glossary/polymarket">Polymarket</a><span class="term-desc">The largest decentralized prediction market, built on Polygon, where users bet on event outcomes.</span></li>
+          <li class="term-item" data-term="fed-funds-rate"><a class="term-name" href="/glossary/fed-funds-rate">Fed Funds Rate</a><span class="term-desc">The interest rate at which US banks lend reserves to each other overnight, set by the Federal Reserve.</span></li>
+          <li class="term-item" data-term="cpi"><a class="term-name" href="/glossary/cpi">CPI</a><span class="term-desc">Consumer Price Index: a measure of the average change in prices paid by consumers for goods and services.</span></li>
+          <li class="term-item" data-term="treasury-yield"><a class="term-name" href="/glossary/treasury-yield">Treasury Yield</a><span class="term-desc">The return earned on US government debt securities, used as a benchmark for interest rates globally.</span></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="no-results" id="no-results">No matching terms found.</div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById('glossary-search');
+    const categories = document.querySelectorAll('.category');
+    const noResults = document.getElementById('no-results');
+
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      let anyVisible = false;
+
+      categories.forEach(function(cat) {
+        const items = cat.querySelectorAll('.term-item');
+        let catHasVisible = false;
+
+        items.forEach(function(item) {
+          const term = item.getAttribute('data-term') || '';
+          const name = item.querySelector('.term-name').textContent.toLowerCase();
+          const desc = item.querySelector('.term-desc').textContent.toLowerCase();
+          const match = !query || term.includes(query) || name.includes(query) || desc.includes(query);
+          item.style.display = match ? '' : 'none';
+          if (match) catHasVisible = true;
+        });
+
+        cat.style.display = catHasVisible ? '' : 'none';
+        if (catHasVisible) anyVisible = true;
+      });
+
+      noResults.style.display = anyVisible ? 'none' : 'block';
+    });
+  </script>
+</body>
+</html>
