@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Hacker News Widget | TerminalFeed</title>
+  <meta name="description" content="The current top story on Hacker News. Embeddable live widget from TerminalFeed.">
+  <link rel="canonical" href="https://terminalfeed.io/embed/hn-top">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace}
+    body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+    body.theme-light{background:#FFF;color:#1A1A1E}
+    .widget{width:100%;height:100%;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;position:relative}
+    .label{font-size:10px;letter-spacing:2px;opacity:0.5;margin-bottom:6px}
+    .title{font-size:13px;font-weight:600;line-height:1.4;color:#EF9F27}
+    body.theme-light .title{color:#B45309}
+    .sub{font-size:11px;margin-top:5px;opacity:0.6}
+    .footer{position:absolute;bottom:5px;right:10px;font-size:8px;opacity:0.35}
+    .footer a{color:inherit;text-decoration:none}
+    .footer a:hover{opacity:1}
+    .pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;margin-right:5px;animation:pulse 2s ease infinite;vertical-align:middle}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="label"><span class="pulse"></span>TOP ON HN</div>
+    <div class="title" id="story">loading...</div>
+    <div class="sub" id="points"></div>
+    <div class="footer"><a href="https://terminalfeed.io" target="_blank" rel="noopener">terminalfeed.io</a></div>
+  </div>
+  <script>
+    var params=new URLSearchParams(window.location.search);
+    document.body.className='theme-'+(params.get('theme')||'dark');
+    function load(){
+      fetch('https://terminalfeed.io/api/hackernews').then(function(r){return r.json()}).then(function(d){
+        try{
+          var stories=d.data||d.stories||d||[];
+          if(!Array.isArray(stories))stories=[];
+          if(stories.length>0){
+            var s=stories[0];
+            var t=s.title||'Untitled';
+            if(t.length>80)t=t.substring(0,77)+'...';
+            document.getElementById('story').textContent=t;
+            var pts=s.score||s.points||0;
+            document.getElementById('points').textContent=pts+' points';
+          }
+        }catch(e){document.getElementById('story').textContent='--'}
+      }).catch(function(){document.getElementById('story').textContent='--'});
+    }
+    load();setInterval(load,300000);
+  </script>
+</body>
+</html>

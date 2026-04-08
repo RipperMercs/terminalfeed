@@ -26,6 +26,16 @@
     "mainEntityOfPage": "https://terminalfeed.io/team"
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Team", "item": "https://terminalfeed.io/team" }
+    ]
+  }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -36,8 +46,10 @@
       padding: 40px 20px;
     }
     .container { max-width: 800px; margin: 0 auto; }
-    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
-    .back:hover { color: #5DCAA5; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
     .header { margin-bottom: 40px; }
     .header h1 {
       font-size: 14px;
@@ -140,7 +152,9 @@
 </head>
 <body>
   <div class="container">
-    <a href="/" class="back">&larr; back to terminal</a>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Team</span>
+    </nav>
 
     <div class="header">
       <h1>>_ THE TEAM</h1>
@@ -154,7 +168,7 @@
           >_
         </div>
         <div class="member-info">
-          <div class="member-name">Ripper</div>
+          <div class="member-name"><a href="/team/ripper" style="color: #F0EDE6; text-decoration: none;">Ripper</a></div>
           <div class="member-title">FOUNDER & EDITOR-IN-CHIEF</div>
           <div class="member-bio">Built TerminalFeed from scratch as a personal second-monitor dashboard. Turned it into a real-time data platform with 30+ live feeds, a public API, and a growing suite of developer tools. Writes about building products, the state of crypto, and whatever catches his attention on the terminal. Also runs a music label and makes games.</div>
           <div class="member-topics">
@@ -171,7 +185,7 @@
           0x
         </div>
         <div class="member-info">
-          <div class="member-name">zer0day</div>
+          <div class="member-name"><a href="/team/zer0day" style="color: #F0EDE6; text-decoration: none;">zer0day</a></div>
           <div class="member-title">SECURITY CORRESPONDENT</div>
           <div class="member-bio">Covers the intersection of cybersecurity and the open internet. Tracks emerging threats, vulnerability disclosures, and the hacker culture that inspired TerminalFeed's terminal aesthetic. Believes information wants to be free but your credentials should stay private.</div>
           <div class="member-topics">
@@ -188,7 +202,7 @@
           $$
         </div>
         <div class="member-info">
-          <div class="member-name">Pulse</div>
+          <div class="member-name"><a href="/team/pulse" style="color: #F0EDE6; text-decoration: none;">Pulse</a></div>
           <div class="member-title">MARKET ANALYST</div>
           <div class="member-bio">Watches the numbers so you don't have to. Covers cryptocurrency markets, traditional equities, prediction market odds, economic indicators, and the Fear and Greed Index. Translates complex financial data into insights that actually make sense. Not financial advice.</div>
           <div class="member-topics">
@@ -205,7 +219,7 @@
           {}
         </div>
         <div class="member-info">
-          <div class="member-name">Node</div>
+          <div class="member-name"><a href="/team/node" style="color: #F0EDE6; text-decoration: none;">Node</a></div>
           <div class="member-title">DEVELOPER ADVOCATE</div>
           <div class="member-bio">Full-stack developer who believes the best tools are free, fast, and dark-mode. Writes tutorials, API guides, and opinionated takes on the developer tools landscape. Maintains TerminalFeed's growing suite of browser-based dev tools and the public API documentation.</div>
           <div class="member-topics">
@@ -222,7 +236,7 @@
           AI
         </div>
         <div class="member-info">
-          <div class="member-name">Signal</div>
+          <div class="member-name"><a href="/team/signal" style="color: #F0EDE6; text-decoration: none;">Signal</a></div>
           <div class="member-title">DATA & AI EDITOR</div>
           <div class="member-bio">Tracks the AI landscape from foundation models to autonomous agents. Covers how AI is changing the internet, the rise of AI-native web infrastructure, and the data feeds that power intelligent systems. Runs TerminalFeed's AI Hub and agent tracking infrastructure.</div>
           <div class="member-topics">

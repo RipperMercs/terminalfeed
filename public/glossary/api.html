@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is an API? - TerminalFeed Glossary</title>
+  <meta name="description" content="API (Application Programming Interface) is a set of rules that lets software applications communicate with each other. Learn how APIs work with examples.">
+  <meta property="og:title" content="What is an API? - TerminalFeed Glossary">
+  <meta property="og:description" content="API is a set of rules that lets software applications communicate with each other.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/api">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/api">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "API",
+    "description": "Application Programming Interface: a set of rules that lets software applications communicate with each other.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/api"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "API", "item": "https://terminalfeed.io/glossary/api" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>API</span>
+    </nav>
+
+    <h1>API</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>An API (Application Programming Interface) is a defined set of rules and protocols that allows one piece of software to request data or services from another. It is the standard way applications talk to each other over the internet.</p>
+
+    <h2>How it works</h2>
+    <p>When your weather app shows today's forecast, it is not generating that data itself. It sends a request to a weather API, which responds with the relevant data in a structured format (usually <a href="/glossary/json">JSON</a>). The app then displays that data to you. The API defines what you can ask for, how to ask for it, and what the response will look like.</p>
+    <p>Most web APIs follow the <a href="/glossary/rest">REST</a> pattern, where you make HTTP requests (GET, POST, PUT, DELETE) to specific URLs called endpoints. Each endpoint returns a predictable response. For example, calling <code>GET /api/btc-price</code> on TerminalFeed returns the current Bitcoin price. Some APIs use <a href="/glossary/graphql">GraphQL</a> instead, letting clients specify exactly which fields they want.</p>
+    <p>APIs usually require authentication (via API keys, <a href="/glossary/oauth">OAuth</a> tokens, or <a href="/glossary/jwt">JWTs</a>) and enforce <a href="/glossary/api-rate-limiting">rate limits</a> to prevent abuse. Good API documentation explains every endpoint, its parameters, expected responses, and error codes.</p>
+
+    <h2>Why it matters</h2>
+    <p>APIs are the backbone of modern software. Every dashboard, mobile app, and integration you use relies on APIs to fetch and send data. Understanding APIs is essential for developers building applications, and increasingly useful for non-developers who want to automate workflows or pull data into spreadsheets and tools.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed itself is powered by 20+ API endpoints. Every panel on the <a href="/">dashboard</a> fetches data through our <a href="/developers">public API</a>. You can explore all available endpoints at <code>/api/</code>. For a guide to free APIs you can use in your own projects, check out our article on <a href="/blog/free-apis-2026">30+ Free APIs for 2026</a>.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/rest">REST</a></li>
+        <li><a href="/glossary/json">JSON</a></li>
+        <li><a href="/glossary/api-rate-limiting">API Rate Limiting</a></li>
+        <li><a href="/glossary/cors">CORS</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Movers Widget</title>
+  <meta name="description" content="Top crypto gainers and losers widget.">
+  <link rel="canonical" href="https://terminalfeed.io/embed/crypto-movers">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace}
+    body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+    body.theme-light{background:#FFF;color:#1A1A1E}
+    .widget{width:100%;height:100%;padding:12px 18px;display:flex;flex-direction:column;position:relative}
+    .label{font-size:10px;letter-spacing:2px;opacity:0.5;margin-bottom:8px}
+    .row{display:flex;justify-content:space-between;font-size:11px;line-height:1.8}
+    .sym{opacity:0.7}
+    .up{color:#4ADE80}
+    .down{color:#F87171}
+    body.theme-light .up{color:#16A34A}
+    body.theme-light .down{color:#DC2626}
+    .footer{position:absolute;bottom:5px;right:10px;font-size:8px;opacity:0.35}
+    .footer a{color:inherit;text-decoration:none}
+    .footer a:hover{opacity:1}
+    .pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;margin-right:5px;animation:pulse 2s ease infinite;vertical-align:middle}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+    .cols{display:flex;gap:16px}
+    .col{flex:1}
+    .col-title{font-size:9px;opacity:0.4;margin-bottom:4px}
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="label"><span class="pulse"></span>CRYPTO MOVERS</div>
+    <div class="cols">
+      <div class="col"><div class="col-title">GAINERS</div><div id="gainers"></div></div>
+      <div class="col"><div class="col-title">LOSERS</div><div id="losers"></div></div>
+    </div>
+    <div class="footer"><a href="https://terminalfeed.io" target="_blank" rel="noopener">terminalfeed.io</a></div>
+  </div>
+  <script>
+    var params=new URLSearchParams(window.location.search);
+    document.body.className='theme-'+(params.get('theme')||'dark');
+    function load(){
+      fetch('https://terminalfeed.io/api/crypto-movers').then(function(r){return r.json()}).then(function(d){
+        try{
+          var c=d.data||d.coins||d||[];
+          if(!Array.isArray(c))c=[];
+          function k(x){return parseFloat(x.price_change_percentage_24h||x.change_24h||0)}
+          c.sort(function(a,b){return k(b)-k(a)});
+          function r(i,id,cl){var e=document.getElementById(id);e.innerHTML='';i.forEach(function(x){var d=document.createElement('div');d.className='row';d.innerHTML='<span class="sym">'+(x.symbol||'?').toUpperCase()+'</span><span class="'+cl+'">'+(k(x)>=0?'+':'')+k(x).toFixed(1)+'%</span>';e.appendChild(d)})}
+          r(c.slice(0,3),'gainers','up');r(c.slice(-3).reverse(),'losers','down');
+        }catch(e){}
+      }).catch(function(){});
+    }
+    load();setInterval(load,60000);
+  </script>
+</body>
+</html>

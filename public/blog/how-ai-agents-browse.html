@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How AI Agents Actually Browse the Web (And Why Most Sites Are Hostile to Them) | TerminalFeed Blog</title>
+  <meta name="description" content="AI agents are real internet users now. They search, click, read, and call APIs. But most websites are accidentally hostile to them. Here's what's actually happening and what it means for the future of the web.">
+  <meta property="og:title" content="How AI Agents Actually Browse the Web (And Why Most Sites Are Hostile to Them)">
+  <meta property="og:description" content="AI agents are real internet users now. They search, click, read, and call APIs. But most websites are accidentally hostile to them. Here's what's actually happening and what it means for the future of the web.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/how-ai-agents-browse">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/how-ai-agents-browse">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How AI Agents Actually Browse the Web (And Why Most Sites Are Hostile to Them)",
+    "description": "AI agents are real internet users now. They search, click, read, and call APIs. But most websites are accidentally hostile to them. Here's what's actually happening and what it means for the future of the web.",
+    "author": {
+      "@type": "Person",
+      "name": "Signal",
+      "url": "https://terminalfeed.io/team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-04-07",
+    "dateModified": "2026-04-07",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/how-ai-agents-browse",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>How AI Agents Browse</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "How AI Agents Browse", "item": "https://terminalfeed.io/blog/how-ai-agents-browse" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">AI</span>
+        <span class="article-tag">WEB</span>
+        <span class="article-tag">INFRASTRUCTURE</span>
+      </div>
+      <h1>How AI Agents Actually Browse the Web (And Why Most Sites Are Hostile to Them)</h1>
+      <div class="article-meta">
+        <span>By Signal</span>
+        <span>April 7, 2026</span>
+        <span>9 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Right now, on the internet, an AI agent is opening a webpage. It's parsing the HTML, extracting the text content, summarizing what it found, and reporting back to a human user who asked it a question. This is happening millions of times per day. It's already a measurable percentage of all web traffic. And almost nobody who builds websites is thinking about it.</p>
+
+      <p>The web was designed for humans. Browsers render pages visually, humans read them, humans click links, humans enter text in forms. Every assumption baked into how websites are built (from page layout to authentication to anti-bot measures) assumes that the entity on the other end is a human with eyes, hands, and a browser. AI agents don't fit any of these assumptions, and the resulting friction is creating one of the most interesting problems in web infrastructure right now.</p>
+
+      <h2>What an AI agent actually does when it browses</h2>
+
+      <p>When you ask Claude or ChatGPT a question that requires current information ("what's the weather in Tokyo right now" or "summarize this news article") the model doesn't have the answer in its training data. The training data is months or years old. So the AI needs to go get the information from the actual internet. This is where AI agents come in.</p>
+
+      <p>The agent receives a task. It decides what information it needs. It searches the web (using a search engine or its built-in browsing tool). It picks a result. It fetches the page. It parses the HTML to extract the readable text. It identifies the relevant information. It summarizes that information. It returns the summary to the human. The whole process takes a few seconds and involves multiple HTTP requests, multiple decisions, and multiple transformations of data.</p>
+
+      <p>The agent isn't a simple scraper. It's making real decisions at every step, similar to how a human researcher works. If the first result doesn't have the information, it tries another. If a page is paywalled, it looks for alternatives. If the data format is confusing, it tries to make sense of it. The intelligence is in the decision-making, not just the fetching.</p>
+
+      <h2>Why most websites are accidentally hostile to AI agents</h2>
+
+      <p>Here's where it gets interesting. Most websites are not designed with AI agents in mind, which means they accidentally create obstacles that make it hard for agents to extract information. Some of these obstacles are intentional anti-bot measures. Others are just consequences of modern web development practices.</p>
+
+      <p><strong>JavaScript-rendered content.</strong> Modern web frameworks like React, Vue, and Svelte build the page in the browser using JavaScript. When you fetch the raw HTML, you get a mostly empty document with a script tag that says "build the real page here." Humans don't notice this because their browser executes the JavaScript and renders the actual content. AI agents that don't run a full browser see an empty page. They have no idea what's actually on it.</p>
+
+      <p><strong>Anti-bot infrastructure.</strong> Cloudflare's bot protection, Google's reCAPTCHA, and similar services try to distinguish between humans and automated traffic. They use a combination of fingerprinting, behavioral analysis, and challenge-response puzzles. These systems are getting better at detecting AI agents and either blocking them entirely or making them solve CAPTCHAs they can't solve. From the agent's perspective, the page just doesn't load.</p>
+
+      <p><strong>Paywalls and registration walls.</strong> Most major news sites now require either a subscription or a free registration to read articles. AI agents can't sign up for accounts. They can't enter payment information. They can't click through "I am not a robot" forms. When they hit a paywall, they have no way around it. They give up and try another source.</p>
+
+      <p><strong>Cookie banners and consent forms.</strong> Modern websites bury their content behind a wall of GDPR consent popups, cookie acceptance forms, and notification permission requests. Humans dismiss these reflexively. Agents struggle with them because they require interaction in specific ways that vary across sites.</p>
+
+      <p><strong>Unstructured HTML.</strong> Even when an agent successfully fetches a page, the content might be buried in deeply nested div tags with random class names, intermixed with ads and navigation, and impossible to extract reliably. The page renders correctly for humans but is parsed by agents as a soup of meaningless text.</p>
+
+      <h2>What AI-friendly websites look like</h2>
+
+      <p>A small but growing number of websites are starting to design for AI agents alongside humans. The patterns are becoming clearer.</p>
+
+      <p><strong>Structured data via JSON APIs.</strong> Instead of forcing agents to scrape HTML, these sites offer clean JSON endpoints that return the same data in a format that's trivially easy to parse. The agent makes one HTTP request, gets a structured response, and immediately has what it needs. No HTML parsing required. TerminalFeed does this: every panel of data on the dashboard is also available as a JSON endpoint at <code>/api/[name]</code>. Agents that discover the API never need to touch the HTML.</p>
+
+      <p><strong>The llms.txt file.</strong> This is an emerging standard, similar to robots.txt, that tells AI crawlers what data is available and how to access it. The file lives at the root of the website and contains plain English descriptions of available endpoints, data sources, and usage guidelines. Agents that find an llms.txt file get a clear map of what the site offers without having to figure it out themselves. TerminalFeed has one at <a href="/llms.txt">terminalfeed.io/llms.txt</a>. So do a growing number of other data-focused sites.</p>
+
+      <p><strong>Server-side rendering of critical content.</strong> Even sites that use React or other JavaScript frameworks can render their main content server-side, so the initial HTML response contains the actual text. This makes the content visible to agents that don't run JavaScript. Next.js, Nuxt, SvelteKit, and Astro all support this. The performance benefits for human users are also significant.</p>
+
+      <p><strong>Graceful handling of bot traffic.</strong> Instead of blocking all non-human requests, AI-friendly sites identify legitimate AI agents (Claude, GPT, Perplexity, etc.) and allow them through with reasonable rate limits. The bot protection still blocks malicious scrapers, but legitimate AI traffic is treated as a first-class citizen.</p>
+
+      <p><strong>Public APIs without authentication for public data.</strong> Many sites have data that's freely visible to humans but require API keys, account registration, or payment to access programmatically. This is backwards. If the data is public, the API should be public. TerminalFeed's <a href="/developers">/api/briefing</a> endpoint requires no authentication because the data it returns is the same data anyone can see by visiting the dashboard.</p>
+
+      <h2>The flywheel that's about to start</h2>
+
+      <p>Here's the part that makes this interesting from a business perspective. AI agents are going to keep growing as a percentage of web traffic. Humans increasingly ask AI to do research for them rather than doing it themselves. Every major AI provider is building agent capabilities into their products. The trend is clearly heading toward more agent traffic, not less.</p>
+
+      <p>The websites that make themselves AI-friendly now will benefit from a flywheel effect. When an AI cites a website as a source, the human reading that response often clicks through to verify or learn more. This creates traffic that's directly attributable to AI usage. The AI-friendly sites get cited more often, which sends them more human traffic, which signals to other AIs that those sites are reliable sources, which leads to more citations, which leads to more traffic. It's the SEO flywheel of 2010 all over again, but for AI-mediated discovery instead of search engines.</p>
+
+      <p>The websites that don't adapt will lose out. They'll still get human traffic, but they'll be invisible to the AI layer that's increasingly mediating how humans find information. As AI usage grows, being invisible to AI becomes more and more costly.</p>
+
+      <h2>What you can do this week</h2>
+
+      <p>If you run a website and you want it to be friendly to AI agents, there are a few things you can do this week.</p>
+
+      <p><strong>Add an llms.txt file</strong> to your root directory. Document what your site offers and how to access it. Even a basic version helps agents understand what they're looking at.</p>
+
+      <p><strong>Provide a JSON API</strong> for your most valuable data. Even if your main interface is HTML, give agents a structured alternative. This could be as simple as a single endpoint that returns your most important content as JSON.</p>
+
+      <p><strong>Make sure your most important pages are server-side rendered.</strong> If you're using React or another JavaScript framework, enable SSR for pages that contain primary content. The agents will be able to read it without running a full browser.</p>
+
+      <p><strong>Allow legitimate AI traffic</strong> through your bot protection. Identify the user agents that legitimate AI providers use (they document this) and add them to your allowlist with appropriate rate limits.</p>
+
+      <p><strong>Think about your content from the perspective of an entity that can't see colors, can't click buttons, and can't fill out forms.</strong> What would it need to extract value from your site? Build for that entity alongside building for humans.</p>
+
+      <p>The web is in the middle of the biggest shift in how it's used since the introduction of mobile browsers. The shift is happening quietly, but it's happening fast. The sites that figure out how to serve both humans and AI agents are going to have a structural advantage over the sites that only serve one or the other. In a year or two, AI-friendliness will be a baseline expectation, the same way mobile-friendliness became a baseline expectation in 2015.</p>
+
+      <p>For now, it's still an opportunity. Most sites haven't thought about this yet. The few that have are quietly capturing all the AI-mediated traffic. If you're building anything web-based right now, this is one of the most important things you should be thinking about.</p>
+
+      <div class="cta-box">
+        <p>TerminalFeed is built for both humans and AI agents. Open API, llms.txt, and 20+ JSON endpoints.</p>
+        <a href="/developers" class="cta-link">Explore the API</a>
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

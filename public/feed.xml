@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>TerminalFeed Blog</title>
+    <link>https://terminalfeed.io/blog</link>
+    <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
+    <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <lastBuildDate>Wed, 08 Apr 2026 12:00:00 GMT</lastBuildDate>
+    <image>
+      <url>https://terminalfeed.io/logo.png</url>
+      <title>TerminalFeed Blog</title>
+      <link>https://terminalfeed.io/blog</link>
+    </image>
+
+    <item>
+      <title>The Free Tier Is Dead. Long Live the Open Source Alternative.</title>
+      <link>https://terminalfeed.io/blog/free-tier-is-dead</link>
+      <description>Every developer tool you loved is removing its free tier. Heroku did it. Postman did it. MongoDB did it. Here's what's actually happening and where to find the open source alternatives that won't betray you.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Wed, 08 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/free-tier-is-dead</guid>
+    </item>
+
+    <item>
+      <title>Why You Should Read Your Browser Console Tonight</title>
+      <link>https://terminalfeed.io/blog/read-your-browser-console</link>
+      <description>The browser console is the most underused security tool you already have. Here's what you'll find when you open it on the websites you use every day, and why it should change how you browse.</description>
+      <author>hello@terminalfeed.io (zer0day)</author>
+      <pubDate>Wed, 08 Apr 2026 11:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/read-your-browser-console</guid>
+    </item>
+
+    <item>
+      <title>What the Fear and Greed Index Got Wrong in March 2026</title>
+      <link>https://terminalfeed.io/blog/what-the-fear-greed-index-got-wrong</link>
+      <description>The Crypto Fear and Greed Index spent most of March in extreme fear territory while Bitcoin held above 70K. Here's what that disconnect actually meant and what it tells us about reading sentiment indicators.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Wed, 08 Apr 2026 10:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/what-the-fear-greed-index-got-wrong</guid>
+    </item>
+
+    <item>
+      <title>The Hacker Quarterly Turns 41: Why 2600 Magazine Still Matters in 2026</title>
+      <link>https://terminalfeed.io/blog/2600-still-matters</link>
+      <description>2600 Magazine has been publishing for 41 years. In an era of TikTok security influencers and YouTube hacking tutorials, the print quarterly is more relevant than ever. Here's why.</description>
+      <author>hello@terminalfeed.io (zer0day)</author>
+      <pubDate>Tue, 07 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/2600-still-matters</guid>
+    </item>
+
+    <item>
+      <title>Self-Hosting Is Having a Moment Again: Here's Why</title>
+      <link>https://terminalfeed.io/blog/self-hosting-is-back</link>
+      <description>After two decades of moving everything to the cloud, developers are quietly building homelabs and self-hosting their own services again. The reasons are more interesting than nostalgia.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Tue, 07 Apr 2026 11:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/self-hosting-is-back</guid>
+    </item>
+
+    <item>
+      <title>How AI Agents Actually Browse the Web (And Why Most Sites Are Hostile to Them)</title>
+      <link>https://terminalfeed.io/blog/how-ai-agents-browse</link>
+      <description>AI agents are real internet users now. They search, click, read, and call APIs. But most websites are accidentally hostile to them. Here's what's actually happening and what it means for the future of the web.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Tue, 07 Apr 2026 10:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/how-ai-agents-browse</guid>
+    </item>
+
+    <item>
+      <title>Why Your Second Monitor Should Be a Dashboard, Not a Distraction</title>
+      <link>https://terminalfeed.io/blog/why-second-monitor-dashboards-matter</link>
+      <description>Most developers waste their second monitor on Slack or YouTube. Here's why a real-time dashboard is the highest-value use of that screen real estate, and how to set one up.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Tue, 07 Apr 2026 09:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/why-second-monitor-dashboards-matter</guid>
+    </item>
+
+    <item>
+      <title>How API Rate Limits Actually Work (And How to Work Around Them)</title>
+      <link>https://terminalfeed.io/blog/api-rate-limits-explained</link>
+      <description>Rate limits are the invisible wall every API developer hits eventually. Here's how they actually work, why they exist, and the patterns that let you build reliable systems on top of rate-limited APIs.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Tue, 07 Apr 2026 08:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/api-rate-limits-explained</guid>
+    </item>
+
+    <item>
+      <title>The Data You're Not Watching is Costing You Money</title>
+      <link>https://terminalfeed.io/blog/why-data-matters-for-traders</link>
+      <description>Most retail traders only watch price. Here's a list of the data points that experienced traders watch alongside price, and why ignoring them is one of the most expensive mistakes you can make.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Tue, 07 Apr 2026 07:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/why-data-matters-for-traders</guid>
+    </item>
+
+    <item>
+      <title>Week 4: Building in Public, Waiting on Google, and Why Patience is the Hardest Skill</title>
+      <link>https://terminalfeed.io/blog/originals/week-4</link>
+      <description>350 daily users with zero marketing. AdSense still pending. A team page goes live. Week 4 of building TerminalFeed in public, and the irony of waiting for permission to grow.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Fri, 04 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/originals/week-4</guid>
+    </item>
+
+    <item>
+      <title>Your Website Has Two Audiences Now: Humans and AI Agents</title>
+      <link>https://terminalfeed.io/blog/websites-humans-ai-agents</link>
+      <description>AI agents are browsing the web, consuming APIs, and reading your content. If your site only speaks to humans, you are invisible to the fastest-growing audience on the internet.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Thu, 03 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/websites-humans-ai-agents</guid>
+    </item>
+
+    <item>
+      <title>The 2600 Hz Whistle That Changed the Internet Forever</title>
+      <link>https://terminalfeed.io/blog/2600-hz-whistle-history</link>
+      <description>In the 1960s, a toy whistle from a cereal box could make free long-distance calls. The phone phreaking movement that followed gave birth to modern hacking culture and the tech industry itself.</description>
+      <author>hello@terminalfeed.io (zer0day)</author>
+      <pubDate>Wed, 02 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/2600-hz-whistle-history</guid>
+    </item>
+
+    <item>
+      <title>Stop Paying for Postman: Free API Testing Tools That Actually Work</title>
+      <link>https://terminalfeed.io/blog/free-api-testing-tools</link>
+      <description>Postman went paid. Here are the best free API testing alternatives in 2026, from browser-based tools to CLI options, and why the future of API testing lives in your browser.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Tue, 01 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/free-api-testing-tools</guid>
+    </item>
+
+    <item>
+      <title>BTC at $71K with Extreme Fear: What the Data is Telling Us</title>
+      <link>https://terminalfeed.io/blog/btc-extreme-fear-data</link>
+      <description>Bitcoin is trading at $71K while the Fear and Greed Index sits at 15. Here is what the on-chain data, prediction markets, and historical patterns say about what comes next.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Mon, 31 Mar 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/btc-extreme-fear-data</guid>
+    </item>
+
+    <item>
+      <title>Prediction Markets Explained: How to Read Polymarket Odds Like a Pro</title>
+      <link>https://terminalfeed.io/blog/prediction-markets</link>
+      <description>How prediction markets work, how to read Polymarket odds, and why they're often more accurate than polls. A complete guide.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Tue, 24 Mar 2026 13:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/prediction-markets</guid>
+    </item>
+
+    <item>
+      <title>How to Monitor Bitcoin Network Health: Mempool, Hashrate and Fees Explained</title>
+      <link>https://terminalfeed.io/blog/bitcoin-mempool</link>
+      <description>Understanding Bitcoin's mempool, hashrate, transaction fees, difficulty adjustments, and block data. A complete guide to on-chain metrics.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Tue, 24 Mar 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/bitcoin-mempool</guid>
+    </item>
+
+    <item>
+      <title>30+ Free APIs Every Developer Should Know in 2026</title>
+      <link>https://terminalfeed.io/blog/free-apis-2026</link>
+      <description>A comprehensive guide to 30+ free APIs for crypto, news, weather, space, security, and more. Endpoints, rate limits, and honest reviews from the team that built TerminalFeed.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Sun, 22 Mar 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/free-apis-2026</guid>
+    </item>
+
+    <item>
+      <title>How I Built a Real-Time Dashboard with 30+ Live Data Feeds</title>
+      <link>https://terminalfeed.io/blog/building-terminalfeed</link>
+      <description>The story of building TerminalFeed from scratch. From the first API call to serving thousands of users. Technical decisions, mistakes, lessons learned.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Fri, 20 Mar 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/building-terminalfeed</guid>
+    </item>
+
+    <item>
+      <title>Week 1: Bitcoin Fear is Real, AI Agents Are Coming, and Nobody's Paying Attention</title>
+      <link>https://terminalfeed.io/blog/originals/week-1</link>
+      <description>BTC at $71K with Extreme Fear. AI agents becoming real internet users. Fed meeting odds shifting. Weekly dispatch from the terminal.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Mon, 16 Mar 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/originals/week-1</guid>
+    </item>
+
+    <item>
+      <title>What is the Crypto Fear and Greed Index and How to Actually Use It</title>
+      <link>https://terminalfeed.io/blog/fear-greed-guide</link>
+      <description>The Fear and Greed Index is one of the most watched indicators in crypto. Learn what it measures, what moves it, and how experienced traders interpret it.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Sat, 15 Mar 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/fear-greed-guide</guid>
+    </item>
+
+  </channel>
+</rss>

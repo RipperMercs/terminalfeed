@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Encryption? - TerminalFeed Glossary</title>
+  <meta name="description" content="Encryption is the process of converting readable data into an unreadable format that can only be decoded with a key. Learn how encryption protects data online.">
+  <meta property="og:title" content="What is Encryption? - TerminalFeed Glossary">
+  <meta property="og:description" content="Encryption converts readable data into an unreadable format that can only be decoded with a key.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/encryption">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/encryption">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "Encryption",
+    "description": "The process of converting readable data into an unreadable format that can only be decoded with a key.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/encryption"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "Encryption", "item": "https://terminalfeed.io/glossary/encryption" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Encryption</span>
+    </nav>
+
+    <h1>Encryption</h1>
+    <div class="category-label">SECURITY</div>
+
+    <h2>Quick Definition</h2>
+    <p>Encryption is the process of transforming readable data (plaintext) into an unreadable format (ciphertext) using a mathematical algorithm and a key. Only someone with the correct decryption key can convert it back to its original form.</p>
+
+    <h2>How it works</h2>
+    <p>There are two main types of encryption. Symmetric encryption uses the same key to both encrypt and decrypt data. AES (Advanced Encryption Standard) is the most widely used symmetric algorithm. It is fast and efficient, which makes it the go-to choice for encrypting data at rest (stored files, database fields) and data in transit (when wrapped by <a href="/glossary/ssl-tls">TLS</a>).</p>
+    <p>Asymmetric encryption (also called public-key cryptography) uses a pair of keys: a public key that anyone can use to encrypt a message, and a private key that only the recipient holds to decrypt it. RSA and elliptic curve cryptography are common asymmetric algorithms. This approach solves the key distribution problem, since you can share your public key openly without compromising security.</p>
+    <p>In practice, most secure communication uses both. When you visit an HTTPS website, your browser and the server perform a TLS handshake that uses asymmetric encryption to exchange a temporary symmetric key. All subsequent data flows using that faster symmetric key. <a href="/glossary/bitcoin">Bitcoin</a> wallets also rely on asymmetric cryptography: your private key signs transactions, and the network verifies them using your public key.</p>
+
+    <h2>Why it matters</h2>
+    <p>Encryption is the foundation of online security. Without it, passwords, financial data, and private messages would travel across the internet as readable text. For crypto users, encryption protects wallet access and transaction integrity. For developers, understanding encryption helps you make sound decisions about data storage, API security, and compliance requirements.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The Cyber Threats panel on the <a href="/">TerminalFeed dashboard</a> tracks active malware campaigns and indicators of compromise, many of which target encrypted communication channels. Our <a href="/blog/read-your-browser-console">browser console guide</a> also touches on how your browser handles encrypted connections behind the scenes.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/ssl-tls">SSL/TLS</a></li>
+        <li><a href="/glossary/hash-function">Hash Function</a></li>
+        <li><a href="/glossary/zero-day">Zero-Day</a></li>
+        <li><a href="/glossary/two-factor-authentication">Two-Factor Authentication</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

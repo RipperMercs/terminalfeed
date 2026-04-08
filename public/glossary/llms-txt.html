@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is llms.txt? - TerminalFeed Glossary</title>
+  <meta name="description" content="llms.txt is a standardized file that websites publish to help AI agents discover and understand their content, APIs, and capabilities. Learn about the format.">
+  <meta property="og:title" content="What is llms.txt? - TerminalFeed Glossary">
+  <meta property="og:description" content="llms.txt is a standardized file that helps AI agents discover and understand a website's content and APIs.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/llms-txt">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/llms-txt">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "llms.txt",
+    "description": "A standardized file that websites publish to help AI agents discover and understand their content and APIs.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/llms-txt"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "llms.txt", "item": "https://terminalfeed.io/glossary/llms-txt" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #1A1A1E; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #F0EDE6; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>llms.txt</span>
+    </nav>
+
+    <h1>llms.txt</h1>
+    <div class="category-label">AI &amp; MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>llms.txt is an emerging standard for a plain-text file placed at a website's root (like <code>/llms.txt</code>) that tells <a href="/glossary/ai-agent">AI agents</a> what the site offers, which APIs are available, and how to interact with the content. Think of it as robots.txt, but for large language models.</p>
+
+    <h2>How it works</h2>
+    <p>The file is written in Markdown and contains a structured summary of the website: what it does, which pages are most important, what APIs it exposes, and any special instructions for AI consumption. When an AI agent arrives at a new website, it can read llms.txt to quickly understand what is available without crawling every page.</p>
+    <p>A typical llms.txt file includes a title, a brief description of the site, a list of key pages with short summaries, and links to API documentation or OpenAPI specs. Some sites also include an llms-full.txt with more detailed content for agents that want deeper context.</p>
+    <p>The format was proposed as a lightweight way to bridge the gap between websites designed for human readers and the <a href="/glossary/large-language-model">large language models</a> that increasingly browse and consume web content. It does not replace sitemaps or robots.txt. Instead, it adds a semantic layer specifically for AI discovery. As AI agents become more common, having an llms.txt file helps ensure your site and its data are accessible to them.</p>
+
+    <h2>Why it matters</h2>
+    <p>AI agents are a growing source of web traffic. Websites that make themselves easily discoverable to AI systems can attract more usage of their APIs, increase data citation, and become part of AI-generated answers and workflows. llms.txt is a simple, low-effort way to participate in this new ecosystem.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed publishes its own <a href="/llms.txt">llms.txt</a> file listing all API endpoints and site features. Combined with our <a href="/openapi.json">OpenAPI spec</a> and the <a href="/developers">/developers</a> documentation, this makes TerminalFeed fully discoverable by AI agents. Read more in our article on <a href="/blog/websites-humans-ai-agents">building websites for humans and AI agents</a>.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/ai-agent">AI Agent</a></li>
+        <li><a href="/glossary/large-language-model">Large Language Model</a></li>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/prompt-engineering">Prompt Engineering</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

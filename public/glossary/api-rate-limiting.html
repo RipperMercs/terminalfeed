@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is API Rate Limiting? - TerminalFeed Glossary</title>
+  <meta name="description" content="API rate limiting is the practice of throttling the number of requests a client can make to an API within a given time window. Learn how rate limits work.">
+  <meta property="og:title" content="What is API Rate Limiting? - TerminalFeed Glossary">
+  <meta property="og:description" content="API rate limiting throttles the number of requests a client can make within a given time window.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/api-rate-limiting">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/api-rate-limiting">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "API Rate Limiting",
+    "description": "Throttling the number of API requests a client can make within a given time window.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/api-rate-limiting"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "API Rate Limiting", "item": "https://terminalfeed.io/glossary/api-rate-limiting" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #1A1A1E; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #F0EDE6; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>API Rate Limiting</span>
+    </nav>
+
+    <h1>API Rate Limiting</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>API rate limiting is a technique that restricts how many requests a client can send to an <a href="/glossary/api">API</a> within a specific time period. It protects servers from being overwhelmed and ensures fair access across all users.</p>
+
+    <h2>How it works</h2>
+    <p>When you call an API, the server tracks your request count, usually by API key or IP address. If you exceed the allowed limit (for example, 100 requests per minute), the server responds with a <code>429 Too Many Requests</code> <a href="/glossary/http-status-code">status code</a> and blocks further requests until the window resets.</p>
+    <p>Most APIs communicate rate limit details through response headers. Common headers include <code>X-RateLimit-Limit</code> (your total allowed requests), <code>X-RateLimit-Remaining</code> (how many you have left), and <code>X-RateLimit-Reset</code> (when the counter resets). Well-behaved clients read these headers and throttle themselves accordingly.</p>
+    <p>Rate limiting can be implemented with several algorithms. Token bucket allows bursts up to a limit then throttles. Sliding window smooths traffic more evenly. Fixed window is the simplest, resetting the counter at regular intervals. The right approach depends on the API's use case and the traffic patterns it expects.</p>
+
+    <h2>Why it matters</h2>
+    <p>If you are building an application that relies on external APIs, hitting rate limits will break your user experience. Understanding rate limits helps you design caching strategies, implement retry logic with exponential backoff, and choose the right polling intervals. For API providers, rate limiting is essential to maintain performance and prevent abuse.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The TerminalFeed API Worker uses in-memory caching with per-endpoint TTLs to stay within upstream rate limits. Our <a href="/blog/api-rate-limits-explained">API Rate Limits Explained</a> article covers practical strategies for handling limits in your own projects. You can explore our endpoints at <a href="/developers">/developers</a>.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/rest">REST</a></li>
+        <li><a href="/glossary/http-status-code">HTTP Status Code</a></li>
+        <li><a href="/glossary/cors">CORS</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>

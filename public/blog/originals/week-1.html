@@ -21,12 +21,17 @@
     "description": "BTC at $71K with Extreme Fear. AI agents becoming real internet users. Fed meeting odds shifting. Weekly dispatch from the terminal.",
     "author": {
       "@type": "Person",
-      "name": "Ripper"
+      "name": "Ripper",
+      "url": "https://terminalfeed.io/team"
     },
     "publisher": {
       "@type": "Organization",
       "name": "TerminalFeed",
-      "url": "https://terminalfeed.io"
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
     },
     "datePublished": "2026-03-16",
     "dateModified": "2026-03-16",
@@ -128,16 +133,36 @@
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
 
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
     @media (max-width: 600px) {
       body { padding: 24px 16px; }
       .article-header h1 { font-size: 18px; }
       .article-body { font-size: 12px; }
     }
   </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
 </head>
 <body>
   <div class="container">
-    <a href="/blog" class="back">&larr; back to blog</a>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><a href="/blog#originals">Originals</a><span class="bc-sep">&rsaquo;</span><span>Week 1</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Originals", "item": "https://terminalfeed.io/blog#originals" },
+        { "@type": "ListItem", "position": 4, "name": "Week 1", "item": "https://terminalfeed.io/blog/originals/week-1" }
+      ]
+    }
+    </script>
 
     <header class="article-header">
       <div class="article-tags">

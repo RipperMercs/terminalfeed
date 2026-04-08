@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Status Widget</title>
+  <meta name="description" content="Live service status widget.">
+  <link rel="canonical" href="https://terminalfeed.io/embed/service-status">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace}
+    body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+    body.theme-light{background:#FFF;color:#1A1A1E}
+    .widget{width:100%;height:100%;padding:12px 18px;display:flex;flex-direction:column;position:relative}
+    .label{font-size:10px;letter-spacing:2px;opacity:0.5;margin-bottom:8px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+    .svc{font-size:10px;line-height:2;display:flex;align-items:center;gap:5px}
+    .dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .dot-ok{background:#4ADE80}
+    .dot-err{background:#F87171}
+    .dot-unk{background:#4E4D49}
+    .footer{position:absolute;bottom:5px;right:10px;font-size:8px;opacity:0.35}
+    .footer a{color:inherit;text-decoration:none}
+    .footer a:hover{opacity:1}
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="label">SERVICE STATUS</div>
+    <div class="grid" id="grid"></div>
+    <div class="footer"><a href="https://terminalfeed.io" target="_blank" rel="noopener">terminalfeed.io</a></div>
+  </div>
+  <script>
+    var params=new URLSearchParams(window.location.search);
+    document.body.className='theme-'+(params.get('theme')||'dark');
+    var show=['GitHub','Cloudflare','OpenAI','Discord','npm','Vercel'];
+    function load(){
+      fetch('https://terminalfeed.io/api/service-status').then(function(r){return r.json()}).then(function(d){
+        try{
+          var services=d.data||d.services||d||[];
+          if(!Array.isArray(services))services=[];
+          var map={};
+          services.forEach(function(s){
+            var name=s.name||s.service||'';
+            map[name.toLowerCase()]=s;
+          });
+          var el=document.getElementById('grid');
+          el.innerHTML='';
+          show.forEach(function(name){
+            var s=map[name.toLowerCase()];
+            var ok=s&&(s.status==='operational'||s.status==='ok'||s.status==='none'||s.indicator==='none');
+            var div=document.createElement('div');
+            div.className='svc';
+            div.innerHTML='<span class="dot '+(s?(ok?'dot-ok':'dot-err'):'dot-unk')+'"></span>'+name;
+            el.appendChild(div);
+          });
+        }catch(e){}
+      }).catch(function(){var el=document.getElementById('grid');el.innerHTML='';show.forEach(function(n){var d=document.createElement('div');d.className='svc';d.innerHTML='<span class="dot dot-unk"></span>'+n;el.appendChild(d)})});
+    }
+    load();setInterval(load,120000);
+  </script>
+</body>
+</html>

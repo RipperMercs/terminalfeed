@@ -21,12 +21,17 @@
     "description": "Most retail traders only watch price. Here's a list of the data points that experienced traders watch alongside price, and why ignoring them is one of the most expensive mistakes you can make.",
     "author": {
       "@type": "Person",
-      "name": "Pulse"
+      "name": "Pulse",
+      "url": "https://terminalfeed.io/team"
     },
     "publisher": {
       "@type": "Organization",
       "name": "TerminalFeed",
-      "url": "https://terminalfeed.io"
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
     },
     "datePublished": "2026-04-07",
     "dateModified": "2026-04-07",
@@ -145,6 +150,10 @@
     footer.footer a { color: #4E4D49; text-decoration: none; }
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
 
     @media (max-width: 600px) {
       body { padding: 24px 16px; }
@@ -152,10 +161,24 @@
       .article-body { font-size: 12px; }
     }
   </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
 </head>
 <body>
   <div class="container">
-    <a href="/blog" class="back">&larr; back to blog</a>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Data for Traders</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Data for Traders", "item": "https://terminalfeed.io/blog/why-data-matters-for-traders" }
+      ]
+    }
+    </script>
 
     <header class="article-header">
       <div class="article-tags">

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fear &amp; Greed Index Widget | TerminalFeed</title>
+  <meta name="description" content="Live Crypto Fear and Greed Index embeddable widget. Free to embed on any site.">
+  <link rel="canonical" href="https://terminalfeed.io/embed/fear-greed">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace}
+    body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+    body.theme-light{background:#FFF;color:#1A1A1E}
+    .widget{width:100%;height:100%;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;position:relative}
+    .label{font-size:10px;letter-spacing:2px;opacity:0.5;margin-bottom:6px}
+    .value{font-size:26px;font-weight:600;line-height:1}
+    .sub{font-size:11px;margin-top:5px;opacity:0.6}
+    .footer{position:absolute;bottom:5px;right:10px;font-size:8px;opacity:0.35}
+    .footer a{color:inherit;text-decoration:none}
+    .footer a:hover{opacity:1}
+    .pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;margin-right:5px;animation:pulse 2s ease infinite;vertical-align:middle}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="label"><span class="pulse"></span>FEAR &amp; GREED INDEX</div>
+    <div class="value" id="val">--</div>
+    <div class="sub" id="lbl">loading...</div>
+    <div class="footer"><a href="https://terminalfeed.io" target="_blank" rel="noopener">terminalfeed.io</a></div>
+  </div>
+  <script>
+    var params=new URLSearchParams(window.location.search);
+    var theme=params.get('theme')||'dark';
+    document.body.className='theme-'+theme;
+    function getColor(v){
+      if(v<=24)return'#F87171';
+      if(v<=49)return'#EF9F27';
+      if(v===50)return'#8A8880';
+      if(v<=74)return'#4ADE80';
+      return'#5DCAA5';
+    }
+    function getLabel(v){
+      if(v<=24)return'Extreme Fear';
+      if(v<=49)return'Fear';
+      if(v===50)return'Neutral';
+      if(v<=74)return'Greed';
+      return'Extreme Greed';
+    }
+    function load(){
+      fetch('https://terminalfeed.io/api/fear-greed').then(function(r){return r.json()}).then(function(d){
+        try{
+          var v=parseInt(d.data&&d.data[0]&&d.data[0].value||d.value||d.index||0);
+          var el=document.getElementById('val');
+          el.textContent=v;
+          el.style.color=getColor(v);
+          document.getElementById('lbl').textContent=getLabel(v);
+        }catch(e){document.getElementById('val').textContent='--'}
+      }).catch(function(){document.getElementById('val').textContent='--'});
+    }
+    load();setInterval(load,300000);
+  </script>
+</body>
+</html>

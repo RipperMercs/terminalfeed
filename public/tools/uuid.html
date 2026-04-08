@@ -37,6 +37,17 @@
   }
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+    { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://terminalfeed.io/tools" },
+    { "@type": "ListItem", "position": 3, "name": "UUID Generator", "item": "https://terminalfeed.io/tools/uuid" }
+  ]
+}
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -257,11 +268,17 @@
     color: #8A8880;
     line-height: 1.7;
   }
+  .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+  .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+  .breadcrumbs a:hover { color: #5DCAA5; }
+  .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
 </style>
 </head>
 <body data-page="tools-uuid">
-<div class="back-link"><a href="/tools" data-i18n="back_tools">&larr; back to tools</a></div>
 <div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/tools">Tools</a><span class="bc-sep">&rsaquo;</span><span>UUID Generator</span>
+  </nav>
   <div class="header">
     <h1><span>&gt;_</span> <span data-i18n="uuid_title">UUID GENERATOR</span></h1>
     <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>

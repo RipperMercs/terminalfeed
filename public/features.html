@@ -10,6 +10,16 @@
   <meta property="og:description" content="30+ real-time data feeds on one dashboard. Bitcoin, stocks, news, earthquakes, space, and more.">
   <meta property="og:url" content="https://terminalfeed.io/features">
   <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Features", "item": "https://terminalfeed.io/features" }
+    ]
+  }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'JetBrains Mono', monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 800px; margin: 0 auto; line-height: 1.7; }
@@ -24,10 +34,16 @@
     .feed h3::before { content: ">_ "; color: #4ADE80; }
     .feed p { font-size: 12px; color: #7A7A72; margin-bottom: 0; }
     .footer { margin-top: 48px; font-size: 10px; color: #3E3E3A; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
   </style>
 </head>
 <body>
-  <a href="/" class="back">&larr; back to terminal</a>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Features</span>
+  </nav>
   <h1>>_ Features</h1>
 
   <p>TerminalFeed is a free, real-time command center dashboard with over 30 live data feeds. Everything streams in real-time using WebSockets, Server-Sent Events, and smart polling. No login required. No paywall. Here is every data feed available on the dashboard.</p>
