@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Mythos and Project Glasswing: Anthropic Just Held Back Its Most Powerful Model Because It's Too Good at Hacking | TerminalFeed Blog</title>
+  <meta name="description" content="Anthropic released Claude Mythos Preview to a handful of security partners this week. The rest of us don't get access because the model is too dangerous. Here's what that means.">
+  <meta property="og:title" content="Claude Mythos and Project Glasswing: Anthropic Held Back Its Most Powerful Model">
+  <meta property="og:description" content="Anthropic released Claude Mythos Preview to a handful of security partners this week. The rest of us don't get access because the model is too dangerous. Here's what that means.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/claude-mythos-project-glasswing">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/claude-mythos-project-glasswing">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Claude Mythos and Project Glasswing: Anthropic Just Held Back Its Most Powerful Model Because It's Too Good at Hacking",
+    "description": "Anthropic released Claude Mythos Preview to a handful of security partners this week. The rest of us don't get access because the model is too dangerous. Here's what that means.",
+    "author": {
+      "@type": "Person",
+      "name": "zer0day",
+      "url": "https://terminalfeed.io/team/zer0day"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-04-08",
+    "dateModified": "2026-04-08",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/claude-mythos-project-glasswing",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Claude Mythos &amp; Project Glasswing</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Claude Mythos & Project Glasswing", "item": "https://terminalfeed.io/blog/claude-mythos-project-glasswing" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">AI</span>
+        <span class="article-tag">SECURITY</span>
+        <span class="article-tag">INFOSEC</span>
+        <span class="article-tag">INDUSTRY</span>
+      </div>
+      <h1>Claude Mythos and Project Glasswing: Anthropic Just Held Back Its Most Powerful Model Because It's Too Good at Hacking</h1>
+      <div class="article-meta">
+        <span>By zer0day</span>
+        <span>April 8, 2026</span>
+        <span>9 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Something important happened on Tuesday that most people outside the AI and cybersecurity worlds probably missed. Anthropic released a preview of its newest frontier model, Claude Mythos, but only to a tightly controlled group of partners. The rest of the world, including most of Anthropic's own customers, does not get access. The reason is that the model is apparently so good at finding and exploiting software vulnerabilities that Anthropic decided a public release would be irresponsible.</p>
+
+      <p>This is the first time in nearly seven years that a major AI lab has held back a model over safety concerns. The last comparable moment was OpenAI's decision in 2019 to delay the full release of GPT-2 because of worries about text generation being used for disinformation. That decision looks quaint now. GPT-2 is trivial compared to anything released in the years since. But the situation with Mythos feels different because the concerns aren't abstract. They're specific, measurable, and backed by test results that security researchers are taking very seriously.</p>
+
+      <p>Let's walk through what we actually know, what it means for the security industry, and why this release is a bigger deal than the usual AI product announcements.</p>
+
+      <h2>What Mythos is</h2>
+
+      <p>Claude Mythos is Anthropic's newest and most capable frontier model. It sits above the existing Claude Opus line, which until now was Anthropic's most powerful tier. Internally and in leaked documents, Anthropic has been referring to a new tier called Capybara, which appears to be the same underlying model line that Mythos is the first release of. The naming is a bit confusing but the important point is that this represents a step up from everything Anthropic has released publicly so far.</p>
+
+      <p>According to Anthropic's own description, Mythos is a general-purpose model with significant improvements in reasoning, coding, and cybersecurity over Claude Opus 4.6. It wasn't specifically trained to be a hacking tool. The cybersecurity capabilities emerged from general improvements in reasoning and code understanding, which is in some ways more concerning than a dedicated security model would be. It suggests that as general-purpose AI models get better, they get better at finding security vulnerabilities as a side effect, whether the model builders intended that or not.</p>
+
+      <p>The benchmarks Anthropic shared are striking. In internal testing, Mythos Preview successfully reproduced known vulnerabilities and created working proof-of-concept exploits on the first attempt in 83.1 percent of cases. It found thousands of zero-day vulnerabilities across major operating systems and web browsers during testing. Some of those vulnerabilities had been sitting undiscovered in open source code for decades, including a 27-year-old flaw in OpenBSD that could allow remote crashes of any system running it. By comparison, Claude Opus 4.6, the previous top model, found around 500 zero-days in open source software during its testing. Mythos found tens of thousands.</p>
+
+      <p>Those numbers are worth pausing on. The difference between 500 and tens of thousands isn't incremental. It's the difference between a talented security researcher and a fleet of automated exploit-finding systems that never sleep.</p>
+
+      <h2>Project Glasswing and the partner list</h2>
+
+      <p>Rather than releasing Mythos publicly, Anthropic launched something called Project Glasswing. This is a limited-access program where Mythos Preview is being given to a small group of organizations for defensive security work. The idea is that these organizations will use the model to find and fix vulnerabilities in their own systems and in critical open source software before models with similar capabilities become broadly available.</p>
+
+      <p>The founding partner list is a who's who of companies whose systems represent massive shared attack surface for the global internet. Amazon Web Services, Apple, Broadcom, Cisco, CrowdStrike, Google, JPMorgan Chase, the Linux Foundation, Microsoft, Nvidia, and Palo Alto Networks are the primary Glasswing partners. Beyond those, Anthropic has extended access to over 40 additional organizations that maintain critical software infrastructure.</p>
+
+      <p>The focus is explicitly defensive. Partners are expected to use Mythos to scan their first-party code and dependencies for vulnerabilities that can then be patched before they are exploited in the wild. The Linux Foundation's inclusion is particularly interesting because the Linux kernel powers a substantial portion of the world's servers, phones, and supercomputers. Any vulnerabilities Mythos finds and helps patch in Linux benefit every person and organization that runs Linux anywhere, which is to say almost everyone.</p>
+
+      <p>Anthropic is putting significant money behind the initiative. The company has committed up to 100 million dollars in Mythos usage credits for Glasswing partners, plus 4 million dollars in direct donations to open source security organizations including OpenSSF, Alpha-Omega, and the Apache Software Foundation. These aren't token amounts. They represent a serious bet that the defensive use of capability like this can meaningfully improve the security of foundational software before the same capability reaches bad actors.</p>
+
+      <h2>Why this matters beyond the AI news cycle</h2>
+
+      <p>There's a thing that happens with every major AI model release. The news cycle treats it as a product launch, focuses on benchmark scores, and moves on. This is different and worth thinking about carefully for a few reasons.</p>
+
+      <p>First, the asymmetry between offense and defense in cybersecurity has been a slow-moving crisis for decades. Attackers only need to find one vulnerability. Defenders need to find all of them. Attackers have time. Defenders have limited budgets and rotating personnel. Attackers can fail silently and try again. Defenders only see their failures after a breach. This asymmetry has been trending in favor of attackers for a long time, and AI was already starting to make it worse by automating parts of the attack chain. What Mythos potentially does, if Anthropic's framing is correct, is swing that asymmetry back toward defense, at least temporarily, by letting defenders run through their entire codebases at a scale and speed that was never possible before.</p>
+
+      <p>The catch is that this only works if defenders get the capability first. The moment similar models are publicly available, attackers will use them too, and the temporary defensive advantage disappears. Anthropic's decision to release Mythos to a limited group is essentially an attempt to create a window during which defenders can get ahead of the curve. Whether that window will be long enough to matter is an open question. Anthropic's own researchers have said that similar capabilities are likely to appear in models from other labs within six to eighteen months. That's not a long window.</p>
+
+      <p>Second, this is a real test of how AI labs handle capability disclosure. The AI safety community has been arguing for years about whether frontier AI labs should voluntarily restrict access to dangerous capabilities or push them out as widely as possible. The arguments on both sides are reasonable. Restricted access lets you control who has the capability and gives responsible users time to prepare defenses. But restricted access also means the capability is known to exist without being available to the broader research community, which limits the ability of independent researchers to study and critique it. There's no clean answer. Anthropic's choice to release Mythos through Glasswing is a specific bet on the restricted-access model, and the results of that bet will influence how future frontier models are handled.</p>
+
+      <p>Third, this is a signal about where the AI industry is heading in 2026 and beyond. For the past few years, the general assumption has been that model capabilities will keep improving gradually and that safety concerns are mostly about misuse at the margins: generating harassment, disinformation, or low-skill phishing content. The Mythos release suggests that we're entering a phase where capability improvements are no longer marginal. They're structural. A model that can find decades-old zero-days at a rate 20 to 100 times better than the previous best is not a small improvement on the previous state of the art. It's a shift in what AI can do.</p>
+
+      <h2>What defenders should actually do</h2>
+
+      <p>If you're a developer, a security engineer, or just someone responsible for the security of some piece of software, the practical question is what you should do about this right now. Most people will not get access to Mythos. Anthropic has been clear that the preview is not going to be made generally available, even at enterprise pricing. So the question becomes how you benefit from this moment without having direct access to the model.</p>
+
+      <p>A few things are worth doing this week.</p>
+
+      <p><strong>Audit your critical dependencies.</strong> Look at what your code actually depends on and ask yourself which of those dependencies have active maintenance and which don't. Old, abandoned libraries are exactly the kind of thing that Mythos-class models will find vulnerabilities in first. Replacing a dead dependency with an actively maintained alternative is cheap insurance.</p>
+
+      <p><strong>Update everything.</strong> If you've been putting off updating libraries, operating systems, or frameworks, this is the week to catch up. Many of the vulnerabilities that will be disclosed through Glasswing over the coming weeks will have patches available before the vulnerabilities are made public. Staying current means you benefit from those patches automatically.</p>
+
+      <p><strong>Pay attention to security advisories from the Glasswing partners.</strong> Microsoft, Apple, Google, the Linux Foundation, and the other participants will be patching vulnerabilities found by Mythos and disclosing them through normal channels. Watching the security bulletins from these organizations for the next few months will give you an early indication of what kinds of vulnerabilities Mythos is finding and where similar issues might exist in your own code.</p>
+
+      <p><strong>Run your own static analysis and fuzzing tools.</strong> The commercial and open source security tools that exist today are not at the level of Mythos, but they're not nothing either. Tools like Semgrep, CodeQL, and modern fuzzers can find a lot of the low-hanging fruit. If you haven't integrated these into your CI pipeline yet, now is the time.</p>
+
+      <p><strong>Consider your exposure.</strong> Think about which of your systems would be most damaging if compromised and focus your attention there first. Not every vulnerability is equal. A flaw in an internal admin tool that only five employees use is different from a flaw in a customer-facing authentication flow.</p>
+
+      <h2>The bigger picture</h2>
+
+      <p>Every time a new AI capability threshold gets crossed, there's a temptation to see it as either world-ending or overhyped. The reality with Mythos is somewhere in between. It's not going to immediately cause a wave of catastrophic attacks. The model is being tightly controlled and the partners using it are using it defensively. But it is also a real capability shift, and it will eventually be available to more people, and some of those people will use it offensively.</p>
+
+      <p>The window between now and the broader availability of similar capabilities is an opportunity. For defenders, for open source maintainers, for security teams at every organization, the next several months are the time to get your security posture in order. The tools that exist today are already good enough to find most of the obvious problems, if you actually use them. The excuse that security is too hard or too expensive starts to look worse when you consider that a year from now, the people looking for vulnerabilities in your systems will include automated AI agents running Mythos-class models at scale.</p>
+
+      <p>As for the personal angle: yes, I'd like to try Mythos too. Most people in security would. But the decision to restrict access is probably the right call, and the honest response isn't disappointment about not having the toy. It's to take the warning seriously and get our infrastructure ready before the capability is widely available. That's the real test of whether this release was handled well. A year from now, if the organizations that got early access have meaningfully improved the security of the systems most people depend on, Anthropic's approach will look prescient. If they haven't, we'll have a lot to talk about.</p>
+
+      <p>The terminal never sleeps. Neither, apparently, do the models searching for the next bug.</p>
+
+      <div class="cta-box">
+        <p>TerminalFeed tracks AI models, cyber threats, and security status in real time. 30+ live panels on one dashboard.</p>
+        <a href="/" class="cta-link">Open the Dashboard</a>
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+  </footer>
+</body>
+</html>
