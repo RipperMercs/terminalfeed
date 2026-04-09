@@ -31,6 +31,11 @@ CoinGecko, Binance WebSocket, Finnhub, mempool.space, ESPN, USGS, GDACS, NASA DO
 Open-Meteo, Hacker News Firebase, RSS2JSON, GitHub API, StackExchange, Frankfurter,
 Open Library, Art Institute of Chicago, TheMealDB, Dog CEO, The Cat API, and more.
 
+## Sister Sites
+
+- https://tensorfeed.ai — AI news aggregation and intelligence tracking
+- https://phreak.fm — Hacker culture, phreaking history, and underground tech
+
 ## Contact
 
 hello@terminalfeed.io
