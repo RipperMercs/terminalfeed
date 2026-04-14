@@ -165,6 +165,8 @@ function App() {
   const btcPrice = priceData?.price ?? 0;
   const btcChange = priceData?.changePercent24h ?? 0;
   const isUp = btcChange >= 0;
+  // Detect stale data: source is static fallback, or lastUpdate is over 10 minutes old
+  const btcIsStale = priceData?.source === 'static' || (priceData?.lastUpdate && Date.now() - priceData.lastUpdate > 10 * 60_000);
 
   // Dynamic tab title with live BTC price
   useEffect(() => {
@@ -327,10 +329,22 @@ function App() {
           {priceData?.source && <span className="panelTagDim">{priceData.source}</span>}
         </div>
         <div className="panelLive">
-          <span className="liveDot" style={{ background: btcPrice > 0 ? 'var(--green)' : 'var(--red)' }} />
-          <span className="liveText">{btcPrice > 0 ? 'LIVE' : 'LOADING'}</span>
+          {btcIsStale ? (<>
+            <span className="liveDot" style={{ background: 'var(--amber)' }} />
+            <span className="liveText" style={{ color: 'var(--amber)' }}>STALE</span>
+          </>) : (<>
+            <span className="liveDot" style={{ background: btcPrice > 0 ? 'var(--green)' : 'var(--red)' }} />
+            <span className="liveText">{btcPrice > 0 ? 'LIVE' : 'LOADING'}</span>
+          </>)}
         </div>
       </PanelHead>
+      {btcIsStale && (
+        <div className="staleBanner">
+          {priceData?.source === 'static'
+            ? 'Unable to connect to live feeds. Showing approximate data. Check your network or ad blocker.'
+            : 'Price data may be outdated. Reconnecting...'}
+        </div>
+      )}
       <div className="priceMain">
         <div>
           <div className="priceValue">${btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
@@ -342,7 +356,7 @@ function App() {
           <div className="priceRange">
             <span className="priceRangeLabel">24h range</span>
             <span className="priceRangeValue">
-              ${priceData.low24h.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${priceData.high24h.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              ${priceData.low24h.toLocaleString(undefined, { maximumFractionDigits: 0 })} - ${priceData.high24h.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
         )}
