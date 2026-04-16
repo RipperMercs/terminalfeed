@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-import { cloudflare } from "@cloudflare/vite-plugin";
-
 export default defineConfig({
   plugins: [react(), {
     name: 'static-page-rewrites',
@@ -19,18 +17,5 @@ export default defineConfig({
         next()
       })
     },
-  }, cloudflare()],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-        },
-      },
-    },
-    minify: 'terser',
-    reportCompressedSize: true,
-    target: 'es2020',
-    sourcemap: false,
-  },
-})
+  }],
+  build:
