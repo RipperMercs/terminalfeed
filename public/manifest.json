@@ -1,5 +1,5 @@
 {
-  "name": "TerminalFeed — Real-Time Command Center",
+  "name": "TerminalFeed - Real-Time Command Center",
   "short_name": "TerminalFeed",
   "description": "Live crypto, stocks, gold, AI news & more. The dashboard for your second monitor.",
   "start_url": "/",
@@ -13,7 +13,22 @@
       "src": "/logo.png",
       "sizes": "400x400",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "400x400",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "TerminalFeed Dashboard"
     }
   ]
 }
