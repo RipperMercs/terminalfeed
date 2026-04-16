@@ -849,6 +849,47 @@ async function handleGas(env) {
 }
 
 
+// --- NASA APOD ---
+async function handleNasaApod() {
+  var cached = getCached('nasa_apod', 3600000); // 1 hour
+  if (cached) return jsonResponse(cached);
+
+  try {
+    var today = new Date();
+    for (var i = 0; i < 5; i++) {
+      var d = new Date(today);
+      d.setDate(d.getDate() - i);
+      var dateStr = d.toISOString().slice(0, 10);
+      var res = await fetchWithTimeout(
+        'https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&date=' + dateStr,
+        {}, 8000
+      );
+      if (!res.ok) continue;
+      var json = await res.json();
+      if (json.media_type !== 'image') continue;
+      var data = {
+        title: json.title || '',
+        url: json.url || '',
+        hdurl: json.hdurl || json.url || '',
+        explanation: json.explanation || '',
+        date: json.date || '',
+        media_type: 'image',
+        copyright: json.copyright || null,
+        ts: Date.now(),
+      };
+      setCache('nasa_apod', data);
+      return jsonResponse(data, 200, 3600);
+    }
+  } catch (e) {
+    console.error('NASA APOD fetch failed:', e.message);
+  }
+
+  var stale = getStale('nasa_apod');
+  if (stale) return jsonResponse(stale);
+  return jsonResponse({ error: 'No APOD available' }, 503);
+}
+
+
 // --- Memecoin Radar (DexScreener) ---
 async function handleMemeRadar() {
   var cached = getCached('meme_radar', 60000);
@@ -951,6 +992,7 @@ export default {
       case 'auto-briefing':  return await handleAutoBriefing(request, env);
       case 'gas':            return await handleGas(env);
       case 'meme-radar':     return await handleMemeRadar();
+      case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
       default:
         return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);
