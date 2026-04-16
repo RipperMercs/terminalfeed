@@ -58,7 +58,7 @@ export function usePredictionMarkets(): { markets: PredictionMarket[]; status: P
           setStatus('ready');
           setCache(CACHE_KEY, results, 'worker');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[PredictionMarkets]', e); }
     };
 
     fetch_();

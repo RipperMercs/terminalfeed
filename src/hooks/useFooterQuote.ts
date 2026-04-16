@@ -36,7 +36,7 @@ export function useFooterQuote(): Quote | null {
           setQuote({ text: data[0].q, author: data[0].a });
           return;
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[FooterQuote]', e); }
       // Fallback on error
       if (mountedRef.current) {
         setQuote(FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)]);

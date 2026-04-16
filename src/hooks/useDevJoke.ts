@@ -36,7 +36,7 @@ export function useDevJoke(): string {
 
         setJoke(json.joke);
         setCache(CACHE_KEY, { joke: json.joke, timestamp: Date.now() }, 'jokeapi');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[DevJoke]', e); }
     };
 
     fetch_();

@@ -81,7 +81,7 @@ export function useFlightRadar(): { stats: FlightStats | null; status: FlightSta
         setStats(result);
         setStatus('ready');
         setCache(CACHE_KEY, result, 'opensky');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[FlightRadar]', e); }
     };
 
     fetchFlights();

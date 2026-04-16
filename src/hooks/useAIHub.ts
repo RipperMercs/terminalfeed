@@ -53,7 +53,7 @@ export function useAIHub() {
         if (data.totalHits24h > 0) {
           setTotalHits(prev => Math.max(prev, data.totalHits24h));
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[AIHub]', e); }
     };
     fetchStats();
     const id = setInterval(fetchStats, 30000);

@@ -60,7 +60,7 @@ export function useWikipediaLive(): { edits: WikiEdit[]; editsPerMin: number } {
             lastAddRef.current = Date.now();
             setEdits(prev => [edit, ...prev].slice(0, MAX_EDITS));
           }
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[WikipediaLive]', e); }
       };
 
       source.onerror = () => {

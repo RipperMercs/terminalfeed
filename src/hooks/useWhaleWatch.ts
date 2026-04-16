@@ -46,7 +46,7 @@ export function useWhaleWatch(): WhaleTransaction[] {
           setWhales(results);
           setCache(CACHE_KEY, results, 'mempool');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[WhaleWatch]', e); }
     };
 
     fetch_();

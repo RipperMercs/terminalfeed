@@ -37,7 +37,7 @@ export function useAstros(): AstroData | null {
 
         setData(result);
         setCache(CACHE_KEY, result, 'open-notify');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Astros]', e); }
     };
 
     fetch_();

@@ -59,7 +59,7 @@ export function useGithubEvents(): GHEvent[] {
 
         setEvents(results);
         setCache(CACHE_KEY, results, 'github');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[GithubEvents]', e); }
     };
 
     fetch_();

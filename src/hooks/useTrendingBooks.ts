@@ -43,7 +43,7 @@ export function useTrendingBooks(): TrendingBook[] {
 
         setBooks(results);
         setCache(CACHE_KEY, results, 'openlibrary');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[TrendingBooks]', e); }
     };
 
     fetch_();

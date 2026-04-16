@@ -56,7 +56,7 @@ export function useBlockStream() {
           if (msg.fees) {
             setFeeRate(msg.fees.fastestFee);
           }
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[BlockStream]', e); }
       };
 
       ws.onclose = () => {
@@ -66,7 +66,7 @@ export function useBlockStream() {
       };
 
       ws.onerror = () => { ws.close(); };
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[BlockStream]', e); }
   }, []);
 
   useEffect(() => {

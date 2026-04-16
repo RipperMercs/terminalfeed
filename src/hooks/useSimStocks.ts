@@ -103,7 +103,7 @@ export function useSimStocks(customSymbols: string[] = []) {
             return next;
           });
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[SimStocks]', e); }
     }
   }, []);
 
@@ -151,7 +151,7 @@ export function useSimStocks(customSymbols: string[] = []) {
               return { ...s, price, change };
             }),
           );
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[SimStocks]', e); }
       };
 
       ws.onclose = () => {
@@ -160,7 +160,7 @@ export function useSimStocks(customSymbols: string[] = []) {
       };
 
       ws.onerror = () => { ws.close(); };
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[SimStocks]', e); }
   }, []);
 
   useEffect(() => {

@@ -42,7 +42,7 @@ export function useThisDay(): HistoricalEvent[] {
             setCache(CACHE_KEY, selected, 'wikimedia');
           }
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[ThisDay]', e); }
     };
 
     fetch_();

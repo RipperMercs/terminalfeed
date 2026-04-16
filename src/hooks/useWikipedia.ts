@@ -39,7 +39,7 @@ export function useWikipedia(): WikiArticle | null {
 
         setArticle(result);
         setCache(CACHE_KEY, result, 'wikipedia');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Wikipedia]', e); }
     };
 
     fetch_();

@@ -76,7 +76,7 @@ export function useClaudeStatus() {
 
         setData(result);
         setCache(CACHE_KEY, result, 'statuspage');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[ClaudeStatus]', e); }
     };
 
     fetchStatus();

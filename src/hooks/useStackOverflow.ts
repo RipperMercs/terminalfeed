@@ -51,7 +51,7 @@ export function useStackOverflow(): SOQuestion[] {
 
         setQuestions(results);
         setCache(CACHE_KEY, results, 'stackoverflow');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[StackOverflow]', e); }
     };
 
     fetch_();

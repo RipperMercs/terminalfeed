@@ -41,7 +41,7 @@ export function useEarthquakes(): Earthquake[] {
 
         setQuakes(results);
         setCache(CACHE_KEY, results, 'usgs');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Earthquakes]', e); }
     };
 
     fetch_();

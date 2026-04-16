@@ -97,7 +97,7 @@ export function useGDACS(): DisasterAlert[] {
             setAlerts(results);
             setCache(CACHE_KEY, results, 'gdacs');
           }
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[GDACS]', e); }
       }
     };
 
