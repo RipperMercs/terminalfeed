@@ -1,6 +1,6 @@
 # CLAUDE.md — TerminalFeed.io
 
-Last updated: April 14, 2026
+Last updated: April 15, 2026
 
 ## Project Overview
 
@@ -59,6 +59,9 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 /api/steam         — Top Steam games from SteamSpy
 /api/weather       — Weather from Open-Meteo (params: lat, lon)
 /api/ai-stats      — API call tracking for AI Hub panel
+/api/gas           — ETH gas prices from Etherscan (15s cache)
+/api/meme-radar    — Trending tokens from DexScreener (60s cache)
+/api/error         — POST client error reports (logged to Cloudflare Workers dashboard)
 /api/tweet         — POST tweet to @terminalfeed (Bearer ADMIN_SECRET)
 /api/auto-briefing — Generate and post automated briefing tweet (Bearer ADMIN_SECRET)
 ```
@@ -66,6 +69,7 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 ### Worker Environment Variables
 - FINNHUB_API_KEY, stock quotes
 - FRED_API_KEY, economic data from fred.stlouisfed.org
+- ETHERSCAN_API_KEY, ETH gas prices from etherscan.io
 - X_API_KEY, X/Twitter API consumer key
 - X_API_SECRET, X/Twitter API consumer secret
 - X_ACCESS_TOKEN, X/Twitter API access token
@@ -419,6 +423,18 @@ Font:          JetBrains Mono, SF Mono, Fira Code, Consolas, monospace
 
 ## Critical Rules for Claude Code
 
+### ABSOLUTE RULE: NEVER CRASH THE SITE
+A new panel, feature, or change must NEVER take down the entire site. This is the #1 rule above all others. If you are unsure whether something is safe, err on the side of caution. The site has real users and real traffic. A crashed site is unacceptable.
+
+### Panel Safety Rules (learned the hard way - April 15, 2026 incident)
+- **Every panel MUST have its own ErrorBoundary wrapper.** A single panel crash must NEVER take down the entire dashboard. Wrap every panel in a per-panel ErrorBoundary that catches errors and hides just that panel.
+- **NEVER call .toFixed(), .toUpperCase(), .substring(), or any method on API data without null-safe defaults.** Always use `value ?? fallback` BEFORE calling methods. Example: `(t.priceChange24h ?? 0).toFixed(0)` not `t.priceChange24h.toFixed(0)`. This caused a full site crash on April 15, 2026.
+- **NEVER trust external API response shapes.** Every field from an external API can be undefined, null, missing, or a different type than expected. Destructure with defaults. Validate before rendering.
+- **Test new panels with REAL API data before deploying**, not just with mocked/assumed data shapes. If the Worker endpoint is not deployed yet, the panel MUST gracefully handle the missing endpoint (return null, not crash).
+- **Worker routes MUST be deployed BEFORE frontend panels that depend on them.** Never deploy a frontend panel that calls a Worker endpoint that doesn't exist yet. Deploy order: Worker first, frontend second.
+- **Every .map() callback that renders JSX must have defensive defaults on EVERY field it accesses.** If even one field is undefined, the entire app crashes.
+
+### Existing Rules
 1. **No em dashes**, never use em dashes in any text
 2. **Panels must be height: auto**, NEVER set fixed heights on panels. No min-height. No flex-grow. Panels shrink to fit content. This was the #1 recurring bug.
 3. **CSS columns for main layout**, use column-count, NOT CSS Grid for the panel layout
@@ -439,20 +455,27 @@ Font:          JetBrains Mono, SF Mono, Fira Code, Consolas, monospace
 18. **No ad placeholders or AdSense script tags** until AdSense is approved, they caused the first rejection
 19. **Use wrangler secret put for sensitive values**, never commit keys, even encrypted
 
+### Incident Log
+- **April 15, 2026 - FULL SITE CRASH:** MemeRadarPanel called `.toFixed()` on `t.priceChange24h` which was undefined because DexScreener's token boosts API doesn't include price change data. The ErrorBoundary caught it but wrapped the entire app, taking down all 30+ panels. Root cause: untested API response shape + no per-panel error isolation. Fix: null-safe defaults (`?? 0`) on all API fields. Prevention: per-panel ErrorBoundary wrappers, mandatory null-safe defaults, test with real API data before deploy.
+
 ---
 
-## Current Status (April 14, 2026)
+## Current Status (April 15, 2026)
 
-- Dashboard: Live with 30+ panels including Originals panel
-- API Worker: Live with 20+ data endpoints + X bot integration
+- Dashboard: Live with 32+ panels including ETH Gas Tracker, Memecoin Radar, Originals
+- API Worker: Live with 23+ data endpoints (/api/gas, /api/meme-radar, /api/error added Apr 15) + X bot
 - X Bot: Live, auto-posts daily briefing at 9 AM ET, manual tweets via POST /api/tweet
-- Blog: 20+ substantial original articles across 5 author personas
-- Tools: 7 live, 14 more planned
+- Blog: 26+ substantial original articles across 5 author personas
+- Tools: 24 live (added satoshi, gwei, hex converters)
+- Glossary: 45+ terms across crypto, dev, AI, security categories
+- Cheatsheets: Git, Docker, HTTP status codes
 - i18n: Live in Spanish, Portuguese, German
 - SEO: Schema.org + breadcrumbs + RSS feed + static SEO block all deployed
+- Accessibility: ARIA labels, skip-to-content link, role="region" on all panels
+- Error monitoring: Client errors POST to /api/error, visible in Cloudflare Workers logs
 - AdSense: Rejected twice, fixes deployed, awaiting re-review
 - Traffic: ~350 real visits/day with zero promotion. 12K+ API requests/day.
-- Google Search Console: Verified, sitemap submitted, 95+ pages indexed
+- Google Search Console: Verified, sitemap submitted, 140+ pages indexed
 
 ---
 
