@@ -7,7 +7,19 @@ import App from './App.tsx'
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: Error) { console.error('TerminalFeed crash:', error); }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('TerminalFeed crash:', error);
+    fetch('/api/error', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+        url: window.location.href,
+        component: errorInfo.componentStack?.substring(0, 500),
+      }),
+    }).catch(() => {});
+  }
   render() {
     if (this.state.hasError) {
       return (
@@ -52,3 +64,27 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
+
+// Global error reporters (visible in Cloudflare Workers logs)
+window.addEventListener('unhandledrejection', (event) => {
+  fetch('/api/error', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      error: `Unhandled rejection: ${event.reason}`,
+      url: window.location.href,
+    }),
+  }).catch(() => {});
+});
+
+window.addEventListener('error', (event) => {
+  fetch('/api/error', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      error: event.message,
+      stack: `${event.filename}:${event.lineno}:${event.colno}`,
+      url: window.location.href,
+    }),
+  }).catch(() => {});
+});
