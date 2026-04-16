@@ -16,6 +16,7 @@ const SHOWS = [
   { name: 'Darknet Diaries', rss: 'https://feeds.megaphone.fm/darknetdiaries', spotifyShow: '4XPl3uEEL9hvqMkoZrzbx5' },
   { name: 'Changelog', rss: 'https://changelog.com/podcast/feed', spotifyShow: '5bBki72YeKSLUMVRhNFMo1' },
   { name: 'Syntax FM', rss: 'https://feed.syntax.fm/rss', spotifyShow: '4kYCRYJ3yK5DQbP5tbfZby' },
+  { name: 'AI Daily Brief', rss: 'https://anchor.fm/s/f7cac464/podcast/rss', spotifyShow: '7gKwwMLFLc6RmjmRpbMtEO' },
 ];
 
 const CACHE_KEY = 'podcasts';
