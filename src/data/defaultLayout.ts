@@ -26,6 +26,8 @@ export const DEFAULT_LAYOUT = {
     'solar',
     'predictions',
     'crypto',
+    'gas',
+    'meme-radar',
     'uap',
     'the-wire',
     'tcg-market',
