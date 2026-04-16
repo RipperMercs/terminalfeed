@@ -1134,6 +1134,7 @@ function App() {
 
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">Skip to dashboard</a>
       {/* ── Top Bar ── */}
       <div className="topBar">
         <div className="topBarLeft">
@@ -1265,7 +1266,7 @@ function App() {
       </div>
 
       {/* ── Main Grid — rendered dynamically from panelOrder ── */}
-      <div className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
+      <div id="main-content" className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
         {(() => {
           const userPanels = layout.panelOrder.filter(id =>
             layout.isVisible(id) && id !== 'support'
@@ -1315,13 +1316,13 @@ function App() {
             // First 6 panels load immediately, rest are lazy
             if (idx < 6) {
               return (
-                <div key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
+                <div key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
                   {content}
                 </div>
               );
             }
             return (
-              <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} {...dragProps}>
+              <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
                 {content}
               </LazyPanel>
             );

@@ -87,12 +87,12 @@ export function PanelHead({ panelId, layout, isStale, children }: Props) {
       {isStale && <span className="staleIndicator">delayed</span>}
       {layout.isOrganizing && (
         <div className="orgControls">
-          <span className="orgDragHandle" title="Drag to reorder">&#x2807;</span>
-          <button className="orgArrow" onClick={() => moveVisual('left')} title="Move left">&#9664;</button>
-          <button className="orgArrow" onClick={() => moveVisual('up')} title="Move up">&#9650;</button>
-          <button className="orgArrow" onClick={() => moveVisual('down')} title="Move down">&#9660;</button>
-          <button className="orgArrow" onClick={() => moveVisual('right')} title="Move right">&#9654;</button>
-          <button className="orgHide" onClick={() => layout.toggleHidden(panelId)} title="Hide panel">&#128065;</button>
+          <span className="orgDragHandle" title="Drag to reorder" role="button" aria-label={`Reorder ${panelId} panel`} tabIndex={0}>&#x2807;</span>
+          <button className="orgArrow" onClick={() => moveVisual('left')} title="Move left" aria-label={`Move ${panelId} panel left`}>&#9664;</button>
+          <button className="orgArrow" onClick={() => moveVisual('up')} title="Move up" aria-label={`Move ${panelId} panel up`}>&#9650;</button>
+          <button className="orgArrow" onClick={() => moveVisual('down')} title="Move down" aria-label={`Move ${panelId} panel down`}>&#9660;</button>
+          <button className="orgArrow" onClick={() => moveVisual('right')} title="Move right" aria-label={`Move ${panelId} panel right`}>&#9654;</button>
+          <button className="orgHide" onClick={() => layout.toggleHidden(panelId)} title="Hide panel" aria-label={`Hide ${panelId} panel`}>&#128065;</button>
         </div>
       )}
     </div>
