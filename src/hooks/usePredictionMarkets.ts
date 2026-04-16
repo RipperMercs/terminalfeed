@@ -10,18 +10,29 @@ export interface PredictionMarket {
   source: string;
 }
 
+export type PredictionsStatus = 'loading' | 'ready' | 'failed';
+
 const API_URL = '/api/predictions';
 const CACHE_KEY = 'prediction_markets';
 const POLL_MS = 60_000; // 1 min
+const FAIL_AFTER_MS = 10_000;
 
-export function usePredictionMarkets(): PredictionMarket[] {
-  const [markets, setMarkets] = useState<PredictionMarket[]>(() => {
-    return getCache<PredictionMarket[]>(CACHE_KEY)?.data ?? [];
-  });
+export function usePredictionMarkets(): { markets: PredictionMarket[]; status: PredictionsStatus } {
+  const cached = getCache<PredictionMarket[]>(CACHE_KEY)?.data;
+  const [markets, setMarkets] = useState<PredictionMarket[]>(() => cached ?? []);
+  const [status, setStatus] = useState<PredictionsStatus>(
+    cached && cached.length > 0 ? 'ready' : 'loading'
+  );
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
+
+    // Self-heal: if we don't have data within FAIL_AFTER_MS and no cache, mark failed so the panel hides.
+    const failTimer = setTimeout(() => {
+      if (!mountedRef.current) return;
+      setStatus(prev => (prev === 'loading' ? 'failed' : prev));
+    }, FAIL_AFTER_MS);
 
     const fetch_ = async () => {
       try {
@@ -44,6 +55,7 @@ export function usePredictionMarkets(): PredictionMarket[] {
 
         if (results.length > 0 && mountedRef.current) {
           setMarkets(results);
+          setStatus('ready');
           setCache(CACHE_KEY, results, 'worker');
         }
       } catch {}
@@ -51,8 +63,12 @@ export function usePredictionMarkets(): PredictionMarket[] {
 
     fetch_();
     const id = setInterval(fetch_, POLL_MS);
-    return () => { mountedRef.current = false; clearInterval(id); };
+    return () => {
+      mountedRef.current = false;
+      clearInterval(id);
+      clearTimeout(failTimer);
+    };
   }, []);
 
-  return markets;
+  return { markets, status };
 }

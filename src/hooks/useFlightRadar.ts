@@ -10,23 +10,33 @@ export interface FlightStats {
   timestamp: number;
 }
 
+export type FlightStatus = 'loading' | 'ready' | 'failed';
+
 const API_URL = 'https://opensky-network.org/api/states/all';
 const CACHE_KEY = 'flight_radar';
 const POLL_MS = 120_000; // 2 minutes — respectful to free API
+const FETCH_TIMEOUT_MS = 8_000;
+const FAIL_AFTER_MS = 10_000;
 
-export function useFlightRadar() {
-  const [stats, setStats] = useState<FlightStats | null>(() => {
-    const cached = getCache<FlightStats>(CACHE_KEY);
-    return cached?.data ?? null;
-  });
+export function useFlightRadar(): { stats: FlightStats | null; status: FlightStatus } {
+  const cached = getCache<FlightStats>(CACHE_KEY)?.data ?? null;
+  const [stats, setStats] = useState<FlightStats | null>(cached);
+  const [status, setStatus] = useState<FlightStatus>(cached ? 'ready' : 'loading');
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
 
+    // OpenSky is notoriously flaky. Self-heal: if first fetch doesn't return within FAIL_AFTER_MS
+    // and we have no cache, mark failed so the panel hides instead of sticking on "Contacting...".
+    const failTimer = setTimeout(() => {
+      if (!mountedRef.current) return;
+      setStatus(prev => (prev === 'loading' ? 'failed' : prev));
+    }, FAIL_AFTER_MS);
+
     const fetchFlights = async () => {
       try {
-        const res = await fetch(API_URL, { signal: AbortSignal.timeout(15000) });
+        const res = await fetch(API_URL, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
         if (!res.ok) return;
         const json = await res.json();
         if (!mountedRef.current || !json.states) return;
@@ -69,14 +79,19 @@ export function useFlightRadar() {
         };
 
         setStats(result);
+        setStatus('ready');
         setCache(CACHE_KEY, result, 'opensky');
       } catch {}
     };
 
     fetchFlights();
     const id = setInterval(fetchFlights, POLL_MS);
-    return () => { mountedRef.current = false; clearInterval(id); };
+    return () => {
+      mountedRef.current = false;
+      clearInterval(id);
+      clearTimeout(failTimer);
+    };
   }, []);
 
-  return stats;
+  return { stats, status };
 }

@@ -55,7 +55,6 @@ export const ALL_PANELS = [
   { id: 'trending-movies', label: 'Trending Movies', defaultSpan: 1 },
   // Bottom: Fun/lifestyle
   { id: 'npm-trends', label: 'NPM Trends', defaultSpan: 1 },
-  { id: 'fitness', label: 'Fitness', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
 { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
   { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
@@ -71,7 +70,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '31'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '32'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
