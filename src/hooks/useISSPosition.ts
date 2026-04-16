@@ -61,7 +61,7 @@ export function useISSPosition() {
           timestamp: json.timestamp * 1000,
           location: approxLocation(lat, lon),
         });
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[ISSPosition]', e); }
     };
 
     const fetchCrew = async () => {
@@ -72,7 +72,7 @@ export function useISSPosition() {
         if (json.message === 'success') {
           setCrewCount(json.number ?? 0);
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[ISSPosition]', e); }
     };
 
     fetchPos();

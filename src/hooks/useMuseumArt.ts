@@ -43,7 +43,7 @@ export function useMuseumArt(): ArtworkData | null {
 
         setArt(result);
         setCache(CACHE_KEY, result, 'artic');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[MuseumArt]', e); }
     };
 
     fetch_();

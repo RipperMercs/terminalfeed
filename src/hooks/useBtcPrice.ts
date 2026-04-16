@@ -114,7 +114,7 @@ export function useBtcPrice() {
           if (price > 0) {
             pushPrice(price, change, high, low, 'binance');
           }
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[BtcPrice]', e); }
       };
 
       ws.onclose = () => {
@@ -157,7 +157,7 @@ export function useBtcPrice() {
           marketCap: coin.market_cap ?? 0,
         } : prev);
       }
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[BtcPrice]', e); }
   }, [pushPrice]);
 
   // Seed chart with historical data (tries multiple sources)
@@ -183,7 +183,7 @@ export function useBtcPrice() {
           return;
         }
       }
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[BtcPrice]', e); }
 
     // Fallback: use our Worker for current price and build a minimal line
     try {
@@ -203,7 +203,7 @@ export function useBtcPrice() {
           });
         }
       }
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[BtcPrice]', e); }
   }, [priceHistory.length]);
 
   useEffect(() => {

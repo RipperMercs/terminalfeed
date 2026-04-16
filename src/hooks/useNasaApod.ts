@@ -56,7 +56,7 @@ export function useNasaApod() {
           setCache(CACHE_KEY, item, 'nasa-apod');
           return;
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[NasaApod]', e); }
     };
 
     const cached = getCache<ApodData>(CACHE_KEY);

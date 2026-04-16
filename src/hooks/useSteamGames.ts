@@ -39,7 +39,7 @@ export function useSteamGames(): SteamGame[] {
           setGames(results);
           setCache(CACHE_KEY, results, 'worker');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[SteamGames]', e); }
     };
 
     fetch_();

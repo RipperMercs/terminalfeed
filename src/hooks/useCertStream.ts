@@ -45,14 +45,14 @@ export function useCertStream(): CertEntry[] {
 
             lastAddRef.current = now;
             setCerts(prev => [{ domain, issuer, time: now }, ...prev].slice(0, MAX_CERTS));
-          } catch {}
+          } catch (e) { if (import.meta.env.DEV) console.warn('[CertStream]', e); }
         };
 
         ws.onerror = () => ws?.close();
         ws.onclose = () => {
           if (mountedRef.current) setTimeout(connect, 5000);
         };
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[CertStream]', e); }
     };
 
     connect();

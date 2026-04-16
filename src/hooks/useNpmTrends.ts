@@ -39,7 +39,7 @@ export function useNpmTrends(): NpmPackage[] {
           setPackages(results);
           setCache(CACHE_KEY, results, 'npmjs');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[NpmTrends]', e); }
     };
 
     fetch_();

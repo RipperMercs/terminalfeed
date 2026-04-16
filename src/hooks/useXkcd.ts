@@ -44,7 +44,7 @@ export function useXkcd() {
 
         setComic(result);
         setCache(CACHE_KEY, result, 'xkcd');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Xkcd]', e); }
     };
 
     fetchComic();

@@ -157,7 +157,7 @@ export function useSportsScores() {
                 situation: '',
               });
             }
-          } catch {}
+          } catch (e) { if (import.meta.env.DEV) console.warn('[SportsScores]', e); }
         }),
       );
 

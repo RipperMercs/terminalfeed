@@ -45,7 +45,7 @@ export function useMetals() {
             },
           ]);
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Metals]', e); }
     };
 
     fetchPrices();

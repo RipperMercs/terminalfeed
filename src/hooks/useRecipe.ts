@@ -64,7 +64,7 @@ export function useRecipe(): RecipeData[] {
           setRecipes(results);
           setCache(CACHE_KEY, results, 'themealdb');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Recipe]', e); }
     };
 
     // Fetch on load if cache is stale or empty

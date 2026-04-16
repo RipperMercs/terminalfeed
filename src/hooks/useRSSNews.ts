@@ -59,7 +59,7 @@ export function useRSSNews(): RSSItem[] {
                 time: item.pubDate ? Math.floor(new Date(item.pubDate).getTime() / 1000) : Math.floor(Date.now() / 1000),
               });
             }
-          } catch {}
+          } catch (e) { if (import.meta.env.DEV) console.warn('[RSSNews]', e); }
         })
       );
 

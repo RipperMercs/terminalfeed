@@ -45,7 +45,7 @@ async function fetchTrending(): Promise<TrendingMovie[]> {
         mediaType: isMovie ? 'movie' : 'tv',
       });
     }
-  } catch {}
+  } catch (e) { if (import.meta.env.DEV) console.warn('[TrendingMovies]', e); }
 
   return items;
 }

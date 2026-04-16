@@ -116,7 +116,7 @@ export function useWeather(): WeatherData | null {
 
         setData(result);
         setCache(CACHE_KEY, result, 'open-meteo');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Weather]', e); }
     };
 
     const init = async () => {

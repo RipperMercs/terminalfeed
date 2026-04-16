@@ -42,7 +42,7 @@ export function useCryptoGlobal(): CryptoGlobalData | null {
 
         setData(result);
         setCache(CACHE_KEY, result, 'coingecko');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[CryptoGlobal]', e); }
     };
 
     fetch_();

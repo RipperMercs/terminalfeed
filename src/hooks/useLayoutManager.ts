@@ -412,7 +412,7 @@ export function useLayoutManager(): LayoutManager {
           if (data.panelOrder?.length > 0) setPanelOrderState(data.panelOrder);
           showToast('Shared layout applied');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[LayoutManager]', e); }
     }
 
     // Strip the layout param from URL

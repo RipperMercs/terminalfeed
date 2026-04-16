@@ -44,7 +44,7 @@ async function fetchSubreddit(sub: string): Promise<GoodNewsItem[]> {
         return items;
       }
     }
-  } catch {}
+  } catch (e) { if (import.meta.env.DEV) console.warn('[GoodNews]', e); }
 
   // Fallback: Direct RSS XML
   try {
@@ -71,7 +71,7 @@ async function fetchSubreddit(sub: string): Promise<GoodNewsItem[]> {
         });
       });
     }
-  } catch {}
+  } catch (e) { if (import.meta.env.DEV) console.warn('[GoodNews]', e); }
 
   return items;
 }

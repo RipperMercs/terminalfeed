@@ -47,7 +47,7 @@ async function fetchSubredditRSS(sub: string): Promise<RedditPost[]> {
         return posts;
       }
     }
-  } catch {}
+  } catch (e) { if (import.meta.env.DEV) console.warn('[RedditTech]', e); }
 
   // Fallback: Direct RSS XML parsing
   try {
@@ -76,7 +76,7 @@ async function fetchSubredditRSS(sub: string): Promise<RedditPost[]> {
       });
       if (posts.length > 0) return posts;
     }
-  } catch {}
+  } catch (e) { if (import.meta.env.DEV) console.warn('[RedditTech]', e); }
 
   // Last resort: old JSON API
   try {
@@ -102,7 +102,7 @@ async function fetchSubredditRSS(sub: string): Promise<RedditPost[]> {
         });
       }
     }
-  } catch {}
+  } catch (e) { if (import.meta.env.DEV) console.warn('[RedditTech]', e); }
 
   return posts;
 }

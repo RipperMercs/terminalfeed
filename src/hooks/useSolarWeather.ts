@@ -85,7 +85,7 @@ export function useSolarWeather(): SolarData | null {
 
         setData(result);
         setCache(CACHE_KEY, result, 'nasa-donki');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[SolarWeather]', e); }
     };
 
     fetch_();

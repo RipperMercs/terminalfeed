@@ -67,7 +67,7 @@ export function useHackerNews() {
         }
 
         setStories(filtered);
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[HackerNews]', e); }
     };
 
     fetchStories();

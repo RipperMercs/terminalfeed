@@ -81,7 +81,7 @@ export function useDonations(): DonationStats {
 
         setStats(result);
         setCache(CACHE_KEY, result, 'mempool');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[Donations]', e); }
     };
 
     fetch_();

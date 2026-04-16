@@ -97,7 +97,7 @@ export function useSimCrypto(customSymbols: string[] = []) {
 
       setCrypto(fullList);
       setCache('crypto_prices', fullList, 'coingecko');
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[SimCrypto]', e); }
   }, []);
 
   const connectWs = useCallback(() => {
@@ -129,7 +129,7 @@ export function useSimCrypto(customSymbols: string[] = []) {
             setCache('crypto_prices', next, 'coincap');
             return next;
           });
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[SimCrypto]', e); }
       };
 
       ws.onclose = () => {
@@ -138,7 +138,7 @@ export function useSimCrypto(customSymbols: string[] = []) {
       };
 
       ws.onerror = () => { ws.close(); };
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[SimCrypto]', e); }
   }, []);
 
   useEffect(() => {

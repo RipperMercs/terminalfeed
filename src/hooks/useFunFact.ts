@@ -23,7 +23,7 @@ export function useFunFact(): string {
           setFact(data.text);
           setCache(CACHE_KEY, data.text, 'uselessfacts');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[FunFact]', e); }
     };
 
     fetch_();

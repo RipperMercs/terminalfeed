@@ -49,7 +49,7 @@ export function useHumansInSpace(): HumansInSpaceData | null {
             return;
           }
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[HumansInSpace]', e); }
 
       // Worker failed — use cache or fallback (open-notify is HTTP-only, no direct fetch from HTTPS site)
       if (mountedRef.current && !getCache<HumansInSpaceData>(CACHE_KEY)?.data) {

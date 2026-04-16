@@ -104,7 +104,7 @@ export function useBtcNetwork(): BtcNetworkData {
         partial.feeHour = fees.hourFee ?? 0;
         partial.feeEconomy = fees.economyFee ?? 0;
         partial.feeMinimum = fees.minimumFee ?? 0;
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
     }
 
     // Difficulty adjustment
@@ -115,7 +115,7 @@ export function useBtcNetwork(): BtcNetworkData {
         partial.diffChange = diff.difficultyChange ?? 0;
         partial.diffRemainingBlocks = diff.remainingBlocks ?? 0;
         partial.diffRetargetDate = diff.estimatedRetargetDate ?? 0;
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
     }
 
     // Hashrate
@@ -124,7 +124,7 @@ export function useBtcNetwork(): BtcNetworkData {
         const hr = await hashrateRes.value.json();
         partial.hashrate = hr.currentHashrate ?? 0;
         partial.difficulty = hr.currentDifficulty ?? 0;
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
     }
 
     // Recent blocks
@@ -156,7 +156,7 @@ export function useBtcNetwork(): BtcNetworkData {
             partial.blockPool = blocks[0].extras?.pool?.name ?? 'Unknown';
           }
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
     }
 
     // Mempool
@@ -165,7 +165,7 @@ export function useBtcNetwork(): BtcNetworkData {
         const mem = await mempoolRes.value.json();
         partial.mempoolCount = mem.count ?? 0;
         partial.mempoolVsize = mem.vsize ?? 0;
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
     }
 
     update(partial);
@@ -212,7 +212,7 @@ export function useBtcNetwork(): BtcNetworkData {
           }
 
           if (Object.keys(partial).length > 0) update(partial);
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
       };
 
       ws.onclose = () => {
@@ -222,7 +222,7 @@ export function useBtcNetwork(): BtcNetworkData {
       };
 
       ws.onerror = () => { ws.close(); };
-    } catch {}
+    } catch (e) { if (import.meta.env.DEV) console.warn('[BtcNetwork]', e); }
   }, [update]);
 
   useEffect(() => {

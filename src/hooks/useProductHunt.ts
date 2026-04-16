@@ -35,7 +35,7 @@ export function useProductHunt(): PHProduct[] {
 
         setProducts(results);
         setCache(CACHE_KEY, results, 'producthunt');
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[ProductHunt]', e); }
     };
 
     fetch_();

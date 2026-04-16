@@ -40,7 +40,7 @@ export function useForexHeatmap(): ForexRate[] {
             const yData = await yRes.json();
             prevRates = yData.rates || {};
           }
-        } catch {}
+        } catch (e) { if (import.meta.env.DEV) console.warn('[ForexHeatmap]', e); }
 
         const results: ForexRate[] = DISPLAY_CURRENCIES
           .filter(c => data.rates[c])
@@ -55,7 +55,7 @@ export function useForexHeatmap(): ForexRate[] {
           setRates(results);
           setCache(CACHE_KEY, results, 'frankfurter');
         }
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[ForexHeatmap]', e); }
     };
 
     fetch_();

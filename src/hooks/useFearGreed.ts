@@ -28,7 +28,7 @@ export function useFearGreed() {
           label: entry.value_classification,
           timestamp: parseInt(entry.timestamp, 10) * 1000,
         });
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[FearGreed]', e); }
     };
 
     fetch_();

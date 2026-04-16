@@ -46,7 +46,7 @@ export function useGithubTrending() {
             url: item.html_url,
           })),
         );
-      } catch {}
+      } catch (e) { if (import.meta.env.DEV) console.warn('[GithubTrending]', e); }
     };
 
     fetchTrending();
