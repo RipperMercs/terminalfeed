@@ -19,6 +19,8 @@
 // =============================================================================
 
 
+const workerStartTime = Date.now();
+
 // --- In-Memory Cache ---
 
 const _cache = {};
@@ -994,6 +996,7 @@ export default {
       case 'meme-radar':     return await handleMemeRadar();
       case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
+      case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
       default:
         return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);
     }
