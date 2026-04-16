@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="API Playground for TerminalFeed.io. Test all endpoints live, see JSON responses, generate code snippets in cURL, JavaScript, and Python.">
+    <meta name="keywords" content="API, playground, test endpoints, TerminalFeed, crypto, stocks, real-time data">
+    <title>API Playground | TerminalFeed</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="API Playground | TerminalFeed">
+    <meta property="og:description" content="Test TerminalFeed API endpoints live. Click to fetch, see JSON responses with syntax highlighting. No auth required.">
+    <meta property="og:url" content="https://terminalfeed.io/developers-playground">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="API Playground | TerminalFeed">
+    <meta name="twitter:description" content="Test TerminalFeed API endpoints live. Click to fetch, see JSON responses with syntax highlighting. No auth required.">
+    <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://terminalfeed.io/developers-playground">
+
+    <!-- RSS -->
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml">
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://terminalfeed.io"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "API Docs",
+                "item": "https://terminalfeed.io/developers"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Playground",
+                "item": "https://terminalfeed.io/developers-playground"
+            }
+        ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "API Playground",
+        "description": "Test TerminalFeed API endpoints live with interactive playground. See JSON responses, generate code, no auth required.",
+        "url": "https://terminalfeed.io/developers-playground",
+        "publisher": {
+            "@type": "Organization",
+            "name": "TerminalFeed",
+            "logo": "https://terminalfeed.io/logo.png",
+            "url": "https://terminalfeed.io"
+        }
+    }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0A0A0C;
+            color: #F0EDE6;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            margin-bottom: 2rem;
+            font-size: 12px;
+        }
+
+        .breadcrumbs a {
+            color: #5DCAA5;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumbs a:hover {
+            color: #4ADE80;
+        }
+
+        .breadcrumb-sep {
+            color: #4E4D49;
+            margin: 0 0.5rem;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid #1E1E24;
+            padding-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #4ADE80;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: #8A8880;
+            font-size: 14px;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background-color: #111114;
+            border: 1px solid #1E1E24;
+            color: #F0EDE6;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 2px;
+        }
+
+        .btn:hover {
+            background-color: #1A1A1E;
+            border-color: #5DCAA5;
+            color: #5DCAA5;
+        }
+
+        .btn.primary {
+            background-color: #5DCAA5;
+            color: #0A0A0C;
+            border-color: #5DCAA5;
+        }
+
+        .btn.primary:hover {
+            background-color: #4ADE80;
+            border-color: #4ADE80;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Endpoint Grid */
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .endpoint-card {
+            background-color: #111114;
+            border: 1px solid #1E1E24;
+            border-radius: 2px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .endpoint-card:hover {
+            border-color: #5DCAA5;
+            box-shadow: 0 0 20px rgba(93, 202, 165, 0.1);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: #4ADE80;
+            color: #0A0A0C;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 1px;
+            letter-spacing: 1px;
+        }
+
+        .endpoint-path {
+            color: #5DCAA5;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .endpoint-description {
+            color: #8A8880;
+            font-size: 12px;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .endpoint-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .try-btn {
+            flex: 1;
+        }
+
+        /* Response Area */
+        .response-area {
+            margin-top: 1rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .response-area.expanded {
+            max-height: 600px;
+        }
+
+        .response-container {
+            background-color: #0D0D10;
+            border: 1px solid #1E1E24;
+            border-radius: 2px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 12px;
+            color: #8A8880;
+        }
+
+        .response-time {
+            color: #4ADE80;
+        }
+
+        .copy-btn {
+            padding: 0.25rem 0.75rem;
+            background-color: #1E1E24;
+            border: 1px solid #4E4D49;
+            color: #8A8880;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 1px;
+        }
+
+        .copy-btn:hover {
+            color: #5DCAA5;
+            border-color: #5DCAA5;
+        }
+
+        .copy-btn.copied {
+            color: #4ADE80;
+            border-color: #4ADE80;
+        }
+
+        .json-content {
+            color: #F0EDE6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .loading {
+            color: #EF9F27;
+            animation: pulse 1.5s infinite;
+        }
+
+        .error {
+            color: #F87171;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Code Generator */
+        .code-generator {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #1E1E24;
+        }
+
+        .code-generator h2 {
+            font-size: 1.5rem;
+            color: #4ADE80;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .code-selector {
+            margin-bottom: 2rem;
+        }
+
+        .code-selector label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #D4D2CB;
+            font-size: 12px;
+        }
+
+        .code-selector select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #111114;
+            border: 1px solid #1E1E24;
+            color: #F0EDE6;
+            font-family: inherit;
+            font-size: 13px;
+            border-radius: 2px;
+        }
+
+        .code-selector select:focus {
+            outline: none;
+            border-color: #5DCAA5;
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #1E1E24;
+        }
+
+        .code-tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: #8A8880;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .code-tab:hover {
+            color: #5DCAA5;
+        }
+
+        .code-tab.active {
+            color: #5DCAA5;
+            border-bottom-color: #5DCAA5;
+        }
+
+        .code-block {
+            background-color: #0D0D10;
+            border: 1px solid #1E1E24;
+            border-radius: 2px;
+            padding: 1rem;
+            overflow-x: auto;
+            display: none;
+        }
+
+        .code-block.active {
+            display: block;
+        }
+
+        .code-block code {
+            color: #F0EDE6;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .code-copy-btn {
+            display: block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #111114;
+            border: 1px solid #1E1E24;
+            color: #F0EDE6;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 2px;
+        }
+
+        .code-copy-btn:hover {
+            border-color: #5DCAA5;
+            color: #5DCAA5;
+        }
+
+        .code-copy-btn.copied {
+            border-color: #4ADE80;
+            color: #4ADE80;
+        }
+
+        /* SEO Content */
+        .seo-content {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #1E1E24;
+            color: #8A8880;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .seo-content h3 {
+            color: #D4D2CB;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 13px;
+        }
+
+        .seo-content a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+
+        .seo-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* Load Test Results */
+        .load-test-results {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .load-test-results.show {
+            display: block;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 1rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #1E1E24;
+        }
+
+        .results-table th {
+            background-color: #111114;
+            color: #4ADE80;
+            font-weight: bold;
+        }
+
+        .results-table td {
+            color: #D4D2CB;
+        }
+
+        .status-ok {
+            color: #4ADE80;
+        }
+
+        .status-error {
+            color: #F87171;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #1E1E24;
+            text-align: center;
+            font-size: 12px;
+            color: #8A8880;
+        }
+
+        .footer a {
+            color: #5DCAA5;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: #4ADE80;
+        }
+
+        .sep {
+            color: #4E4D49;
+            margin: 0 0.5rem;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .endpoints-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .response-area.expanded {
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs">
+            <a href="/">Home</a>
+            <span class="breadcrumb-sep">/</span>
+            <a href="/developers">API Docs</a>
+            <span class="breadcrumb-sep">/</span>
+            <span>Playground</span>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <h1>API PLAYGROUND</h1>
+            <p>Test any TerminalFeed API endpoint. Click to fetch, see the response. No auth required.</p>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <button class="btn primary" id="fetchAllBtn">FETCH ALL ENDPOINTS</button>
+            <button class="btn" id="clearAllBtn">CLEAR ALL RESPONSES</button>
+        </div>
+
+        <!-- Load Test Results (hidden until Fetch All is clicked) -->
+        <div class="load-test-results" id="loadTestResults">
+            <h3>Load Test Results</h3>
+            <table class="results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Status</th>
+                        <th>Response Time (ms)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Endpoints Grid -->
+        <div class="endpoints-grid" id="endpointsGrid"></div>
+
+        <!-- Code Generator -->
+        <div class="code-generator">
+            <h2>CODE GENERATOR</h2>
+
+            <div class="code-selector">
+                <label for="endpointSelect">Select an endpoint to generate code snippets:</label>
+                <select id="endpointSelect">
+                    <option value="">-- Choose endpoint --</option>
+                </select>
+            </div>
+
+            <div class="code-tabs">
+                <button class="code-tab active" data-lang="curl">cURL</button>
+                <button class="code-tab" data-lang="javascript">JavaScript</button>
+                <button class="code-tab" data-lang="python">Python</button>
+            </div>
+
+            <div class="code-block active" id="curlBlock">
+                <code id="curlCode"></code>
+            </div>
+            <div class="code-block" id="jsBlock">
+                <code id="jsCode"></code>
+            </div>
+            <div class="code-block" id="pythonBlock">
+                <code id="pythonCode"></code>
+            </div>
+
+            <button class="code-copy-btn" id="codeCopyBtn">COPY CODE</button>
+        </div>
+
+        <!-- SEO Content -->
+        <div class="seo-content">
+            <h3>About the TerminalFeed API Playground</h3>
+            <p>The API Playground is an interactive tool for developers to test all TerminalFeed endpoints without authentication. Every endpoint returns live JSON data from our real-time feeds covering cryptocurrency, stocks, weather, earthquakes, prediction markets, and more.</p>
+
+            <h3>How to Use</h3>
+            <p>Click the "Try it" button on any endpoint card to fetch live data. You'll see the JSON response, response time in milliseconds, and options to copy the response or generate code snippets. The Fetch All button runs all 19 endpoints simultaneously for load testing.</p>
+
+            <h3>API Endpoints</h3>
+            <p>Available endpoints include briefing (world snapshot), BTC price, stocks, crypto movers, fear and greed index, earthquakes, Polymarket predictions, HackerNews, service status, cyber threats, GitHub trending, forex rates, ISS crew, disaster alerts, space launches, economic data, Steam games, weather, and API call statistics.</p>
+
+            <h3>Code Generation</h3>
+            <p>Select an endpoint from the code generator dropdown to see copy-paste code examples in cURL, JavaScript (fetch), and Python (requests). Perfect for integrating TerminalFeed data into your own projects.</p>
+
+            <h3>Developer Resources</h3>
+            <p>Visit the <a href="/developers">full API documentation</a> for detailed endpoint specs, parameters, and response schemas. Check out the <a href="/blog">blog</a> for tutorials and best practices. For questions, reach out to <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a>.</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/live">Live</a><span class="sep">|</span>
+            <a href="/tools">Tools</a><span class="sep">|</span>
+            <a href="/agent">Agents</a><span class="sep">|</span>
+            <a href="/radio">Radio</a><span class="sep">|</span>
+            <a href="/wifi">WiFi</a><span class="sep">|</span>
+            <a href="/blog">Blog</a><span class="sep">|</span>
+            <a href="/developers">API</a><span class="sep">|</span>
+            <a href="/about">About</a><span class="sep">|</span>
+            <a href="/team">Team</a><span class="sep">|</span>
+            <a href="/features">Features</a>
+            <span class="sep">|</span>
+            <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+            <span class="sep">|</span>
+            <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+        </footer>
+    </div>
+
+    <script>
+        // API Endpoints Configuration
+        const endpoints = [
+            {
+                path: '/api/briefing',
+                description: 'One-call world snapshot. AI agents use this for global context.',
+                name: 'Briefing'
+            },
+            {
+                path: '/api/btc-price',
+                description: 'Bitcoin price from Binance with CoinCap fallback.',
+                name: 'BTC Price'
+            },
+            {
+                path: '/api/stocks',
+                description: 'Top US stocks from Finnhub with prices and changes.',
+                name: 'Stocks'
+            },
+            {
+                path: '/api/crypto-movers',
+                description: 'Top 15 crypto gainers and losers from CoinGecko.',
+                name: 'Crypto Movers'
+            },
+            {
+                path: '/api/fear-greed',
+                description: 'Fear & Greed Index from Alternative.me.',
+                name: 'Fear & Greed'
+            },
+            {
+                path: '/api/earthquake',
+                description: 'Recent earthquakes from USGS.',
+                name: 'Earthquakes'
+            },
+            {
+                path: '/api/predictions',
+                description: 'Polymarket prediction market odds via Gamma API.',
+                name: 'Predictions'
+            },
+            {
+                path: '/api/hackernews',
+                description: 'Top HackerNews stories from Firebase.',
+                name: 'HackerNews'
+            },
+            {
+                path: '/api/service-status',
+                description: 'Status of GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian.',
+                name: 'Service Status'
+            },
+            {
+                path: '/api/cyber-threats',
+                description: 'Malware and IOCs from URLhaus and ThreatFox.',
+                name: 'Cyber Threats'
+            },
+            {
+                path: '/api/github-trending',
+                description: 'Trending GitHub events and repositories.',
+                name: 'GitHub Trending'
+            },
+            {
+                path: '/api/forex',
+                description: 'Currency exchange rates from Frankfurter.',
+                name: 'Forex Rates'
+            },
+            {
+                path: '/api/humans-in-space',
+                description: 'Current ISS crew from Open Notify.',
+                name: 'Humans in Space'
+            },
+            {
+                path: '/api/disaster-alerts',
+                description: 'GDACS disaster and emergency alerts.',
+                name: 'Disaster Alerts'
+            },
+            {
+                path: '/api/launches',
+                description: 'Upcoming space launches from The Space Devs.',
+                name: 'Space Launches'
+            },
+            {
+                path: '/api/economic-data',
+                description: 'Fed rate, CPI, unemployment from FRED.',
+                name: 'Economic Data'
+            },
+            {
+                path: '/api/steam',
+                description: 'Top Steam games by concurrent players.',
+                name: 'Steam Games'
+            },
+            {
+                path: '/api/weather?lat=34.05&lon=-118.24',
+                description: 'Weather data from Open-Meteo (Los Angeles example).',
+                name: 'Weather'
+            },
+            {
+                path: '/api/ai-stats',
+                description: 'API call tracking and statistics for AI Hub panel.',
+                name: 'AI Stats'
+            }
+        ];
+
+        // Initialize the page
+        function init() {
+            renderEndpointCards();
+            populateCodeSelector();
+            setupEventListeners();
+        }
+
+        // Render endpoint cards
+        function renderEndpointCards() {
+            const grid = document.getElementById('endpointsGrid');
+
+            endpoints.forEach((endpoint, index) => {
+                const card = document.createElement('div');
+                card.className = 'endpoint-card';
+                card.innerHTML = `
+                    <div class="endpoint-header">
+                        <span class="badge">GET</span>
+                        <div class="endpoint-path">${endpoint.path}</div>
+                    </div>
+                    <p class="endpoint-description">${endpoint.description}</p>
+                    <div class="endpoint-actions">
+                        <button class="btn try-btn" onclick="fetchEndpoint(${index})">TRY IT</button>
+                    </div>
+                    <div class="response-area" id="response-${index}">
+                        <div class="response-container">
+                            <div class="response-header">
+                                <span>JSON Response</span>
+                                <button class="copy-btn" onclick="copyResponse(${index})">COPY</button>
+                            </div>
+                            <div class="response-header">
+                                <span id="time-${index}"></span>
+                            </div>
+                            <div class="json-content" id="content-${index}"></div>
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Fetch a single endpoint
+        async function fetchEndpoint(index) {
+            const endpoint = endpoints[index];
+            const responseArea = document.getElementById(`response-${index}`);
+            const content = document.getElementById(`content-${index}`);
+            const timeEl = document.getElementById(`time-${index}`);
+
+            // Show loading state
+            content.innerHTML = '<span class="loading">Loading...</span>';
+            timeEl.innerHTML = '';
+            responseArea.classList.add('expanded');
+
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch(`https://terminalfeed.io${endpoint.path}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+
+                const data = await response.json();
+
+                // Syntax highlight and format JSON
+                const highlighted = syntaxHighlightJson(JSON.stringify(data, null, 2));
+                content.innerHTML = highlighted;
+                timeEl.innerHTML = `<span class="response-time">Response: ${duration}ms</span>`;
+
+                // Store raw data for copy
+                content.dataset.raw = JSON.stringify(data, null, 2);
+            } catch (error) {
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+
+                content.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                timeEl.innerHTML = `<span class="response-time">Failed after ${duration}ms</span>`;
+            }
+        }
+
+        // Fetch all endpoints simultaneously
+        async function fetchAll() {
+            const btn = document.getElementById('fetchAllBtn');
+            btn.disabled = true;
+            btn.textContent = 'FETCHING...';
+
+            const resultsBody = document.getElementById('resultsBody');
+            resultsBody.innerHTML = '';
+
+            const promises = endpoints.map((endpoint, index) => {
+                return fetchEndpoint(index).then(() => {
+                    const duration = document.getElementById(`time-${index}`).textContent;
+                    const match = duration.match(/(\d+)ms/);
+                    const time = match ? parseInt(match[1]) : 0;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><a href="#" onclick="location.hash='endpoint-${index}'; return false;">${endpoint.name}</a></td>
+                        <td><span class="status-ok">OK</span></td>
+                        <td>${time}ms</td>
+                    `;
+                    resultsBody.appendChild(row);
+                }).catch((error) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${endpoint.name}</td>
+                        <td><span class="status-error">ERROR</span></td>
+                        <td>Failed</td>
+                    `;
+                    resultsBody.appendChild(row);
+                });
+            });
+
+            await Promise.all(promises);
+
+            document.getElementById('loadTestResults').classList.add('show');
+
+            btn.disabled = false;
+            btn.textContent = 'FETCH ALL ENDPOINTS';
+        }
+
+        // Copy response
+        function copyResponse(index) {
+            const content = document.getElementById(`content-${index}`);
+            const raw = content.dataset.raw;
+
+            if (!raw) return;
+
+            navigator.clipboard.writeText(raw).then(() => {
+                const btn = event.target;
+                const original = btn.textContent;
+                btn.textContent = 'COPIED!';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Populate code selector
+        function populateCodeSelector() {
+            const select = document.getElementById('endpointSelect');
+
+            endpoints.forEach((endpoint, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = endpoint.name;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', (e) => {
+                if (e.target.value !== '') {
+                    generateCodeSnippets(parseInt(e.target.value));
+                }
+            });
+        }
+
+        // Generate code snippets
+        function generateCodeSnippets(index) {
+            const endpoint = endpoints[index];
+            const url = `https://terminalfeed.io${endpoint.path}`;
+
+            // cURL
+            const curlCode = `curl -X GET "${url}" \\
+  -H "Accept: application/json"`;
+            document.getElementById('curlCode').textContent = curlCode;
+
+            // JavaScript
+            const jsCode = `fetch('${url}')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));`;
+            document.getElementById('jsCode').textContent = jsCode;
+
+            // Python
+            const pythonCode = `import requests
+
+url = '${url}'
+response = requests.get(url)
+data = response.json()
+print(data)`;
+            document.getElementById('pythonCode').textContent = pythonCode;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('fetchAllBtn').addEventListener('click', fetchAll);
+
+            document.getElementById('clearAllBtn').addEventListener('click', () => {
+                endpoints.forEach((_, index) => {
+                    const responseArea = document.getElementById(`response-${index}`);
+                    responseArea.classList.remove('expanded');
+                    document.getElementById(`content-${index}`).innerHTML = '';
+                    document.getElementById(`time-${index}`).innerHTML = '';
+                });
+                document.getElementById('loadTestResults').classList.remove('show');
+            });
+
+            // Code tab switching
+            document.querySelectorAll('.code-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const lang = e.target.dataset.lang;
+
+                    // Update tab active state
+                    document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // Update code block active state
+                    const langMap = { curl: 'curlBlock', javascript: 'jsBlock', python: 'pythonBlock' };
+                    document.querySelectorAll('.code-block').forEach(block => block.classList.remove('active'));
+                    document.getElementById(langMap[lang]).classList.add('active');
+                });
+            });
+
+            // Code copy button
+            document.getElementById('codeCopyBtn').addEventListener('click', () => {
+                const activeBlock = document.querySelector('.code-block.active code');
+                if (activeBlock) {
+                    navigator.clipboard.writeText(activeBlock.textContent).then(() => {
+                        const btn = event.target;
+                        const original = btn.textContent;
+                        btn.textContent = 'COPIED!';
+                        btn.classList.add('copied');
+
+                        setTimeout(() => {
+                            btn.textContent = original;
+                            btn.classList.remove('copied');
+                        }, 2000);
+                    });
+                }
+            });
+        }
+
+        // Syntax highlight JSON
+        function syntaxHighlightJson(json) {
+            return json
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+                    let cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+
+                    const colorMap = {
+                        key: '#60A5FA',
+                        string: '#4ADE80',
+                        number: '#FBBF24',
+                        boolean: '#A78BFA',
+                        null: '#6B7280'
+                    };
+
+                    return `<span style="color: ${colorMap[cls]}">${match}</span>`;
+                });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
