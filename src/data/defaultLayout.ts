@@ -46,7 +46,6 @@ export const DEFAULT_LAYOUT = {
     'hn-community',
     'npm-trends',
     'recipe',
-    'fitness',
     'support',
     'daily-paws',
   ],

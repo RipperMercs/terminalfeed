@@ -139,7 +139,7 @@ function App() {
   const rssNews = useRSSNews();
   const npmPackages = useNpmTrends();
   const aiHub = useAIHub();
-  const predictionMarkets = usePredictionMarkets();
+  const { markets: predictionMarkets, status: predictionsStatus } = usePredictionMarkets();
   const steamGames = useSteamGames();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const museumArt = useMuseumArt();
@@ -155,7 +155,7 @@ function App() {
   const humansInSpace = useHumansInSpace();
   const thisDayEvents = useThisDay();
   const footerQuote = useFooterQuote();
-  const flightStats = useFlightRadar();
+  const { stats: flightStats, status: flightStatus } = useFlightRadar();
   const cloudStatus = useCloudStatus();
   const tcgMarket = useTCGMarket();
 
@@ -565,7 +565,7 @@ function App() {
         <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Checking cloud providers...</div>
       )}
     </>),
-    'flight-radar': (<>
+    'flight-radar': flightStatus === 'failed' ? null : (<>
       <PanelHead panelId="flight-radar" isStale={panelHealth.isStale('flight-radar')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">Flight Radar</span><span className="panelTag">OPENSKY</span></div>
         <div className="panelLive">
@@ -663,22 +663,6 @@ function App() {
         ))}
       </div>
     </>),
-    'fitness': (<>
-      <PanelHead panelId="fitness" isStale={panelHealth.isStale('fitness')} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Fitness</span><span className="panelTag" style={{ color: 'var(--green)' }}>LIVE</span></div>
-        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>daily gains</span>
-      </PanelHead>
-      <div style={{ display: 'flex', gap: 16, padding: '0 0 8px', fontSize: 10 }}>
-        <div><div style={{ color: 'var(--red)', fontSize: 16, fontWeight: 700 }}>0</div><div style={{ color: 'var(--text-dim)', fontSize: 8 }}>reps today</div></div>
-        <div><div style={{ color: 'var(--gold)', fontSize: 16, fontWeight: 700 }}>3,200</div><div style={{ color: 'var(--text-dim)', fontSize: 8 }}>cal consumed</div></div>
-        <div><div style={{ color: 'var(--green)', fontSize: 16, fontWeight: 700 }}>100%</div><div style={{ color: 'var(--text-dim)', fontSize: 8 }}>pizza intake</div></div>
-      </div>
-      <img src="https://images.pexels.com/photos/1653877/pexels-photo-1653877.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Peak fitness performance" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
-      <div style={{ padding: '6px 0 0', fontSize: 8, color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
-        <span>this one's for you, rupture</span>
-        <span>powered by carbs</span>
-      </div>
-    </>),
     'museum-art': (<>
       <PanelHead panelId="museum-art" isStale={panelHealth.isStale('museum-art')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Art</span><span className="panelTag">MUSEUM</span></div></PanelHead>
       {museumArt ? (
@@ -761,7 +745,7 @@ function App() {
         <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>source: NUFORC · nuforc.org</div>
       </div>
     </>),
-    'predictions': (<>
+    'predictions': predictionsStatus === 'failed' ? null : (<>
       <PanelHead panelId="predictions" isStale={panelHealth.isStale('predictions')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Predictions</span><span className="panelTag">POLYMARKET</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {predictionMarkets.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading markets...</div>}
