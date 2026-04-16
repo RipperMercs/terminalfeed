@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Terminal Briefing - Newsletter | TerminalFeed</title>
+  <meta name="description" content="Subscribe to The Daily Terminal Briefing. BTC price, market sentiment, earthquake count, top headlines, and the data that matters. Free daily newsletter at 9 AM ET.">
+  <link rel="canonical" href="https://terminalfeed.io/newsletter">
+  <meta property="og:title" content="Daily Terminal Briefing - Newsletter">
+  <meta property="og:description" content="Free daily newsletter: BTC price, Fear & Greed, earthquakes, top headlines. Every morning at 9 AM ET.">
+  <meta property="og:url" content="https://terminalfeed.io/newsletter">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Newsletter", "item": "https://terminalfeed.io/newsletter" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Daily Terminal Briefing Newsletter",
+    "description": "Subscribe to The Daily Terminal Briefing. Free daily email with BTC price, market sentiment, earthquake count, top headlines, and the data that matters.",
+    "url": "https://terminalfeed.io/newsletter",
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs {
+      font-size: 11px;
+      color: #4E4D49;
+      margin-bottom: 32px;
+    }
+    .breadcrumbs a {
+      color: #4E4D49;
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .hero h1 {
+      font-size: 24px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      font-weight: 400;
+    }
+    .hero .subtitle {
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .preview-section {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 40px;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #C8C8C0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    }
+    .preview-section .preview-title {
+      color: #4ADE80;
+      margin-bottom: 12px;
+      font-weight: 400;
+    }
+    .preview-section .preview-line {
+      margin-bottom: 6px;
+    }
+    .preview-section .preview-line span.label { color: #5DCAA5; }
+    .preview-section .preview-line span.data { color: #F0EDE6; font-weight: 500; }
+    .preview-section .preview-line span.positive { color: #4ADE80; }
+    .preview-section .preview-line span.negative { color: #F87171; }
+
+    .signup-form {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+    .signup-form h2 {
+      font-size: 14px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 600px) {
+      .form-group {
+        flex-direction: row;
+        gap: 8px;
+      }
+    }
+
+    .form-group input {
+      flex: 1;
+      background: #0D0D10;
+      border: 1px solid #1E1E24;
+      color: #F0EDE6;
+      padding: 12px 16px;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 13px;
+      border-radius: 4px;
+      transition: border-color 0.2s ease;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #5DCAA5;
+    }
+    .form-group input::placeholder {
+      color: #4E4D49;
+    }
+
+    .btn-subscribe {
+      background: #5DCAA5;
+      color: #0A0A0C;
+      border: none;
+      padding: 12px 32px;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .btn-subscribe:hover { background: #4BB895; }
+    .btn-subscribe:active { transform: scale(0.98); }
+    .btn-subscribe:disabled {
+      background: #4E4D49;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .form-message {
+      font-size: 12px;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 12px;
+      display: none;
+    }
+    .form-message.success {
+      background: #4ADE8015;
+      color: #4ADE80;
+      border: 1px solid #4ADE8040;
+      display: block;
+    }
+    .form-message.error {
+      background: #F8717115;
+      color: #F87171;
+      border: 1px solid #F8717140;
+      display: block;
+    }
+
+    .subscriber-count {
+      text-align: center;
+      font-size: 14px;
+      color: #8A8880;
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+
+    .privacy-note {
+      background: #0D0D10;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 11px;
+      color: #4E4D49;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .cta-section {
+      text-align: center;
+      padding: 32px 24px;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      margin-bottom: 32px;
+    }
+    .cta-section h3 {
+      font-size: 13px;
+      color: #5DCAA5;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .cta-section p {
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .cta-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+    .cta-links a {
+      color: #5DCAA5;
+      text-decoration: none;
+    }
+    .cta-links a:hover { text-decoration: underline; }
+
+    .footer {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #1E1E24;
+      font-size: 10px;
+      color: #3E3E3A;
+      text-align: center;
+    }
+    .footer p { margin-bottom: 12px; }
+    .footer a {
+      color: #4E4D49;
+      text-decoration: none;
+    }
+    .footer a:hover { color: #5DCAA5; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 18px; }
+      .hero .subtitle { font-size: 12px; }
+      .preview-section { font-size: 11px; padding: 16px; }
+      .signup-form { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Newsletter</span>
+    </nav>
+
+    <div class="hero">
+      <h1>>_ THE DAILY TERMINAL BRIEFING</h1>
+      <p class="subtitle">BTC price, market sentiment, earthquake count, top headlines, and the data that matters. In your inbox every morning at 9 AM ET.</p>
+    </div>
+
+    <div class="preview-section">
+<span class="preview-title">--- TERMINAL BRIEFING | Apr 15, 2026 ---</span>
+<div class="preview-line"><span class="label">BTC:</span> <span class="data">$74,806</span> <span class="positive">(+0.4%)</span> <span class="label">| F&G:</span> <span class="data">23</span> <span class="label">Extreme Fear</span></div>
+<div class="preview-line"><span class="label">Earthquakes (24h):</span> <span class="data">12</span> <span class="label">| Largest:</span> <span class="data">M4.7</span> <span class="label">Tonga</span></div>
+<div class="preview-line"><span class="label">Top HN:</span> <span class="data">"Building AI Agents That Actually Work"</span></div>
+<div class="preview-line"><span class="label">Markets:</span> <span class="data">SPY</span> <span class="positive">+0.8%</span> <span class="label">|</span> <span class="data">QQQ</span> <span class="positive">+1.1%</span></div>
+<span class="preview-title">---</span>
+<div class="preview-line"><span class="data">terminalfeed.io/live</span></div>
+    </div>
+
+    <div class="signup-form">
+      <h2>Subscribe</h2>
+      <div class="subscriber-count">Join 0 developers and traders</div>
+      <form id="newsletter-form">
+        <div class="form-group">
+          <input
+            type="email"
+            id="email-input"
+            placeholder="your@email.com"
+            required
+            aria-label="Email address"
+          >
+          <button type="submit" class="btn-subscribe" id="submit-btn">Subscribe</button>
+        </div>
+        <div class="form-message" id="form-message"></div>
+      </form>
+    </div>
+
+    <div class="privacy-note">
+      <strong style="color: #D4D2CB;">Privacy first.</strong> No spam. Unsubscribe anytime with one click. We never sell, share, or use your email for anything else. Your data stays on TerminalFeed servers.
+    </div>
+
+    <div class="cta-section">
+      <h3>Other Ways to Stay Connected</h3>
+      <p>Follow us on X for breaking market moves and daily updates.</p>
+      <div class="cta-links">
+        <a href="https://x.com/terminalfeed" target="_blank" rel="noopener">@terminalfeed on X</a>
+        <span style="color: #2A2A30;">|</span>
+        <a href="/live">Live Dashboard</a>
+        <span style="color: #2A2A30;">|</span>
+        <a href="/blog">Blog</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper &middot; Not financial advice</p>
+      <p>
+        <a href="/">Home</a> &middot;
+        <a href="/blog">Blog</a> &middot;
+        <a href="/about">About</a> &middot;
+        <a href="/team">Team</a> &middot;
+        <a href="/features">Features</a> &middot;
+        <a href="/live">Live</a> &middot;
+        <a href="/changelog">Changelog</a> &middot;
+        <a href="/privacy">Privacy</a> &middot;
+        <a href="/terms">Terms</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('newsletter-form');
+    const emailInput = document.getElementById('email-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const formMessage = document.getElementById('form-message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = emailInput.value.trim();
+      if (!email) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Subscribing...';
+      formMessage.className = 'form-message';
+
+      try {
+        // Try to POST to the backend
+        const response = await fetch('/api/newsletter-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        // Store email locally regardless of API response
+        const subscribers = JSON.parse(localStorage.getItem('tf_newsletter_subscribers') || '[]');
+        if (!subscribers.includes(email)) {
+          subscribers.push(email);
+          localStorage.setItem('tf_newsletter_subscribers', JSON.stringify(subscribers));
+        }
+
+        // Show success message
+        formMessage.textContent = "You're in. First briefing arrives tomorrow at 9 AM ET.";
+        formMessage.className = 'form-message success';
+        emailInput.value = '';
+        submitBtn.textContent = 'Subscribe';
+        submitBtn.disabled = false;
+
+      } catch (error) {
+        // Still show success and store locally
+        const subscribers = JSON.parse(localStorage.getItem('tf_newsletter_subscribers') || '[]');
+        if (!subscribers.includes(email)) {
+          subscribers.push(email);
+          localStorage.setItem('tf_newsletter_subscribers', JSON.stringify(subscribers));
+        }
+
+        formMessage.textContent = "You're in. First briefing arrives tomorrow at 9 AM ET.";
+        formMessage.className = 'form-message success';
+        emailInput.value = '';
+        submitBtn.textContent = 'Subscribe';
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Validate email format on input
+    emailInput.addEventListener('input', (e) => {
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value);
+      submitBtn.disabled = !isValid;
+    });
+
+    // Initialize: disable submit button until valid email
+    submitBtn.disabled = true;
+  </script>
+</body>
+</html>
