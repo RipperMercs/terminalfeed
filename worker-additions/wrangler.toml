@@ -1,0 +1,10 @@
+name = "terminalfeed-api"
+main = "worker.js"
+compatibility_date = "2024-09-25"
+
+routes = [
+  { pattern = "terminalfeed.io/api/*", zone_name = "terminalfeed.io" }
+]
+
+[triggers]
+crons = ["0 14 * * *"]

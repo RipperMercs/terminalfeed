@@ -533,7 +533,4 @@
   <url><loc>https://terminalfeed.io/glossary/whale</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://terminalfeed.io/glossary/yaml</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 
-  <!-- Newsletter + API Playground -->
-  <url><loc>https://terminalfeed.io/newsletter</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://terminalfeed.io/developers-playground</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
