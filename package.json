@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/generate-blog-data.js",
+    "verify": "node scripts/verify-deploy.js",
+    "prebuild": "node scripts/verify-deploy.js && node scripts/generate-blog-data.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

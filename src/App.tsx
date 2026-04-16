@@ -8,6 +8,7 @@ import { useSimCrypto } from './hooks/useSimCrypto';
 import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
+import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { BtcMiniChart } from './components/BtcMiniChart';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
@@ -1327,13 +1328,13 @@ function App() {
             if (idx < 6) {
               return (
                 <div key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
-                  {content}
+                  <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
                 </div>
               );
             }
             return (
               <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
-                {content}
+                <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
               </LazyPanel>
             );
           });
