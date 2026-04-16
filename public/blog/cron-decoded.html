@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cron Expressions Decoded: A Developer's Visual Guide to Scheduling | TerminalFeed</title>
+  <meta name="description" content="Master cron expressions with visual examples. Learn the 5-field syntax, common patterns, and how to avoid scheduling mistakes in your automation workflows.">
+  <meta name="author" content="Node">
+  <meta property="og:title" content="Cron Expressions Decoded: A Developer's Visual Guide to Scheduling">
+  <meta property="og:description" content="Master cron expressions with visual examples. Learn the 5-field syntax, common patterns, and how to avoid scheduling mistakes.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://terminalfeed.io/blog/cron-decoded">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cron Expressions Decoded: A Developer's Visual Guide to Scheduling">
+  <meta name="twitter:description" content="Master cron expressions with visual examples. Learn the 5-field syntax, common patterns, and how to avoid scheduling mistakes.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/cron-decoded">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag { display: inline-block; font-size: 9px; color: #5DCAA5; border: 1px solid #5DCAA530; background: #5DCAA510; padding: 2px 8px; border-radius: 3px; margin-right: 6px; letter-spacing: 1px; }
+    .article-header h1 { font-size: 22px; color: #F0EDE6; line-height: 1.4; margin-bottom: 12px; font-weight: 600; }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 { font-size: 16px; color: #4ADE80; margin-top: 36px; margin-bottom: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul { margin-bottom: 18px; padding-left: 20px; }
+    .article-body li { margin-bottom: 10px; color: #D4D2CB; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code { background: #111114; border: 1px solid #1E1E24; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .article-body pre { background: #111114; border: 1px solid #1E1E24; border-radius: 6px; padding: 16px; margin: 20px 0; overflow-x: auto; font-size: 12px; color: #D4D2CB; line-height: 1.6; }
+    .callout { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #5DCAA5; border-radius: 6px; padding: 18px 20px; margin: 24px 0; font-size: 13px; color: #8A8880; line-height: 1.7; }
+    .callout strong { color: #F0EDE6; }
+    .cta-box { background: #111114; border: 1px solid #5DCAA530; border-radius: 8px; padding: 24px; margin: 32px 0; text-align: center; }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link { display: inline-block; font-size: 13px; color: #0A0A0C; background: #5DCAA5; padding: 10px 24px; border-radius: 6px; text-decoration: none; border: none; font-family: inherit; font-weight: 600; letter-spacing: 0.5px; }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+    .author-box { background: #111114; border: 1px solid #1E1E24; border-radius: 8px; padding: 20px; margin-top: 36px; font-size: 12px; color: #8A8880; line-height: 1.7; }
+    .author-box strong { color: #F0EDE6; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } .article-header h1 { font-size: 18px; } .article-body { font-size: 12px; } }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Cron Expressions Decoded: A Developer's Visual Guide to Scheduling",
+    "description": "Master cron expressions with visual examples. Learn the 5-field syntax, common patterns, and how to avoid scheduling mistakes in your automation workflows.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-14T00:00:00Z",
+    "dateModified": "2026-04-14T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team/node"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <a href="/blog" class="back">< Back to Blog</a>
+
+    <div class="breadcrumbs">
+      <a href="/">Home</a> <span class="bc-sep">/</span>
+      <a href="/blog">Blog</a> <span class="bc-sep">/</span>
+      <span>Cron Expressions Decoded</span>
+    </div>
+
+    <article class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">DEV TOOLS</span>
+        <span class="article-tag">SCHEDULING</span>
+        <span class="article-tag">TOOL TUESDAY</span>
+      </div>
+      <h1>Cron Expressions Decoded: A Developer's Visual Guide to Scheduling</h1>
+      <div class="article-meta">
+        <span>Node, Developer Advocate</span>
+        <span>April 14, 2026</span>
+      </div>
+    </article>
+
+    <section class="article-body">
+      <p>Cron expressions are everywhere. They power database backups, CI/CD pipelines, batch jobs, and automated notifications across the web. Yet many developers treat them like black magic: you find an example that works, copy it, and hope it keeps working.</p>
+
+      <p>It doesn't have to be that way. Cron syntax is actually simple once you understand the five fields and the ranges they represent. This guide breaks down the visual structure so you can read, write, and debug cron expressions with confidence.</p>
+
+      <h2>The Five-Field Structure</h2>
+
+      <p>A standard cron expression has exactly five fields, separated by spaces:</p>
+
+      <pre>MINUTE HOUR DAY MONTH DAY_OF_WEEK
+   0     9    *     *       *</pre>
+
+      <p>Each field controls when a job runs. Here's what each one means:</p>
+
+      <ul>
+        <li><strong>MINUTE</strong>: 0-59 (which minute of the hour)</li>
+        <li><strong>HOUR</strong>: 0-23 (which hour of the day, 24-hour format)</li>
+        <li><strong>DAY</strong>: 1-31 (which day of the month)</li>
+        <li><strong>MONTH</strong>: 1-12 (which month of the year)</li>
+        <li><strong>DAY_OF_WEEK</strong>: 0-6 (which day of the week, 0 = Sunday)</li>
+      </ul>
+
+      <p>The asterisk (<code>*</code>) means "every" for that field. So <code>0 9 * * *</code> means "at 9:00 AM every day, regardless of the month or day of the week."</p>
+
+      <h2>Common Patterns You'll Actually Use</h2>
+
+      <p>Most real-world cron jobs fall into a handful of patterns. Learn these and you'll cover 80% of use cases:</p>
+
+      <pre>0 0 * * *      # Midnight every day
+0 9 * * 1-5    # 9 AM every weekday (Monday-Friday)
+0 */6 * * *    # Every 6 hours (0, 6, 12, 18)
+30 2 * * 0     # 2:30 AM every Sunday
+0 0 1 * *      # Midnight on the first of each month
+0 12 15 * *    # Noon on the 15th of each month
+*/5 * * * *    # Every 5 minutes</pre>
+
+      <p>Let's break down the slash operator: <code>*/5</code> in the minute field means "every 5 minutes" (0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55). The slash divides the range evenly.</p>
+
+      <p>For the day of the week, note that <code>0</code> and <code>7</code> both represent Sunday. So <code>1-5</code> is Monday through Friday, and <code>0-4</code> is Sunday through Thursday.</p>
+
+      <h2>Operators and Syntax Rules</h2>
+
+      <p>You have a few tools available to build more complex expressions:</p>
+
+      <ul>
+        <li><strong>Asterisk (*)</strong>: Any value</li>
+        <li><strong>Comma (,)</strong>: Specific values. <code>9,14,21</code> means hours 9, 14, and 21</li>
+        <li><strong>Hyphen (-)</strong>: Ranges. <code>9-17</code> means 9 through 17 inclusive</li>
+        <li><strong>Slash (/)</strong>: Step values. <code>*/15</code> means every 15 units</li>
+      </ul>
+
+      <p>You can combine operators. For example, <code>0 9-17 * * 1-5</code> runs at the top of every hour from 9 AM to 5 PM on weekdays. The hyphen creates the range 9, 10, 11, 12, 13, 14, 15, 16, 17. Then the job fires at minute 0 of each of those hours.</p>
+
+      <h2>Common Mistakes</h2>
+
+      <p>Even experienced developers stumble on these:</p>
+
+      <p><strong>Mistake 1: Forgetting timezones.</strong> Cron always runs in the server's local timezone unless your cron daemon is configured otherwise. If your server is in UTC and you want 9 AM EST, you need to do the math: that's 14:00 UTC, so <code>0 14 * * *</code>. Double-check this. It's the #1 reason scheduled jobs run at the wrong time.</p>
+
+      <p><strong>Mistake 2: Conflicting DAY and DAY_OF_WEEK.</strong> If you specify both a day of month and a day of week (anything other than <code>*</code> in both), cron uses OR logic, not AND. For example, <code>0 9 15 * 5</code> runs at 9 AM on either the 15th of the month OR on Friday. It does not run only on Fridays that are the 15th. To avoid confusion, set one of them to <code>*</code>.</p>
+
+      <p><strong>Mistake 3: Invalid ranges.</strong> Remember that months go 1-12, days go 1-31 (with some months having fewer), and day of week goes 0-6. Off-by-one errors here cause silent failures.</p>
+
+      <p><strong>Mistake 4: Not accounting for job duration.</strong> If your cron job takes 30 minutes to run and you schedule it every 30 minutes, overlapping executions will pile up. Build in headroom, or use a locking mechanism to prevent concurrent runs.</p>
+
+      <h2>Real-World Examples</h2>
+
+      <p><strong>Database backup at 2 AM daily:</strong> <code>0 2 * * *</code></p>
+
+      <p><strong>Health check every 5 minutes during business hours:</strong> <code>*/5 9-17 * * 1-5</code></p>
+
+      <p><strong>Weekly cleanup on Sunday at 3 AM:</strong> <code>0 3 * * 0</code></p>
+
+      <p><strong>End-of-month report on the last day at 6 PM:</strong> This one is trickier. Standard cron can't natively express "last day of month," so you use a workaround: <code>0 18 28-31 * *</code> and then in your script, check if tomorrow's date has a different month. Or use a cron extension if your system supports it.</p>
+
+      <p><strong>Quarterly review on the 1st of Jan, Apr, Jul, Oct at noon:</strong> <code>0 12 1 1,4,7,10 *</code></p>
+
+      <h2>Debugging Tools and Testing</h2>
+
+      <p>Before deploying a cron job to production, verify it in a tool. Services like <a href="https://crontab.guru">Crontab Guru</a> provide instant feedback. You paste in your expression and it tells you exactly when your job will run for the next several occurrences. Use this every time. It takes 10 seconds and prevents hours of debugging.</p>
+
+      <p>In your own tools or applications, TerminalFeed now offers a <a href="/tools/cron">Cron Expression Builder</a> that decodes expressions visually and shows you the schedule in human-readable format. Try it when learning or when debugging existing cron jobs.</p>
+
+      <div class="callout">
+        <strong>Pro Tip:</strong> Store cron expressions as constants or environment variables with comments explaining them. <code>BACKUP_SCHEDULE=0 2 * * * # 2 AM daily</code> is much clearer than discovering a bare <code>0 2 * * *</code> buried in code months later and guessing what it does.
+      </div>
+
+      <h2>Beyond Basic Cron</h2>
+
+      <p>Some systems support extended cron syntax with a sixth field for seconds, or allow named ranges like <code>MON-FRI</code> instead of <code>1-5</code>. AWS EventBridge, for example, uses its own rate and cron expression syntax. Always check your platform's documentation. The five-field standard is portable across Linux, macOS, Unix, and many cloud platforms, but custom systems vary.</p>
+
+      <p>If you're building scheduled tasks in modern languages like Python, Node.js, or Go, consider libraries like APScheduler, node-cron, or cronv3 that provide more flexibility than system cron. They let you define schedules in code and handle timezone conversion automatically.</p>
+
+      <div class="cta-box">
+        <p>Want to build or test cron expressions visually?</p>
+        <a href="/tools/cron" class="cta-link">Try the Cron Tool</a>
+      </div>
+
+      <h2>Next Steps</h2>
+
+      <p>The best way to master cron is to write a few expressions, test them, and build intuition. Start with the common patterns section above. Build a backup job, a health check, a report scheduler. Each one teaches you something. And when you encounter an edge case, you'll know where to look.</p>
+
+      <p>Cron has been around since 1975 for a reason. It works, it's simple, and once you understand the five fields, you'll never see a cron expression as magic again.</p>
+
+      <div class="author-box">
+        <strong>Node</strong> is TerminalFeed's Developer Advocate, focused on APIs, developer tools, and practical programming tutorials. He writes "Tool Tuesday" articles each week, diving deep into the command-line utilities and scheduling systems that power modern development. Find Node on the TerminalFeed team page or follow along for weekly dev tool explorations.
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/live">Live</a><span class="sep">|</span>
+      <a href="/tools">Tools</a><span class="sep">|</span>
+      <a href="/agent">Agents</a><span class="sep">|</span>
+      <a href="/radio">Radio</a><span class="sep">|</span>
+      <a href="/wifi">WiFi</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/developers">API</a><span class="sep">|</span>
+      <a href="/about">About</a><span class="sep">|</span>
+      <a href="/team">Team</a><span class="sep">|</span>
+      <a href="/features">Features</a>
+      <span class="sep">|</span>
+      <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+      <span class="sep">|</span>
+      <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+    </footer>
+  </div>
+</body>
+</html>

@@ -483,4 +483,53 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+
+  <!-- Status monitor -->
+  <url><loc>https://terminalfeed.io/status</loc><lastmod>2026-04-16</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
+
+  <!-- Cheatsheets -->
+  <url><loc>https://terminalfeed.io/cheatsheets</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/cheatsheets/git</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://terminalfeed.io/cheatsheets/docker</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://terminalfeed.io/cheatsheets/http</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- New tools -->
+  <url><loc>https://terminalfeed.io/tools/satoshi</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/tools/gwei</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/tools/hex</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- New blog posts (April 14-16, 2026) -->
+  <url><loc>https://terminalfeed.io/blog/real-time-vs-near-real-time</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/browser-extensions-watching</loc><lastmod>2026-04-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/claude-vs-chatgpt</loc><lastmod>2026-04-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/rest-vs-graphql</loc><lastmod>2026-04-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/websocket-vs-sse</loc><lastmod>2026-04-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/cron-decoded</loc><lastmod>2026-04-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- New glossary terms (April 2026 batch) -->
+  <url><loc>https://terminalfeed.io/glossary/base64</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/cdn</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/cold-storage</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/cpi</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/csrf</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/dns</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/embeddings</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/graphql</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/hash-function</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/http-status-code</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/ip-address</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/lightning-network</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/mining-pool</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/oauth</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/polymarket</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/port</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/prompt-engineering</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/regex</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/smart-contract</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/ssl-tls</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/treasury-yield</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/two-factor-authentication</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/uuid</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/whale</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://terminalfeed.io/glossary/yaml</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is IP Address? - TerminalFeed Glossary</title>
+  <meta name="description" content="An IP address is a numerical label assigned to every device on a network, used for routing data packets. Learn about IPv4, IPv6, and how IP addressing works.">
+  <meta property="og:title" content="What is IP Address? - TerminalFeed Glossary">
+  <meta property="og:description" content="A numerical label assigned to every device on a network, used for routing data packets.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/ip-address">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/ip-address">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "IP Address",
+    "description": "A numerical label assigned to every device on a network, used for routing data packets.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/ip-address"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "IP Address", "item": "https://terminalfeed.io/glossary/ip-address" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>IP Address</span>
+    </nav>
+
+    <h1>IP Address</h1>
+    <div class="category-label">NETWORKING</div>
+
+    <h2>Quick Definition</h2>
+    <p>An IP (Internet Protocol) address is a unique numerical identifier assigned to every device connected to a network. It serves two purposes: identifying the host or network interface and providing the location for routing. IPv4 addresses look like 192.168.1.1 (four octets, 32 bits), while IPv6 addresses look like 2001:0db8:85a3::8a2e:0370:7334 (128 bits), providing an astronomically larger address space.</p>
+
+    <h2>How it works</h2>
+    <p>When your device connects to the internet, your ISP assigns it a public IP address. Within your local network, your router assigns private IP addresses (typically in the 192.168.x.x or 10.x.x.x ranges). Network Address Translation (NAT) maps private addresses to the single public address when traffic leaves your network. Every data packet sent over the internet contains a source and destination IP address, which routers use to forward the packet hop by hop to its destination.</p><p>IPv4's 32-bit space supports roughly 4.3 billion addresses, which have been effectively exhausted. IPv6's 128-bit space supports 340 undecillion addresses, enough for every atom on Earth's surface to have its own. Adoption of IPv6 has been gradual but is accelerating as mobile networks and cloud providers default to it.</p>
+
+    <h2>Why it matters</h2>
+    <p>Understanding IP addressing is fundamental for networking, security, server administration, and debugging connectivity issues. IP addresses determine geolocation (roughly), enable IP-based access controls and rate limiting, and form the basis of every internet connection. For web developers, knowing the difference between public and private IPs, understanding <a href="/glossary/dns">DNS</a> resolution to IP addresses, and configuring firewall rules by IP range are everyday tasks.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The <a href="/wifi">WiFi Speed Test</a> on TerminalFeed can display your connection information. The TerminalFeed Worker API uses IP-based <a href="/glossary/api-rate-limiting">rate limiting</a> to protect against abuse while keeping the API free for legitimate use.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/dns">DNS</a></li>
+        <li><a href="/glossary/port">Port</a></li>
+        <li><a href="/glossary/cdn">CDN</a></li>
+        <li><a href="/glossary/ssl-tls">SSL/TLS</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

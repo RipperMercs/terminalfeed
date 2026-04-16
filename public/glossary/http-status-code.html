@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is HTTP Status Code? - TerminalFeed Glossary</title>
+  <meta name="description" content="HTTP status codes are three-digit numbers returned by servers to indicate request results. Learn the meaning of 200, 301, 404, 429, 500, and more.">
+  <meta property="og:title" content="What is HTTP Status Code? - TerminalFeed Glossary">
+  <meta property="og:description" content="A three-digit number returned by a server to indicate the result of a client's request.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/http-status-code">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/http-status-code">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "HTTP Status Code",
+    "description": "A three-digit number returned by a server to indicate the result of a client's request.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/http-status-code"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "HTTP Status Code", "item": "https://terminalfeed.io/glossary/http-status-code" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>HTTP Status Code</span>
+    </nav>
+
+    <h1>HTTP Status Code</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>An HTTP status code is a three-digit number included in every HTTP response that tells the client what happened with its request. Codes are grouped into five classes: 1xx (informational), 2xx (success), 3xx (redirection), 4xx (client error), and 5xx (server error). The most familiar is 404 Not Found, but understanding the full range is essential for building and debugging web applications and APIs.</p>
+
+    <h2>How it works</h2>
+    <p>When a client (browser, API consumer, AI agent) sends an HTTP request, the server processes it and returns a response with a status code, headers, and optionally a body. The status code is the first thing the client checks to determine how to handle the response. A 200 means the request succeeded. A 301 means the resource permanently moved to a new URL. A 429 means the client is sending too many requests (rate limiting). A 503 means the server is temporarily unavailable.</p><p>Common codes every developer encounters: 200 OK, 201 Created, 204 No Content, 301 Moved Permanently, 304 Not Modified, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 429 Too Many Requests, 500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable.</p>
+
+    <h2>Why it matters</h2>
+    <p>Correct use of status codes is fundamental to building reliable APIs and web applications. Returning a 200 for an error condition makes debugging impossible. Using 301 vs 302 redirects affects SEO. Handling 429 responses with proper retry-after logic prevents getting blocked by <a href="/glossary/api-rate-limiting">rate limiters</a>. The TerminalFeed API Worker, for example, returns stale cached data rather than a 500 when an upstream source fails, because a stale 200 is more useful to clients than an error.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The <a href="/developers">TerminalFeed API documentation</a> describes the status codes returned by each endpoint. The Dev/Ops Status panel on the dashboard monitors service health by checking HTTP response codes from major platforms. The <a href="/tools/http">HTTP Status Code Reference</a> tool provides a quick lookup for all standard codes.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/rest">REST</a></li>
+        <li><a href="/glossary/cors">CORS</a></li>
+        <li><a href="/glossary/api-rate-limiting">API Rate Limiting</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

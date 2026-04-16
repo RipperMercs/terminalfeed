@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Cheat Sheet - Container Commands Reference | TerminalFeed</title>
+    <meta name="description" content="Complete Docker cheat sheet with 40+ commands for managing containers, images, networks, and volumes. Quick reference guide for Docker users.">
+    <meta name="keywords" content="docker, cheat sheet, containers, commands, reference">
+    <meta property="og:title" content="Docker Cheat Sheet - Container Commands Reference | TerminalFeed">
+    <meta property="og:description" content="Complete Docker cheat sheet with 40+ commands for containers, images, networks, and volumes.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/docker.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Docker Cheat Sheet - Container Commands Reference | TerminalFeed">
+    <meta name="twitter:description" content="Complete Docker cheat sheet with 40+ commands for containers, images, networks, and volumes.">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/docker.html">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0A0A0C;
+            color: #D4D2CB;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #1E1E24;
+            padding-bottom: 20px;
+        }
+        .breadcrumbs {
+            font-size: 12px;
+            color: #8A8880;
+            margin-bottom: 16px;
+        }
+        .breadcrumbs a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumbs .sep {
+            margin: 0 8px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #F0EDE6;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #8A8880;
+        }
+        .search-box {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            background: #111114;
+            border: 1px solid #1E1E24;
+            color: #F0EDE6;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #5DCAA5;
+        }
+        .search-box input::placeholder {
+            color: #4E4D49;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section-title {
+            color: #4ADE80;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cmd-row {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #1A1A1E;
+            align-items: baseline;
+        }
+        .cmd-row:last-child {
+            border-bottom: none;
+        }
+        .cmd-code {
+            flex-shrink: 0;
+            background: #0D0D10;
+            border: 1px solid #1A1A22;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #5DCAA5;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .cmd-desc {
+            font-size: 12px;
+            color: #8A8880;
+            flex-grow: 1;
+        }
+        .hidden {
+            display: none;
+        }
+        footer {
+            border-top: 1px solid #1E1E24;
+            padding-top: 20px;
+            margin-top: 40px;
+            font-size: 11px;
+            color: #8A8880;
+            text-align: center;
+        }
+        footer a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .sep {
+            margin: 0 8px;
+            color: #4E4D49;
+        }
+        @media print {
+            .search-box { display: none; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Docker Cheat Sheet - Container Commands Reference",
+        "description": "Complete Docker cheat sheet with 40+ commands for managing containers, images, networks, and volumes.",
+        "url": "https://terminalfeed.io/cheatsheets/docker.html",
+        "datePublished": "2026-04-15",
+        "dateModified": "2026-04-15",
+        "author": {
+            "@type": "Person",
+            "name": "TerminalFeed"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "TerminalFeed",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://terminalfeed.io/og-image.png"
+            }
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://terminalfeed.io"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Cheatsheets",
+                "item": "https://terminalfeed.io/cheatsheets"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Docker",
+                "item": "https://terminalfeed.io/cheatsheets/docker.html"
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>Docker</span>
+            </div>
+            <h1>Docker Cheat Sheet</h1>
+            <p class="subtitle">Essential commands for building, running, and managing containers</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search commands... (e.g., run, build, ps)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">General Commands</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker version</div>
+                <div class="cmd-desc">Show Docker version information</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker info</div>
+                <div class="cmd-desc">Display system-wide Docker information</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker help</div>
+                <div class="cmd-desc">Show Docker command help</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker login</div>
+                <div class="cmd-desc">Log in to Docker Hub or registry</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker logout</div>
+                <div class="cmd-desc">Log out from Docker Hub or registry</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Images</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker images</div>
+                <div class="cmd-desc">List all local images</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker pull &lt;image&gt;</div>
+                <div class="cmd-desc">Pull an image from registry</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker push &lt;image&gt;</div>
+                <div class="cmd-desc">Push an image to registry</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker build -t &lt;name&gt; .</div>
+                <div class="cmd-desc">Build an image from Dockerfile</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker tag &lt;id&gt; &lt;name&gt;</div>
+                <div class="cmd-desc">Tag an image with a name</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker rmi &lt;image&gt;</div>
+                <div class="cmd-desc">Remove an image</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker inspect &lt;image&gt;</div>
+                <div class="cmd-desc">Show detailed image information</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker search &lt;term&gt;</div>
+                <div class="cmd-desc">Search Docker Hub for images</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker history &lt;image&gt;</div>
+                <div class="cmd-desc">Show image layer history</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Containers</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run &lt;image&gt;</div>
+                <div class="cmd-desc">Create and run a container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run -d &lt;image&gt;</div>
+                <div class="cmd-desc">Run container in detached mode</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run -it &lt;image&gt; bash</div>
+                <div class="cmd-desc">Run container interactively with bash</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run -p 8080:80 &lt;image&gt;</div>
+                <div class="cmd-desc">Map port 8080 to container port 80</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run -v /host:/container &lt;image&gt;</div>
+                <div class="cmd-desc">Mount volume from host to container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run -e VAR=value &lt;image&gt;</div>
+                <div class="cmd-desc">Set environment variable in container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker run --name &lt;name&gt; &lt;image&gt;</div>
+                <div class="cmd-desc">Run container with custom name</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker ps</div>
+                <div class="cmd-desc">List running containers</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker ps -a</div>
+                <div class="cmd-desc">List all containers (running and stopped)</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker start &lt;container&gt;</div>
+                <div class="cmd-desc">Start a stopped container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker stop &lt;container&gt;</div>
+                <div class="cmd-desc">Stop a running container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker restart &lt;container&gt;</div>
+                <div class="cmd-desc">Restart a container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker rm &lt;container&gt;</div>
+                <div class="cmd-desc">Remove a container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker kill &lt;container&gt;</div>
+                <div class="cmd-desc">Force stop a container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker exec -it &lt;container&gt; bash</div>
+                <div class="cmd-desc">Execute command inside running container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker logs &lt;container&gt;</div>
+                <div class="cmd-desc">View container logs</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker logs -f &lt;container&gt;</div>
+                <div class="cmd-desc">Follow container logs in real-time</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker inspect &lt;container&gt;</div>
+                <div class="cmd-desc">Show detailed container information</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker stats &lt;container&gt;</div>
+                <div class="cmd-desc">Show container CPU and memory usage</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Networks</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker network ls</div>
+                <div class="cmd-desc">List all networks</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker network create &lt;name&gt;</div>
+                <div class="cmd-desc">Create a new network</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker network connect &lt;net&gt; &lt;container&gt;</div>
+                <div class="cmd-desc">Connect container to network</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker network disconnect &lt;net&gt; &lt;container&gt;</div>
+                <div class="cmd-desc">Disconnect container from network</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker network inspect &lt;network&gt;</div>
+                <div class="cmd-desc">Show network details</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker network rm &lt;network&gt;</div>
+                <div class="cmd-desc">Remove a network</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Volumes</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker volume ls</div>
+                <div class="cmd-desc">List all volumes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker volume create &lt;name&gt;</div>
+                <div class="cmd-desc">Create a new volume</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker volume inspect &lt;volume&gt;</div>
+                <div class="cmd-desc">Show volume details</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker volume rm &lt;volume&gt;</div>
+                <div class="cmd-desc">Remove a volume</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker volume prune</div>
+                <div class="cmd-desc">Remove unused volumes</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Docker Compose</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose up</div>
+                <div class="cmd-desc">Start services defined in docker-compose.yml</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose up -d</div>
+                <div class="cmd-desc">Start services in detached mode</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose down</div>
+                <div class="cmd-desc">Stop and remove services</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose ps</div>
+                <div class="cmd-desc">List services and their status</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose logs</div>
+                <div class="cmd-desc">View logs from services</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose exec &lt;service&gt; bash</div>
+                <div class="cmd-desc">Execute command in service container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose build</div>
+                <div class="cmd-desc">Build images for services</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker-compose pull</div>
+                <div class="cmd-desc">Pull images for services</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Debugging & Inspection</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker attach &lt;container&gt;</div>
+                <div class="cmd-desc">Attach to running container output</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker diff &lt;container&gt;</div>
+                <div class="cmd-desc">Show filesystem changes in container</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker cp &lt;container&gt;:&lt;path&gt; &lt;host&gt;</div>
+                <div class="cmd-desc">Copy files from container to host</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker commit &lt;container&gt; &lt;image&gt;</div>
+                <div class="cmd-desc">Create image from container</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Cleanup</div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker prune</div>
+                <div class="cmd-desc">Remove unused containers, images, volumes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker container prune</div>
+                <div class="cmd-desc">Remove stopped containers</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker image prune</div>
+                <div class="cmd-desc">Remove dangling images</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">docker system prune -a</div>
+                <div class="cmd-desc">Remove all unused images, containers, networks</div>
+            </div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/live">Live</a><span class="sep">|</span>
+            <a href="/tools">Tools</a><span class="sep">|</span>
+            <a href="/agent">Agents</a><span class="sep">|</span>
+            <a href="/radio">Radio</a><span class="sep">|</span>
+            <a href="/wifi">WiFi</a><span class="sep">|</span>
+            <a href="/blog">Blog</a><span class="sep">|</span>
+            <a href="/developers">API</a><span class="sep">|</span>
+            <a href="/about">About</a><span class="sep">|</span>
+            <a href="/team">Team</a><span class="sep">|</span>
+            <a href="/features">Features</a>
+            <span class="sep">|</span>
+            <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+            <span class="sep">|</span>
+            <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>

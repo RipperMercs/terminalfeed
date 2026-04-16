@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Prompt Engineering? - TerminalFeed Glossary</title>
+  <meta name="description" content="Prompt engineering is the practice of crafting inputs to large language models to get more accurate, useful outputs. Learn techniques, patterns, and best practices.">
+  <meta property="og:title" content="What is Prompt Engineering? - TerminalFeed Glossary">
+  <meta property="og:description" content="The practice of crafting inputs to large language models to get more accurate, useful outputs.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/prompt-engineering">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/prompt-engineering">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "Prompt Engineering",
+    "description": "The practice of crafting inputs to large language models to get more accurate, useful outputs.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/prompt-engineering"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "Prompt Engineering", "item": "https://terminalfeed.io/glossary/prompt-engineering" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Prompt Engineering</span>
+    </nav>
+
+    <h1>Prompt Engineering</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>Prompt engineering is the skill of designing inputs (prompts) to large language models in a way that produces the most accurate, useful, and consistent outputs. It involves techniques like providing context, specifying output format, giving examples (few-shot prompting), assigning roles, and structuring instructions to guide model behavior. As LLMs become central to software, prompt engineering has become a practical skill for developers, analysts, and content creators.</p>
+
+    <h2>How it works</h2>
+    <p>LLMs generate text by predicting the most likely next tokens given the input. The prompt shapes this prediction space. A vague prompt ("tell me about APIs") produces generic output, while a structured prompt ("Explain REST API authentication methods for a developer who knows HTTP but is new to OAuth. Include code examples in Python. Keep it under 500 words.") produces focused, useful content. Key techniques include: system prompts (setting model behavior), few-shot examples (showing desired input/output pairs), chain-of-thought (asking the model to reason step by step), and structured output (requesting JSON, tables, or specific formats).</p><p>Prompt engineering is iterative. You write a prompt, test it against edge cases, refine wording, add constraints, and test again. Small changes in phrasing can dramatically change output quality. Production systems often use prompt templates with variable substitution to maintain consistency.</p>
+
+    <h2>Why it matters</h2>
+    <p>The gap between a good prompt and a bad one is often the difference between a useful AI feature and a useless one. As organizations integrate LLMs into products, workflows, and automation, the ability to write effective prompts determines the quality of AI-assisted outputs. For developers building <a href="/glossary/ai-agent">AI agents</a>, prompt engineering is the primary mechanism for controlling agent behavior, tool use, and decision-making.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed's X bot and automated briefing system use carefully engineered prompts to generate consistent, formatted tweets from raw data feeds. The <a href="/blog/how-ai-agents-browse">How AI Agents Browse</a> article discusses prompting strategies for web-browsing agents. The <a href="/glossary/llms-txt">llms.txt</a> file at terminalfeed.io/llms.txt is itself a form of prompt engineering, structuring site information for AI consumption.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/large-language-model">Large Language Model</a></li>
+        <li><a href="/glossary/ai-agent">AI Agent</a></li>
+        <li><a href="/glossary/embeddings">Embeddings</a></li>
+        <li><a href="/glossary/llms-txt">llms.txt</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

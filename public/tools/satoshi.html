@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satoshi to USD Converter - Bitcoin Unit Calculator | TerminalFeed</title>
+<meta name="description" content="Convert between satoshis, BTC, mBTC, and USD with live Bitcoin prices. Free Bitcoin unit calculator that runs locally in your browser.">
+<meta name="keywords" content="satoshi, bitcoin, BTC, converter, calculator, USD, crypto unit">
+<link rel="canonical" href="https://terminalfeed.io/tools/satoshi">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/satoshi">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/satoshi">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/satoshi">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/satoshi">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/satoshi">
+<meta property="og:title" content="Satoshi to USD Converter - Bitcoin Unit Calculator | TerminalFeed">
+<meta property="og:description" content="Convert between satoshis, BTC, mBTC, and USD with live Bitcoin prices.">
+<meta property="og:url" content="https://terminalfeed.io/tools/satoshi">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Satoshi to USD Converter - TerminalFeed Tools">
+<meta name="twitter:description" content="Convert between satoshis, BTC, mBTC, and USD with live Bitcoin prices.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Satoshi to USD Converter",
+  "url": "https://terminalfeed.io/tools/satoshi",
+  "description": "Convert between satoshis, BTC, mBTC, and USD with live Bitcoin prices. Free Bitcoin unit calculator.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+    { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://terminalfeed.io/tools" },
+    { "@type": "ListItem", "position": 3, "name": "Satoshi Converter", "item": "https://terminalfeed.io/tools/satoshi" }
+  ]
+}
+</script>
+<link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+  .back-link a { color: #4E4D49; }
+  .back-link a:hover { color: #5DCAA5; }
+  .container { max-width: 960px; width: 100%; }
+  .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; }
+  .header h1 span { color: #5DCAA5; }
+  .badge {
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(93,202,165,0.25);
+    white-space: nowrap;
+  }
+  .btc-price {
+    background: rgba(93,202,165,0.05);
+    color: #5DCAA5;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(93,202,165,0.25);
+    white-space: nowrap;
+  }
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+  .panel { display: flex; flex-direction: column; gap: 0.4rem; }
+  .panel label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    background: #111114;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.7rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: #5DCAA5; }
+  input[type="text"].error, input[type="number"].error { border-color: #F87171; }
+  .unit-selector {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+  }
+  .unit-btn {
+    background: rgba(93,202,165,0.12);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.3);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    text-transform: uppercase;
+  }
+  .unit-btn:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+  .unit-btn.active { background: rgba(93,202,165,0.3); border-color: #5DCAA5; }
+  .preset-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+  }
+  .preset-btn {
+    background: rgba(93,202,165,0.08);
+    color: #8A8880;
+    border: 1px solid rgba(93,202,165,0.15);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .preset-btn:hover { background: rgba(93,202,165,0.15); color: #5DCAA5; }
+  .conversion-result {
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .conversion-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(93,202,165,0.08);
+  }
+  .conversion-row:last-child { border-bottom: none; }
+  .conversion-label { color: #4E4D49; font-size: 0.75rem; }
+  .conversion-value { color: #4ADE80; font-weight: 600; }
+  button {
+    background: rgba(93,202,165,0.12);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+  button:active { transform: scale(0.97); }
+  .btn-copy {
+    background: rgba(93,202,165,0.06);
+    border-color: rgba(93,202,165,0.15);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.8rem;
+    margin-top: 0.5rem;
+  }
+  .error-msg { color: #F87171; font-size: 0.75rem; min-height: 1.1em; margin-top: 0.3rem; }
+  footer {
+    margin-top: auto;
+    padding-top: 3rem;
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-align: center;
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .seo-content {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid #1A1A22;
+    color: #7A7A72;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .seo-content h2 {
+    color: #C8C8C0;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    letter-spacing: 0.5px;
+  }
+  .seo-content h3 {
+    color: #9A9A92;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+  }
+  .seo-content p {
+    margin-bottom: 12px;
+  }
+  .seo-content code {
+    background: #151518;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #4ADE80;
+  }
+  .seo-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+  }
+  .seo-content th, .seo-content td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1A1A22;
+    font-size: 12px;
+  }
+  .seo-content th {
+    color: #C8C8C0;
+  }
+  .tool-intro {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #8A8880;
+    line-height: 1.7;
+  }
+  .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+  .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+  .breadcrumbs a:hover { color: #5DCAA5; }
+  .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+  .sep { color: #2A2A30; }
+</style>
+</head>
+<body data-page="tools-satoshi">
+<div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/tools">Tools</a><span class="bc-sep">&rsaquo;</span><span>Satoshi Converter</span>
+  </nav>
+  <div class="header">
+    <h1 data-i18n="satoshi_heading"><span>&gt;_</span> SATOSHI</h1>
+    <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
+    <span class="btc-price" id="btcPriceDisplay">Loading BTC price...</span>
+  </div>
+
+  <div class="tool-intro">
+    Convert between Bitcoin units instantly. This satoshi calculator handles conversions between satoshis (the smallest Bitcoin unit), BTC (Bitcoin), mBTC (millibitcoin), and USD. Fetches live Bitcoin prices from the Binance API to show accurate USD equivalents. Perfect for developers, traders, and Bitcoin enthusiasts who need quick unit conversions. All calculations run 100% client-side in your browser with no data transmission.
+  </div>
+
+  <div class="workspace">
+    <div class="panel">
+      <label>Amount to Convert</label>
+      <input type="number" id="amountInput" placeholder="Enter amount" step="any">
+      <label style="margin-top: 0.8rem;">Unit</label>
+      <div class="unit-selector">
+        <button class="unit-btn active" data-unit="satoshi">Satoshi</button>
+        <button class="unit-btn" data-unit="btc">BTC</button>
+        <button class="unit-btn" data-unit="mbtc">mBTC</button>
+      </div>
+      <label style="margin-top: 0.8rem;">Quick Presets</label>
+      <div class="preset-buttons">
+        <button class="preset-btn" data-preset="1">1 sat</button>
+        <button class="preset-btn" data-preset="100">100 sats</button>
+        <button class="preset-btn" data-preset="10000">10K sats</button>
+        <button class="preset-btn" data-preset="100000">100K sats</button>
+        <button class="preset-btn" data-preset="1000000">1M sats</button>
+        <button class="preset-btn" data-preset="100000000">1 BTC</button>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="panel">
+      <label>All Conversions</label>
+      <div class="conversion-result">
+        <div class="conversion-row">
+          <span class="conversion-label">Satoshi</span>
+          <span class="conversion-value" id="satoshiResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">BTC</span>
+          <span class="conversion-value" id="btcResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">mBTC</span>
+          <span class="conversion-value" id="mbtcResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">USD</span>
+          <span class="conversion-value" id="usdResult">-</span>
+        </div>
+      </div>
+      <button class="btn-copy" id="btnCopy">Copy Results</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="seo-content" data-i18n-html="satoshi_seo">
+    <h2>Satoshi to USD Converter - Bitcoin Unit Calculator</h2>
+
+    <h3>What Is a Satoshi?</h3>
+    <p>A satoshi (sat) is the smallest unit of Bitcoin, equal to 0.00000001 BTC or one hundred millionth of a Bitcoin. It is named after Satoshi Nakamoto, the pseudonymous creator of Bitcoin. Just as the US dollar is divided into 100 cents, Bitcoin is divisible into 100 million satoshis. This small unit size allows Bitcoin to remain divisible and transactable even as the price per BTC increases. In practice, most micropayments and small transactions on the Bitcoin network are denominated in satoshis.</p>
+
+    <h3>Bitcoin Unit Hierarchy</h3>
+    <p>Bitcoin has several recognized units, each serving different purposes. <code>Satoshi (sat)</code> is the base unit (1 sat = 0.00000001 BTC). <code>Millibitcoin (mBTC)</code> equals 100,000 satoshis or 0.001 BTC. <code>Bitcoin (BTC)</code> is the primary unit and equals 100 million satoshis. Understanding these denominations is essential for reading transaction fees, setting payment amounts, and understanding blockchain data.</p>
+
+    <h3>Why Satoshis Matter</h3>
+    <p>Bitcoin fees are typically quoted in satoshis per byte (sat/B) or satoshis per vbyte (sat/vB). Understanding satoshi-level conversions is critical for traders, developers, and anyone interacting with the Bitcoin blockchain. As Bitcoin price increases, the satoshi-denominated perspective helps users understand the value of small amounts without dealing with very small decimal numbers. Instead of transacting "0.00001 BTC," users can say "1000 satoshis," which is clearer and more intuitive.</p>
+
+    <h3>How to Use This Tool</h3>
+    <p>Enter an amount in the input field, select a unit (satoshi, BTC, or mBTC), and the tool instantly converts to all other units and displays the USD equivalent using live Bitcoin prices. Click any preset button to quickly set common amounts. The USD conversion updates whenever the BTC price feed refreshes, ensuring you see current market rates. Click <strong>Copy Results</strong> to copy all conversions to your clipboard.</p>
+
+    <h3>Live Price Integration</h3>
+    <p>This converter fetches live Bitcoin price data from the Binance API through TerminalFeed's secure backend, ensuring accurate USD conversions at all times. Price updates are cached to minimize API calls. If the price feed becomes unavailable, the last known price is used. The live price display at the top of the page shows the current BTC/USD rate in real-time.</p>
+
+    <h3>Privacy &amp; Security</h3>
+    <p>This tool runs <strong>100% client-side</strong> in your browser. No personal data is transmitted. Your calculations never leave your machine. There are no usage limits, no account required, and no telemetry tracking. Bitcoin price data is fetched from TerminalFeed's API with full CORS support, making the tool accessible from any domain.</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/" data-i18n="home">Home</a>
+  <a href="/live">Live</a>
+  <a href="/tools" data-i18n="tools">Tools</a>
+  <a href="/agent">Agents</a>
+  <a href="/radio">Radio</a>
+  <a href="/wifi">WiFi</a>
+  <a href="/developers">API</a>
+  <a href="/blog">Blog</a>
+  <a href="/about">About</a>
+  <a href="/team">Team</a>
+  <a href="/features">Features</a>
+  <span class="sep">|</span>
+  <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  <span class="sep">|</span>
+  <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+</footer>
+
+<script>
+(function() {
+  const amountInput = document.getElementById('amountInput');
+  const satoshiResult = document.getElementById('satoshiResult');
+  const btcResult = document.getElementById('btcResult');
+  const mbtcResult = document.getElementById('mbtcResult');
+  const usdResult = document.getElementById('usdResult');
+  const errorMsg = document.getElementById('errorMsg');
+  const btcPriceDisplay = document.getElementById('btcPriceDisplay');
+  let currentUnit = 'satoshi';
+  let btcPrice = 0;
+
+  async function fetchBtcPrice() {
+    try {
+      const response = await fetch('/api/btc-price');
+      const data = await response.json();
+      if (data.price) {
+        btcPrice = data.price;
+        btcPriceDisplay.textContent = '$' + btcPrice.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        convert();
+      }
+    } catch (e) {
+      console.error('Failed to fetch BTC price:', e);
+      btcPriceDisplay.textContent = 'Price unavailable';
+    }
+  }
+
+  function satToBtc(sats) {
+    return sats / 100000000;
+  }
+
+  function btcToSat(btc) {
+    return Math.round(btc * 100000000);
+  }
+
+  function convert() {
+    errorMsg.textContent = '';
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount < 0) {
+      satoshiResult.textContent = '-';
+      btcResult.textContent = '-';
+      mbtcResult.textContent = '-';
+      usdResult.textContent = '-';
+      return;
+    }
+
+    let satoshis = 0;
+    if (currentUnit === 'satoshi') {
+      satoshis = Math.round(amount);
+    } else if (currentUnit === 'btc') {
+      satoshis = btcToSat(amount);
+    } else if (currentUnit === 'mbtc') {
+      satoshis = btcToSat(amount / 1000);
+    }
+
+    const btc = satToBtc(satoshis);
+    const mbtc = btc * 1000;
+    const usd = btc * btcPrice;
+
+    satoshiResult.textContent = satoshis.toLocaleString('en-US');
+    btcResult.textContent = btc.toFixed(8);
+    mbtcResult.textContent = mbtc.toFixed(5);
+    usdResult.textContent = usd > 0 ? '$' + usd.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '-';
+  }
+
+  document.querySelectorAll('.unit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentUnit = this.dataset.unit;
+      convert();
+    });
+  });
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      amountInput.value = this.dataset.preset;
+      currentUnit = 'satoshi';
+      document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-unit="satoshi"]').classList.add('active');
+      convert();
+    });
+  });
+
+  amountInput.addEventListener('input', convert);
+
+  document.getElementById('btnCopy').addEventListener('click', function() {
+    const text = 'Satoshi: ' + satoshiResult.textContent + '\nBTC: ' + btcResult.textContent + '\nmBTC: ' + mbtcResult.textContent + '\nUSD: ' + usdResult.textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('btnCopy');
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Copy Results'; }, 1500);
+    });
+  });
+
+  fetchBtcPrice();
+  setInterval(fetchBtcPrice, 30000);
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>

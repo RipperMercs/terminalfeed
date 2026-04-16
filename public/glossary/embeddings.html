@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Embeddings? - TerminalFeed Glossary</title>
+  <meta name="description" content="Embeddings are numerical vector representations of text, images, or data that capture semantic meaning for AI models. Learn how embeddings power search and recommendations.">
+  <meta property="og:title" content="What is Embeddings? - TerminalFeed Glossary">
+  <meta property="og:description" content="Numerical vector representations of text, images, or data that capture semantic meaning for AI models.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/embeddings">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/embeddings">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "Embeddings",
+    "description": "Numerical vector representations of text, images, or data that capture semantic meaning for AI models.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/embeddings"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "Embeddings", "item": "https://terminalfeed.io/glossary/embeddings" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Embeddings</span>
+    </nav>
+
+    <h1>Embeddings</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>Embeddings are dense numerical vectors (arrays of floating-point numbers) that represent the semantic meaning of text, images, audio, or other data in a high-dimensional space. Similar items are placed close together in this space, allowing AI systems to measure similarity, perform semantic search, cluster related content, and build recommendation systems without relying on exact keyword matching.</p>
+
+    <h2>How it works</h2>
+    <p>An embedding model (like OpenAI's text-embedding-3-small or Cohere's embed-v3) takes an input (a sentence, paragraph, or document) and outputs a fixed-length vector, typically 256 to 3072 dimensions. The model has learned during training that semantically similar inputs should produce vectors that are close together (measured by cosine similarity or Euclidean distance). "How do I reset my password" and "I forgot my login credentials" would produce very similar vectors, even though they share almost no words.</p><p>These vectors are stored in vector databases (Pinecone, Weaviate, Qdrant, pgvector) that are optimized for similarity search. When a user makes a query, it is embedded into the same vector space, and the database returns the nearest neighbors. This is the foundation of retrieval-augmented generation (RAG), where LLMs are grounded with relevant context retrieved via embeddings.</p>
+
+    <h2>Why it matters</h2>
+    <p>Embeddings transformed search from keyword matching to semantic understanding. They power recommendation engines ("users who liked this also liked..."), content deduplication, anomaly detection, and the retrieval layer of modern AI applications. For developers building with <a href="/glossary/large-language-model">large language models</a>, embeddings are the bridge between unstructured data and structured search, enabling LLMs to work with knowledge bases far larger than their context windows.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The <a href="/blog/ai-agents-explained">AI Agents article</a> on the TerminalFeed blog discusses how agents use embeddings for memory and retrieval. The <a href="/agent">AI Agent Tracker</a> lists agents and frameworks that rely on embedding-based search for their knowledge systems.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/large-language-model">Large Language Model</a></li>
+        <li><a href="/glossary/ai-agent">AI Agent</a></li>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/json">JSON</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

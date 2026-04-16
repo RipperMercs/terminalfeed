@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Hash Function? - TerminalFeed Glossary</title>
+  <meta name="description" content="A hash function converts input data into a fixed-size string of characters used for verification, passwords, and data integrity. Learn about MD5, SHA-256, and more.">
+  <meta property="og:title" content="What is Hash Function? - TerminalFeed Glossary">
+  <meta property="og:description" content="A mathematical function that converts input data into a fixed-size string of characters, used for verification.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/hash-function">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/hash-function">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "Hash Function",
+    "description": "A mathematical function that converts input data into a fixed-size string of characters, used for verification.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/hash-function"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "Hash Function", "item": "https://terminalfeed.io/glossary/hash-function" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Hash Function</span>
+    </nav>
+
+    <h1>Hash Function</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>A cryptographic hash function takes any input (a password, a file, a block of transactions) and produces a fixed-length string of characters called a digest or hash. The same input always produces the same hash, but even a tiny change in input produces a completely different output. Crucially, it is computationally infeasible to reverse the process -- you cannot recover the original input from its hash.</p>
+
+    <h2>How it works</h2>
+    <p>Hash functions process input data through a series of mathematical operations that mix, shift, and compress the bits. Common algorithms include MD5 (128-bit output, now considered insecure), SHA-1 (160-bit, deprecated for security use), SHA-256 (256-bit, used by Bitcoin), and SHA-3 (variable length, newest standard). The output length is always the same regardless of input size -- hashing a single character and hashing an entire movie both produce the same-length digest.</p><p>Key properties of a good cryptographic hash: deterministic (same input = same output), fast to compute, infeasible to reverse (pre-image resistance), infeasible to find two inputs with the same hash (collision resistance), and a small change in input changes the output completely (avalanche effect).</p>
+
+    <h2>Why it matters</h2>
+    <p>Hash functions are everywhere in computing. Passwords are stored as hashes (with salting) so databases never contain plaintext credentials. Git identifies every commit, tree, and blob by its SHA-1 hash. Bitcoin miners race to find a nonce that produces a SHA-256 hash below a target value. File downloads include checksums so you can verify integrity. Digital signatures hash the message before encrypting. Understanding hashing is foundational for security, blockchain, and data integrity.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed offers a <a href="/tools/hash">Hash Generator tool</a> that computes MD5, SHA-1, SHA-256, and SHA-512 hashes instantly in the browser. The BTC Network panel on the <a href="/">dashboard</a> shows block hashes and <a href="/glossary/hashrate">hashrate</a> data from the Bitcoin network.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/hashrate">Hashrate</a></li>
+        <li><a href="/glossary/encryption">Encryption</a></li>
+        <li><a href="/glossary/bitcoin">Bitcoin</a></li>
+        <li><a href="/glossary/jwt">JWT</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

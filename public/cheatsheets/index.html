@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Cheatsheets - Quick Reference Guides | TerminalFeed</title>
+    <meta name="description" content="Printable, searchable developer cheatsheets for git, docker, HTTP status codes, and more. Quick reference guides optimized for developers.">
+    <meta name="keywords" content="cheatsheet, git, docker, HTTP, reference, developer tools">
+    <meta property="og:title" content="Developer Cheatsheets - Quick Reference Guides | TerminalFeed">
+    <meta property="og:description" content="Printable, searchable developer cheatsheets for git, docker, HTTP status codes, and more.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Developer Cheatsheets - Quick Reference Guides | TerminalFeed">
+    <meta name="twitter:description" content="Printable, searchable developer cheatsheets for git, docker, HTTP status codes, and more.">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0A0A0C;
+            color: #D4D2CB;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #1E1E24;
+            padding-bottom: 20px;
+        }
+        .breadcrumbs {
+            font-size: 12px;
+            color: #8A8880;
+            margin-bottom: 16px;
+        }
+        .breadcrumbs a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumbs .sep {
+            margin: 0 8px;
+        }
+        h1 {
+            font-size: 32px;
+            color: #F0EDE6;
+            margin-bottom: 12px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #8A8880;
+            margin-bottom: 20px;
+        }
+        .intro {
+            background: #111114;
+            border: 1px solid #1E1E24;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 40px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #D4D2CB;
+        }
+        .intro p {
+            margin-bottom: 10px;
+        }
+        .intro p:last-child {
+            margin-bottom: 0;
+        }
+        .cheatsheet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .cheatsheet-card {
+            background: #111114;
+            border: 1px solid #1E1E24;
+            border-radius: 4px;
+            padding: 24px;
+            transition: border-color 0.2s, background 0.2s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+        }
+        .cheatsheet-card:hover {
+            border-color: #5DCAA5;
+            background: #14141A;
+        }
+        .card-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #5DCAA5;
+        }
+        .card-title {
+            font-size: 16px;
+            color: #F0EDE6;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .card-description {
+            font-size: 12px;
+            color: #8A8880;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+        .card-meta {
+            font-size: 11px;
+            color: #4E4D49;
+        }
+        footer {
+            border-top: 1px solid #1E1E24;
+            padding-top: 20px;
+            font-size: 11px;
+            color: #8A8880;
+            text-align: center;
+        }
+        footer a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .sep {
+            margin: 0 8px;
+            color: #4E4D49;
+        }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Developer Cheatsheets - Quick Reference Guides",
+        "description": "Printable, searchable developer cheatsheets for git, docker, HTTP status codes, and more.",
+        "url": "https://terminalfeed.io/cheatsheets",
+        "publisher": {
+            "@type": "Organization",
+            "name": "TerminalFeed",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://terminalfeed.io/og-image.png"
+            }
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://terminalfeed.io"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Cheatsheets",
+                "item": "https://terminalfeed.io/cheatsheets"
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <span>Cheatsheets</span>
+            </div>
+            <h1>Developer Cheatsheets</h1>
+            <p class="subtitle">Quick reference guides for the tools you use every day</p>
+        </header>
+
+        <div class="intro">
+            <p>Print-friendly, searchable cheatsheets for developers. Each guide covers the most essential commands and concepts you need when working with these tools. Use the search box on each page to quickly find what you're looking for, or reference them while coding.</p>
+            <p>All cheatsheets are designed to be printable and optimized for quick lookup in the terminal or browser.</p>
+        </div>
+
+        <div class="cheatsheet-grid">
+            <a href="/cheatsheets/git.html" class="cheatsheet-card">
+                <div class="card-icon">git</div>
+                <div class="card-title">Git Cheat Sheet</div>
+                <div class="card-description">Essential git commands for version control, branching, merging, and collaboration. ~50 commands covering setup, basics, remotes, and advanced workflows.</div>
+                <div class="card-meta">50+ commands</div>
+            </a>
+
+            <a href="/cheatsheets/docker.html" class="cheatsheet-card">
+                <div class="card-icon">docker</div>
+                <div class="card-title">Docker Cheat Sheet</div>
+                <div class="card-description">Docker container commands for building, running, and managing containers. Includes image operations, networking, volumes, and debugging techniques.</div>
+                <div class="card-meta">40+ commands</div>
+            </a>
+
+            <a href="/cheatsheets/http.html" class="cheatsheet-card">
+                <div class="card-icon">http</div>
+                <div class="card-title">HTTP Status Codes</div>
+                <div class="card-description">Complete reference of all HTTP status codes grouped by class. Includes 1xx, 2xx, 3xx, 4xx, and 5xx responses with practical examples.</div>
+                <div class="card-meta">60+ status codes</div>
+            </a>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/live">Live</a><span class="sep">|</span>
+            <a href="/tools">Tools</a><span class="sep">|</span>
+            <a href="/agent">Agents</a><span class="sep">|</span>
+            <a href="/radio">Radio</a><span class="sep">|</span>
+            <a href="/wifi">WiFi</a><span class="sep">|</span>
+            <a href="/blog">Blog</a><span class="sep">|</span>
+            <a href="/developers">API</a><span class="sep">|</span>
+            <a href="/about">About</a><span class="sep">|</span>
+            <a href="/team">Team</a><span class="sep">|</span>
+            <a href="/features">Features</a>
+            <span class="sep">|</span>
+            <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+            <span class="sep">|</span>
+            <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+        </footer>
+    </div>
+</body>
+</html>
