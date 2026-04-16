@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol | TerminalFeed</title>
+  <meta name="description" content="Compare WebSocket and Server-Sent Events (SSE) for real-time applications. Learn when to use each protocol, implementation details, and real-world examples.">
+  <meta property="og:title" content="WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol">
+  <meta property="og:description" content="Compare WebSocket and Server-Sent Events (SSE) for real-time applications. Learn when to use each protocol, implementation details, and real-world examples.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:url" content="https://terminalfeed.io/blog/websocket-vs-sse">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WebSocket vs Server-Sent Events: Real-Time Protocols Compared">
+  <meta name="twitter:description" content="Compare WebSocket and SSE for real-time applications. Learn when to use each protocol.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/websocket-vs-sse">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed" href="https://terminalfeed.io/feed.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "WebSocket vs SSE", "item": "https://terminalfeed.io/blog/websocket-vs-sse"}
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol",
+    "description": "Compare WebSocket and Server-Sent Events (SSE) for real-time applications. Learn when to use each protocol, implementation details, and real-world examples.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-15T00:00:00Z",
+    "dateModified": "2026-04-15T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Signal",
+      "url": "https://terminalfeed.io/team/signal",
+      "jobTitle": "Data & AI Editor"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 48px;
+      border-bottom: 1px solid #1E1E24;
+      padding-bottom: 32px;
+    }
+
+    .breadcrumbs {
+      font-size: 11px;
+      color: #8A8880;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .breadcrumbs a {
+      color: #5DCAA5;
+      text-decoration: none;
+    }
+
+    .breadcrumbs a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumbs span {
+      margin: 0 6px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #F0EDE6;
+      margin: 20px 0 16px 0;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: #8A8880;
+      margin-top: 12px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(239, 159, 39, 0.12);
+      color: #EF9F27;
+      padding: 3px 8px;
+      border-radius: 2px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-right: 6px;
+    }
+
+    .article-body {
+      color: #D4D2CB;
+    }
+
+    .article-body p {
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .article-body h2 {
+      font-size: 18px;
+      color: #4ADE80;
+      margin: 32px 0 16px 0;
+      font-weight: 600;
+      border-left: 3px solid #4ADE80;
+      padding-left: 12px;
+    }
+
+    .article-body h3 {
+      font-size: 14px;
+      color: #5DCAA5;
+      margin: 20px 0 12px 0;
+      font-weight: 600;
+    }
+
+    .article-body ul, .article-body ol {
+      margin-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    .article-body li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .article-body code {
+      background: #111114;
+      color: #5DCAA5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .code-block {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 16px;
+      margin: 20px 0;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 12px;
+      border: 1px solid #1E1E24;
+    }
+
+    .compare-table th {
+      text-align: left;
+      padding: 12px 12px;
+      border-bottom: 2px solid #1E1E24;
+      color: #5DCAA5;
+      font-weight: 600;
+      background: rgba(93, 202, 165, 0.05);
+    }
+
+    .compare-table td {
+      padding: 12px 12px;
+      border-bottom: 1px solid #1A1A1E;
+      color: #D4D2CB;
+    }
+
+    .compare-table tr:nth-child(odd) td {
+      background: rgba(17, 17, 20, 0.5);
+    }
+
+    .compare-table tr:hover td {
+      background: rgba(93, 202, 165, 0.08);
+    }
+
+    .compare-table td:first-child {
+      color: #F0EDE6;
+      font-weight: 500;
+    }
+
+    .cta-box {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #5DCAA5;
+      padding: 20px;
+      margin: 32px 0;
+      border-radius: 3px;
+    }
+
+    .cta-box h3 {
+      margin-top: 0;
+      color: #5DCAA5;
+      font-size: 14px;
+    }
+
+    .cta-box p {
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .cta-link {
+      display: inline-block;
+      background: rgba(93, 202, 165, 0.15);
+      color: #5DCAA5;
+      padding: 8px 12px;
+      text-decoration: none;
+      border-radius: 3px;
+      font-size: 12px;
+      border: 1px solid #5DCAA5;
+      transition: all 0.2s;
+    }
+
+    .cta-link:hover {
+      background: rgba(93, 202, 165, 0.25);
+    }
+
+    .author-box {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 20px;
+      margin-top: 40px;
+      border-radius: 3px;
+    }
+
+    .author-box h3 {
+      font-size: 13px;
+      color: #F0EDE6;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .author-info {
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.6;
+    }
+
+    .author-info a {
+      color: #5DCAA5;
+      text-decoration: none;
+    }
+
+    .author-info a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #1E1E24;
+      font-size: 11px;
+      color: #4E4D49;
+      text-align: center;
+    }
+
+    footer a {
+      color: #5DCAA5;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .glossary-links {
+      background: rgba(93, 202, 165, 0.05);
+      border: 1px solid #1E1E24;
+      padding: 16px;
+      margin: 24px 0;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .glossary-links strong {
+      color: #5DCAA5;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .glossary-links a {
+      display: inline-block;
+      margin-right: 12px;
+      margin-bottom: 6px;
+      color: #5DCAA5;
+      text-decoration: none;
+      border: 1px solid #1E1E24;
+      padding: 4px 8px;
+      border-radius: 2px;
+    }
+
+    .glossary-links a:hover {
+      background: rgba(93, 202, 165, 0.1);
+      border-color: #5DCAA5;
+    }
+
+    @media (max-width: 600px) {
+      html, body {
+        padding: 24px 16px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .article-body h2 {
+        font-size: 16px;
+      }
+
+      .compare-table {
+        font-size: 11px;
+      }
+
+      .compare-table th, .compare-table td {
+        padding: 8px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="breadcrumbs">
+        <a href="https://terminalfeed.io">Home</a>
+        <span>&gt;</span>
+        <a href="https://terminalfeed.io/blog">Blog</a>
+        <span>&gt;</span>
+        <span>WebSocket vs SSE</span>
+      </div>
+      <h1>WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol</h1>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="tag">DATA</span>
+          <span class="tag">REAL-TIME</span>
+          <span class="tag">ARCHITECTURE</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">By <strong><a href="https://terminalfeed.io/team/signal" style="color: #5DCAA5; text-decoration: none;">Signal</a></strong></div>
+        <div class="meta-item">April 15, 2026</div>
+        <div class="meta-item">~8 min read</div>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <p>Real-time applications require pushing data from server to client without constant polling. Two protocols dominate this space: WebSocket, a full-duplex communication channel, and Server-Sent Events (SSE), a unidirectional stream over HTTP. The choice between them hinges on directionality, complexity tolerance, and infrastructure constraints.</p>
+
+      <h2>How WebSocket Works</h2>
+      <p>WebSocket establishes a persistent TCP connection with a single HTTP upgrade handshake. Once established, both client and server can send messages independently at any time. It's a genuine two-way conversation.</p>
+      <p>The protocol overhead is minimal: after the initial handshake, frames are small (2-14 bytes of header for most messages). This makes WebSocket ideal for high-frequency updates and interactive applications where the server needs to handle client commands and push updates back.</p>
+
+      <h2>How Server-Sent Events Works</h2>
+      <p>SSE (Server-Sent Events) is HTTP-based and unidirectional: the server pushes events to the client, but the client cannot send messages through the SSE connection. It uses the text/event-stream content type and maintains a single HTTP connection.</p>
+      <p>The client can send separate HTTP requests for commands, but the update stream flows in one direction. This simplicity is both a strength and limitation depending on use case.</p>
+
+      <h2>Key Differences at a Glance</h2>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Aspect</th>
+            <th>WebSocket</th>
+            <th>Server-Sent Events</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Directionality</td>
+            <td>Bidirectional (full-duplex)</td>
+            <td>Unidirectional (server to client)</td>
+          </tr>
+          <tr>
+            <td>Protocol</td>
+            <td>ws:// or wss:// (binary)</td>
+            <td>HTTP/HTTPS (text-based)</td>
+          </tr>
+          <tr>
+            <td>Client Sending</td>
+            <td>Direct via WebSocket.send()</td>
+            <td>Separate HTTP requests needed</td>
+          </tr>
+          <tr>
+            <td>Connection Count</td>
+            <td>One persistent connection</td>
+            <td>One for events, separate for requests</td>
+          </tr>
+          <tr>
+            <td>Message Format</td>
+            <td>Binary frames, variable length</td>
+            <td>Text events, newline-delimited</td>
+          </tr>
+          <tr>
+            <td>Reconnection</td>
+            <td>Manual, requires client code</td>
+            <td>Built-in, automatic with retry</td>
+          </tr>
+          <tr>
+            <td>Proxy/Firewall</td>
+            <td>Can be blocked, requires special config</td>
+            <td>Works through any HTTP proxy</td>
+          </tr>
+          <tr>
+            <td>Browser Support</td>
+            <td>98%+ modern browsers</td>
+            <td>95%+ modern browsers</td>
+          </tr>
+          <tr>
+            <td>Library Size</td>
+            <td>Large (socket.io, ws)</td>
+            <td>Tiny (EventSource built-in)</td>
+          </tr>
+          <tr>
+            <td>Latency</td>
+            <td>Lower, binary protocol</td>
+            <td>Slightly higher, text parsing</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Bidirectionality: The Fundamental Difference</h2>
+      <p>WebSocket enables true bidirectional communication. Client sends a command, server responds, client receives updates independently. This is essential for interactive applications: multiplayer games, collaborative editors, real-time chat where the server might need to acknowledge commands and push state updates.</p>
+      <p>SSE is server-to-client only. If you need the client to tell the server something, you send a separate HTTP POST request. For applications where the flow is primarily server-to-client (stock tickers, live news, sensor data), this is simpler and doesn't impose WebSocket overhead.</p>
+
+      <h2>TerminalFeed's Real-World Usage</h2>
+      <p>TerminalFeed uses both protocols strategically. The Bitcoin price panel uses WebSocket to Binance for the lowest latency (updates every 1 second on desktop). This is bidirectional communication where precision matters: we request the stream, Binance sends ticks, we parse and render.</p>
+      <p>The Wikipedia Live Edits panel uses Server-Sent Events from Wikimedia's event stream API. We subscribe to the stream and receive edit events. There's no need for bidirectional communication, so SSE's simplicity and HTTP compatibility are advantages. The connection passes through proxies effortlessly and reconnects automatically if the network hiccups.</p>
+
+      <h2>Reconnection and Reliability</h2>
+      <p>WebSocket reconnection is manual. If the connection drops, the browser doesn't know. You must implement heartbeat pings, detect disconnections, and reconnect. Libraries like socket.io abstract this, but add overhead.</p>
+      <p>SSE has reconnection built-in. The EventSource API automatically reconnects if the connection drops, with configurable retry delays. The server sends an id field so the client can tell the server which events it's already received, enabling resumption without replay.</p>
+      <div class="code-block">
+// SSE auto-reconnects with retry
+const eventSource = new EventSource('/api/events');
+eventSource.addEventListener('message', (e) => {
+  console.log(e.data);
+});
+eventSource.onerror = () => {
+  // Reconnects automatically after 1 second
+};
+      </div>
+
+      <h2>Proxy and Firewall Compatibility</h2>
+      <p>WebSocket upgrades from HTTP to a new protocol. Some corporate proxies and firewalls don't understand this. If you're behind an intercepting proxy, WebSocket might be blocked or require special configuration. This is rare in modern infrastructure but remains a risk in enterprise environments.</p>
+      <p>SSE uses standard HTTP, so it passes through every proxy, firewall, and load balancer without special handling. If you're deploying behind restrictive network conditions, SSE is safer.</p>
+
+      <h2>Performance Characteristics</h2>
+      <p>WebSocket frames have 2-14 bytes of overhead per message. The protocol is optimized for frequent, small messages. At high frequency (>1000 messages/second), WebSocket's binary format is more efficient than SSE's text parsing.</p>
+      <p>SSE adds text parsing overhead and uses more bandwidth per event (newline-delimited text), but for typical update frequencies (5-60 events/second), the difference is imperceptible. Network latency dominates.</p>
+
+      <h2>Library and Complexity Trade-offs</h2>
+      <p>WebSocket libraries (socket.io, ws) add significant JavaScript payload. Socket.io adds fallback logic and feature bloat you might not need. A bare WebSocket is only 50 lines of client code, but production-grade implementations are complex.</p>
+      <p>SSE uses the native EventSource API, which is tiny and built-in. For simple unidirectional streaming, SSE requires less code and has fewer dependencies.</p>
+
+      <h2>When to Use WebSocket</h2>
+      <ul>
+        <li>Chat applications where clients send messages that broadcast to others</li>
+        <li>Multiplayer games with low-latency turn-based or real-time gameplay</li>
+        <li>Collaborative editors (Figma, Google Docs) where edits must propagate bidirectionally</li>
+        <li>Trading platforms where users issue orders and receive fills in real-time</li>
+        <li>High-frequency data streams (>100 updates/second) where binary efficiency matters</li>
+        <li>Applications where client and server are tightly coupled and need rapid request/response cycles</li>
+      </ul>
+
+      <h2>When to Use Server-Sent Events</h2>
+      <ul>
+        <li>Live news feeds, tickers, and scoreboards</li>
+        <li>System monitoring and log streaming</li>
+        <li>Sensor data aggregation where clients only receive readings</li>
+        <li>Notifications where the server pushes updates unidirectionally</li>
+        <li>Behind restrictive proxies where WebSocket is unreliable</li>
+        <li>Mobile or bandwidth-constrained clients where text parsing is acceptable</li>
+        <li>Applications where automatic reconnection is critical and you want built-in behavior</li>
+      </ul>
+
+      <h2>The Hybrid Approach</h2>
+      <p>The pragmatic architecture combines both protocols. Use SSE for broadcasting updates (dashboard feeds, status changes, notifications). Use WebSocket for interactive, low-latency sessions (chat, gaming, collaborative editing).</p>
+      <p>Separate concerns: SSE handles high-volume, low-frequency updates. WebSocket handles bidirectional, interactive patterns. This avoids overcomplicating either protocol.</p>
+
+      <h2>Scaling Considerations</h2>
+      <p>WebSocket connections are stateful. Each connected client consumes memory on the server. Scaling WebSocket requires sticky session routing or a message broker (Redis) to distribute messages across servers.</p>
+      <p>SSE is simpler to scale: each server can maintain independent SSE connections, and load balancers route new connections. There's no state sharing required. This makes SSE easier for horizontal scaling in containerized environments.</p>
+
+      <h2>Conclusion</h2>
+      <p>WebSocket and SSE are not competing technologies; they solve different problems. WebSocket enables bidirectional, interactive applications. SSE provides simple, reliable unidirectional streaming. Most modern applications benefit from both, deployed for their respective strengths.</p>
+      <p>Default to SSE unless you need bidirectional communication. It's simpler, more reliable for reconnection, and safer behind proxies. Use WebSocket when users need to send commands that immediately affect other users, or when latency is a critical performance metric.</p>
+
+      <div class="cta-box">
+        <h3>Explore Related Topics</h3>
+        <p>Learn more about real-time data patterns and architectural decisions.</p>
+        <a href="https://terminalfeed.io/blog/rest-vs-graphql" class="cta-link">REST vs GraphQL</a>
+        <a href="https://terminalfeed.io/developers" class="cta-link">API Documentation</a>
+      </div>
+
+      <div class="glossary-links">
+        <strong>Learn More:</strong>
+        <a href="https://terminalfeed.io/glossary/websocket">WebSocket</a>
+        <a href="https://terminalfeed.io/glossary/sse">Server-Sent Events</a>
+        <a href="https://terminalfeed.io/glossary/api">API</a>
+        <a href="https://terminalfeed.io/glossary/real-time">Real-Time</a>
+      </div>
+    </article>
+
+    <div class="author-box">
+      <h3>About Signal</h3>
+      <div class="author-info">
+        <p>Signal is TerminalFeed's Data and AI Editor, covering real-time data feeds, AI agents, and infrastructure patterns. They focus on helping teams build systems that observe and react to the world at scale.</p>
+        <p><a href="https://terminalfeed.io/team/signal">View all articles by Signal</a></p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Published on April 15, 2026 at TerminalFeed</p>
+      <p><a href="https://terminalfeed.io/feed.xml">Subscribe via RSS</a> | <a href="https://terminalfeed.io/blog">Back to Blog</a> | <a href="https://terminalfeed.io">Home</a></p>
+    </footer>
+  </div>
+</body>
+</html>

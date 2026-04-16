@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Cheat Sheet - Essential Commands for Developers | TerminalFeed</title>
+    <meta name="description" content="Complete git cheat sheet with 50+ essential commands for version control, branching, merging, and collaboration. Searchable reference guide.">
+    <meta name="keywords" content="git, cheat sheet, version control, commands, reference">
+    <meta property="og:title" content="Git Cheat Sheet - Essential Commands for Developers | TerminalFeed">
+    <meta property="og:description" content="Complete git cheat sheet with 50+ essential commands. Searchable reference for version control workflows.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/git.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Git Cheat Sheet - Essential Commands for Developers | TerminalFeed">
+    <meta name="twitter:description" content="Complete git cheat sheet with 50+ essential commands for version control and collaboration.">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/git.html">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0A0A0C;
+            color: #D4D2CB;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #1E1E24;
+            padding-bottom: 20px;
+        }
+        .breadcrumbs {
+            font-size: 12px;
+            color: #8A8880;
+            margin-bottom: 16px;
+        }
+        .breadcrumbs a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumbs .sep {
+            margin: 0 8px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #F0EDE6;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #8A8880;
+        }
+        .search-box {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            background: #111114;
+            border: 1px solid #1E1E24;
+            color: #F0EDE6;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #5DCAA5;
+        }
+        .search-box input::placeholder {
+            color: #4E4D49;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section-title {
+            color: #4ADE80;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cmd-row {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #1A1A1E;
+            align-items: baseline;
+        }
+        .cmd-row:last-child {
+            border-bottom: none;
+        }
+        .cmd-code {
+            flex-shrink: 0;
+            background: #0D0D10;
+            border: 1px solid #1A1A22;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #5DCAA5;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .cmd-desc {
+            font-size: 12px;
+            color: #8A8880;
+            flex-grow: 1;
+        }
+        .hidden {
+            display: none;
+        }
+        footer {
+            border-top: 1px solid #1E1E24;
+            padding-top: 20px;
+            margin-top: 40px;
+            font-size: 11px;
+            color: #8A8880;
+            text-align: center;
+        }
+        footer a {
+            color: #5DCAA5;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .sep {
+            margin: 0 8px;
+            color: #4E4D49;
+        }
+        @media print {
+            .search-box { display: none; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Git Cheat Sheet - Essential Commands for Developers",
+        "description": "Complete git cheat sheet with 50+ essential commands for version control, branching, merging, and collaboration.",
+        "url": "https://terminalfeed.io/cheatsheets/git.html",
+        "datePublished": "2026-04-15",
+        "dateModified": "2026-04-15",
+        "author": {
+            "@type": "Person",
+            "name": "TerminalFeed"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "TerminalFeed",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://terminalfeed.io/og-image.png"
+            }
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://terminalfeed.io"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Cheatsheets",
+                "item": "https://terminalfeed.io/cheatsheets"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Git",
+                "item": "https://terminalfeed.io/cheatsheets/git.html"
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>Git</span>
+            </div>
+            <h1>Git Cheat Sheet</h1>
+            <p class="subtitle">Essential commands for version control, branching, and collaboration</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search commands... (e.g., commit, branch, merge)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Setup & Configuration</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git config --global user.name "Name"</div>
+                <div class="cmd-desc">Set your global git username</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git config --global user.email "email@example.com"</div>
+                <div class="cmd-desc">Set your global git email</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git config --list</div>
+                <div class="cmd-desc">Show all git configuration settings</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git config user.name</div>
+                <div class="cmd-desc">Check your current username</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Basics</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git init</div>
+                <div class="cmd-desc">Initialize a new git repository</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git clone &lt;url&gt;</div>
+                <div class="cmd-desc">Clone a remote repository</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git add &lt;file&gt;</div>
+                <div class="cmd-desc">Stage a file for commit</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git add .</div>
+                <div class="cmd-desc">Stage all changes for commit</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git commit -m "message"</div>
+                <div class="cmd-desc">Commit staged changes with a message</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git commit -am "message"</div>
+                <div class="cmd-desc">Stage and commit tracked files</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git status</div>
+                <div class="cmd-desc">Show working tree status</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git diff</div>
+                <div class="cmd-desc">Show unstaged changes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git diff --staged</div>
+                <div class="cmd-desc">Show staged changes</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Branching</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch</div>
+                <div class="cmd-desc">List local branches</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch -a</div>
+                <div class="cmd-desc">List all branches (local and remote)</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Create a new branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git checkout &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Switch to a different branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git checkout -b &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Create and switch to a new branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git switch &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Modern syntax to switch branches</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git switch -c &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Modern syntax to create and switch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch -d &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Delete a branch (safe)</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch -D &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Force delete a branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch -m &lt;new-name&gt;</div>
+                <div class="cmd-desc">Rename current branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git branch -m &lt;old&gt; &lt;new&gt;</div>
+                <div class="cmd-desc">Rename a specific branch</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Merging</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git merge &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Merge a branch into current branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git merge --no-ff &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Merge with merge commit (preserves history)</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git merge --squash &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Squash commits before merging</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git rebase &lt;branch-name&gt;</div>
+                <div class="cmd-desc">Rebase current branch onto another</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git merge --abort</div>
+                <div class="cmd-desc">Cancel a merge in progress</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Remote Repositories</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git remote -v</div>
+                <div class="cmd-desc">Show all remote repositories with URLs</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git remote add &lt;name&gt; &lt;url&gt;</div>
+                <div class="cmd-desc">Add a new remote repository</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git remote remove &lt;name&gt;</div>
+                <div class="cmd-desc">Remove a remote repository</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git remote rename &lt;old&gt; &lt;new&gt;</div>
+                <div class="cmd-desc">Rename a remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git fetch</div>
+                <div class="cmd-desc">Fetch all changes from remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git fetch &lt;remote&gt;</div>
+                <div class="cmd-desc">Fetch changes from specific remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git pull</div>
+                <div class="cmd-desc">Fetch and merge remote changes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git pull --rebase</div>
+                <div class="cmd-desc">Fetch and rebase instead of merge</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push</div>
+                <div class="cmd-desc">Push commits to remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push &lt;remote&gt; &lt;branch&gt;</div>
+                <div class="cmd-desc">Push specific branch to remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push -u origin &lt;branch&gt;</div>
+                <div class="cmd-desc">Push and set upstream tracking</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push --all</div>
+                <div class="cmd-desc">Push all branches to remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push --force</div>
+                <div class="cmd-desc">Force push to remote (use with caution)</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Stashing</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash</div>
+                <div class="cmd-desc">Stash current changes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash save "message"</div>
+                <div class="cmd-desc">Stash changes with a message</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash list</div>
+                <div class="cmd-desc">List all stashed changes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash pop</div>
+                <div class="cmd-desc">Apply and remove latest stash</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash apply</div>
+                <div class="cmd-desc">Apply latest stash without removing</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash drop</div>
+                <div class="cmd-desc">Delete latest stash</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git stash clear</div>
+                <div class="cmd-desc">Delete all stashes</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">History & Logs</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git log</div>
+                <div class="cmd-desc">Show commit history</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git log --oneline</div>
+                <div class="cmd-desc">Show commit history in one line per commit</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git log --graph --oneline --all</div>
+                <div class="cmd-desc">Show branch graph with history</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git log -p</div>
+                <div class="cmd-desc">Show commit history with full diff</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git log --author="name"</div>
+                <div class="cmd-desc">Filter commits by author</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git log --since="2 weeks ago"</div>
+                <div class="cmd-desc">Filter commits by date</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git show &lt;commit&gt;</div>
+                <div class="cmd-desc">Show details of a specific commit</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git blame &lt;file&gt;</div>
+                <div class="cmd-desc">Show who changed each line</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git reflog</div>
+                <div class="cmd-desc">Show reference logs (all head movements)</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Undoing Changes</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git restore &lt;file&gt;</div>
+                <div class="cmd-desc">Discard changes in working directory</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git restore --staged &lt;file&gt;</div>
+                <div class="cmd-desc">Unstage a file</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git reset HEAD &lt;file&gt;</div>
+                <div class="cmd-desc">Unstage a file (older syntax)</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git reset --soft HEAD~1</div>
+                <div class="cmd-desc">Undo last commit, keep changes staged</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git reset --mixed HEAD~1</div>
+                <div class="cmd-desc">Undo last commit, keep changes unstaged</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git reset --hard HEAD~1</div>
+                <div class="cmd-desc">Undo last commit, discard changes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git revert &lt;commit&gt;</div>
+                <div class="cmd-desc">Create new commit that undoes changes</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git clean -fd</div>
+                <div class="cmd-desc">Remove untracked files and directories</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Tags</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git tag</div>
+                <div class="cmd-desc">List all tags</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git tag &lt;tag-name&gt;</div>
+                <div class="cmd-desc">Create a lightweight tag</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git tag -a &lt;tag&gt; -m "message"</div>
+                <div class="cmd-desc">Create an annotated tag</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git show &lt;tag&gt;</div>
+                <div class="cmd-desc">Show tag details</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git tag -d &lt;tag&gt;</div>
+                <div class="cmd-desc">Delete a local tag</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push origin &lt;tag&gt;</div>
+                <div class="cmd-desc">Push a specific tag to remote</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git push origin --tags</div>
+                <div class="cmd-desc">Push all tags to remote</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Advanced</div>
+            <div class="cmd-row">
+                <div class="cmd-code">git cherry-pick &lt;commit&gt;</div>
+                <div class="cmd-desc">Apply a specific commit to current branch</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git bisect start</div>
+                <div class="cmd-desc">Start binary search to find bug-introducing commit</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git grep "pattern"</div>
+                <div class="cmd-desc">Search for text in tracked files</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git worktree add &lt;path&gt; &lt;branch&gt;</div>
+                <div class="cmd-desc">Create a separate working directory</div>
+            </div>
+            <div class="cmd-row">
+                <div class="cmd-code">git filter-branch</div>
+                <div class="cmd-desc">Rewrite commit history (advanced)</div>
+            </div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/live">Live</a><span class="sep">|</span>
+            <a href="/tools">Tools</a><span class="sep">|</span>
+            <a href="/agent">Agents</a><span class="sep">|</span>
+            <a href="/radio">Radio</a><span class="sep">|</span>
+            <a href="/wifi">WiFi</a><span class="sep">|</span>
+            <a href="/blog">Blog</a><span class="sep">|</span>
+            <a href="/developers">API</a><span class="sep">|</span>
+            <a href="/about">About</a><span class="sep">|</span>
+            <a href="/team">Team</a><span class="sep">|</span>
+            <a href="/features">Features</a>
+            <span class="sep">|</span>
+            <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+            <span class="sep">|</span>
+            <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>

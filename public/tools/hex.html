@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hex Converter - Hexadecimal to Decimal, Binary, Octal | TerminalFeed</title>
+<meta name="description" content="Convert between hexadecimal, decimal, binary, octal, and ASCII. Free hex converter that runs locally in your browser with live color preview.">
+<meta name="keywords" content="hex, hexadecimal, decimal, binary, octal, converter, ascii, color">
+<link rel="canonical" href="https://terminalfeed.io/tools/hex">
+<link rel="alternate" hreflang="en" href="https://terminalfeed.io/tools/hex">
+<link rel="alternate" hreflang="es" href="https://terminalfeed.io/es/tools/hex">
+<link rel="alternate" hreflang="pt" href="https://terminalfeed.io/pt/tools/hex">
+<link rel="alternate" hreflang="de" href="https://terminalfeed.io/de/tools/hex">
+<link rel="alternate" hreflang="x-default" href="https://terminalfeed.io/tools/hex">
+<meta property="og:title" content="Hex Converter - Hexadecimal to Decimal, Binary, Octal | TerminalFeed">
+<meta property="og:description" content="Convert between hexadecimal, decimal, binary, octal, and ASCII. Free hex converter with live color preview.">
+<meta property="og:url" content="https://terminalfeed.io/tools/hex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hex Converter - TerminalFeed Tools">
+<meta name="twitter:description" content="Convert between hexadecimal, decimal, binary, octal, and ASCII.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Hex Converter",
+  "url": "https://terminalfeed.io/tools/hex",
+  "description": "Convert between hexadecimal, decimal, binary, octal, and ASCII. Free hex converter that runs locally.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TerminalFeed",
+    "url": "https://terminalfeed.io"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+    { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://terminalfeed.io/tools" },
+    { "@type": "ListItem", "position": 3, "name": "Hex Converter", "item": "https://terminalfeed.io/tools/hex" }
+  ]
+}
+</script>
+<link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0A0C;
+    color: #D4D2CB;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+  .back-link a { color: #4E4D49; }
+  .back-link a:hover { color: #5DCAA5; }
+  .container { max-width: 960px; width: 100%; }
+  .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; }
+  .header h1 span { color: #5DCAA5; }
+  .badge {
+    background: rgba(93,202,165,0.1);
+    color: #5DCAA5;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(93,202,165,0.25);
+    white-space: nowrap;
+  }
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 700px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+  .panel { display: flex; flex-direction: column; gap: 0.4rem; }
+  .panel label { font-size: 0.75rem; color: #4E4D49; text-transform: uppercase; letter-spacing: 0.08em; }
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    background: #111114;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.85rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: #5DCAA5; }
+  textarea.error { border-color: #F87171; }
+  input[type="text"] {
+    width: 100%;
+    background: #111114;
+    color: #D4D2CB;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.7rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: #5DCAA5; }
+  .color-preview {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    margin-top: 0.6rem;
+    padding: 0.8rem;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+  }
+  .color-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    border: 2px solid #1A1A22;
+  }
+  .color-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+  }
+  .color-label { color: #4E4D49; }
+  .color-value { color: #5DCAA5; }
+  .preset-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+  }
+  .preset-btn {
+    background: rgba(93,202,165,0.08);
+    color: #8A8880;
+    border: 1px solid rgba(93,202,165,0.15);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .preset-btn:hover { background: rgba(93,202,165,0.15); color: #5DCAA5; }
+  .conversion-result {
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .conversion-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(93,202,165,0.08);
+  }
+  .conversion-row:last-child { border-bottom: none; }
+  .conversion-label { color: #4E4D49; font-size: 0.75rem; flex: 0 0 80px; }
+  .conversion-value {
+    color: #4ADE80;
+    font-weight: 600;
+    flex: 1;
+    word-break: break-all;
+    text-align: right;
+    font-size: 0.75rem;
+  }
+  button {
+    background: rgba(93,202,165,0.12);
+    color: #5DCAA5;
+    border: 1px solid rgba(93,202,165,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  button:hover { background: rgba(93,202,165,0.22); border-color: #5DCAA5; }
+  button:active { transform: scale(0.97); }
+  .btn-copy {
+    background: rgba(93,202,165,0.06);
+    border-color: rgba(93,202,165,0.15);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.8rem;
+    margin-top: 0.5rem;
+  }
+  .error-msg { color: #F87171; font-size: 0.75rem; min-height: 1.1em; margin-top: 0.3rem; }
+  footer {
+    margin-top: auto;
+    padding-top: 3rem;
+    font-size: 0.75rem;
+    color: #4E4D49;
+    text-align: center;
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .seo-content {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid #1A1A22;
+    color: #7A7A72;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .seo-content h2 {
+    color: #C8C8C0;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    letter-spacing: 0.5px;
+  }
+  .seo-content h3 {
+    color: #9A9A92;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+  }
+  .seo-content p {
+    margin-bottom: 12px;
+  }
+  .seo-content code {
+    background: #151518;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #4ADE80;
+  }
+  .seo-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+  }
+  .seo-content th, .seo-content td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1A1A22;
+    font-size: 12px;
+  }
+  .seo-content th {
+    color: #C8C8C0;
+  }
+  .tool-intro {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #111114;
+    border: 1px solid #1A1A22;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #8A8880;
+    line-height: 1.7;
+  }
+  .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+  .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+  .breadcrumbs a:hover { color: #5DCAA5; }
+  .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+  .sep { color: #2A2A30; }
+</style>
+</head>
+<body data-page="tools-hex">
+<div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/tools">Tools</a><span class="bc-sep">&rsaquo;</span><span>Hex Converter</span>
+  </nav>
+  <div class="header">
+    <h1 data-i18n="hex_heading"><span>&gt;_</span> HEX</h1>
+    <span class="badge" data-i18n="runs_locally">&#9889; runs locally</span>
+  </div>
+
+  <div class="tool-intro">
+    Convert between hexadecimal, decimal, binary, octal, and ASCII instantly. This hex converter accepts input in any number system and automatically converts to all others. If your input looks like a color code, a live color preview appears. Perfect for developers working with memory addresses, color codes, Unicode escapes, and low-level programming. All calculations run 100% client-side in your browser.
+  </div>
+
+  <div class="workspace">
+    <div class="panel">
+      <label for="inputArea">Enter Number (any format)</label>
+      <textarea id="inputArea" placeholder="Enter hex, decimal, binary, or octal value..." data-i18n-placeholder="hex_input_placeholder"></textarea>
+      <label style="margin-top: 0.8rem;">Preset Examples</label>
+      <div class="preset-buttons">
+        <button class="preset-btn" data-preset="FF">0xFF (255)</button>
+        <button class="preset-btn" data-preset="DEADBEEF">0xDEADBEEF</button>
+        <button class="preset-btn" data-preset="5DCAA5">5DCAA5 (teal)</button>
+        <button class="preset-btn" data-preset="1000">Binary 1000</button>
+        <button class="preset-btn" data-preset="777">Octal 777</button>
+        <button class="preset-btn" data-preset="65">ASCII 'A'</button>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="panel">
+      <label>All Conversions</label>
+      <div class="conversion-result">
+        <div class="conversion-row">
+          <span class="conversion-label">Hex</span>
+          <span class="conversion-value" id="hexResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">Decimal</span>
+          <span class="conversion-value" id="decimalResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">Binary</span>
+          <span class="conversion-value" id="binaryResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">Octal</span>
+          <span class="conversion-value" id="octalResult">-</span>
+        </div>
+        <div class="conversion-row">
+          <span class="conversion-label">ASCII</span>
+          <span class="conversion-value" id="asciiResult">-</span>
+        </div>
+      </div>
+      <div id="colorContainer"></div>
+      <button class="btn-copy" id="btnCopy">Copy Results</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="seo-content" data-i18n-html="hex_seo">
+    <h2>Hex Converter - Hexadecimal to Decimal, Binary, Octal</h2>
+
+    <h3>What Is Hexadecimal?</h3>
+    <p>Hexadecimal (hex) is a base-16 number system that uses digits 0 through 9 and letters A through F to represent values. One hexadecimal digit represents four binary digits (bits). For example, the hex digit <code>F</code> equals <code>1111</code> in binary and <code>15</code> in decimal. Hexadecimal notation is written with the prefix <code>0x</code>, such as <code>0xFF</code> for 255 or <code>0xDEADBEEF</code> for the 32-bit value 3735928559. Hexadecimal is ubiquitous in computing because it provides a compact representation of binary data that is easier for humans to read than long strings of 0s and 1s.</p>
+
+    <h3>Why Use Hexadecimal?</h3>
+    <p>Computers work in binary (base-2), but binary numbers are long and difficult to read. Decimal (base-10) is what humans naturally use. Hexadecimal (base-16) bridges this gap: it is compact enough to be practical yet represents binary data exactly. Since one hex digit encodes four bits, two hex digits encode one byte (8 bits). This makes hex the standard for representing memory addresses, color codes, cryptographic hashes, and raw binary data. Web developers use hex for CSS color codes like <code>#5DCAA5</code>. Security researchers use hex for analyzing malware and cryptographic values. Embedded systems programmers use hex for register values and firmware dumps.</p>
+
+    <h3>Common Use Cases</h3>
+    <p><strong>Color codes</strong> in web design are hexadecimal RGB values. <code>#FF0000</code> is pure red (255 red, 0 green, 0 blue). <strong>Memory addresses</strong> in debuggers and assembly language are shown in hex. <strong>Unicode escape sequences</strong> in strings use hex, e.g., <code>\u00A9</code> for the copyright symbol. <strong>Cryptographic hashes</strong> like MD5 and SHA-256 are represented as hex strings. <strong>MAC addresses</strong> for network interfaces use hex, such as <code>00:1A:2B:3C:4D:5E</code>. <strong>File headers and magic bytes</strong> are identified by hex values, like <code>89 50 4E 47</code> for PNG files.</p>
+
+    <h3>Number System Conversion Table</h3>
+    <table>
+      <tr>
+        <th>Hex</th>
+        <th>Decimal</th>
+        <th>Binary</th>
+        <th>Octal</th>
+      </tr>
+      <tr>
+        <td><code>0x00</code></td>
+        <td>0</td>
+        <td>0000</td>
+        <td>0</td>
+      </tr>
+      <tr>
+        <td><code>0x0F</code></td>
+        <td>15</td>
+        <td>1111</td>
+        <td>17</td>
+      </tr>
+      <tr>
+        <td><code>0xFF</code></td>
+        <td>255</td>
+        <td>11111111</td>
+        <td>377</td>
+      </tr>
+      <tr>
+        <td><code>0x100</code></td>
+        <td>256</td>
+        <td>100000000</td>
+        <td>400</td>
+      </tr>
+    </table>
+
+    <h3>How to Use This Tool</h3>
+    <p>Enter any number in hexadecimal, decimal, binary, or octal format. The tool automatically detects the input format and converts to all other bases. Hex input can include the <code>0x</code> prefix or not. Binary input should start with <code>0b</code>. Octal input should start with <code>0o</code>. The tool displays the ASCII character (if applicable), and if your input is a valid color code (3 or 6 hex digits), a live color preview appears. Click <strong>Copy Results</strong> to copy all conversions to your clipboard.</p>
+
+    <h3>Binary, Decimal, and Octal Basics</h3>
+    <p><strong>Decimal</strong> (base-10) is the standard number system used in everyday math and most programming. <strong>Binary</strong> (base-2) is the fundamental language of computers, using only 0 and 1. <strong>Octal</strong> (base-8) is historically used in Unix/Linux file permissions (chmod). For example, file permission <code>755</code> in octal means owner read-write-execute (7), group read-execute (5), and others read-execute (5). Understanding the relationship between these bases is essential for low-level programming, systems administration, and debugging.</p>
+
+    <h3>Privacy &amp; Security</h3>
+    <p>This tool runs <strong>100% client-side</strong> in your browser. No data is transmitted to any server. Your conversions never leave your machine. There are no usage limits, no accounts required, and no telemetry tracking. Feel free to convert sensitive values like cryptographic hashes or private key fragments without worry.</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/" data-i18n="home">Home</a>
+  <a href="/live">Live</a>
+  <a href="/tools" data-i18n="tools">Tools</a>
+  <a href="/agent">Agents</a>
+  <a href="/radio">Radio</a>
+  <a href="/wifi">WiFi</a>
+  <a href="/developers">API</a>
+  <a href="/blog">Blog</a>
+  <a href="/about">About</a>
+  <a href="/team">Team</a>
+  <a href="/features">Features</a>
+  <span class="sep">|</span>
+  <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  <span class="sep">|</span>
+  <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+</footer>
+
+<script>
+(function() {
+  const inputArea = document.getElementById('inputArea');
+  const hexResult = document.getElementById('hexResult');
+  const decimalResult = document.getElementById('decimalResult');
+  const binaryResult = document.getElementById('binaryResult');
+  const octalResult = document.getElementById('octalResult');
+  const asciiResult = document.getElementById('asciiResult');
+  const errorMsg = document.getElementById('errorMsg');
+  const colorContainer = document.getElementById('colorContainer');
+
+  function parseInput(input) {
+    const trimmed = input.trim().toLowerCase();
+    if (!trimmed) return null;
+    let decimal = null;
+    if (trimmed.startsWith('0x')) {
+      try { decimal = parseInt(trimmed, 16); } catch (e) {}
+    } else if (trimmed.startsWith('0b')) {
+      try { decimal = parseInt(trimmed.slice(2), 2); } catch (e) {}
+    } else if (trimmed.startsWith('0o')) {
+      try { decimal = parseInt(trimmed.slice(2), 8); } catch (e) {}
+    } else if (/^[0-9a-f]+$/.test(trimmed)) {
+      try { decimal = parseInt(trimmed, 16); } catch (e) {}
+    } else if (/^[01]+$/.test(trimmed)) {
+      try { decimal = parseInt(trimmed, 2); } catch (e) {}
+    } else if (/^[0-7]+$/.test(trimmed)) {
+      try { decimal = parseInt(trimmed, 8); } catch (e) {}
+    } else if (/^[0-9]+$/.test(trimmed)) {
+      try { decimal = parseInt(trimmed, 10); } catch (e) {}
+    }
+    return decimal;
+  }
+
+  function convert() {
+    errorMsg.textContent = '';
+    colorContainer.innerHTML = '';
+    const decimal = parseInput(inputArea.value);
+    if (decimal === null || isNaN(decimal)) {
+      hexResult.textContent = '-';
+      decimalResult.textContent = '-';
+      binaryResult.textContent = '-';
+      octalResult.textContent = '-';
+      asciiResult.textContent = '-';
+      return;
+    }
+    if (decimal < 0) {
+      errorMsg.textContent = 'Negative values not supported';
+      return;
+    }
+    const hex = decimal.toString(16).toUpperCase();
+    const binary = decimal.toString(2);
+    const octal = decimal.toString(8);
+    let ascii = '-';
+    if (decimal >= 32 && decimal <= 126) {
+      ascii = String.fromCharCode(decimal);
+    } else if (decimal >= 0 && decimal <= 127) {
+      ascii = '<control>';
+    }
+    hexResult.textContent = hex;
+    decimalResult.textContent = decimal;
+    binaryResult.textContent = binary;
+    octalResult.textContent = octal;
+    asciiResult.textContent = ascii;
+    if ((hex.length === 3 || hex.length === 6) && /^[0-9A-F]+$/.test(hex)) {
+      try {
+        const colorHex = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'color-preview';
+        const colorBox = document.createElement('div');
+        colorBox.className = 'color-box';
+        colorBox.style.backgroundColor = '#' + colorHex;
+        const colorInfo = document.createElement('div');
+        colorInfo.className = 'color-info';
+        const label = document.createElement('span');
+        label.className = 'color-label';
+        label.textContent = 'Color Preview';
+        const value = document.createElement('span');
+        value.className = 'color-value';
+        value.textContent = '#' + colorHex;
+        colorInfo.appendChild(label);
+        colorInfo.appendChild(value);
+        colorDiv.appendChild(colorBox);
+        colorDiv.appendChild(colorInfo);
+        colorContainer.appendChild(colorDiv);
+      } catch (e) {}
+    }
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      inputArea.value = this.dataset.preset;
+      convert();
+    });
+  });
+
+  inputArea.addEventListener('input', convert);
+
+  document.getElementById('btnCopy').addEventListener('click', function() {
+    const text = 'Hex: ' + hexResult.textContent + '\nDecimal: ' + decimalResult.textContent + '\nBinary: ' + binaryResult.textContent + '\nOctal: ' + octalResult.textContent + '\nASCII: ' + asciiResult.textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('btnCopy');
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Copy Results'; }, 1500);
+    });
+  });
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>

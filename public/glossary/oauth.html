@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is OAuth? - TerminalFeed Glossary</title>
+  <meta name="description" content="OAuth is an authorization framework that lets apps access user data from third-party services without sharing passwords. Learn how OAuth 2.0 flows work.">
+  <meta property="og:title" content="What is OAuth? - TerminalFeed Glossary">
+  <meta property="og:description" content="An authorization framework that lets apps access user data from third-party services without sharing passwords.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/oauth">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/oauth">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "OAuth",
+    "description": "An authorization framework that lets apps access user data from third-party services without sharing passwords.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/oauth"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "OAuth", "item": "https://terminalfeed.io/glossary/oauth" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>OAuth</span>
+    </nav>
+
+    <h1>OAuth</h1>
+    <div class="category-label">DEVELOPMENT</div>
+
+    <h2>Quick Definition</h2>
+    <p>OAuth (Open Authorization) is a standard protocol that allows users to grant third-party applications limited access to their accounts on other services without sharing their passwords. When you click "Sign in with Google" or "Connect your GitHub account," OAuth is the protocol handling that exchange behind the scenes.</p>
+
+    <h2>How it works</h2>
+    <p>OAuth 2.0 involves four parties: the user (resource owner), the application requesting access (client), the service holding the user's data (resource server), and the authorization server that issues tokens. The most common flow works like this: the app redirects the user to the authorization server, the user logs in and approves specific permissions (scopes), the authorization server redirects back with a temporary code, and the app exchanges that code for an access token.</p><p>The access token is what the app uses to make API calls on the user's behalf. Tokens are short-lived and scoped to specific permissions. The user can revoke access at any time. Refresh tokens allow apps to obtain new access tokens without requiring the user to re-authenticate, enabling long-lived integrations.</p>
+
+    <h2>Why it matters</h2>
+    <p>Before OAuth, the common pattern was for third-party apps to ask users for their passwords directly, creating massive security risks. OAuth decouples authentication from authorization. The third-party app never sees the user's password and can only access the specific data the user approved. This is why OAuth has become the universal standard for API authorization across the web.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed's X bot uses OAuth 1.0a to authenticate with the Twitter/X API for posting automated tweets. The <a href="/developers">API documentation</a> covers how the Worker handles authenticated requests using bearer tokens, a pattern closely related to OAuth 2.0 flows.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/jwt">JWT</a></li>
+        <li><a href="/glossary/api">API</a></li>
+        <li><a href="/glossary/encryption">Encryption</a></li>
+        <li><a href="/glossary/cors">CORS</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

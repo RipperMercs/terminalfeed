@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026 | TerminalFeed Blog</title>
+  <meta name="description" content="'Live data' doesn't mean the same thing everywhere. WebSocket streams update in milliseconds. API polling takes seconds. Worker caches add minutes. Understanding the tradeoffs between true real-time and near-real-time determines whether your dashboard is useful or just flashy.">
+  <meta property="og:title" content="Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026">
+  <meta property="og:description" content="'Live data' doesn't mean the same thing everywhere. WebSocket streams update in milliseconds. API polling takes seconds. Worker caches add minutes. Understanding the tradeoffs between true real-time and near-real-time determines whether your dashboard is useful or just flashy.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/real-time-vs-near-real-time">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/real-time-vs-near-real-time">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026",
+    "description": "'Live data' doesn't mean the same thing everywhere. WebSocket streams update in milliseconds. API polling takes seconds. Worker caches add minutes. Understanding the tradeoffs between true real-time and near-real-time determines whether your dashboard is useful or just flashy.",
+    "author": {
+      "@type": "Person",
+      "name": "Signal",
+      "url": "https://terminalfeed.io/team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-04-16",
+    "dateModified": "2026-04-16",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/real-time-vs-near-real-time",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    /* Article Header */
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    /* Article Body */
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+
+    /* Callout Box */
+    .callout {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #5DCAA5;
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .callout strong { color: #F0EDE6; }
+
+    /* CTA Box */
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    /* Author Box */
+    .author-box {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 36px;
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .author-box strong { color: #F0EDE6; }
+
+    /* Footer */
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Real-Time vs Near-Real-Time</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Real-Time vs Near-Real-Time", "item": "https://terminalfeed.io/blog/real-time-vs-near-real-time" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">DATA</span>
+        <span class="article-tag">AI</span>
+        <span class="article-tag">DATA THURSDAY</span>
+      </div>
+      <h1>Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026</h1>
+      <div class="article-meta">
+        <span>By Signal</span>
+        <span>April 2026</span>
+        <span>10 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Your dashboard says "Live BTC Price: $68,420". Your competitor's dashboard says the same price. Your data updated 300 milliseconds ago. Theirs updated 45 seconds ago. You're both calling the same API. What's the difference?</p>
+
+      <p>Everything depends on how you define "live." In 2026, dashboards, data platforms, and AI agents all claim to show "real-time" data, but the latency between what you're displaying and what's actually happening in the world varies by orders of magnitude. Understanding where data sits on the real-time spectrum is the difference between a useful dashboard and expensive theater.</p>
+
+      <h2>The spectrum: from milliseconds to minutes</h2>
+
+      <p>Real-time doesn't exist. It's a spectrum.</p>
+
+      <p>At one end, <strong>WebSocket streams</strong> deliver updates every few hundred milliseconds. When you connect directly to a crypto exchange's WebSocket, you get price updates as fast as they're generated, typically 20-100 times per second depending on the exchange. Bitcoin's network broadcasts new blocks roughly every 10 minutes, but Binance's price tick stream updates hundreds of times per minute. This is as close to "real-time" as you can get on the public internet.</p>
+
+      <p>In the middle, <strong>REST API polling</strong> introduces latency. You call the endpoint, wait for a response, process it, then call again. The fastest practical polling interval is usually 1-2 seconds. If you poll every second, you miss everything that happens between polls. But a 1-second stale window is acceptable for many use cases. Stock prices move slowly enough that 1-second latency barely matters to casual traders. Weather data changes so slowly that 5-minute polling is still "real-time" in any meaningful sense.</p>
+
+      <p>At the other end of the spectrum, <strong>cached snapshots</strong> can be hours old. Your worker caches a response for 15 minutes before refreshing. Your data feed updates once per day. Your spreadsheet auto-refreshes every 4 hours. This isn't "real-time" in any technical sense, but it's still called "live data" because it's fresher than yesterday's cached version.</p>
+
+      <p>Most dashboards mix all three strategies on the same page. This is correct. Your earthquake feed doesn't need WebSocket latency. Your fear and greed index doesn't change every millisecond. But your Bitcoin price absolutely should stream live because that's what traders expect. Building a good dashboard means choosing the right latency for each data source.</p>
+
+      <h2>Why latency matters: the cost of being behind</h2>
+
+      <p>Imagine you're running a trading bot or an AI agent that responds to market data. You're looking at Bitcoin on the screen. It's $68,420. You decide to trade. You send your order. The order reaches the exchange. The exchange tells you: sorry, the price is now $68,450. Your bid is stale. Rejected.</p>
+
+      <p>This happens because of latency. The data you're looking at is behind the actual market state. The larger the latency, the wider the window for the price to move against you. For traders, every millisecond matters. For casual observers, 1 second is fine. For long-term trend analysis, 15 minutes is fine.</p>
+
+      <p>There's also a cost to latency in how you experience data. A dashboard that updates every 300ms feels responsive and alive. A dashboard that updates every 5 seconds feels sluggish. A dashboard that updates once per minute feels broken. Perceived responsiveness affects whether users trust your dashboard or use something else.</p>
+
+      <p>But there's also a cost to pushing latency too low. Updating every 100ms instead of every 300ms means 3x more network bandwidth, 3x more computation, and 3x more battery drain on phones. Every millisecond you shave off has a cost. The question is whether the benefit is worth it.</p>
+
+      <h2>The architecture of TerminalFeed: choosing latency per source</h2>
+
+      <p>TerminalFeed handles 20+ data sources, each with different latency requirements. Our approach is instructive.</p>
+
+      <p><strong>WebSocket streaming:</strong> Bitcoin price uses a direct WebSocket connection to Binance. Updates arrive hundreds of times per second. We throttle to 1 update per second on desktop and 1 per 3 seconds on mobile. This gives users the feeling of "live" data without the battery drain of a thousand updates per second. Latency: 300-1000 milliseconds.</p>
+
+      <p><strong>Server-Sent Events (SSE):</strong> Our earthquake and Wikipedia live edits panels use SSE streams. SSE is like WebSocket but simpler, one-way only, and works better over HTTP. Updates arrive when they happen, typically every few seconds. We buffer updates and flush every 500ms to batch rendering and avoid thrashing the DOM. Latency: 500-2000 milliseconds.</p>
+
+      <p><strong>REST polling with per-endpoint caching:</strong> HackerNews, Reddit, GitHub trending, and most other feeds use our Cloudflare Worker as a cache layer. We call the upstream API once every 30-60 seconds, cache the response, and serve all visitors the cached data. A visitor's view is never more than 1 minute behind the source. But the Worker only calls upstream once per minute, not once per visitor request, so we hit the API 100x less often. Latency: 30-60 seconds. Cost: nearly free.</p>
+
+      <p><strong>Long-lived cache:</strong> Fear and Greed Index, economic indicators, and prediction markets get called once every 5-15 minutes and cached aggressively. Users see data that's 5-15 minutes old. For these slow-moving metrics, this is perfectly fine. It looks like a dashboard glitch if it updates too frequently anyway. Users understand that unemployment reports don't change by the minute. Latency: 5-15 minutes. Cost: minimal.</p>
+
+      <div class="callout">
+        <strong>Real architecture:</strong> TerminalFeed's API Worker routes every /api/* call through a cache layer with per-endpoint TTLs. BTC price uses WebSocket (1s refreshes). Earthquake data uses SSE. HackerNews polls every 60s and caches for visitors. Fear and Greed caches for 15 minutes. If an API fails, we return stale cache instead of an error. Result: users never see outages, bandwidth is minimal, and we stay well under rate limits on all upstream APIs.
+      </div>
+
+      <h2>The hidden cost: bandwidth and battery</h2>
+
+      <p>Every millisecond of latency you remove costs bandwidth and processing power. A WebSocket connection to Binance that updates 100 times per second uses roughly 10x more data than a single REST call every second, for the same data. On desktop, this is negligible. On mobile, it's the difference between 8 hours and 6 hours of battery life.</p>
+
+      <p>The math is simple: more updates equals more network requests, more data transferred, more CPU to parse and render, more battery consumed. If your latency is 1 second but your users' phones are dead after 2 hours, you've optimized the wrong thing.</p>
+
+      <p>This is why TerminalFeed throttles WebSocket updates on mobile and doubles all polling intervals. A visitor on cellular data shouldn't pay for your desire for sub-second latency. Real dashboards adjust their refresh rate based on device, connection speed, and whether the tab is visible.</p>
+
+      <h2>True real-time is rare and expensive</h2>
+
+      <p>If you're building something that truly requires millisecond-level latency, you should know that it's expensive. Crypto exchanges run proprietary data centers close to where the exchanges run. They pay for direct fiber connections. They write in low-level languages that compile to fast machine code. They measure latency in single-digit milliseconds.</p>
+
+      <p>For a web-based dashboard? You can't do that. Your browser talks to your server, which talks to the upstream API. There are too many layers. You get JavaScript garbage collection pauses. Your server has network latency. The upstream API has latency. By the time data reaches the browser, at least 50-100 milliseconds have passed. Add human perception latency on top: humans can't perceive changes faster than 50-100 milliseconds anyway. The marginal benefit of optimizing below 100ms is zero.</p>
+
+      <p>What matters is consistency. A 500ms latency that's always 500ms feels better than a 100ms latency that's sometimes 100ms and sometimes 2000ms. Users notice jitter more than they notice absolute latency.</p>
+
+      <h2>Making the tradeoff decision</h2>
+
+      <p>When you're building a dashboard or a data feed, ask yourself these questions:</p>
+
+      <ul>
+        <li><strong>What action does the user take based on this data?</strong> If they trade, milliseconds matter. If they read, seconds don't.</li>
+        <li><strong>How often does the underlying data actually change?</strong> Polling faster than the source updates is waste.</li>
+        <li><strong>What's the cost of being behind?</strong> Trading costs money. News articles age gradually. Earthquake alerts: you want low latency.</li>
+        <li><strong>What's your infrastructure budget?</strong> WebSocket is more expensive than polling. Polling is more expensive than caching.</li>
+        <li><strong>Will this run on mobile?</strong> If yes, bias toward lower frequency updates and better caching.</li>
+      </ul>
+
+      <p>The best dashboards don't chase sub-second latency everywhere. They choose the right latency for each data source. Bitcoin price warrants WebSocket. Earthquake alerts warrant SSE. HackerNews warrants 60-second polling. Fear and Greed Index warrants 15-minute cache. Every choice is correct given the use case.</p>
+
+      <div class="cta-box">
+        <p>See how TerminalFeed mixes WebSocket, SSE, and polling to deliver live data efficiently. Explore the dashboard and API architecture.</p>
+        <a href="/" class="cta-link">Explore TerminalFeed Dashboard</a>
+      </div>
+
+      <p>In 2026, "real-time" has lost all meaning. We say "real-time data" to mean everything from Binance WebSocket ticks to the unemployment report from yesterday. The term is useless. What matters is: how old is this data when I look at it, and is that old enough for what I'm doing? Answer those questions honestly, and you'll build dashboards that are genuinely useful instead of just visually impressive.</p>
+
+    </article>
+
+    <div class="author-box">
+      <strong>Signal</strong> is the Data and AI Editor at TerminalFeed. They focus on data infrastructure, machine learning systems, and how AI agents consume and act on structured data. Their work bridges the gap between raw API feeds and decision-making. Previously a data engineer at a fintech startup.
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

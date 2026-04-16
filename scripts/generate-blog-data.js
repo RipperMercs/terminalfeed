@@ -11,12 +11,15 @@ function extractMetadata(htmlContent, slug) {
   const title = (htmlContent.match(/<meta property="og:title" content="([^"]+)"/) ||
                  htmlContent.match(/<title>([^|<]+)/))?.[1]?.trim() || '';
   const excerpt = htmlContent.match(/<meta name="description" content="([^"]+)"/)?.[1] || '';
-  const datePublished = htmlContent.match(/"datePublished":\s*"([^"]+)"/)?.[1] || '';
+  const datePublished = (htmlContent.match(/"datePublished":\s*"([^"]+)"/)?.[1] || '').slice(0, 10);
   const readTime = htmlContent.match(/<span>(\d+ min read)<\/span>/)?.[1] || '';
 
-  // Extract author from "By AuthorName" in article-meta
-  const authorMatch = htmlContent.match(/<span>By ([^<]+)<\/span>/);
-  const author = authorMatch?.[1]?.trim() || '';
+  // Author: prefer JSON-LD (reliable across layouts), fall back to legacy "By X" span
+  const author = (
+    htmlContent.match(/"author"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/)?.[1] ||
+    htmlContent.match(/<span>By ([^<]+)<\/span>/)?.[1] ||
+    ''
+  ).trim();
 
   // Extract tags from article-tag spans
   const tagMatches = [...htmlContent.matchAll(/<span class="article-tag">([^<]+)<\/span>/g)];

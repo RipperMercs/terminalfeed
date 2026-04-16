@@ -6,12 +6,66 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Wed, 08 Apr 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 16 Apr 2026 12:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026</title>
+      <link>https://terminalfeed.io/blog/real-time-vs-near-real-time</link>
+      <description>'Live data' doesn't mean the same thing everywhere. WebSocket streams update in milliseconds, API polling takes seconds, Worker caches add minutes. Understanding the tradeoffs determines whether your dashboard is useful or just flashy.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Thu, 16 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/real-time-vs-near-real-time</guid>
+    </item>
+
+    <item>
+      <title>Your Browser Extensions Are Watching You: The Hidden Cost of Free Add-Ons</title>
+      <link>https://terminalfeed.io/blog/browser-extensions-watching</link>
+      <description>Browser extensions have become a privacy threat vector. Discover why free add-ons monitor your behavior, how they monetize your data, and what you can do about it.</description>
+      <author>hello@terminalfeed.io (zer0day)</author>
+      <pubDate>Wed, 15 Apr 2026 14:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/browser-extensions-watching</guid>
+    </item>
+
+    <item>
+      <title>Claude vs ChatGPT in 2026: An Honest Comparison for Developers</title>
+      <link>https://terminalfeed.io/blog/claude-vs-chatgpt</link>
+      <description>Unbiased comparison of Claude and ChatGPT in 2026. Compare model capabilities, context windows, coding ability, pricing, and API experience for developers.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Wed, 15 Apr 2026 13:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/claude-vs-chatgpt</guid>
+    </item>
+
+    <item>
+      <title>REST vs GraphQL: Which API Architecture Should You Use in 2026?</title>
+      <link>https://terminalfeed.io/blog/rest-vs-graphql</link>
+      <description>Comprehensive comparison of REST and GraphQL APIs. Learn the key differences, when to use each architecture, and the hybrid approach for modern applications.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Wed, 15 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/rest-vs-graphql</guid>
+    </item>
+
+    <item>
+      <title>WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol</title>
+      <link>https://terminalfeed.io/blog/websocket-vs-sse</link>
+      <description>Compare WebSocket and Server-Sent Events (SSE) for real-time applications. Learn when to use each protocol, implementation details, and real-world examples from TerminalFeed.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Wed, 15 Apr 2026 11:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/websocket-vs-sse</guid>
+    </item>
+
+    <item>
+      <title>Cron Expressions Decoded: A Developer's Visual Guide to Scheduling</title>
+      <link>https://terminalfeed.io/blog/cron-decoded</link>
+      <description>Master cron expressions with visual examples. Learn the 5-field syntax, common patterns, and how to avoid scheduling mistakes in your automation workflows.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Tue, 14 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/cron-decoded</guid>
+    </item>
 
     <item>
       <title>The Free Tier Is Dead. Long Live the Open Source Alternative.</title>

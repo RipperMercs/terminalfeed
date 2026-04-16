@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is DNS? - TerminalFeed Glossary</title>
+  <meta name="description" content="DNS (Domain Name System) is the internet's phonebook, translating human-readable domain names into IP addresses. Learn how DNS resolution works.">
+  <meta property="og:title" content="What is DNS? - TerminalFeed Glossary">
+  <meta property="og:description" content="Domain Name System: the internet's phonebook that translates domain names into IP addresses.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/dns">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/dns">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "DNS",
+    "description": "Domain Name System: the internet's phonebook that translates domain names into IP addresses.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/dns"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "DNS", "item": "https://terminalfeed.io/glossary/dns" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>DNS</span>
+    </nav>
+
+    <h1>DNS</h1>
+    <div class="category-label">NETWORKING</div>
+
+    <h2>Quick Definition</h2>
+    <p>The Domain Name System (DNS) is a hierarchical naming system that translates human-readable domain names (like terminalfeed.io) into machine-readable IP addresses (like 104.21.32.1). Every time you type a URL into your browser, a DNS lookup happens before the connection is even established. DNS is one of the most fundamental and invisible pieces of internet infrastructure.</p>
+
+    <h2>How it works</h2>
+    <p>When you enter a domain name, your device first checks its local cache. If not found, it queries a recursive resolver (usually provided by your ISP or a service like Cloudflare's 1.1.1.1). The resolver checks its cache, and if needed, queries the DNS hierarchy: root servers point to TLD servers (.io, .com), which point to authoritative nameservers for the specific domain. The authoritative server returns the IP address, which is then cached at every level for the record's TTL (time to live).</p><p>DNS records come in many types. A records map names to IPv4 addresses. AAAA records map to IPv6. CNAME records create aliases. MX records direct email. TXT records hold arbitrary text (often used for domain verification and email security like SPF, DKIM, and DMARC).</p>
+
+    <h2>Why it matters</h2>
+    <p>DNS is a single point of failure for every internet service. If DNS goes down, nothing works, even if servers are running perfectly. Major outages at DNS providers have taken down large portions of the internet. Choosing a reliable DNS provider, setting appropriate TTLs, and understanding DNS propagation are critical for running any web service. DNS is also a common attack vector through cache poisoning, DNS hijacking, and DDoS attacks on nameservers.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed uses Cloudflare for both DNS and hosting. The domain terminalfeed.io is registered through Cloudflare Registrar with Cloudflare DNS nameservers. The Dev/Ops Status panel on the <a href="/">dashboard</a> monitors services that depend on reliable DNS resolution.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/ssl-tls">SSL/TLS</a></li>
+        <li><a href="/glossary/cdn">CDN</a></li>
+        <li><a href="/glossary/ip-address">IP Address</a></li>
+        <li><a href="/glossary/port">Port</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+    <span class="sep">|</span>
+    <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+  </footer>
+</body>
+</html>

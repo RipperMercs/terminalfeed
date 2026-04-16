@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Browser Extensions Are Watching You | TerminalFeed</title>
+  <meta name="description" content="Browser extensions have become a privacy threat vector. Discover why free add-ons monitor your behavior, how they monetize your data, and what you can do about it.">
+  <meta property="og:title" content="Your Browser Extensions Are Watching You: The Hidden Cost of Free Add-Ons">
+  <meta property="og:description" content="Browser extensions have become a privacy threat vector. Discover why free add-ons monitor your behavior, and what you can do about it.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://terminalfeed.io/blog/browser-extensions-watching">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Your Browser Extensions Are Watching You">
+  <meta name="twitter:description" content="Why free browser extensions are a privacy threat, and what you can do about it.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:creator" content="@terminalfeed">
+  <link rel="canonical" href="https://terminalfeed.io/blog/browser-extensions-watching">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml">
+  <link rel="alternate" hreflang="en" href="https://terminalfeed.io/blog/browser-extensions-watching">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag { display: inline-block; font-size: 9px; color: #5DCAA5; border: 1px solid #5DCAA530; background: #5DCAA510; padding: 2px 8px; border-radius: 3px; margin-right: 6px; letter-spacing: 1px; }
+    .article-header h1 { font-size: 22px; color: #F0EDE6; line-height: 1.4; margin-bottom: 12px; font-weight: 600; }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 { font-size: 16px; color: #4ADE80; margin-top: 36px; margin-bottom: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul { margin-bottom: 18px; padding-left: 20px; }
+    .article-body li { margin-bottom: 10px; color: #D4D2CB; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code { background: #111114; border: 1px solid #1E1E24; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .article-body pre { background: #111114; border: 1px solid #1E1E24; border-radius: 6px; padding: 16px; margin: 20px 0; overflow-x: auto; font-size: 12px; color: #D4D2CB; line-height: 1.6; }
+    .callout { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #5DCAA5; border-radius: 6px; padding: 18px 20px; margin: 24px 0; font-size: 13px; color: #8A8880; line-height: 1.7; }
+    .callout strong { color: #F0EDE6; }
+    .cta-box { background: #111114; border: 1px solid #5DCAA530; border-radius: 8px; padding: 24px; margin: 32px 0; text-align: center; }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link { display: inline-block; font-size: 13px; color: #0A0A0C; background: #5DCAA5; padding: 10px 24px; border-radius: 6px; text-decoration: none; border: none; font-family: inherit; font-weight: 600; letter-spacing: 0.5px; }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+    .author-box { background: #111114; border: 1px solid #1E1E24; border-radius: 8px; padding: 20px; margin-top: 36px; font-size: 12px; color: #8A8880; line-height: 1.7; }
+    .author-box strong { color: #F0EDE6; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } .article-header h1 { font-size: 18px; } .article-body { font-size: 12px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="breadcrumbs">
+      <a href="/">Home</a><span class="bc-sep">/</span>
+      <a href="/blog">Blog</a><span class="bc-sep">/</span>
+      <span>Browser Extensions Are Watching You</span>
+    </div>
+
+    <a href="/blog" class="back">< Back to Blog</a>
+
+    <article>
+      <header class="article-header">
+        <div class="article-tags">
+          <span class="article-tag">SECURITY</span>
+          <span class="article-tag">PRIVACY</span>
+          <span class="article-tag">WIRE WEDNESDAY</span>
+        </div>
+        <h1>Your Browser Extensions Are Watching You: The Hidden Cost of Free Add-Ons</h1>
+        <div class="article-meta">
+          <span>zer0day</span>
+          <span>April 15, 2026</span>
+          <span>6 min read</span>
+        </div>
+      </header>
+
+      <div class="article-body">
+        <p>You've got a browser extension for everything. Password managers, ad blockers, email notifiers, grammar checkers, tab organizers, shopping assistants. They're convenient, they're free, and they're installed on your machine right now, watching every website you visit and every keystroke you make. Most people have no idea what permissions they've actually granted.</p>
+
+        <p>Here's the uncomfortable truth: if an extension is free, you're not the customer. Your data is the product. And the browser extension ecosystem is one of the most effective data collection systems ever built, hiding in plain sight in the corner of your toolbar.</p>
+
+        <h2>The Permission Trap</h2>
+
+        <p>When you install a browser extension, it asks for permissions. You probably clicked "Allow" without reading them. Everyone does. But those permissions are everything. A malicious or negligent extension can:</p>
+
+        <ul>
+          <li>Read every keystroke you type (including passwords before encryption)</li>
+          <li>Access all cookies and session tokens from every website you visit</li>
+          <li>See your entire browsing history in real-time</li>
+          <li>Inject ads or modify content on any webpage</li>
+          <li>Capture screenshots of your screen</li>
+          <li>Access your clipboard</li>
+          <li>Read data from forms before you submit them</li>
+          <li>Exfiltrate search queries, emails, financial data, and private messages</li>
+        </ul>
+
+        <p>The browser extension permission model assumes developers are trustworthy. They're not always. And even well-intentioned developers sometimes get acquired by advertising companies or venture capital firms that pivot the product toward monetization through data collection.</p>
+
+        <div class="callout">
+          <strong>Reality check:</strong> Your extension doesn't need your permission to send data to third-party servers. It can do that completely silently. There's no notification, no audit log, no way for you to know what's happening in the background.
+        </div>
+
+        <h2>The Acquisition Game</h2>
+
+        <p>The most common rug pull in the extension world is the acquisition. A developer builds a free, genuinely useful extension and builds a real user base. Then an advertising network or data broker acquires the extension for six or seven figures. New management takes over, and suddenly the extension's code changes. New telemetry appears. The extension's behavior shifts toward data collection and ad injection.</p>
+
+        <p>This has happened to dozens of popular extensions. Ad blocker extensions have been caught adding their own ads. Download managers have been found exfiltrating search queries. Grammar checkers have been observed sending entire documents to remote servers for processing and archiving.</p>
+
+        <p>The worst part? Users usually don't know the extension changed hands. There's no notification. The icon is the same. It still works. But the privacy contract has been violated completely.</p>
+
+        <h2>The Enterprise Surveillance Angle</h2>
+
+        <p>Some extensions are built from the ground up as data harvesting tools. They're not trying to hide it, exactly, but they hide it in boring terms of service that nobody reads. Corporate analytics companies, marketing firms, and third-party data brokers have all built extensions to monitor user behavior at scale.</p>
+
+        <p>These extensions track which websites you visit, how long you spend there, what you click, what you search for, what you buy. If you use a shopping assistant extension, it's probably watching your purchasing behavior to sell insights to retailers. If you're using an email notifier, it might be scanning your emails for keywords and selling that metadata to advertisers.</p>
+
+        <p>And here's the kicker: the extension doesn't even need to read your data directly. It can inject tracking pixels and analytics beacons into every webpage you visit. Your extension becomes a proxy for third-party tracking, operating with your explicit consent.</p>
+
+        <h2>The Supply Chain Attack</h2>
+
+        <p>Even legitimate extension developers can be compromised. An attacker can breach a developer's account, push malicious updates to thousands of users without anyone knowing. This has happened. A developer's GitHub account gets pwned, the extension code gets replaced with a cryptominer or data stealer, and it automatically updates on thousands of machines.</p>
+
+        <p>The extension store validation process is not designed to catch these attacks. It's automated. As long as the extension doesn't trigger immediate red flags, it gets through. By the time humans notice something's wrong, the damage is done.</p>
+
+        <h2>What You Can Actually Do</h2>
+
+        <p>The obvious answer is: uninstall extensions you don't absolutely need. But if you're like most people, you've got maybe 5-10 that you actually use daily. Here's a practical approach:</p>
+
+        <ul>
+          <li><strong>Audit your installed extensions.</strong> Go through your extension list right now. For each one, ask: do I actually use this? Can I do without it? Write down what each extension does.</li>
+          <li><strong>Check permissions.</strong> Click into each extension's details page and see what permissions it's requesting. If it's asking for "read and modify all data on all websites," that's a red flag unless that's literally what it's supposed to do.</li>
+          <li><strong>Restrict extensions by site.</strong> Modern browsers let you restrict extensions to run only on specific sites. Use this feature. Your grammar checker doesn't need access to your banking website.</li>
+          <li><strong>Use open source when possible.</strong> Open source extensions can be audited. The code is visible. That doesn't guarantee it's safe, but it's better than closed-source extensions from random companies.</li>
+          <li><strong>Check update history.</strong> Before installing, scroll through the reviews and look for complaints about behavior changes after updates. If lots of people are saying "this extension changed after an update and now it's spammy," that's a sign the developer got acquired or pivoted.</li>
+          <li><strong>Use browser native features.</strong> Firefox and Chrome have built-in tools for password management, tab management, and basic ad blocking. They're not as feature-rich as extensions, but they're more trustworthy because the browser vendor's business model doesn't depend on harvesting your data.</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Pro tip:</strong> Check your extension's privacy policy. If it doesn't have one, or if the policy says it collects and shares your data, that's not an accident. It's intentional.
+        </div>
+
+        <h2>Look at Your Own Browser Console</h2>
+
+        <p>Want to see what's really happening? Open your browser's developer console while browsing normally, then watch the network tab. You'll see requests being made to analytics servers, tracking pixels being loaded, data being sent to third-party domains. Your extensions are likely responsible for a lot of this noise.</p>
+
+        <p>If you're curious about the technical details of what's happening in your browser, we've written a whole guide on <a href="/blog/read-your-browser-console">how to read your browser console and understand what your extensions are actually doing</a>. It's worth understanding at least the basics of what's happening under the hood.</p>
+
+        <h2>The Reality</h2>
+
+        <p>The browser extension ecosystem is fundamentally broken from a security perspective. Developers have too much power, users have too little visibility, and the incentive structure rewards data collection over privacy.</p>
+
+        <p>Until that changes, your best defense is paranoia. Assume every extension is watching you. Because most of them are.</p>
+
+        <div class="cta-box">
+          <p>Want to understand what your browser is actually doing behind the scenes?</p>
+          <a href="/blog/read-your-browser-console" class="cta-link">Read Your Browser Console Guide</a>
+        </div>
+
+        <div class="author-box">
+          <strong>zer0day</strong> is TerminalFeed's Security Correspondent, covering privacy threats, hacker culture, and the dark corners of the internet. When not writing about how you're being surveilled, zer0day helps developers build secure systems and teaches people how to protect themselves online. Based in the tradition of 2600 magazine and grassroots security research.
+        </div>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/live">Live</a><span class="sep">|</span>
+      <a href="/tools">Tools</a><span class="sep">|</span>
+      <a href="/agent">Agents</a><span class="sep">|</span>
+      <a href="/radio">Radio</a><span class="sep">|</span>
+      <a href="/wifi">WiFi</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/developers">API</a><span class="sep">|</span>
+      <a href="/about">About</a><span class="sep">|</span>
+      <a href="/team">Team</a><span class="sep">|</span>
+      <a href="/features">Features</a>
+      <span class="sep">|</span>
+      <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+      <span class="sep">|</span>
+      <a href="https://phreak.fm" target="_blank" rel="noopener noreferrer">Phreak.fm</a>
+    </footer>
+  </div>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Your Browser Extensions Are Watching You: The Hidden Cost of Free Add-Ons",
+    "description": "Browser extensions have become a privacy threat vector. Discover why free add-ons monitor your behavior, how they monetize your data, and what you can do about it.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-15T00:00:00Z",
+    "dateModified": "2026-04-15T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "zer0day",
+      "url": "https://terminalfeed.io/team"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://terminalfeed.io/blog/browser-extensions-watching"
+    }
+  }
+  </script>
+</body>
+</html>

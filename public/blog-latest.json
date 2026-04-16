@@ -1,83 +1,74 @@
 {
-  "updated": "2026-04-09T01:38:05.329Z",
+  "updated": "2026-04-16T01:00:56.591Z",
   "articles": [
     {
-      "slug": "claude-mythos-project-glasswing",
-      "title": "Claude Mythos and Project Glasswing: Anthropic Held Back Its Most Powerful Model",
-      "excerpt": "Anthropic released Claude Mythos Preview to a handful of security partners this week. The rest of us don't get access because the model is too dangerous. Here's what that means.",
-      "author": "zer0day",
-      "author_title": "Security Correspondent",
+      "slug": "real-time-vs-near-real-time",
+      "title": "Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026",
+      "excerpt": "'Live data' doesn't mean the same thing everywhere. WebSocket streams update in milliseconds. API polling takes seconds. Worker caches add minutes. Understanding the tradeoffs between true real-time and near-real-time determines whether your dashboard is useful or just flashy.",
+      "author": "Signal",
+      "author_title": "Infrastructure Writer",
       "tags": [
-        "AI",
-        "SECURITY"
+        "DATA",
+        "AI"
       ],
-      "published": "2026-04-08",
-      "read_time": "9 min read"
+      "published": "2026-04-16",
+      "read_time": "10 min read"
     },
     {
-      "slug": "free-tier-is-dead",
-      "title": "The Free Tier Is Dead. Long Live the Open Source Alternative.",
-      "excerpt": "Every developer tool you loved is removing its free tier. Heroku did it. Postman did it. MongoDB did it. Here's what's actually happening and where to find the open source alternatives that won't betray you.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [
-        "DEV TOOLS",
-        "OPEN SOURCE"
-      ],
-      "published": "2026-04-08",
-      "read_time": "8 min read"
-    },
-    {
-      "slug": "read-your-browser-console",
-      "title": "Why You Should Read Your Browser Console Tonight",
-      "excerpt": "The browser console is the most underused security tool you already have. Here's what you'll find when you open it on the websites you use every day, and why it should change how you browse.",
+      "slug": "browser-extensions-watching",
+      "title": "Your Browser Extensions Are Watching You: The Hidden Cost of Free Add-Ons",
+      "excerpt": "Browser extensions have become a privacy threat vector. Discover why free add-ons monitor your behavior, how they monetize your data, and what you can do about it.",
       "author": "zer0day",
       "author_title": "Security Correspondent",
       "tags": [
         "SECURITY",
         "PRIVACY"
       ],
-      "published": "2026-04-08",
+      "published": "2026-04-15",
       "read_time": "6 min read"
     },
     {
-      "slug": "what-the-fear-greed-index-got-wrong",
-      "title": "What the Fear and Greed Index Got Wrong in March 2026",
-      "excerpt": "The Crypto Fear and Greed Index spent most of March in extreme fear territory while Bitcoin held above 70K. Here's what that disconnect actually meant and what it tells us about reading sentiment indicators.",
-      "author": "Pulse",
-      "author_title": "Market Analyst",
-      "tags": [
-        "CRYPTO",
-        "MARKETS"
-      ],
-      "published": "2026-04-08",
-      "read_time": "7 min read"
+      "slug": "claude-vs-chatgpt",
+      "title": "Claude vs ChatGPT in 2026: An Honest Comparison for Developers",
+      "excerpt": "Unbiased comparison of Claude and ChatGPT in 2026. Compare model capabilities, context windows, coding ability, pricing, and API experience for developers.",
+      "author": "Signal",
+      "author_title": "Infrastructure Writer",
+      "tags": [],
+      "published": "2026-04-15",
+      "read_time": ""
     },
     {
-      "slug": "2600-still-matters",
-      "title": "The Hacker Quarterly Turns 41: Why 2600 Magazine Still Matters in 2026",
-      "excerpt": "2600 Magazine has been publishing for 41 years. In an era of TikTok security influencers and YouTube hacking tutorials, the print quarterly is more relevant than ever. Here's why.",
-      "author": "zer0day",
-      "author_title": "Security Correspondent",
-      "tags": [
-        "HACKER CULTURE",
-        "HISTORY"
-      ],
-      "published": "2026-04-07",
-      "read_time": "8 min read"
+      "slug": "rest-vs-graphql",
+      "title": "REST vs GraphQL: Which API Architecture Should You Use in 2026?",
+      "excerpt": "Comprehensive comparison of REST and GraphQL APIs. Learn the key differences, when to use each architecture, and the hybrid approach for modern applications.",
+      "author": "Node",
+      "author_title": "Dev Tools Editor",
+      "tags": [],
+      "published": "2026-04-15",
+      "read_time": ""
     },
     {
-      "slug": "api-rate-limits-explained",
-      "title": "How API Rate Limits Actually Work (And How to Work Around Them)",
-      "excerpt": "Rate limits are the invisible wall every API developer hits eventually. Here's how they actually work, why they exist, and the patterns that let you build reliable systems on top of rate-limited APIs.",
+      "slug": "websocket-vs-sse",
+      "title": "WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol",
+      "excerpt": "Compare WebSocket and Server-Sent Events (SSE) for real-time applications. Learn when to use each protocol, implementation details, and real-world examples.",
+      "author": "Signal",
+      "author_title": "Infrastructure Writer",
+      "tags": [],
+      "published": "2026-04-15",
+      "read_time": ""
+    },
+    {
+      "slug": "cron-decoded",
+      "title": "Cron Expressions Decoded: A Developer's Visual Guide to Scheduling",
+      "excerpt": "Master cron expressions with visual examples. Learn the 5-field syntax, common patterns, and how to avoid scheduling mistakes in your automation workflows.",
       "author": "Node",
       "author_title": "Dev Tools Editor",
       "tags": [
-        "APIs",
-        "DEV"
+        "DEV TOOLS",
+        "SCHEDULING"
       ],
-      "published": "2026-04-07",
-      "read_time": "8 min read"
+      "published": "2026-04-14",
+      "read_time": ""
     }
   ]
 }
