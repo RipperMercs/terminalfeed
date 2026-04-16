@@ -23,10 +23,11 @@ export const MemeRadarPanel = memo(function MemeRadarPanel({ tokens, layout, pan
     </PanelHead>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {tokens.map((t, i) => {
-        const isHot = t.priceChange24h > 100;
+        const change = t.priceChange24h ?? 0;
+        const isHot = change > 100;
         const badge = isHot ? 'HOT' : 'NEW';
         const badgeColor = isHot ? 'var(--red)' : 'var(--green)';
-        const changeColor = t.priceChange24h >= 0 ? 'var(--green)' : 'var(--red)';
+        const changeColor = change >= 0 ? 'var(--green)' : 'var(--red)';
 
         return (
           <a key={`${t.symbol}-${i}`} href={t.pairUrl || undefined} target="_blank" rel="noopener noreferrer"
@@ -36,9 +37,9 @@ export const MemeRadarPanel = memo(function MemeRadarPanel({ tokens, layout, pan
               background: badgeColor, color: '#000', fontWeight: 700, marginRight: 6,
             }}>{badge}</span>
             <span style={{ flex: 1, color: 'var(--text)', fontSize: 11 }}>{t.symbol}</span>
-            <span style={{ color: 'var(--text-dim)', fontSize: 9, marginRight: 8 }}>{t.chain.toUpperCase().substring(0, 5)}</span>
+            <span style={{ color: 'var(--text-dim)', fontSize: 9, marginRight: 8 }}>{(t.chain || '').toUpperCase().substring(0, 5)}</span>
             <span style={{ color: changeColor, minWidth: 50, textAlign: 'right', fontSize: 10 }}>
-              {t.priceChange24h >= 0 ? '+' : ''}{t.priceChange24h.toFixed(0)}%
+              {change >= 0 ? '+' : ''}{change.toFixed(0)}%
             </span>
           </a>
         );
