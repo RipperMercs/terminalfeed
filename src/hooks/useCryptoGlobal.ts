@@ -10,9 +10,9 @@ export interface CryptoGlobalData {
   activeCryptos: number;
 }
 
-const API_URL = 'https://api.coingecko.com/api/v3/global';
+const API_URL = '/api/coingecko/global';
 const CACHE_KEY = 'crypto_global';
-const POLL_MS = 45_000; // 45s — CoinGecko rate limit is ~30/min
+const POLL_MS = 120_000;
 
 export function useCryptoGlobal(): CryptoGlobalData | null {
   const [data, setData] = useState<CryptoGlobalData | null>(() => {

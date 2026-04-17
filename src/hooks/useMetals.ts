@@ -7,11 +7,8 @@ export interface MetalPrice {
   change: number;
 }
 
-// Commodity-backed tokens on CoinGecko that track real spot prices
-const COINGECKO_URL =
-  'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=pax-gold,tether-gold&sparkline=false';
-
-const POLL_MS = 60_000;
+const API_URL = '/api/coingecko/gold';
+const POLL_MS = 180_000;
 
 export function useMetals() {
   const [metals, setMetals] = useState<MetalPrice[]>([
@@ -26,16 +23,13 @@ export function useMetals() {
       if (!mountedRef.current) return;
 
       try {
-        const res = await fetch(COINGECKO_URL);
+        const res = await fetch(API_URL, { signal: AbortSignal.timeout(8000) });
         if (!res.ok) return;
-        const data = await res.json();
+        const json = await res.json();
         if (!mountedRef.current) return;
-
-        // Use pax-gold as primary, tether-gold as fallback
-        const gold = data.find((c: any) => c.id === 'pax-gold') ||
-                     data.find((c: any) => c.id === 'tether-gold');
-
-        if (gold) {
+        const list = Array.isArray(json.data) ? json.data : [];
+        const gold = list[0];
+        if (gold && (gold.current_price ?? 0) > 0) {
           setMetals([
             {
               symbol: 'XAU',

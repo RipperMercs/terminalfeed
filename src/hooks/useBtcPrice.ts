@@ -23,8 +23,9 @@ interface BtcPriceData {
 // Binance 24hr ticker — fires every ~1s with full daily stats
 const BINANCE_WS = 'wss://stream.binance.com:9443/ws/btcusdt@ticker';
 
-// Fallback REST
-const COINGECKO_URL = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin&sparkline=false';
+// Fallback REST (Worker handles upstream)
+const BTC_REST_URL = '/api/btc-price';
+const BTC_CHART_URL = '/api/coingecko/btc-chart';
 
 const IS_MOBILE = typeof window !== 'undefined' && window.innerWidth < 768;
 const THROTTLE_MS = IS_MOBILE ? 3000 : 1000;
@@ -131,30 +132,30 @@ export function useBtcPrice() {
     }
   }, [pushPrice]);
 
-  // Fallback: CoinGecko REST polling (if WS fails repeatedly)
+  // Fallback: REST polling via Worker (if WS fails or is blocked)
   const fetchREST = useCallback(async () => {
     if (!mountedRef.current) return;
     try {
-      const res = await fetch(COINGECKO_URL, { signal: AbortSignal.timeout(8000) });
+      const res = await fetch(BTC_REST_URL, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) return;
-      const [coin] = await res.json();
-      if (!coin || !mountedRef.current) return;
+      const json = await res.json();
+      const d = json?.data;
+      if (!d || !mountedRef.current) return;
 
-      const price = coin.current_price;
+      const price = d.price_usd;
       if (price > 0) {
         pushPrice(
           price,
-          coin.price_change_percentage_24h ?? 0,
-          coin.high_24h ?? price,
-          coin.low_24h ?? price,
-          'coingecko'
+          d.change_24h_percent ?? 0,
+          d.high_24h ?? price,
+          d.low_24h ?? price,
+          'worker-rest'
         );
 
-        // Update extra stats
         setData(prev => prev ? {
           ...prev,
-          volume24h: coin.total_volume ?? 0,
-          marketCap: coin.market_cap ?? 0,
+          volume24h: d.volume_24h ?? prev.volume24h,
+          marketCap: d.market_cap ?? prev.marketCap,
         } : prev);
       }
     } catch (e) { if (import.meta.env.DEV) console.warn('[BtcPrice]', e); }
@@ -167,12 +168,9 @@ export function useBtcPrice() {
     // Skip if WS already delivering data
     if (priceHistory.length > 10) return;
 
-    // Try CoinGecko chart data
+    // Try Worker-proxied chart data
     try {
-      const res = await fetch(
-        'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1',
-        { signal: AbortSignal.timeout(5000) }
-      );
+      const res = await fetch(BTC_CHART_URL, { signal: AbortSignal.timeout(5000) });
       if (res.ok && mountedRef.current) {
         const data = await res.json();
         if (data.prices?.length > 10) {

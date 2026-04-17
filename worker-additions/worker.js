@@ -81,6 +81,11 @@ function fetchWithTimeout(url, opts, timeoutMs) {
   timeoutMs = timeoutMs || 8000;
   opts = opts || {};
   opts.signal = AbortSignal.timeout(timeoutMs);
+  // Some upstreams (CoinPaprika, Binance) reject/throttle Cloudflare's default UA
+  opts.headers = Object.assign({
+    'User-Agent': 'terminalfeed.io/1.0 (+https://terminalfeed.io)',
+    'Accept': 'application/json',
+  }, opts.headers || {});
   return fetch(url, opts);
 }
 
@@ -244,6 +249,131 @@ async function handleStocks(env, url) {
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({ data: [] });
+  }
+}
+
+
+// GET /api/coingecko/markets — top 30 by market cap (CoinLore upstream)
+// Output shape mirrors CoinGecko /coins/markets so frontend stays unchanged
+async function handleCoingeckoMarkets() {
+  var KEY = 'cg:markets';
+  var cached = getCached(KEY, 120000);
+  if (cached) return jsonResponse(cached, 200, 120);
+  try {
+    var res = await fetchWithTimeout('https://api.coinlore.net/api/tickers/?limit=30');
+    if (!res.ok) throw new Error('upstream ' + res.status);
+    var json = await res.json();
+    var coins = Array.isArray(json.data) ? json.data : [];
+    var mapped = coins.map(function(c) {
+      return {
+        id: c.nameid || (c.symbol || '').toLowerCase(),
+        symbol: (c.symbol || '').toLowerCase(),
+        name: c.name,
+        current_price: parseFloat(c.price_usd) || 0,
+        price_change_percentage_24h: parseFloat(c.percent_change_24h) || 0,
+        market_cap: parseFloat(c.market_cap_usd) || 0,
+        total_volume: parseFloat(c.volume24) || 0,
+        image: null,
+      };
+    });
+    var data = { data: mapped, ts: Date.now() };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 120);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 120);
+    return jsonResponse({ data: [] });
+  }
+}
+
+// GET /api/coingecko/global — total market cap, BTC dominance, etc. (CoinLore upstream)
+// Output shape mirrors CoinGecko /global
+async function handleCoingeckoGlobal() {
+  var KEY = 'cg:global';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+  try {
+    var res = await fetchWithTimeout('https://api.coinlore.net/api/global/');
+    if (!res.ok) throw new Error('upstream ' + res.status);
+    var arr = await res.json();
+    var g = (Array.isArray(arr) && arr[0]) || {};
+    var shaped = {
+      active_cryptocurrencies: g.coins_count || 0,
+      total_market_cap: { usd: g.total_mcap || 0 },
+      total_volume: { usd: g.total_volume || 0 },
+      market_cap_percentage: {
+        btc: parseFloat(g.btc_d) || 0,
+        eth: parseFloat(g.eth_d) || 0,
+      },
+      market_cap_change_percentage_24h_usd: parseFloat(g.mcap_change) || 0,
+    };
+    var data = { data: shaped, ts: Date.now() };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 300);
+    return jsonResponse({ data: null });
+  }
+}
+
+// GET /api/coingecko/btc-chart — 24h BTC chart (Coinbase Exchange upstream)
+// Output shape: { prices: [[timestamp_ms, price], ...] } matches CoinGecko market_chart
+async function handleCoingeckoBtcChart() {
+  var KEY = 'cg:btc-chart';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+  try {
+    // 15-min candles (granularity=900). Coinbase returns newest-first.
+    var res = await fetchWithTimeout(
+      'https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=900'
+    );
+    if (!res.ok) throw new Error('upstream ' + res.status);
+    var candles = await res.json();
+    // candle: [time_sec, low, high, open, close, volume] — reverse for chronological order
+    var prices = (Array.isArray(candles) ? candles : [])
+      .slice()
+      .reverse()
+      .map(function(k) { return [k[0] * 1000, parseFloat(k[4]) || 0]; })
+      .filter(function(p) { return p[1] > 0; });
+    var data = { prices: prices, ts: Date.now() };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 300);
+    return jsonResponse({ prices: [] });
+  }
+}
+
+// GET /api/coingecko/gold — PAXG spot via Kraken (proxies XAU price)
+async function handleCoingeckoGold() {
+  var KEY = 'cg:gold';
+  var cached = getCached(KEY, 180000);
+  if (cached) return jsonResponse(cached, 200, 180);
+  try {
+    var res = await fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=PAXGUSD');
+    if (!res.ok) throw new Error('upstream ' + res.status);
+    var json = await res.json();
+    var t = (json && json.result && json.result.PAXGUSD) || null;
+    if (!t) throw new Error('no PAXGUSD in response');
+    var last = parseFloat(t.c && t.c[0]) || 0;
+    var open = parseFloat(t.o) || 0;
+    var change = open > 0 ? ((last - open) / open) * 100 : 0;
+    var shaped = [{
+      id: 'pax-gold',
+      symbol: 'paxg',
+      name: 'PAX Gold',
+      current_price: last,
+      price_change_percentage_24h: change,
+    }];
+    var data = { data: shaped, ts: Date.now() };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 180);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 180);
     return jsonResponse({ data: [] });
   }
 }
@@ -1004,6 +1134,10 @@ export default {
       case 'btc-price':      return await handleBtcPrice();
       case 'stocks':         return await handleStocks(env, url);
       case 'crypto-movers':  return await handleCryptoMovers();
+      case 'coingecko/markets':   return await handleCoingeckoMarkets();
+      case 'coingecko/global':    return await handleCoingeckoGlobal();
+      case 'coingecko/btc-chart': return await handleCoingeckoBtcChart();
+      case 'coingecko/gold':      return await handleCoingeckoGold();
       case 'fear-greed':     return await handleFearGreed();
       case 'earthquake':     return await handleEarthquake();
       case 'predictions':    return await handlePredictions();
