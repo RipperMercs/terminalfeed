@@ -67,6 +67,7 @@ import { useFlightRadar } from './hooks/useFlightRadar';
 import { useTCGMarket } from './hooks/useTCGMarket';
 import { useCloudStatus } from './hooks/useCloudStatus';
 import { OriginalsPanel } from './components/OriginalsPanel';
+import { LoadingOrHide } from './components/LoadingOrHide';
 import { useGasTracker } from './hooks/useGasTracker';
 import { useMemecoinRadar } from './hooks/useMemecoinRadar';
 import { GasPanel } from './panels/GasPanel';
@@ -462,7 +463,7 @@ function App() {
     'reddit': (<>
       <PanelHead panelId="reddit" isStale={panelHealth.isStale('reddit')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Reddit</span><span className="panelTag">TECH</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {redditPosts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading posts...</div>}
+        {redditPosts.length === 0 && <LoadingOrHide label="loading posts..." />}
         {redditPosts.map((post) => (<a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="redditScore">{formatStars(post.score)}</span><div style={{ flex: 1, minWidth: 0 }}><span className="newsTitle">{post.title}</span></div><span className="redditSub">r/{post.subreddit}</span></a>))}
       </div>
     </>),
@@ -665,7 +666,7 @@ function App() {
     'npm-trends': (<>
       <PanelHead panelId="npm-trends" isStale={panelHealth.isStale('npm-trends')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">NPM</span><span className="panelTag">DOWNLOADS</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {npmPackages.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {npmPackages.length === 0 && <LoadingOrHide />}
         {npmPackages.map((p) => (
           <div key={p.name} className="listRow">
             <span className="listRowSymbol" style={{ color: 'var(--cyan)' }}>{p.name}</span>
@@ -916,7 +917,7 @@ function App() {
     'gh-events': (<>
       <PanelHead panelId="gh-events" isStale={panelHealth.isStale('gh-events')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">GitHub</span><span className="panelTag">LIVE</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {ghEvents.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {ghEvents.length === 0 && <LoadingOrHide />}
         {ghEvents.map((e) => (
           <div key={e.id} className="newsRow" style={{ cursor: 'default' }}>
             <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 55, flexShrink: 0 }}>{e.action}</span>
@@ -929,7 +930,7 @@ function App() {
     'books': (<>
       <PanelHead panelId="books" isStale={panelHealth.isStale('books')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Books</span><span className="panelTag">TRENDING</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {trendingBooks.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {trendingBooks.length === 0 && <LoadingOrHide />}
         {trendingBooks.map((b, i) => (
           <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" className="newsRow">
             <span style={{ fontSize: 10, color: 'var(--text-dim)', minWidth: 14, flexShrink: 0 }}>{i + 1}</span>
@@ -944,7 +945,7 @@ function App() {
     'forex': (<>
       <PanelHead panelId="forex" isStale={panelHealth.isStale('forex')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Forex</span><span className="panelTag">HEATMAP</span></div></PanelHead>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
-        {forexRates.length === 0 && <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading rates...</div>}
+        {forexRates.length === 0 && <LoadingOrHide label="loading rates..." style={{ gridColumn: 'span 2' }} />}
         {forexRates.map((r) => (
           <div key={r.currency} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 10 }}>
             <span style={{ color: 'var(--text)', fontWeight: 600 }}>{r.currency}</span>
@@ -965,12 +966,12 @@ function App() {
             </div>
           </div>
         </a>
-      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+      ) : <LoadingOrHide />}
     </>),
     'producthunt': (<>
       <PanelHead panelId="producthunt" isStale={panelHealth.isStale('producthunt')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Product Hunt</span><span className="panelTag">TODAY</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {phProducts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading products...</div>}
+        {phProducts.length === 0 && <LoadingOrHide label="loading products..." />}
         {phProducts.map((p, i) => (
           <a key={i} href={p.link} target="_blank" rel="noopener noreferrer" className="newsRow">
             <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 700, flexShrink: 0, minWidth: 16 }}>{i + 1}</span>
@@ -983,7 +984,7 @@ function App() {
     'hn-community': (<>
       <PanelHead panelId="hn-community" isStale={panelHealth.isStale('hn-community')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Show / Ask HN</span><span className="panelTag">COMMUNITY</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {hnCommunity.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+        {hnCommunity.length === 0 && <LoadingOrHide />}
         {hnCommunity.map((item) => (
           <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="newsRow">
             <span className="newsTag" style={{ color: item.type === 'show' ? 'var(--cyan)' : 'var(--purple)', background: item.type === 'show' ? 'rgba(79,209,197,0.1)' : 'rgba(167,139,250,0.1)' }}>{item.type === 'show' ? 'SHOW' : 'ASK'}</span>
@@ -1013,7 +1014,7 @@ function App() {
     'bluesky': (<>
       <PanelHead panelId="bluesky" isStale={panelHealth.isStale('bluesky')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Bluesky</span><span className="panelTag">LIVE</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {bskyPosts.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading posts...</div>}
+        {bskyPosts.length === 0 && <LoadingOrHide label="loading posts..." />}
         {bskyPosts.map((p, i) => (
           <div key={i} className="newsRow" style={{ cursor: 'default' }}>
             <span className="bskyAuthor">@{p.handle.split('.')[0]}</span>
@@ -1119,11 +1120,11 @@ function App() {
             </div>
           ))}
         </>
-      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+      ) : <LoadingOrHide />}
     </>),
     'this-day': (<>
       <PanelHead panelId="this-day" isStale={panelHealth.isStale('this-day')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">This Day In History</span><span className="panelTag" style={{ color: 'var(--amber)' }}>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span></div></PanelHead>
-      {thisDayEvents.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading...</div>}
+      {thisDayEvents.length === 0 && <LoadingOrHide />}
       {thisDayEvents.map((event, i) => (
         <div key={i} style={{ padding: '5px 0', borderBottom: i < thisDayEvents.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 11, fontFamily: 'monospace', lineHeight: 1.4 }}>
           <span style={{ color: 'var(--green)', fontWeight: 600, marginRight: 8 }}>{event.year}</span>
