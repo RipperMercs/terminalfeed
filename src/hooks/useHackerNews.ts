@@ -27,7 +27,7 @@ export function useHackerNews() {
 
     const fetchStories = async () => {
       try {
-        const res = await fetch(TOP_URL);
+        const res = await fetch(TOP_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok) return;
         const ids: number[] = await res.json();
 
@@ -36,7 +36,7 @@ export function useHackerNews() {
         const items = await Promise.all(
           batch.map(async (id) => {
             try {
-              const r = await fetch(`${ITEM_URL}/${id}.json`);
+              const r = await fetch(`${ITEM_URL}/${id}.json`, { signal: AbortSignal.timeout(4000) });
               return r.ok ? r.json() : null;
             } catch { return null; }
           }),
