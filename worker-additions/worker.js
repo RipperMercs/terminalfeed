@@ -535,43 +535,151 @@ async function handleHackerNews() {
 // GET /api/service-status
 async function handleServiceStatus() {
   var KEY = 'service-status';
-  var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  var cached = getCached(KEY, 120000); // 2 min per spec
+  if (cached) return jsonResponse(cached, 200, 120);
 
   var services = [
     { name: 'GitHub', url: 'https://www.githubstatus.com/api/v2/status.json' },
     { name: 'Cloudflare', url: 'https://www.cloudflarestatus.com/api/v2/status.json' },
-    { name: 'OpenAI', url: 'https://status.openai.com/api/v2/status.json' },
     { name: 'Vercel', url: 'https://www.vercel-status.com/api/v2/status.json' },
+    { name: 'OpenAI', url: 'https://status.openai.com/api/v2/status.json' },
+    { name: 'Anthropic', url: 'https://status.anthropic.com/api/v2/status.json' },
     { name: 'npm', url: 'https://status.npmjs.org/api/v2/status.json' },
     { name: 'Discord', url: 'https://discordstatus.com/api/v2/status.json' },
-    { name: 'Reddit', url: 'https://www.redditstatus.com/api/v2/status.json' },
+    { name: 'Slack', url: 'https://status.slack.com/api/v2.0.0/current' },
     { name: 'Atlassian', url: 'https://status.atlassian.com/api/v2/status.json' },
+    { name: 'Reddit', url: 'https://www.redditstatus.com/api/v2/status.json' },
+    { name: 'Stripe', url: 'https://status.stripe.com/api/v2/status.json' },
+    { name: 'Zoom', url: 'https://status.zoom.us/api/v2/status.json' },
+    { name: 'Datadog', url: 'https://status.datadoghq.com/api/v2/status.json' },
   ];
 
-  try {
-    var results = await Promise.allSettled(
-      services.map(function(svc) {
-        return fetchWithTimeout(svc.url, {}, 5000)
-          .then(function(res) { return res.json(); })
-          .then(function(d) {
-            return { name: svc.name, status: (d.status && d.status.indicator) || 'unknown', description: (d.status && d.status.description) || '' };
-          });
-      })
-    );
+  var results = await Promise.allSettled(
+    services.map(function(svc) {
+      return fetchWithTimeout(svc.url, {}, 5000)
+        .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('status ' + res.status)); })
+        .then(function(d) {
+          // Statuspage standard: d.status.indicator + d.status.description.
+          // Slack's v2.0.0 format: top-level { status: "active"|"ok", date_created, ... }
+          var indicator = 'unknown';
+          var description = '';
+          if (d && d.status && typeof d.status === 'object') {
+            indicator = d.status.indicator || 'unknown';
+            description = d.status.description || '';
+          } else if (d && typeof d.status === 'string') {
+            // Slack-style
+            indicator = (d.status === 'active' || d.status === 'ok') ? 'none' : 'minor';
+            description = d.status;
+          }
+          return { name: svc.name, indicator: indicator, description: description };
+        });
+    })
+  );
 
-    var data = {
-      data: results.map(function(r, i) {
-        return r.status === 'fulfilled' ? r.value : { name: services[i].name, status: 'unknown', description: 'Unreachable' };
-      }),
-    };
-    setCache(KEY, data);
-    return jsonResponse(data, 200, 60);
+  var out = results.map(function(r, i) {
+    return r.status === 'fulfilled'
+      ? r.value
+      : { name: services[i].name, indicator: 'unknown', description: 'Unreachable' };
+  });
+
+  var data = { data: out, ts: Date.now() };
+  setCache(KEY, data);
+  return jsonResponse(data, 200, 120);
+}
+
+// GET /api/claude-status — proxies status.claude.com summary.json
+async function handleClaudeStatus() {
+  var KEY = 'claude-status';
+  var cached = getCached(KEY, 60000);
+  if (cached) return jsonResponse(cached, 200, 60);
+  try {
+    var res = await fetchWithTimeout('https://status.claude.com/api/v2/summary.json', {}, 6000);
+    if (!res.ok) throw new Error('upstream ' + res.status);
+    var json = await res.json();
+    setCache(KEY, json);
+    return jsonResponse(json, 200, 60);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
-    return jsonResponse({ data: [] });
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({ status: { indicator: 'unknown', description: 'Unreachable' }, components: [], incidents: [] });
   }
+}
+
+// GET /api/cloud-status — GCP/AWS/Azure incident feeds
+async function handleCloudStatus() {
+  var KEY = 'cloud-status';
+  var cached = getCached(KEY, 180000); // 3 min
+  if (cached) return jsonResponse(cached, 200, 180);
+
+  async function fetchGCP() {
+    try {
+      var res = await fetchWithTimeout('https://status.cloud.google.com/incidents.json', {}, 6000);
+      if (!res.ok) throw new Error('upstream');
+      var incidents = await res.json();
+      var now = Date.now();
+      var active = (incidents || []).filter(function(inc) {
+        if (!inc.end) return true;
+        return now - new Date(inc.end).getTime() < 2 * 60 * 60 * 1000;
+      }).slice(0, 3);
+      return {
+        name: 'Google Cloud',
+        status: active.length > 0 ? 'incident' : 'operational',
+        incidents: active.map(function(inc) {
+          return { title: inc.external_desc || inc.service_name || 'Event', severity: inc.severity || 'medium' };
+        }),
+      };
+    } catch { return { name: 'Google Cloud', status: 'unknown', incidents: [] }; }
+  }
+
+  async function fetchAWS() {
+    try {
+      var res = await fetchWithTimeout('https://health.aws.amazon.com/public/currentevents', {}, 6000);
+      if (!res.ok) throw new Error('upstream');
+      var events = await res.json();
+      var active = (Array.isArray(events) ? events : []).slice(0, 3);
+      return {
+        name: 'AWS',
+        status: active.length > 0 ? 'incident' : 'operational',
+        incidents: active.map(function(ev) {
+          var sev = ev.status === '3' ? 'high' : ev.status === '2' ? 'medium' : 'low';
+          return { title: ev.summary || ev.service_name || 'Service event', severity: sev };
+        }),
+      };
+    } catch { return { name: 'AWS', status: 'unknown', incidents: [] }; }
+  }
+
+  async function fetchAzure() {
+    // Workers have no DOMParser — use regex on the RSS XML.
+    try {
+      var res = await fetchWithTimeout('https://rssfeed.azure.status.microsoft/en-us/status/feed/', {}, 6000);
+      if (!res.ok) throw new Error('upstream');
+      var text = await res.text();
+      var now = Date.now();
+      var cutoff = now - 24 * 60 * 60 * 1000;
+      var items = [];
+      var re = /<item>([\s\S]*?)<\/item>/g;
+      var m;
+      while ((m = re.exec(text)) !== null && items.length < 10) {
+        var block = m[1];
+        var titleMatch = block.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+        var dateMatch = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+        if (!titleMatch || !dateMatch) continue;
+        var ts = new Date(dateMatch[1].trim()).getTime();
+        if (!ts || ts < cutoff) continue;
+        items.push({ title: titleMatch[1].trim(), severity: 'medium' });
+      }
+      return {
+        name: 'Azure',
+        status: items.length > 0 ? 'incident' : 'operational',
+        incidents: items.slice(0, 3),
+      };
+    } catch { return { name: 'Azure', status: 'unknown', incidents: [] }; }
+  }
+
+  var providers = await Promise.all([fetchAWS(), fetchGCP(), fetchAzure()]);
+  var data = { providers: providers, ts: Date.now() };
+  setCache(KEY, data);
+  return jsonResponse(data, 200, 180);
 }
 
 
@@ -1143,6 +1251,8 @@ export default {
       case 'predictions':    return await handlePredictions();
       case 'hackernews':     return await handleHackerNews();
       case 'service-status': return await handleServiceStatus();
+      case 'cloud-status':   return await handleCloudStatus();
+      case 'claude-status':  return await handleClaudeStatus();
       case 'cyber-threats':  return await handleCyberThreats();
       case 'forex':          return await handleForex();
       case 'humans-in-space':return await handleHumansInSpace();

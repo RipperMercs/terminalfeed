@@ -22,7 +22,7 @@ export interface ClaudeStatusData {
   incidents: ClaudeIncident[];
 }
 
-const API_URL = 'https://status.claude.com/api/v2/summary.json';
+const API_URL = '/api/claude-status';
 const CACHE_KEY = 'claude_status';
 const POLL_MS = 60_000;
 
