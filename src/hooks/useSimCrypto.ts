@@ -13,10 +13,9 @@ const ASSETS = 'ethereum,solana,dogecoin,ripple,cardano,polkadot,avalanche-2,cha
 const COINCAP_WS = `wss://ws.coincap.io/prices?assets=${ASSETS.replace(/-2/g, '')}`;
 const RECONNECT_MS = 5000;
 
-// 24h stats from CoinGecko — fetch top 30 for movers panel
-const COINGECKO_URL =
-  'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&sparkline=false&price_change_percentage=24h';
-const STATS_POLL_MS = 45_000;
+// 24h stats via Worker proxy — top 30 coins by market cap
+const MARKETS_URL = '/api/coingecko/markets';
+const STATS_POLL_MS = 120_000;
 
 const GECKO_TO_SYMBOL: Record<string, string> = {
   ethereum: 'ETH',
@@ -75,10 +74,11 @@ export function useSimCrypto(customSymbols: string[] = []) {
   const fetchStats = useCallback(async () => {
     if (!mountedRef.current) return;
     try {
-      const res = await fetch(COINGECKO_URL);
+      const res = await fetch(MARKETS_URL, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) return;
-      const coins = await res.json();
-      if (!mountedRef.current || !Array.isArray(coins)) return;
+      const json = await res.json();
+      const coins = Array.isArray(json.data) ? json.data : [];
+      if (!mountedRef.current || coins.length === 0) return;
 
       // Update change refs for WS-connected coins
       for (const coin of coins) {
