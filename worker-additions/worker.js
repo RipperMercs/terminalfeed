@@ -205,8 +205,11 @@ async function handleStocks(env, url) {
 
   var symbols = (requested && requested.length > 0) ? requested : DEFAULT_SYMBOLS.slice(0, 15);
   var KEY = 'stocks:' + symbols.join(',');
-  var cached = getCached(KEY, 30000);
-  if (cached) return jsonResponse(cached, 200, 30);
+  // 2-minute cache. Finnhub free tier is 60 calls/min; each cache miss
+  // triggers up to 30 parallel upstream calls, so shorter TTLs risk blowing
+  // the rate limit whenever traffic bursts.
+  var cached = getCached(KEY, 120000);
+  if (cached) return jsonResponse(cached, 200, 120);
 
   try {
     if (!env || !env.FINNHUB_API_KEY) {
@@ -239,16 +242,19 @@ async function handleStocks(env, url) {
       .map(function(r) { return r.value; });
 
     if (stocks.length === 0) {
+      // All upstream calls failed (likely rate-limited) — serve stale cache if we have one
+      // and DON'T overwrite the cache with empty data.
       var stale1 = getStale(KEY);
-      if (stale1) return jsonResponse(stale1, 200, 30);
+      if (stale1) return jsonResponse(stale1, 200, 120);
+      return jsonResponse({ data: [] });
     }
 
     var data = { data: stocks, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 30);
+    return jsonResponse(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonResponse(stale, 200, 120);
     return jsonResponse({ data: [] });
   }
 }
