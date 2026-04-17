@@ -31,7 +31,12 @@ const IS_MOBILE = typeof window !== 'undefined' && window.innerWidth < 768;
 const THROTTLE_MS = IS_MOBILE ? 3000 : 1000;
 const RECONNECT_MS = 3000;
 const MAX_TICKS = 300;
-const STATS_POLL_MS = 60_000;
+// When WS is connected, we only need HTTP for volume/market-cap refresh.
+// When WS is NOT connected (ad blockers, corporate proxies, Binance blocked),
+// HTTP is the primary source — poll faster.
+const STATS_POLL_MS_SLOW = 60_000;
+const STATS_POLL_MS_FAST = 10_000;
+const FRESH_WINDOW_MS = 30_000;
 
 export function useBtcPrice() {
   const [data, setData] = useState<BtcPriceData | null>(() => {
@@ -39,7 +44,10 @@ export function useBtcPrice() {
     if (cached) return cached.data;
     return STATIC_FALLBACKS.btc_price as BtcPriceData;
   });
+  // `connected` = fresh data flowing from any source (WS or HTTP) in the last FRESH_WINDOW_MS
   const [connected, setConnected] = useState(false);
+  const wsOpenRef = useRef(false);
+  const lastDataAtRef = useRef(0);
   const [priceHistory, setPriceHistory] = useState<PriceTick[]>(() => {
     // Seed with cached price so chart has at least 1 point immediately
     const cached = getCache<BtcPriceData>('btc_price');
@@ -65,6 +73,8 @@ export function useBtcPrice() {
     const now = Date.now();
     if (now - lastPushRef.current < THROTTLE_MS) return;
     lastPushRef.current = now;
+    lastDataAtRef.current = now;
+    setConnected(true);
 
     setData(prev => {
       const updated: BtcPriceData = {
@@ -100,7 +110,7 @@ export function useBtcPrice() {
 
       ws.onopen = () => {
         if (!mountedRef.current) return;
-        setConnected(true);
+        wsOpenRef.current = true;
         wsFailCount.current = 0;
       };
 
@@ -120,7 +130,7 @@ export function useBtcPrice() {
 
       ws.onclose = () => {
         if (!mountedRef.current) return;
-        setConnected(false);
+        wsOpenRef.current = false;
         wsFailCount.current++;
         reconnectTimer.current = setTimeout(connectWS, RECONNECT_MS);
       };
@@ -207,21 +217,45 @@ export function useBtcPrice() {
   useEffect(() => {
     mountedRef.current = true;
 
-    // Seed chart immediately with 24h history
     seedChart();
-
-    // Start WebSocket
     connectWS();
+    fetchREST(); // immediate first HTTP fetch — covers ad-blocked / blocked-WS users
 
-    // Also poll REST for volume/market cap stats
-    fetchREST();
-    const statsInterval = setInterval(fetchREST, STATS_POLL_MS);
+    // Adaptive polling: fast while WS isn't open, slow once it is.
+    // Also drives the `connected` derivation (goes false when last data > FRESH_WINDOW_MS old).
+    let statsInterval: ReturnType<typeof setInterval> | null = null;
+    let currentRate: number | null = null;
+    const schedule = () => {
+      const desired = wsOpenRef.current ? STATS_POLL_MS_SLOW : STATS_POLL_MS_FAST;
+      if (currentRate === desired) return;
+      currentRate = desired;
+      if (statsInterval) clearInterval(statsInterval);
+      statsInterval = setInterval(() => {
+        fetchREST();
+        // Re-evaluate rate after each tick (WS may have come back or dropped)
+        schedule();
+        // Drop `connected` if nothing fresh recently
+        if (!mountedRef.current) return;
+        if (Date.now() - lastDataAtRef.current > FRESH_WINDOW_MS && !wsOpenRef.current) {
+          setConnected(false);
+        }
+      }, desired);
+    };
+    schedule();
+
+    // Freshness watchdog — independent of polling cadence so `connected` flips within 5s
+    const freshnessTimer = setInterval(() => {
+      if (!mountedRef.current) return;
+      const stale = Date.now() - lastDataAtRef.current > FRESH_WINDOW_MS;
+      if (stale && !wsOpenRef.current) setConnected(false);
+    }, 5000);
 
     return () => {
       mountedRef.current = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(); }
-      clearInterval(statsInterval);
+      if (statsInterval) clearInterval(statsInterval);
+      clearInterval(freshnessTimer);
     };
   }, [connectWS, fetchREST, seedChart]);
 
