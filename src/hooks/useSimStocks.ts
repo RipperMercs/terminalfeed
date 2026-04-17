@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { setCache, getCache } from '../services/cache';
 import { STATIC_FALLBACKS } from '../data/staticFallbacks';
 
@@ -9,18 +9,14 @@ interface StockItem {
   change: number;
 }
 
-const FINNHUB_KEY = 'REVOKED-FINNHUB-KEY';
-const FINNHUB_WS = `wss://ws.finnhub.io?token=${FINNHUB_KEY}`;
-const FINNHUB_REST = 'https://finnhub.io/api/v1/quote';
-const RECONNECT_MS = 5000;
+const POLL_MS = 30000;
+const POLL_MS_MOBILE = 60000;
 
 const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
-  // Indices
   { symbol: 'SPY', name: 'S&P 500' },
   { symbol: 'QQQ', name: 'NASDAQ' },
   { symbol: 'DIA', name: 'DOW' },
   { symbol: 'IWM', name: 'Russell 2000' },
-  // Mega caps + high-volatility
   { symbol: 'NVDA', name: 'NVIDIA' },
   { symbol: 'AAPL', name: 'Apple' },
   { symbol: 'MSFT', name: 'Microsoft' },
@@ -51,6 +47,14 @@ const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
 
 export const INDICES = ['SPY', 'QQQ', 'DIA', 'IWM'];
 
+interface WorkerQuote {
+  symbol: string;
+  price: number;
+  change: number;
+  change_percent: number;
+  prev_close?: number;
+}
+
 export function useSimStocks(customSymbols: string[] = []) {
   const SYMBOLS = [
     ...DEFAULT_SYMBOLS,
@@ -58,6 +62,7 @@ export function useSimStocks(customSymbols: string[] = []) {
       .filter((s) => !DEFAULT_SYMBOLS.some((d) => d.symbol === s))
       .map((s) => ({ symbol: s, name: '' })),
   ];
+
   const [stocks, setStocks] = useState<StockItem[]>(() => {
     const cached = getCache<StockItem[]>('stock_prices');
     if (cached) return cached.data;
@@ -67,122 +72,69 @@ export function useSimStocks(customSymbols: string[] = []) {
     });
   });
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
-  const pricesRef = useRef<Record<string, { price: number; prevClose: number }>>({});
-
-  // Fetch initial prices via REST (one call per symbol)
-  const fetchInitial = useCallback(async () => {
-    if (!mountedRef.current) return;
-
-    // Stagger calls to stay within 60/min rate limit
-    for (const { symbol } of SYMBOLS) {
-      if (!mountedRef.current) break;
-      try {
-        const res = await fetch(`${FINNHUB_REST}?symbol=${symbol}&token=${FINNHUB_KEY}`);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (!mountedRef.current) break;
-
-        if (data.c && data.c > 0) {
-          pricesRef.current[symbol] = {
-            price: data.c,
-            prevClose: data.pc || data.c,
-          };
-
-          const change = data.pc > 0 ? ((data.c - data.pc) / data.pc) * 100 : 0;
-
-          setStocks((prev) => {
-            const next = prev.map((s) =>
-              s.symbol === symbol
-                ? { ...s, price: data.c, change }
-                : s,
-            );
-            setCache('stock_prices', next, 'finnhub');
-            return next;
-          });
-        }
-      } catch (e) { if (import.meta.env.DEV) console.warn('[SimStocks]', e); }
-    }
-  }, []);
-
-  // Real-time updates via WebSocket
-  const connectWs = useCallback(() => {
-    if (!mountedRef.current) return;
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-    try {
-      const ws = new WebSocket(FINNHUB_WS);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        if (!mountedRef.current) return;
-        // Subscribe to all symbols
-        for (const { symbol } of SYMBOLS) {
-          ws.send(JSON.stringify({ type: 'subscribe', symbol }));
-        }
-      };
-
-      ws.onmessage = (event) => {
-        if (!mountedRef.current) return;
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type !== 'trade' || !msg.data) return;
-
-          // Process trades — take the last price for each symbol
-          const updates: Record<string, number> = {};
-          for (const trade of msg.data) {
-            updates[trade.s] = trade.p;
-          }
-
-          setStocks((prev) =>
-            prev.map((s) => {
-              if (!updates[s.symbol]) return s;
-              const price = updates[s.symbol];
-              const prevClose = pricesRef.current[s.symbol]?.prevClose || price;
-              const change = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0;
-
-              pricesRef.current[s.symbol] = {
-                ...pricesRef.current[s.symbol],
-                price,
-              };
-
-              return { ...s, price, change };
-            }),
-          );
-        } catch (e) { if (import.meta.env.DEV) console.warn('[SimStocks]', e); }
-      };
-
-      ws.onclose = () => {
-        if (!mountedRef.current) return;
-        reconnectTimer.current = setTimeout(connectWs, RECONNECT_MS);
-      };
-
-      ws.onerror = () => { ws.close(); };
-    } catch (e) { if (import.meta.env.DEV) console.warn('[SimStocks]', e); }
-  }, []);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const symbolsCsv = SYMBOLS.map((s) => s.symbol).join(',');
 
   useEffect(() => {
     mountedRef.current = true;
-    fetchInitial();
-    connectWs();
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const pollMs = isMobile ? POLL_MS_MOBILE : POLL_MS;
+
+    const fetchQuotes = async () => {
+      if (!mountedRef.current) return;
+      try {
+        const res = await fetch(`/api/stocks?symbols=${symbolsCsv}`, {
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) return;
+        const json = (await res.json()) as { data?: WorkerQuote[] };
+        if (!mountedRef.current) return;
+        const quotes = Array.isArray(json.data) ? json.data : [];
+        if (quotes.length === 0) return;
+
+        const quoteMap: Record<string, WorkerQuote> = {};
+        for (const q of quotes) {
+          if (q && q.symbol && (q.price ?? 0) > 0) quoteMap[q.symbol] = q;
+        }
+
+        setStocks((prev) => {
+          const next = prev.map((s) => {
+            const q = quoteMap[s.symbol];
+            if (!q) return s;
+            const prevClose = q.prev_close ?? 0;
+            const change = prevClose > 0
+              ? ((q.price - prevClose) / prevClose) * 100
+              : q.change_percent ?? 0;
+            return { ...s, price: q.price, change };
+          });
+          setCache('stock_prices', next, 'worker');
+          return next;
+        });
+      } catch { /* swallow — keep last known values */ }
+    };
+
+    fetchQuotes();
+    intervalRef.current = setInterval(fetchQuotes, pollMs);
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      } else if (!intervalRef.current) {
+        fetchQuotes();
+        intervalRef.current = setInterval(fetchQuotes, pollMs);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       mountedRef.current = false;
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      if (wsRef.current) {
-        // Unsubscribe
-        if (wsRef.current.readyState === WebSocket.OPEN) {
-          for (const { symbol } of SYMBOLS) {
-            wsRef.current.send(JSON.stringify({ type: 'unsubscribe', symbol }));
-          }
-        }
-        wsRef.current.onclose = null;
-        wsRef.current.close();
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [fetchInitial, connectWs]);
+  }, [symbolsCsv]);
 
   return stocks;
 }

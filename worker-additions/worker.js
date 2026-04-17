@@ -181,25 +181,50 @@ async function handleBtcPrice() {
 
 
 // GET /api/stocks
-async function handleStocks(env) {
-  var KEY = 'stocks';
-  var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
-
-  var symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'AMD', 'NFLX', 'CRM',
+async function handleStocks(env, url) {
+  var DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'AMD', 'NFLX', 'CRM',
     'COIN', 'INTC', 'PYPL', 'SQ', 'SHOP', 'UBER', 'PLTR', 'SNOW', 'NET', 'CRWD',
     'MSTR', 'RIOT', 'MARA', 'HOOD', 'SOFI'];
 
+  var requested = null;
+  if (url && url.searchParams) {
+    var q = url.searchParams.get('symbols');
+    if (q) {
+      requested = q.split(',')
+        .map(function(s) { return s.trim().toUpperCase(); })
+        .filter(function(s) { return /^[A-Z][A-Z0-9.-]{0,9}$/.test(s); })
+        .slice(0, 30);
+      requested = Array.from(new Set(requested));
+    }
+  }
+
+  var symbols = (requested && requested.length > 0) ? requested : DEFAULT_SYMBOLS.slice(0, 15);
+  var KEY = 'stocks:' + symbols.join(',');
+  var cached = getCached(KEY, 30000);
+  if (cached) return jsonResponse(cached, 200, 30);
+
   try {
-    if (!env || !env.FINNHUB_API_KEY) return jsonResponse({ data: [] });
+    if (!env || !env.FINNHUB_API_KEY) {
+      var stale0 = getStale(KEY);
+      if (stale0) return jsonResponse(stale0, 200, 30);
+      return jsonResponse({ data: [] });
+    }
 
     var results = await Promise.allSettled(
-      symbols.slice(0, 15).map(function(sym) {
+      symbols.map(function(sym) {
         return fetchWithTimeout(
           'https://finnhub.io/api/v1/quote?symbol=' + sym + '&token=' + env.FINNHUB_API_KEY, {}, 6000
         ).then(function(res) { return res.json(); })
          .then(function(d) {
-           return { symbol: sym, price: d.c || 0, change: d.d || 0, change_percent: d.dp || 0, high: d.h || 0, low: d.l || 0 };
+           return {
+             symbol: sym,
+             price: d.c || 0,
+             change: d.d || 0,
+             change_percent: d.dp || 0,
+             high: d.h || 0,
+             low: d.l || 0,
+             prev_close: d.pc || 0,
+           };
          });
       })
     );
@@ -208,12 +233,17 @@ async function handleStocks(env) {
       .filter(function(r) { return r.status === 'fulfilled' && r.value.price > 0; })
       .map(function(r) { return r.value; });
 
-    var data = { data: stocks };
+    if (stocks.length === 0) {
+      var stale1 = getStale(KEY);
+      if (stale1) return jsonResponse(stale1, 200, 30);
+    }
+
+    var data = { data: stocks, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 60);
+    return jsonResponse(data, 200, 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonResponse(stale, 200, 30);
     return jsonResponse({ data: [] });
   }
 }
@@ -972,7 +1002,7 @@ export default {
     switch (path) {
       case '':               return handleIndex();
       case 'btc-price':      return await handleBtcPrice();
-      case 'stocks':         return await handleStocks(env);
+      case 'stocks':         return await handleStocks(env, url);
       case 'crypto-movers':  return await handleCryptoMovers();
       case 'fear-greed':     return await handleFearGreed();
       case 'earthquake':     return await handleEarthquake();
