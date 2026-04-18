@@ -25,6 +25,32 @@
   font-size: 9.5px;
   overflow: hidden;
   min-width: 0;
+  position: relative;
+}
+
+/* Ambient health-scan sweep — always-on, speeds up with severity.
+   Duration scales via --motion so a future tweaks slider can throttle. */
+.cell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.06), transparent);
+  animation: statusSweep calc(6000ms / var(--motion, 1)) linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.cell > * { position: relative; z-index: 1; }
+
+.cell:nth-child(2n)::before { animation-delay: -2s; }
+.cell:nth-child(3n)::before { animation-delay: -4s; }
+.cell:nth-child(5n)::before { animation-delay: -1s; }
+
+@keyframes statusSweep {
+  0%   { left: -100%; }
+  100% { left: 100%; }
 }
 
 .row {
@@ -70,7 +96,11 @@
 }
 .ok .badge { color: var(--green); }
 
-/* Degraded state */
+/* Degraded state — faster amber sweep */
+.degr::before {
+  background: linear-gradient(90deg, transparent, rgba(239, 159, 39, 0.10), transparent);
+  animation-duration: calc(3000ms / var(--motion, 1));
+}
 .degr { border-color: rgba(239, 159, 39, 0.35); }
 .degr .lamp {
   background: var(--amber);
@@ -79,7 +109,11 @@
 }
 .degr .badge { color: var(--amber); }
 
-/* Down state */
+/* Down state — fast red sweep, more agitated */
+.down::before {
+  background: linear-gradient(90deg, transparent, rgba(248, 113, 113, 0.14), transparent);
+  animation-duration: calc(1500ms / var(--motion, 1));
+}
 .down {
   border-color: rgba(248, 113, 113, 0.45);
   background: rgba(248, 113, 113, 0.04);
@@ -119,4 +153,5 @@
   .ok .lamp,
   .degr .lamp,
   .down .lamp { animation: none; }
+  .cell::before { animation: none; opacity: 0; }
 }
