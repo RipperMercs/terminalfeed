@@ -13,6 +13,7 @@ interface Props {
 
 const STALE_WINDOW_MS = 10 * 60_000;
 const FLASH_MS = 700;
+const WATCHDOG_MS = 5_000; // "NO TICK" chip appears after 5s of silence
 
 function formatCompact(n: number): string {
   if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
@@ -54,7 +55,7 @@ function HeroChart({ ticks }: ChartProps) {
           <line key={p} x1="0" x2={W} y1={H * p} y2={H * p}
                 stroke="var(--border)" strokeWidth="0.5" strokeDasharray="2 3" />
         ))}
-        <path d={dFill} fill="url(#btcHeroGrad)" />
+        <path d={dFill} fill="url(#btcHeroGrad)" className={styles.areaFill} />
         <path d={d} fill="none" stroke="var(--gold)" strokeWidth="1.4" />
         <circle cx={last[0]} cy={last[1]} r="2.5" className={styles.pulseDot} />
         <circle cx={last[0]} cy={last[1]} r="5" fill="var(--gold)" opacity="0.3">
@@ -70,6 +71,7 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
   const { data, priceHistory } = useBtcPrice();
   const [paused, setPaused] = useState(false);
   const [flash, setFlash] = useState<'up' | 'dn' | null>(null);
+  const [noTick, setNoTick] = useState(false);
   const prevPriceRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -85,6 +87,18 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
     }
     prevPriceRef.current = price;
   }, [data?.price, paused]);
+
+  // Watchdog: show a "NO TICK" chip when nothing has updated in WATCHDOG_MS
+  useEffect(() => {
+    const check = () => {
+      const last = data?.lastUpdate ?? 0;
+      const silent = last > 0 && Date.now() - last > WATCHDOG_MS;
+      setNoTick(prev => (prev === silent ? prev : silent));
+    };
+    check();
+    const iv = setInterval(check, 1000);
+    return () => clearInterval(iv);
+  }, [data?.lastUpdate]);
 
   const healthStale = panelHealth.isStale('bitcoin');
   const dataStale =
@@ -153,7 +167,10 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
             </div>
           </div>
         </div>
-        <HeroChart ticks={priceHistory} />
+        <div style={{ position: 'relative' }}>
+          {noTick && !isStale && <span className={styles.watchdog}>NO TICK</span>}
+          <HeroChart ticks={priceHistory} />
+        </div>
       </div>
     </div>
   );
