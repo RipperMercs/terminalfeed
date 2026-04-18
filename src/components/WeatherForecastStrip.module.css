@@ -1,0 +1,56 @@
+/* WeatherForecastStrip — 7-day forecast ribbon under the weather scene */
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 9px;
+  min-width: 0;
+  transition: background 0.15s ease;
+}
+.day:hover { background: var(--bg-hover); }
+
+.todayCell {
+  border-color: var(--border-glow);
+  background: var(--bg-hover);
+}
+
+.dayName {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 8.5px;
+}
+
+.todayCell .dayName {
+  color: var(--green);
+}
+
+.icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.temps {
+  display: flex;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  font-size: 9.5px;
+  line-height: 1;
+}
+.high { color: var(--text); }
+.low { color: var(--text-dim); }

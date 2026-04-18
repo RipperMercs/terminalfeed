@@ -31,6 +31,7 @@ import { PanelManager } from './components/PanelManager';
 import { PanelHead } from './components/PanelHead';
 import { LazyPanel } from './components/LazyPanel';
 import { WeatherScene } from './components/WeatherScene';
+import { WeatherForecastStrip } from './components/WeatherForecastStrip';
 import { useInternetPulse } from './hooks/useInternetPulse';
 import { usePanelHealth } from './hooks/usePanelHealth';
 import { useTerminalsOnline } from './hooks/useTerminalsOnline';
@@ -613,6 +614,7 @@ function App() {
             <span>Set: {weather.sunset}</span>
           </div>}
         </div>
+        {weather.forecast && <WeatherForecastStrip forecast={weather.forecast} />}
       </div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>detecting location...</div>}
     </>),
     'seismic': (<>
