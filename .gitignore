@@ -1,3 +1,6 @@
+# Claude Code worktrees — isolated agent copies, never commit
+.claude/worktrees/
+
 # Logs
 logs
 *.log
