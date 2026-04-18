@@ -647,6 +647,45 @@
   .gridOrganizing .panel.hero2 { width: 100%; }
 }
 
+/* Markets panel — Bloomberg-dense restyle of the listRow rendering */
+.marketsPanel { font-variant-numeric: tabular-nums; }
+.marketsPanel .marketsSectionLabel {
+  font-size: 8.5px;
+  color: var(--text-dim);
+  letter-spacing: 0.12em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.marketsPanel .marketsBody,
+.marketsPanel .marketsIndicesWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.marketsPanel .marketsIndicesWrap {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 6px;
+}
+.marketsPanel .listRow {
+  padding: 3px 2px;
+  border-bottom: 1px dashed rgba(26, 26, 34, 0.6);
+  transition: background 0.15s ease;
+}
+.marketsPanel .listRow:last-child { border-bottom: none; }
+.marketsPanel .listRow:hover { background: var(--bg-hover); }
+.marketsPanel .listRowPrice,
+.marketsPanel .listRowChange {
+  font-variant-numeric: tabular-nums;
+}
+.marketsPanel .listRowChange {
+  min-width: 58px;
+  text-align: right;
+  display: inline-block;
+}
+.marketsPanel .listRowSymbol { letter-spacing: 0.01em; }
+
 .panelHeader {
   display: flex;
   align-items: center;
