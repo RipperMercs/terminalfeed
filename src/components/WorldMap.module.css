@@ -10,6 +10,91 @@
   overflow: hidden;
 }
 
+/* Dashed equator + prime meridian for the "satellite HUD" read */
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Radar sweep — 3s sweep every 8s */
+.sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  left: -30%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(74, 222, 128, 0.02) 30%,
+    rgba(74, 222, 128, 0.08) 50%,
+    rgba(74, 222, 128, 0.02) 70%,
+    transparent 100%
+  );
+  animation: wmRadarSweep calc(8000ms / var(--motion, 1)) linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes wmRadarSweep {
+  0%   { left: -30%; }
+  37%  { left: 130%; } /* 3s of 8s sweeps across */
+  38%  { left: 130%; }
+  100% { left: 130%; } /* rest of cycle: offscreen waiting */
+}
+
+/* Drifting flight dots — pure ambient motion, not tied to real data */
+.flightDrift {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--cyan);
+  border-radius: 50%;
+  opacity: 0.55;
+  box-shadow: 0 0 3px rgba(79, 209, 197, 0.6);
+  transition: left 1.6s linear, top 1.6s linear;
+  pointer-events: none;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+/* Label chip stack in the upper-right */
+.labelStack {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 60%;
+  z-index: 4;
+  pointer-events: none;
+}
+.labelChip {
+  padding: 2px 6px;
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(8, 8, 8, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+  animation: wmChipIn 0.3s ease-out;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  backdrop-filter: blur(3px);
+}
+.labelChip.chipQuake  { border-left: 2px solid var(--red); }
+.labelChip.chipFlight { border-left: 2px solid var(--cyan); }
+.labelChip.chipLaunch { border-left: 2px solid var(--gold); }
+@keyframes wmChipIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 .svg {
   position: absolute;
   inset: 0;
@@ -100,4 +185,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ping::before,
   .ping::after { animation: none; opacity: 0.5; }
+  .sweep,
+  .flightDrift { animation: none; transition: none; }
+  .labelChip { animation: none; }
 }
