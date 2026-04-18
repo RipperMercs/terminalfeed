@@ -14,6 +14,7 @@ export const DEFAULT_LAYOUT = {
     'podcasts',
     'seismic',
     'bitcoin',
+    'live-now',
     'btc-network',
     'ai-hub',
     'gh-events',

@@ -23,6 +23,7 @@ export const ALL_PANELS = [
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
   // Row 5: Dev/nerd
   { id: 'status-wall', label: 'Status Wall', defaultSpan: 1 },
+  { id: 'live-now', label: 'Live Now', defaultSpan: 1 },
   { id: 'claude-status', label: 'Claude Status', defaultSpan: 1 },
   { id: 'cloud-status', label: 'Cloud Status', defaultSpan: 1 },
   { id: 'dev-status', label: 'Dev/Ops Status', defaultSpan: 1 },
@@ -73,7 +74,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '35'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '36'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
