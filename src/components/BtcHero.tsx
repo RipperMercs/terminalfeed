@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { useBtcPrice } from '../hooks/useBtcPrice';
 import type { PriceTick } from '../hooks/useBtcPrice';
 import { PanelHead } from './PanelHead';
+import { LatencyChip } from './LatencyChip';
 import type { LayoutManager } from '../hooks/useLayoutManager';
 import styles from './BtcHero.module.css';
 
@@ -125,7 +126,8 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
           <span className="panelTag">BTC/USD</span>
           {data?.source && <span className="panelTagDim">{data.source}</span>}
         </div>
-        <div className="panelLive">
+        <div className="panelLive" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <LatencyChip lastUpdateMs={data?.lastUpdate ?? null} label="TICK" />
           {isStale ? (<>
             <span className="liveDot" style={{ background: 'var(--amber)' }} />
             <span className="liveText" style={{ color: 'var(--amber)' }}>STALE</span>

@@ -5,6 +5,7 @@ import { useHackerNews } from '../hooks/useHackerNews';
 import { useGithubEvents } from '../hooks/useGithubEvents';
 import { useEarthquakes } from '../hooks/useEarthquakes';
 import { PanelHead } from './PanelHead';
+import { LatencyChip } from './LatencyChip';
 import type { LayoutManager } from '../hooks/useLayoutManager';
 import styles from './LiveNowPanel.module.css';
 
@@ -55,16 +56,9 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [sessionCount, setSessionCount] = useState(0);
   const [lastTs, setLastTs] = useState<number | null>(null);
-  const [now, setNow] = useState(() => Date.now());
   const seenRef = useRef<Set<string>>(new Set());
   const initRef = useRef({ wiki: false, hn: false, gh: false, usgs: false });
   const lastBtcRef = useRef<{ price: number; ts: number } | null>(null);
-
-  // Tick every second so LAST counter updates
-  useEffect(() => {
-    const iv = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(iv);
-  }, []);
 
   // Helper: prepend new events (capped)
   const push = (items: LiveEvent[]) => {
@@ -198,15 +192,15 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
           <span className="panelTitle">Live Now</span>
           <span className="panelTag">REAL-TIME</span>
         </div>
-        <div className="panelLive">
-          <span className="liveDot" />
+        <div className="panelLive" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <LatencyChip lastUpdateMs={lastTs} label="EVENT" />
           <span className="liveText">{events.length}/{MAX_EVENTS}</span>
         </div>
       </PanelHead>
       <div className={styles.counters}>
-        <span>LAST: <b>{lastTs ? timeAgoShort(Math.max(lastTs, now - 1)) : '—'}</b></span>
-        <span className={styles.countersSep}>·</span>
         <span>SESSION: <b>{sessionCount}</b></span>
+        <span className={styles.countersSep}>·</span>
+        <span>MAX: <b>{MAX_EVENTS}</b></span>
       </div>
 
       <div className={styles.wrap}>
