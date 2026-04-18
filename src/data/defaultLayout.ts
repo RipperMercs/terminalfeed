@@ -41,6 +41,7 @@ export const DEFAULT_LAYOUT = {
     'claude-status',
     'cloud-status',
     'dev-status',
+    'status-wall',
     'flight-radar',
     'markets',
     'internet-pulse',
@@ -51,6 +52,6 @@ export const DEFAULT_LAYOUT = {
     'support',
     'daily-paws',
   ],
-  hiddenPanels: [] as string[],
+  hiddenPanels: ['status-wall'] as string[], // opt-in tile — shown via Developer preset or manual enable
   collapsedPanels: [] as string[],
 };
