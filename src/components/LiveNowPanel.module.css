@@ -1,5 +1,27 @@
 /* LiveNowPanel — unified real-time rail */
 
+.counters {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 4px 4px;
+  margin-bottom: 2px;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px dashed rgba(26, 26, 34, 0.6);
+}
+.counters b {
+  color: var(--text);
+  font-weight: 500;
+}
+.countersSep {
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
 .wrap {
   display: flex;
   flex-direction: column;

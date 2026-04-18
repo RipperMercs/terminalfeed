@@ -53,9 +53,18 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
   const quakes = useEarthquakes();
 
   const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [sessionCount, setSessionCount] = useState(0);
+  const [lastTs, setLastTs] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const seenRef = useRef<Set<string>>(new Set());
   const initRef = useRef({ wiki: false, hn: false, gh: false, usgs: false });
   const lastBtcRef = useRef<{ price: number; ts: number } | null>(null);
+
+  // Tick every second so LAST counter updates
+  useEffect(() => {
+    const iv = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(iv);
+  }, []);
 
   // Helper: prepend new events (capped)
   const push = (items: LiveEvent[]) => {
@@ -64,6 +73,8 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
       const merged = [...items, ...prev];
       return merged.slice(0, MAX_EVENTS);
     });
+    setSessionCount(c => c + items.length);
+    setLastTs(Date.now());
   };
 
   // Wikipedia edits — hook already throttles
@@ -192,6 +203,11 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
           <span className="liveText">{events.length}/{MAX_EVENTS}</span>
         </div>
       </PanelHead>
+      <div className={styles.counters}>
+        <span>LAST: <b>{lastTs ? timeAgoShort(Math.max(lastTs, now - 1)) : '—'}</b></span>
+        <span className={styles.countersSep}>·</span>
+        <span>SESSION: <b>{sessionCount}</b></span>
+      </div>
 
       <div className={styles.wrap}>
         {events.length === 0 ? (
