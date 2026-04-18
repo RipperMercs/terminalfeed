@@ -114,6 +114,36 @@
   filter: drop-shadow(0 0 4px var(--gold));
 }
 
+/* Area fill breathes continuously so the chart never feels frozen */
+.areaFill {
+  animation: btcAreaBreathe calc(4000ms / var(--motion, 1)) ease-in-out infinite;
+}
+@keyframes btcAreaBreathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* Small "NO TICK" watchdog chip that appears after 5s of silence */
+.watchdog {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: rgba(239, 159, 39, 0.08);
+  border: 1px solid rgba(239, 159, 39, 0.35);
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+  animation: btcWatchdogBlink 1.4s ease-in-out infinite;
+}
+@keyframes btcWatchdogBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
 .staleBanner {
   font-size: 10px;
   color: var(--amber);
@@ -126,4 +156,6 @@
 @media (prefers-reduced-motion: reduce) {
   .flashUp, .flashDn { animation: none; }
   .pulseDot { filter: none; }
+  .areaFill { animation: none; }
+  .watchdog { animation: none; }
 }
