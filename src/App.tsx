@@ -9,7 +9,7 @@ import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
-import { BtcMiniChart } from './components/BtcMiniChart';
+import { BtcHero } from './components/BtcHero';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -108,7 +108,7 @@ function App() {
     return () => document.removeEventListener('visibilitychange', handler);
   }, []);
   const layout = useLayoutManager();
-  const { data: priceData, priceHistory } = useBtcPrice();
+  const { data: priceData } = useBtcPrice();
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
   const now = useTime();
@@ -173,8 +173,6 @@ function App() {
   const btcPrice = priceData?.price ?? 0;
   const btcChange = priceData?.changePercent24h ?? 0;
   const isUp = btcChange >= 0;
-  // Detect stale data: source is static fallback, or lastUpdate is over 10 minutes old
-  const btcIsStale = priceData?.source === 'static' || (priceData?.lastUpdate && Date.now() - priceData.lastUpdate > 10 * 60_000);
 
   // Dynamic tab title with live BTC price
   useEffect(() => {
@@ -331,48 +329,7 @@ function App() {
   // Panel registry — maps panel IDs to their JSX content
   // This enables dynamic rendering from panelOrder array
   const panelRegistry: Record<string, React.ReactNode> = {
-    'bitcoin': (<>
-      <PanelHead panelId="bitcoin" isStale={panelHealth.isStale('bitcoin')} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft">
-          <span className="panelTitle">Bitcoin</span>
-          <span className="panelTag">BTC/USD</span>
-          {priceData?.source && <span className="panelTagDim">{priceData.source}</span>}
-        </div>
-        <div className="panelLive">
-          {btcIsStale ? (<>
-            <span className="liveDot" style={{ background: 'var(--amber)' }} />
-            <span className="liveText" style={{ color: 'var(--amber)' }}>STALE</span>
-          </>) : (<>
-            <span className="liveDot" style={{ background: btcPrice > 0 ? 'var(--green)' : 'var(--red)' }} />
-            <span className="liveText">{btcPrice > 0 ? 'LIVE' : 'LOADING'}</span>
-          </>)}
-        </div>
-      </PanelHead>
-      {btcIsStale && (
-        <div className="staleBanner">
-          {priceData?.source === 'static'
-            ? 'Unable to connect to live feeds. Showing approximate data. Check your network or ad blocker.'
-            : 'Price data may be outdated. Reconnecting...'}
-        </div>
-      )}
-      <div className="priceMain">
-        <div>
-          <div className="priceValue">${btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-          <div className="priceChange" style={{ color: isUp ? 'var(--green)' : 'var(--red)' }}>
-            {isUp ? '\u25B2' : '\u25BC'} {Math.abs(btcChange).toFixed(2)}% today
-          </div>
-        </div>
-        {priceData && (
-          <div className="priceRange">
-            <span className="priceRangeLabel">24h range</span>
-            <span className="priceRangeValue">
-              ${priceData.low24h.toLocaleString(undefined, { maximumFractionDigits: 0 })} - ${priceData.high24h.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-        )}
-      </div>
-      <BtcMiniChart ticks={priceHistory} height={120} />
-    </>),
+    'bitcoin': <BtcHero layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
     'crypto': (() => {
       const btcEth = crypto.filter(c => ['BTC', 'ETH'].includes(c.symbol));
       const others = crypto.filter(c => !['BTC', 'ETH'].includes(c.symbol) && c.price > 0);
@@ -1287,7 +1244,7 @@ function App() {
           return userPanels.map((id, idx) => {
             const panelDef = ALL_PANELS.find(p => p.id === id);
             if (!panelDef) return null;
-            const span = panelDef.defaultSpan > 1 ? 'spanCol2' : '';
+            const span = panelDef.defaultSpan > 1 ? 'hero2' : '';
             const content = panelRegistry[id as keyof typeof panelRegistry];
             if (!content) return null;
 

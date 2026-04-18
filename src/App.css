@@ -640,6 +640,13 @@
 /* spanCol classes — no longer used with column layout */
 .spanCol2, .spanCol3 { /* no-op in column layout */ }
 
+/* Hero panels span the full width of the CSS-columns grid */
+.panel.hero2 { column-span: all; }
+.gridOrganizing .panel.hero2 { width: calc(50% - 2px); }
+@media (max-width: 1100px) {
+  .gridOrganizing .panel.hero2 { width: 100%; }
+}
+
 .panelHeader {
   display: flex;
   align-items: center;
