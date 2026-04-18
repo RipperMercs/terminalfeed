@@ -1,0 +1,72 @@
+/* LatencyChip — shared age-of-data chip for real-time tiles */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  background: rgba(8, 8, 8, 0.4);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.label {
+  opacity: 0.65;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 4px currentColor;
+  flex-shrink: 0;
+}
+
+.fresh {
+  color: var(--green);
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.05);
+}
+.fresh .dot { animation: chipPulse calc(2000ms / var(--motion, 1)) ease-in-out infinite; }
+
+.warm {
+  color: var(--amber);
+  border-color: rgba(239, 159, 39, 0.35);
+  background: rgba(239, 159, 39, 0.05);
+}
+.warm .dot { animation: chipPulse calc(1400ms / var(--motion, 1)) ease-in-out infinite; }
+
+.cold {
+  color: var(--red);
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.05);
+  animation: chipBlink calc(1200ms / var(--motion, 1)) ease-in-out infinite;
+}
+
+.unknown {
+  color: var(--text-dim);
+  border-color: var(--border);
+  background: transparent;
+}
+
+@keyframes chipPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+@keyframes chipBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fresh .dot,
+  .warm .dot,
+  .cold { animation: none; }
+}
