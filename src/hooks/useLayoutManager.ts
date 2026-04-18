@@ -22,6 +22,7 @@ export const ALL_PANELS = [
   { id: 'reddit', label: 'Reddit', defaultSpan: 1 },
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
   // Row 5: Dev/nerd
+  { id: 'status-wall', label: 'Status Wall', defaultSpan: 1 },
   { id: 'claude-status', label: 'Claude Status', defaultSpan: 1 },
   { id: 'cloud-status', label: 'Cloud Status', defaultSpan: 1 },
   { id: 'dev-status', label: 'Dev/Ops Status', defaultSpan: 1 },
@@ -72,7 +73,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '34'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '35'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -101,18 +102,20 @@ export interface LayoutExport {
 
 // Preset layouts
 export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
+  // everything: keeps status-wall visible alongside the granular status tiles
   everything: { label: 'Everything', hidden: [] },
   trader: {
     label: 'Trader',
-    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github'],
+    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'status-wall'],
   },
+  // developer: swaps in the unified status-wall and hides the 3 granular status tiles
   developer: {
     label: 'Developer',
-    hidden: ['recipe', 'seismic', 'launches', 'steam', 'quick-stats'],
+    hidden: ['recipe', 'seismic', 'launches', 'steam', 'quick-stats', 'claude-status', 'cloud-status', 'dev-status'],
   },
   crypto: {
     label: 'Crypto',
-    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches'],
+    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches', 'status-wall'],
   },
 };
 
