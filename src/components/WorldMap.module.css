@@ -1,0 +1,103 @@
+/* WorldMap — SVG dotted continent silhouette with ripple pings */
+
+.wrap {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ping {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.pingQuake  { background: var(--red);  color: var(--red); }
+.pingFlight { background: var(--cyan); color: var(--cyan); }
+.pingLaunch { background: var(--gold); color: var(--gold); }
+
+.ping::before,
+.ping::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  animation: wmPing 2.4s ease-out forwards;
+  opacity: 0;
+}
+.ping::after { animation-delay: 0.4s; }
+
+.legend {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 10px;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  background: rgba(8, 8, 8, 0.6);
+  padding: 4px 8px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+  z-index: 3;
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend .d {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px currentColor;
+}
+.legend .q { background: var(--red);  color: var(--red); }
+.legend .f { background: var(--cyan); color: var(--cyan); }
+.legend .l { background: var(--gold); color: var(--gold); }
+
+.counts {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  font-variant-numeric: tabular-nums;
+  z-index: 3;
+  background: rgba(8, 8, 8, 0.6);
+  padding: 4px 8px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+}
+.counts b { color: var(--text); font-weight: 500; }
+
+@keyframes wmPing {
+  0%   { opacity: 0.8; transform: scale(1); }
+  80%  { opacity: 0;   transform: scale(8); }
+  100% { opacity: 0;   transform: scale(8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ping::before,
+  .ping::after { animation: none; opacity: 0.5; }
+}
