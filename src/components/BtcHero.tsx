@@ -144,7 +144,7 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
           <div className={styles.rangeBar}>
             <div className={styles.rangeLabel}>
               <span>${low.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              <span className={styles.liveMarker}>\u25CF LIVE</span>
+              <span className={styles.liveMarker}>{'\u25CF'} LIVE</span>
               <span>${high.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
             <div className={styles.rangeTrack}>
