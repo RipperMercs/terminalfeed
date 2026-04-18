@@ -7,6 +7,7 @@ export interface Earthquake {
   place: string;
   time: number; // ms timestamp
   url: string;
+  coordinates?: [number, number]; // [lng, lat] from USGS GeoJSON, depth dropped
 }
 
 const API_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
@@ -31,13 +32,21 @@ export function useEarthquakes(): Earthquake[] {
 
         const results: Earthquake[] = json.features
           .slice(0, 12)
-          .map((f: { id: string; properties: { mag: number; place: string; time: number; url: string } }) => ({
-            id: f.id,
-            magnitude: f.properties.mag,
-            place: f.properties.place,
-            time: f.properties.time,
-            url: f.properties.url,
-          }));
+          .map((f: { id: string; properties: { mag: number; place: string; time: number; url: string }; geometry?: { coordinates?: number[] } }) => {
+            const coords = f.geometry?.coordinates;
+            const lngLat: [number, number] | undefined =
+              Array.isArray(coords) && typeof coords[0] === 'number' && typeof coords[1] === 'number'
+                ? [coords[0], coords[1]]
+                : undefined;
+            return {
+              id: f.id,
+              magnitude: f.properties.mag,
+              place: f.properties.place,
+              time: f.properties.time,
+              url: f.properties.url,
+              coordinates: lngLat,
+            };
+          });
 
         setQuakes(results);
         setCache(CACHE_KEY, results, 'usgs');

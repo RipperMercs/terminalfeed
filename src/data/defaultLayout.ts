@@ -13,6 +13,7 @@ export const DEFAULT_LAYOUT = {
     'wikipedia',
     'podcasts',
     'seismic',
+    'world-map',
     'bitcoin',
     'live-now',
     'btc-network',
