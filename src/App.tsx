@@ -5,6 +5,7 @@ import { useHackerNews } from './hooks/useHackerNews';
 import { useTime } from './hooks/useTime';
 import { useSimStocks, INDICES } from './hooks/useSimStocks';
 import { useSimCrypto } from './hooks/useSimCrypto';
+import { useRowFlashes } from './hooks/useRowFlashes';
 import { useMetals } from './hooks/useMetals';
 import { useSportsScores } from './hooks/useSportsScores';
 import { LegalModal } from './components/LegalModal';
@@ -114,6 +115,7 @@ function App() {
   const now = useTime();
   const stocks = useSimStocks();
   const crypto = useSimCrypto();
+  const cryptoFlashes = useRowFlashes(crypto, c => c.symbol, c => c.price);
   const metals = useMetals();
   const marketHours = useMarketHours();
   const games = useSportsScores();
@@ -335,24 +337,30 @@ function App() {
       const others = crypto.filter(c => !['BTC', 'ETH'].includes(c.symbol) && c.price > 0);
       const cryptoGainers = [...others].filter(c => c.change > 0).sort((a, b) => b.change - a.change).slice(0, 5);
       const cryptoLosers = [...others].filter(c => c.change < 0).sort((a, b) => a.change - b.change).slice(0, 5);
+      const rowClass = (sym: string) => {
+        const f = cryptoFlashes[sym];
+        return 'listRow' + (f === 'up' ? ' rowFlashUp' : f === 'dn' ? ' rowFlashDn' : '');
+      };
       return (<>
         <PanelHead panelId="crypto" isStale={panelHealth.isStale('crypto')} layout={layout} getGridCols={getGridCols}>
           <div className="panelHeaderLeft"><span className="panelTitle">Crypto</span></div>
           <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
         </PanelHead>
-        <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Top Movers</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {cryptoGainers.map(c => (<div key={c.symbol} className="listRow"><div><span style={{ color: 'var(--green)', marginRight: 4, fontSize: 9 }}>▲</span><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price < 1 ? c.price.toFixed(4) : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className="listRowChange tickerUp" style={{ fontWeight: 600 }}>+{c.change.toFixed(2)}%</span>{c.change > 5 && <span style={{ marginLeft: 3, fontSize: 10 }}>🔥</span>}</div></div>))}
-          {cryptoLosers.map(c => (<div key={c.symbol} className="listRow"><div><span style={{ color: 'var(--red)', marginRight: 4, fontSize: 9 }}>▼</span><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price < 1 ? c.price.toFixed(4) : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className="listRowChange tickerDown" style={{ fontWeight: 600 }}>{c.change.toFixed(2)}%</span>{c.change < -5 && <span style={{ marginLeft: 3, fontSize: 10 }}>💀</span>}</div></div>))}
-        </div>
-        <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0', paddingTop: 6 }}>
-          <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' }}>Market</div>
-          {btcEth.map(c => (<div key={c.symbol} className="listRow"><div><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%</span></div></div>))}
-          {cryptoGlobal && (<>
-            <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>Total Cap</span></div><div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalMarketCap)}</span><span className={`listRowChange ${cryptoGlobal.marketCapChange24h >= 0 ? 'tickerUp' : 'tickerDown'}`} style={{ fontSize: 9 }}>{cryptoGlobal.marketCapChange24h >= 0 ? '+' : ''}{cryptoGlobal.marketCapChange24h.toFixed(1)}%</span></div></div>
-            <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>BTC Dom</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>{cryptoGlobal.btcDominance.toFixed(1)}%</span></div>
-            <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>24h Vol</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalVolume24h)}</span></div>
-          </>)}
+        <div className="cryptoPanel">
+          <div className="cryptoSectionLabel">Top Movers</div>
+          <div className="cryptoBody">
+            {cryptoGainers.map(c => (<div key={c.symbol} className={rowClass(c.symbol)}><div><span style={{ color: 'var(--green)', marginRight: 4, fontSize: 9 }}>▲</span><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price < 1 ? c.price.toFixed(4) : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className="listRowChange tickerUp" style={{ fontWeight: 600 }}>+{c.change.toFixed(2)}%</span>{c.change > 5 && <span style={{ marginLeft: 3, fontSize: 10 }}>🔥</span>}</div></div>))}
+            {cryptoLosers.map(c => (<div key={c.symbol} className={rowClass(c.symbol)}><div><span style={{ color: 'var(--red)', marginRight: 4, fontSize: 9 }}>▼</span><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price < 1 ? c.price.toFixed(4) : c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className="listRowChange tickerDown" style={{ fontWeight: 600 }}>{c.change.toFixed(2)}%</span>{c.change < -5 && <span style={{ marginLeft: 3, fontSize: 10 }}>💀</span>}</div></div>))}
+          </div>
+          <div className="cryptoMarketWrap">
+            <div className="cryptoSectionLabel">Market</div>
+            {btcEth.map(c => (<div key={c.symbol} className={rowClass(c.symbol)}><div><span className="listRowSymbol">{c.symbol}</span></div><div><span className="listRowPrice">${c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span className={`listRowChange ${c.change >= 0 ? 'tickerUp' : 'tickerDown'}`}>{c.change >= 0 ? '+' : ''}{c.change.toFixed(2)}%</span></div></div>))}
+            {cryptoGlobal && (<>
+              <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>Total Cap</span></div><div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalMarketCap)}</span><span className={`listRowChange ${cryptoGlobal.marketCapChange24h >= 0 ? 'tickerUp' : 'tickerDown'}`} style={{ fontSize: 9 }}>{cryptoGlobal.marketCapChange24h >= 0 ? '+' : ''}{cryptoGlobal.marketCapChange24h.toFixed(1)}%</span></div></div>
+              <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>BTC Dom</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>{cryptoGlobal.btcDominance.toFixed(1)}%</span></div>
+              <div className="listRow"><div><span className="listRowSymbol" style={{ fontSize: 9 }}>24h Vol</span></div><span style={{ fontSize: 10, color: 'var(--text-mid)' }}>${formatCompact(cryptoGlobal.totalVolume24h)}</span></div>
+            </>)}
+          </div>
         </div>
       </>);
     })(),
