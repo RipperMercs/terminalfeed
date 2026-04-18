@@ -12,6 +12,7 @@ export const DEFAULT_LAYOUT = {
     'forex',
     'wikipedia',
     'podcasts',
+    'seismic-timeline',
     'seismic',
     'bitcoin',
     'live-now',
