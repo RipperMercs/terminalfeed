@@ -21,8 +21,29 @@ interface Ping {
   y: number; // 0..100
 }
 
+interface LabelChip {
+  id: string;
+  kind: PingKind;
+  text: string;
+}
+
+interface DriftDot {
+  id: number;
+  x: number;
+  y: number;
+}
+
 const PING_LIFE_MS = 2_600;
 const MAX_PINGS = 24;
+const MAX_LABELS = 5;
+const LABEL_LIFE_MS = 6_500;
+const FLIGHT_DOT_COUNT = 22;
+const FLIGHT_DRIFT_MS = 1_600;
+
+function randomLandishXY(): [number, number] {
+  // Biased toward the vertical middle band where most land sits
+  return [6 + Math.random() * 88, 18 + Math.random() * 58];
+}
 
 // Hand-tuned land mask — big continent silhouettes with ocean carve-outs.
 // Not geographically precise, but reads as "the world" without a geojson dep.
@@ -110,6 +131,13 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
   const launches = useSpaceLaunches();
 
   const [pings, setPings] = useState<Ping[]>([]);
+  const [labels, setLabels] = useState<LabelChip[]>([]);
+  const [driftDots, setDriftDots] = useState<DriftDot[]>(() =>
+    Array.from({ length: FLIGHT_DOT_COUNT }, (_, i) => {
+      const [x, y] = randomLandishXY();
+      return { id: i, x, y };
+    })
+  );
   const seenRef = useRef<Set<string>>(new Set());
   const initRef = useRef({ quake: false, launch: false });
   const lastAirborneRef = useRef<number | null>(null);
@@ -129,7 +157,7 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
       });
   }, [quakes]);
 
-  const addPing = (kind: PingKind, x: number, y: number, key: string) => {
+  const addPing = (kind: PingKind, x: number, y: number, key: string, label?: string) => {
     const ping: Ping = { id: key, kind, x, y };
     setPings(prev => {
       const next = [...prev, ping];
@@ -138,7 +166,35 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
     setTimeout(() => {
       setPings(prev => prev.filter(p => p.id !== key));
     }, PING_LIFE_MS);
+
+    if (label) {
+      const chip: LabelChip = { id: key, kind, text: label };
+      setLabels(prev => {
+        const next = [chip, ...prev];
+        return next.length > MAX_LABELS ? next.slice(0, MAX_LABELS) : next;
+      });
+      setTimeout(() => {
+        setLabels(prev => prev.filter(l => l.id !== key));
+      }, LABEL_LIFE_MS);
+    }
   };
+
+  // Drifting flight dots — ambient motion every FLIGHT_DRIFT_MS, CSS transition smooths
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setDriftDots(prev => prev.map(d => {
+        // Small random nudge in any direction, wrap at edges
+        const dx = (Math.random() - 0.5) * 14;
+        const dy = (Math.random() - 0.5) * 8;
+        let x = d.x + dx;
+        let y = d.y + dy;
+        if (x < 2) x = 98; else if (x > 98) x = 2;
+        if (y < 12) y = 85; else if (y > 85) y = 15;
+        return { ...d, x, y };
+      }));
+    }, FLIGHT_DRIFT_MS);
+    return () => clearInterval(iv);
+  }, []);
 
   // Earthquakes — real coords if available
   useEffect(() => {
@@ -148,13 +204,14 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
       if (seenRef.current.has(key)) continue;
       seenRef.current.add(key);
       if (!initRef.current.quake) continue; // skip initial snapshot
+      const label = `M${q.magnitude.toFixed(1)} · ${q.place.split(',').pop()?.trim() || q.place}`;
       if (q.coordinates) {
         const [lng, lat] = q.coordinates;
         const [x, y] = lngLatToXY(lng, lat);
-        addPing('quake', x, y, key + ':' + Date.now());
+        addPing('quake', x, y, key + ':' + Date.now(), label);
       } else {
-        // fallback: random landish position
-        addPing('quake', 20 + Math.random() * 60, 20 + Math.random() * 50, key + ':' + Date.now());
+        const [x, y] = randomLandishXY();
+        addPing('quake', x, y, key + ':' + Date.now(), label);
       }
     }
     initRef.current.quake = true;
@@ -168,7 +225,9 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
       if (seenRef.current.has(key)) continue;
       seenRef.current.add(key);
       if (!initRef.current.launch) continue;
-      addPing('launch', 10 + Math.random() * 80, 25 + Math.random() * 45, key + ':' + Date.now());
+      const [x, y] = randomLandishXY();
+      const label = `${l.provider} · ${l.name}`.substring(0, 42);
+      addPing('launch', x, y, key + ':' + Date.now(), label);
     }
     initRef.current.launch = true;
   }, [launches]);
@@ -183,13 +242,11 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
       return;
     }
     if (Math.abs(total - last) < 50) return; // ignore minor deltas
+    const delta = total - last;
     lastAirborneRef.current = total;
-    addPing(
-      'flight',
-      10 + Math.random() * 80,
-      20 + Math.random() * 50,
-      'flight:' + total + ':' + Date.now(),
-    );
+    const [x, y] = randomLandishXY();
+    const label = `${total.toLocaleString()} IN AIR · ${delta > 0 ? '+' : ''}${delta}`;
+    addPing('flight', x, y, 'flight:' + total + ':' + Date.now(), label);
   }, [flightRadar.stats?.totalAirborne]);
 
   const isStale = panelHealth.isStale('world-map');
@@ -212,6 +269,11 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
 
       <div className={styles.wrap}>
         <svg className={styles.svg} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {/* HUD grid: dashed equator + prime meridian */}
+          <g className={styles.gridOverlay}>
+            <line x1="0" y1="50" x2="100" y2="50" stroke="var(--border-glow)" strokeWidth="0.15" strokeDasharray="1 2" />
+            <line x1="50" y1="0" x2="50" y2="100" stroke="var(--border-glow)" strokeWidth="0.15" strokeDasharray="1 2" />
+          </g>
           {dots.map((d, i) => (
             <circle key={i} cx={d.x} cy={d.y} r="0.35" fill="var(--border-glow)" />
           ))}
@@ -224,10 +286,23 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
               fill="var(--red)"
               opacity={m.magnitude >= 5 ? 0.9 : 0.55}
             >
-              <title>M{m.magnitude.toFixed(1)} — {m.place}</title>
+              <title>M{m.magnitude.toFixed(1)} - {m.place}</title>
             </circle>
           ))}
         </svg>
+
+        {/* Radar sweep bar (ambient, always on) */}
+        <div className={styles.sweep} aria-hidden="true" />
+
+        {/* Drifting flight dots (ambient, always on) */}
+        {driftDots.map(d => (
+          <span
+            key={d.id}
+            className={styles.flightDrift}
+            style={{ left: d.x + '%', top: d.y + '%' }}
+            aria-hidden="true"
+          />
+        ))}
 
         {pings.map(p => {
           const cls =
@@ -236,6 +311,22 @@ export const WorldMap = memo(function WorldMap({ layout, panelHealth, getGridCol
                                   styles.pingLaunch;
           return <span key={p.id} className={`${styles.ping} ${cls}`} style={{ left: p.x + '%', top: p.y + '%' }} />;
         })}
+
+        {labels.length > 0 && (
+          <div className={styles.labelStack} aria-live="polite">
+            {labels.map(l => {
+              const chipClass =
+                l.kind === 'quake'  ? styles.chipQuake  :
+                l.kind === 'flight' ? styles.chipFlight :
+                                      styles.chipLaunch;
+              return (
+                <span key={l.id} className={`${styles.labelChip} ${chipClass}`}>
+                  {l.text}
+                </span>
+              );
+            })}
+          </div>
+        )}
 
         <div className={styles.legend}>
           <span><i className={`${styles.d} ${styles.q}`} /> QUAKE</span>
