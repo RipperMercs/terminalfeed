@@ -1,6 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 
+export interface DailyForecast {
+  date: string;      // ISO YYYY-MM-DD
+  high: number;      // °F
+  low: number;       // °F
+  weatherCode: number;
+}
+
 export interface WeatherData {
   temperature: number;
   feelsLike: number;
@@ -13,6 +20,7 @@ export interface WeatherData {
   sunrise: string;
   sunset: string;
   isDaytime: boolean;
+  forecast: DailyForecast[];
 }
 
 const CACHE_KEY = 'weather';
@@ -84,7 +92,7 @@ export function useWeather(): WeatherData | null {
     const fetchWeather = async (lat: number, lon: number, city: string) => {
       try {
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=1`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=7`,
           { signal: AbortSignal.timeout(5000) }
         );
         if (!res.ok) return;
@@ -100,6 +108,17 @@ export function useWeather(): WeatherData | null {
           ? now >= new Date(sunrise) && now <= new Date(sunset)
           : now.getHours() >= 6 && now.getHours() <= 19;
 
+        const dailyDates: string[] = daily?.time ?? [];
+        const dailyHighs: number[] = daily?.temperature_2m_max ?? [];
+        const dailyLows: number[] = daily?.temperature_2m_min ?? [];
+        const dailyCodes: number[] = daily?.weather_code ?? [];
+        const forecast: DailyForecast[] = dailyDates.map((d, i) => ({
+          date: d,
+          high: Math.round(dailyHighs[i] ?? c.temperature_2m),
+          low: Math.round(dailyLows[i] ?? c.temperature_2m),
+          weatherCode: dailyCodes[i] ?? c.weather_code,
+        }));
+
         const result: WeatherData = {
           temperature: Math.round(c.temperature_2m),
           feelsLike: Math.round(c.apparent_temperature ?? c.temperature_2m),
@@ -112,6 +131,7 @@ export function useWeather(): WeatherData | null {
           sunrise: sunrise ? new Date(sunrise).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '',
           sunset: sunset ? new Date(sunset).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '',
           isDaytime,
+          forecast,
         };
 
         setData(result);
