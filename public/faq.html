@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — TerminalFeed</title>
+  <meta name="description" content="Frequently asked questions about TerminalFeed.io: what the site is, how data is sourced, whether it is free, privacy, customization, mobile support, and more.">
+  <link rel="canonical" href="https://terminalfeed.io/faq">
+  <meta property="og:title" content="FAQ — TerminalFeed">
+  <meta property="og:description" content="Common questions about TerminalFeed answered.">
+  <meta property="og:url" content="https://terminalfeed.io/faq">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is TerminalFeed?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TerminalFeed.io is a free real-time dashboard that aggregates 40-plus live data feeds, including Bitcoin price, US stock markets, top cryptocurrencies, earthquakes, weather, space launches, Hacker News, Wikipedia edits, AI service status, and more. It uses a dense Bloomberg-style terminal layout with a dark aesthetic and a JetBrains Mono typeface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is TerminalFeed free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The site is free to use with no account, no paywall, and no signup. A Bitcoin donation option exists for users who want to support hosting, but it is entirely optional."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Where does the data come from?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Data is pulled from public APIs, including Binance, CoinLore, Coinbase, Kraken, Finnhub, Etherscan, DexScreener, USGS, Open-Meteo, Hacker News, Wikimedia EventStreams, OpenSky Network, statuspage.io endpoints from GitHub, Cloudflare, OpenAI, Anthropic, Stripe, and many others. The full list is on the disclaimer page."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How real-time is the data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The Bitcoin ticker updates roughly once per second via WebSocket when the connection is open. Stock quotes refresh every 30 seconds. Crypto movers refresh every 2 minutes. Wikipedia edits stream live. Status pages are cached for 2 to 3 minutes. Most other feeds update every 1 to 15 minutes depending on the source's published limits."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to create an account?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. There is no account system. Your layout preferences are saved in localStorage in your browser and never leave your device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does TerminalFeed track me?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No analytics, no third-party trackers, no ad pixels. See the privacy policy for details. The only data stored is your panel layout preference in your own browser's localStorage."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I customize the layout?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Drag any panel header on desktop to reorder tiles. On mobile use the up and down arrows in organize mode. You can hide panels you do not use, save named presets (Trader, Developer, Crypto, Everything), and export or import a layout via a share code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a mobile app?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Not yet. The website is mobile-responsive and installs as a Progressive Web App on iOS and Android. A native app is on the long-term roadmap but not actively in development."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is this an investment tool?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. TerminalFeed is a data dashboard, not a trading or investment product. Nothing shown on the site is financial advice. Always verify price, execution, and market data with your broker before acting. See the disclaimer page for the long version."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I embed TerminalFeed widgets on my own site?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Embeddable iframe widgets are planned and some early versions are live at /widgets. They link back to terminalfeed.io. The feature set will expand over time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there an API for the data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Every data feed is exposed as a public JSON API under https://terminalfeed.io/api/. Full documentation lives at /developers and an OpenAPI schema is at /openapi.json. CORS is open for all origins. Reasonable rate limits apply."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Who runs TerminalFeed?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Evan Marcus (Ripper) is the creator and sole operator. Editorial content is published under five author personas: Ripper (founder), zer0day (security), Pulse (markets), Node (dev tools), and Signal (AI and data). Contact information is on the contact page."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is TerminalFeed affiliated with Anthropic or Claude?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. The site is an independent project. It displays the public Claude status page as a data feed, but there is no business or technical affiliation with Anthropic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I report a bug or suggest a feature?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Email feedback at terminalfeed.io. Issues are read and triaged by a human. Security-relevant issues should go to security at terminalfeed.io with the subject line URGENT."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does a panel show STALE or LOADING?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The upstream API is unreachable, rate-limited, or returning an error. The dashboard falls back to the most recent cached data where possible and shows STALE after 10 minutes of no updates. LOADING means the first fetch has not completed. If a panel stays empty for more than 8 seconds it collapses so it does not waste screen space."
+        }
+      }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "FAQ", "item": "https://terminalfeed.io/faq" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 800px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 20px; margin-bottom: 24px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 32px 0 12px; text-transform: uppercase; letter-spacing: 2px; }
+    p { font-size: 13px; margin-bottom: 16px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    details { border-top: 1px solid #1A1A22; padding: 14px 4px; }
+    details:last-of-type { border-bottom: 1px solid #1A1A22; }
+    summary { color: #C8C8C0; font-size: 13px; cursor: pointer; list-style: none; position: relative; padding-left: 22px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: '+'; position: absolute; left: 0; color: #4ADE80; font-weight: 600; }
+    details[open] summary::before { content: '\2212'; } /* minus sign */
+    details[open] summary { color: #4ADE80; }
+    details p { margin: 10px 0 4px; color: #8A8880; font-size: 12.5px; line-height: 1.7; }
+    .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #1A1A22; font-size: 10px; color: #3E3E3A; }
+    .footer a { color: #4E4D49; margin-right: 14px; }
+    .footer a:hover { color: #5DCAA5; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>FAQ</span>
+  </nav>
+  <h1>&gt;_ Frequently Asked Questions</h1>
+
+  <p>Most common questions about TerminalFeed. For anything not covered here, the <a href="/contact">contact page</a> has email addresses for feedback, security, legal, and general enquiries.</p>
+
+  <details>
+    <summary>What is TerminalFeed?</summary>
+    <p>TerminalFeed.io is a free real-time dashboard that aggregates 40-plus live data feeds including Bitcoin price, US stock markets, top cryptocurrencies, earthquakes, weather, space launches, Hacker News, Wikipedia edits, AI service status, and more. It uses a dense Bloomberg-style terminal layout with a dark aesthetic and a JetBrains Mono typeface.</p>
+  </details>
+
+  <details>
+    <summary>Is TerminalFeed free?</summary>
+    <p>Yes. The site is free to use with no account, no paywall, and no signup. A Bitcoin donation option exists for users who want to support hosting, but it is entirely optional.</p>
+  </details>
+
+  <details>
+    <summary>Where does the data come from?</summary>
+    <p>Data is pulled from public APIs including Binance, CoinLore, Coinbase, Kraken, Finnhub, Etherscan, DexScreener, USGS, Open-Meteo, Hacker News, Wikimedia EventStreams, OpenSky Network, and statuspage.io endpoints from GitHub, Cloudflare, OpenAI, Anthropic, Stripe, and many others. The full list is on the <a href="/disclaimer">disclaimer page</a>.</p>
+  </details>
+
+  <details>
+    <summary>How real-time is the data?</summary>
+    <p>The Bitcoin ticker updates roughly once per second via WebSocket when the connection is open. Stock quotes refresh every 30 seconds. Crypto movers refresh every 2 minutes. Wikipedia edits stream live. Status pages are cached for 2 to 3 minutes. Most other feeds update every 1 to 15 minutes depending on the source's published limits.</p>
+  </details>
+
+  <details>
+    <summary>Do I need to create an account?</summary>
+    <p>No. There is no account system. Your layout preferences are saved in localStorage in your browser and never leave your device.</p>
+  </details>
+
+  <details>
+    <summary>Does TerminalFeed track me?</summary>
+    <p>No analytics, no third-party trackers, no ad pixels. See the <a href="/privacy">privacy policy</a> for details. The only data stored is your panel layout preference in your own browser's localStorage.</p>
+  </details>
+
+  <details>
+    <summary>Can I customize the layout?</summary>
+    <p>Yes. Drag any panel header on desktop to reorder tiles. On mobile use the up and down arrows in organize mode. You can hide panels you do not use, save named presets (Trader, Developer, Crypto, Everything), and export or import a layout via a share code.</p>
+  </details>
+
+  <details>
+    <summary>Is there a mobile app?</summary>
+    <p>Not yet. The website is mobile-responsive and installs as a Progressive Web App on iOS and Android. A native app is on the long-term roadmap but not actively in development.</p>
+  </details>
+
+  <details>
+    <summary>Is this an investment tool?</summary>
+    <p>No. TerminalFeed is a data dashboard, not a trading or investment product. Nothing shown on the site is financial advice. Always verify price, execution, and market data with your broker before acting. See the <a href="/disclaimer">disclaimer</a> for the long version.</p>
+  </details>
+
+  <details>
+    <summary>Can I embed TerminalFeed widgets on my own site?</summary>
+    <p>Embeddable iframe widgets are planned and some early versions are live at <a href="/widgets">/widgets</a>. They link back to terminalfeed.io. The feature set will expand over time.</p>
+  </details>
+
+  <details>
+    <summary>Is there an API for the data?</summary>
+    <p>Yes. Every data feed is exposed as a public JSON API under <a href="https://terminalfeed.io/api/">terminalfeed.io/api/</a>. Full documentation lives at <a href="/developers">/developers</a> and an OpenAPI schema is at <a href="/openapi.json">/openapi.json</a>. CORS is open for all origins. Reasonable rate limits apply.</p>
+  </details>
+
+  <details>
+    <summary>Who runs TerminalFeed?</summary>
+    <p>Evan Marcus (Ripper) is the creator and sole operator. Editorial content is published under five author personas: Ripper (founder), zer0day (security), Pulse (markets), Node (dev tools), and Signal (AI and data). Contact information is on the <a href="/contact">contact page</a>.</p>
+  </details>
+
+  <details>
+    <summary>Is TerminalFeed affiliated with Anthropic or Claude?</summary>
+    <p>No. The site is an independent project. It displays the public Claude status page as a data feed, but there is no business or technical affiliation with Anthropic.</p>
+  </details>
+
+  <details>
+    <summary>How do I report a bug or suggest a feature?</summary>
+    <p>Email <a href="mailto:feedback@terminalfeed.io">feedback@terminalfeed.io</a>. Issues are read and triaged by a human. Security-relevant issues should go to <a href="mailto:security@terminalfeed.io">security@terminalfeed.io</a> with the subject line URGENT.</p>
+  </details>
+
+  <details>
+    <summary>Why does a panel show STALE or LOADING?</summary>
+    <p>The upstream API is unreachable, rate-limited, or returning an error. The dashboard falls back to the most recent cached data where possible and shows STALE after 10 minutes of no updates. LOADING means the first fetch has not completed. If a panel stays empty for more than 8 seconds it collapses so it does not waste screen space.</p>
+  </details>
+
+  <div class="footer">
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
+    <a href="/disclaimer">Disclaimer</a>
+    <a href="/contact">Contact</a>
+    <div style="margin-top: 10px; color: #2A2A30;">&copy; 2026 TerminalFeed.io</div>
+  </div>
+</body>
+</html>
