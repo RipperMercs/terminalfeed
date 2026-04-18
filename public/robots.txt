@@ -3,4 +3,12 @@ Allow: /
 Disallow: /api/
 Disallow: /embed/
 
+# AdSense crawler, needs explicit permission to evaluate pages for ad relevance
+User-agent: Mediapartners-Google
+Allow: /
+
+# AdsBot, for landing-page quality scoring
+User-agent: AdsBot-Google
+Allow: /
+
 Sitemap: https://terminalfeed.io/sitemap.xml
