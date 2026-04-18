@@ -13,7 +13,6 @@ import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { BtcHero } from './components/BtcHero';
 import { StatusWall } from './components/StatusWall';
 import { LiveNowPanel } from './components/LiveNowPanel';
-import { WorldMap } from './components/WorldMap';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -483,7 +482,6 @@ function App() {
     })(),
     'status-wall': <StatusWall layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
     'live-now': <LiveNowPanel layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
-    'world-map': <WorldMap layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
     'claude-status': (<>
       <PanelHead panelId="claude-status" isStale={panelHealth.isStale('claude-status')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">Claude</span><span className="panelTag">STATUS</span></div>
