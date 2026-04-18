@@ -1,0 +1,129 @@
+/* BtcHero — 2-col hero treatment for the Bitcoin tile */
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .heroGrid { grid-template-columns: 1fr; }
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.price {
+  font-size: 44px;
+  line-height: 1.05;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
+  display: inline-block;
+  border-radius: 2px;
+}
+.flashUp { animation: priceFlash 0.7s ease-out; }
+.flashDn { animation: priceFlashRed 0.7s ease-out; }
+
+.change {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 0 4px;
+}
+.up { color: var(--green); }
+.dn { color: var(--red); }
+
+.subRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 6px;
+  color: var(--text-mid);
+  font-size: 11px;
+  padding: 0 4px;
+}
+.subRow b {
+  color: var(--text);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.rangeBar { margin-top: 10px; padding: 0 4px; }
+.rangeLabel {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4px;
+}
+.liveMarker { color: var(--gold); }
+.rangeTrack {
+  position: relative;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.rangeFill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+}
+.rangeMarker {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 10px;
+  background: var(--gold);
+  box-shadow: 0 0 4px var(--gold);
+  transform: translateX(-1px);
+  transition: left 0.4s ease-out;
+}
+
+.chart {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  min-width: 0;
+}
+.chart svg { width: 100%; height: 100%; display: block; }
+
+.chartEmpty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.pulseDot {
+  fill: var(--gold);
+  filter: drop-shadow(0 0 4px var(--gold));
+}
+
+.staleBanner {
+  font-size: 10px;
+  color: var(--amber);
+  padding: 4px 8px;
+  margin: 4px 0;
+  background: rgba(239, 159, 39, 0.04);
+  border-left: 2px solid var(--amber);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashUp, .flashDn { animation: none; }
+  .pulseDot { filter: none; }
+}

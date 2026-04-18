@@ -7,7 +7,7 @@ import type { PanelHeat } from './usePanelHeat';
 // Top = most valuable data, bottom = niche/fun
 export const ALL_PANELS = [
   // Row 1: The glance zone
-  { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 1 },
+  { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 2 },
   // Row 2: Money
   { id: 'markets', label: 'Markets (US)', defaultSpan: 1 },
   { id: 'crypto', label: 'Crypto', defaultSpan: 1 },
@@ -72,7 +72,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '33'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '34'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
