@@ -22,8 +22,11 @@ export const GasPanel = memo(function GasPanel({ gas, layout, panelHealth, getGr
   // Clamp the dial to 0-80 gwei so extreme spikes don't peg the needle offscreen
   const dialGwei = Math.max(0, Math.min(80, gas.standard ?? 0));
   const needleAngle = -90 + (dialGwei / 80) * 180;
-  const arcEndX = 20 + (dialGwei / 80) * 160;
-  const arcEndY = 100 - Math.sin((dialGwei / 80) * Math.PI) * 80;
+  // Arc endpoint must lie on the 80-radius circle centered at (100, 100),
+  // otherwise SVG scales the path and we get a distorted double-arc.
+  const arcTheta = Math.PI * (1 - dialGwei / 80); // π at 0 gwei (left), 0 at 80 gwei (right)
+  const arcEndX = 100 + 80 * Math.cos(arcTheta);
+  const arcEndY = 100 - 80 * Math.sin(arcTheta);
 
   return (<>
     <PanelHead panelId="gas" isStale={panelHealth.isStale('gas')} layout={layout} getGridCols={getGridCols}>
