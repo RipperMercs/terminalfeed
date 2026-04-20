@@ -70,7 +70,9 @@ const defaultData: BtcNetworkData = {
 export function useBtcNetwork(): BtcNetworkData {
   const [data, setData] = useState<BtcNetworkData>(() => {
     const cached = getCache<BtcNetworkData>(CACHE_KEY);
-    return cached?.data ? { ...cached.data, connected: false } : defaultData;
+    // Spread defaults first so any new fields added in updates get safe defaults
+    // even when localStorage holds a stale cache from a prior deploy.
+    return cached?.data ? { ...defaultData, ...cached.data, connected: false } : defaultData;
   });
 
   const wsRef = useRef<WebSocket | null>(null);

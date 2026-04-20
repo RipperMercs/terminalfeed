@@ -406,13 +406,13 @@ function App() {
         <div className="feeItem"><span className="feeLabel">Low</span><span className="feeValue" style={{ color: 'var(--green)' }}>{btcNet.feeHour || '...'}</span><span className="feeSuffix">sat/vB</span></div>
         <div className="feeItem"><span className="feeLabel">Econ</span><span className="feeValue" style={{ color: 'var(--text-dim)' }}>{btcNet.feeEconomy || '...'}</span><span className="feeSuffix">sat/vB</span></div>
       </div>
-      {btcNet.mempoolBlocks.length > 0 && (
+      {(btcNet.mempoolBlocks?.length ?? 0) > 0 && (
         <div className="mempoolQueue">
           <div className="mempoolQueueHeader">
             <span>Mempool Queue</span>
             <span>{btcNet.mempoolCount > 0 ? `${formatCompact(btcNet.mempoolCount)} pending` : ''}</span>
           </div>
-          {btcNet.mempoolBlocks.slice(0, 5).map((mb, i) => {
+          {(btcNet.mempoolBlocks ?? []).slice(0, 5).map((mb, i) => {
             const fee = Math.max(0, Math.round(mb.medianFee ?? 0));
             const tone = fee >= 50 ? 'high' : fee >= 20 ? 'mid' : fee >= 5 ? 'low' : 'min';
             const sizeMB = ((mb.blockVSize ?? 0) / 1e6).toFixed(2);
