@@ -311,6 +311,29 @@ function App() {
     prevBtcHeightRef.current = btcNet.blockHeight;
   }, [btcNet.blockHeight]);
 
+  // Rolling history of Wikipedia edits-per-minute for the header sparkline.
+  // useWikipediaLive recalculates the rate every 10s, so we get a new sample each time.
+  const [wikiEpmHistory, setWikiEpmHistory] = useState<number[]>([]);
+  useEffect(() => {
+    if (wikiEPM <= 0) return;
+    setWikiEpmHistory(h => [...h, wikiEPM].slice(-20));
+  }, [wikiEPM]);
+
+  // Typewriter reveal for The Wire — retypes each time the current item rotates
+  const [wireShown, setWireShown] = useState('');
+  useEffect(() => {
+    const text = wire.item.text ?? '';
+    setWireShown('');
+    if (!text) return;
+    let i = 0;
+    const iv = setInterval(() => {
+      i++;
+      setWireShown(text.slice(0, i));
+      if (i >= text.length) clearInterval(iv);
+    }, 32);
+    return () => clearInterval(iv);
+  }, [wire.item.text]);
+
   // Smart auto-curation: calculate panel heat scores for new visitors
   const panelHeat = usePanelHeat({
     btcChangeAbs: Math.abs(btcChange),
@@ -677,13 +700,45 @@ function App() {
         {earthquakes.map((q) => { const mc = q.magnitude >= 5 ? 'var(--red)' : q.magnitude >= 4 ? 'var(--amber)' : 'var(--text-mid)'; return (<a key={q.id} href={q.url} target="_blank" rel="noopener noreferrer" className="quakeRow"><span className="quakeMag" style={{ color: mc }}>{q.magnitude.toFixed(1)}</span><span className="quakePlace">{q.place}</span><span className="quakeTime">{timeAgo(Math.floor(q.time / 1000))}</span></a>); })}
       </div>
     </>),
-    'launches': (<>
-      <PanelHead panelId="launches" isStale={panelHealth.isStale('launches')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Launches</span><span className="panelTag">SPACE</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    'launches': (() => {
+      const upcoming = spaceLaunches.filter(l => l.dateTs > 0 && l.dateTs > now.getTime());
+      const nextLaunch = upcoming[0];
+      const rest = upcoming.slice(1);
+      const diff = nextLaunch ? Math.max(0, nextLaunch.dateTs - now.getTime()) : 0;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return (<>
+        <PanelHead panelId="launches" isStale={panelHealth.isStale('launches')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Launches</span><span className="panelTag">SPACE</span></div></PanelHead>
         {spaceLaunches.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading launches...</div>}
-        {spaceLaunches.map((l) => { const isToday = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 && l.dateTs > Date.now(); const isSoon = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 * 3 && l.dateTs > Date.now(); const dc = isToday ? 'var(--green)' : isSoon ? 'var(--amber)' : 'var(--text-dim)'; return (<div key={l.id} className="launchRow"><div className="launchInfo"><span className="launchProvider">{l.provider}</span><span className="launchName">{l.name}</span></div><div className="launchMeta"><span className="launchDate" style={{ color: dc }}>{l.date}</span><span className="launchLoc">{l.location}</span></div></div>); })}
-      </div>
-    </>),
+        {nextLaunch && (
+          <div className="tminus">
+            <div className="tminusLabel">T&minus;MINUS</div>
+            <div className="tminusBig">{h < 100 ? pad(h) : h}:{pad(m)}:{pad(s)}</div>
+            <div className="tminusMission">{nextLaunch.provider} &middot; {nextLaunch.name}</div>
+            {nextLaunch.location && <div className="tminusPad">{nextLaunch.location}</div>}
+            {rest.length > 0 && (
+              <div className="tminusUp">
+                {rest.slice(0, 4).map(l => {
+                  const d = Math.max(0, l.dateTs - now.getTime());
+                  const totalHours = Math.round(d / 3600000);
+                  const offset = totalHours < 72 ? `+${totalHours}h` : `+${Math.round(totalHours / 24)}d`;
+                  return (
+                    <div key={l.id} className="tminusUpRow"><span>{l.name}</span><span>{offset}</span></div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+        {!nextLaunch && spaceLaunches.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {spaceLaunches.map((l) => { const isToday = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 && l.dateTs > Date.now(); const isSoon = l.dateTs > 0 && l.dateTs - Date.now() < 86400000 * 3 && l.dateTs > Date.now(); const dc = isToday ? 'var(--green)' : isSoon ? 'var(--amber)' : 'var(--text-dim)'; return (<div key={l.id} className="launchRow"><div className="launchInfo"><span className="launchProvider">{l.provider}</span><span className="launchName">{l.name}</span></div><div className="launchMeta"><span className="launchDate" style={{ color: dc }}>{l.date}</span><span className="launchLoc">{l.location}</span></div></div>); })}
+          </div>
+        )}
+      </>);
+    })(),
     'stackoverflow': (<>
       <PanelHead panelId="stackoverflow" isStale={panelHealth.isStale('stackoverflow')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Stack Overflow</span><span className="panelTag">HOT</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -897,7 +952,7 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">The Wire</span></div>
         <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{wire.index + 1}/{wire.total}</span>
       </PanelHead>
-      <div style={{ padding: '4px 0', opacity: wire.fading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+      <div className="wireTypewriter" style={{ padding: '4px 0' }}>
         <div style={{
           fontSize: wire.item.type === 'quote' ? 12 : 11,
           color: wire.item.type === 'meta' ? 'var(--cyan)' : wire.item.type === 'quote' ? 'var(--text)' : wire.item.type === 'history' ? 'var(--amber)' : 'var(--text-mid)',
@@ -906,7 +961,8 @@ function App() {
         }}>
           {wire.item.type === 'history' && <span style={{ color: 'var(--cyan)' }}>+ </span>}
           {wire.item.type === 'fact' && <span style={{ color: 'var(--purple)' }}>+ </span>}
-          {wire.item.text}
+          {wireShown}
+          <span className="wireCaret" aria-hidden="true" />
         </div>
       </div>
     </>),
@@ -915,6 +971,18 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">Wikipedia</span><span className="panelTag">LIVE EDITS</span></div>
         <span style={{ fontSize: 9, color: 'var(--cyan)' }}>{wikiEPM > 0 ? `${wikiEPM}/min` : ''}</span>
       </PanelHead>
+      {wikiEpmHistory.length >= 2 && (() => {
+        const max = Math.max(...wikiEpmHistory, 1);
+        const points = wikiEpmHistory.map((v, i) => `${((i / (wikiEpmHistory.length - 1)) * 90).toFixed(2)},${(24 - (v / max) * 22).toFixed(2)}`).join(' ');
+        return (
+          <div className="wikiHead">
+            <div className="wikiRate">{wikiEPM}<span className="wikiRateUnit">/min</span></div>
+            <svg className="wikiSpark" viewBox="0 0 90 24" preserveAspectRatio="none">
+              <polyline points={points} fill="none" stroke="var(--green)" strokeWidth="1" style={{ filter: 'drop-shadow(0 0 2px var(--green))' }} />
+            </svg>
+          </div>
+        );
+      })()}
       <div className="wikiLiveStream" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {wikiEdits.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>connecting to stream...</div>}
         {wikiEdits.map((e, i) => (
