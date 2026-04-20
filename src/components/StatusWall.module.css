@@ -138,10 +138,9 @@
   padding: 8px 2px 0;
   color: var(--green);
 }
-.waveformSvg {
+.waveformSpark {
   flex: 1;
   height: 18px;
-  display: block;
 }
 .waveformLabel {
   font-size: 8.5px;
