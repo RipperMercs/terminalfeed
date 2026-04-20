@@ -59,25 +59,27 @@ function DialInner({
 
   return (
     <div className={styles.root} style={rootStyle} role="meter" aria-label={ariaLabel ?? 'dial'} aria-valuenow={value} aria-valuemin={min} aria-valuemax={max}>
-      <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet" className={styles.svg}>
-        <defs>
-          <linearGradient id={gradId} x1="0" x2="1">
-            {gradient.map((stop, i) => (
-              <stop key={i} offset={stop.offset} stopColor={stop.color} />
-            ))}
-          </linearGradient>
-        </defs>
-        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={`url(#${gradId})`} strokeWidth="6" opacity="0.25" />
-        <path
-          d={`M 20 100 A 80 80 0 0 1 ${arcEndX.toFixed(2)} ${arcEndY.toFixed(2)}`}
-          fill="none"
-          stroke={`url(#${gradId})`}
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        <line className={needleClass} x1="100" y1="100" x2="100" y2="35" stroke="var(--text)" strokeWidth="2" />
-        <circle cx="100" cy="100" r="4" fill="var(--text)" />
-      </svg>
+      <div className={styles.svgWrap}>
+        <svg viewBox="0 0 200 115" preserveAspectRatio="xMidYMid meet" className={styles.svg}>
+          <defs>
+            <linearGradient id={gradId} x1="0" x2="1">
+              {gradient.map((stop, i) => (
+                <stop key={i} offset={stop.offset} stopColor={stop.color} />
+              ))}
+            </linearGradient>
+          </defs>
+          <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={`url(#${gradId})`} strokeWidth="6" opacity="0.25" />
+          <path
+            d={`M 20 100 A 80 80 0 0 1 ${arcEndX.toFixed(2)} ${arcEndY.toFixed(2)}`}
+            fill="none"
+            stroke={`url(#${gradId})`}
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          <line className={needleClass} x1="100" y1="100" x2="100" y2="35" stroke="var(--text)" strokeWidth="2" />
+          <circle cx="100" cy="100" r="4" fill="var(--text)" />
+        </svg>
+      </div>
       {label !== undefined && (
         <div className={styles.value}>
           {label}
