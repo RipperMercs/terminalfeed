@@ -2558,6 +2558,224 @@
   .predRibbonFill { transition: none; }
 }
 
+/* ─── Batch 4 ambient liveness ─── */
+
+/* News marquee — scrolling headline strip at the top of feed panels */
+.newsMarquee {
+  position: relative;
+  overflow: hidden;
+  height: 20px;
+  margin: 4px 0 6px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 13, 16, 0.6);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+.newsMarqueeTrack {
+  display: inline-flex;
+  align-items: center;
+  gap: 30px;
+  height: 100%;
+  padding-left: 0;
+  white-space: nowrap;
+  animation: newsMarqueeScroll 60s linear infinite;
+}
+.newsMarqueeItem {
+  font-size: 10px;
+  color: var(--text-mid);
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.newsMarqueeTag {
+  font-size: 8px;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+@keyframes newsMarqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* GitHub events cascade — IRC log style, new lines fade in from top */
+.ghCascade {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ghCascadeLine {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  border-left: 2px solid transparent;
+  padding-left: 6px;
+  animation: ghCascadeFall 320ms ease both;
+}
+.ghCascadeAction {
+  color: var(--text-dim);
+  min-width: 55px;
+  flex-shrink: 0;
+  font-size: 9px;
+  letter-spacing: 0.3px;
+}
+.ghCascadeRepo {
+  color: var(--blue);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ghCascadeTime {
+  color: var(--text-dim);
+  font-size: 8px;
+  flex-shrink: 0;
+}
+@keyframes ghCascadeFall {
+  from { opacity: 0; transform: translateY(-6px); border-left-color: rgba(96, 165, 250, 0.6); }
+  to   { opacity: 1; transform: translateY(0);    border-left-color: transparent; }
+}
+
+/* NASA APOD starfield parallax — three drifting star layers behind the image */
+.nasaApodFrame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #030307;
+}
+.nasaStarfield {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.nasaStarLayer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  opacity: 0.55;
+}
+.nasaStarLayer1 {
+  background-image: radial-gradient(1px 1px at 10% 20%, #fff 50%, transparent 100%),
+                    radial-gradient(1px 1px at 30% 70%, #fff 50%, transparent 100%),
+                    radial-gradient(1px 1px at 55% 40%, #cfe 50%, transparent 100%),
+                    radial-gradient(1px 1px at 78% 85%, #fff 50%, transparent 100%),
+                    radial-gradient(1px 1px at 90% 15%, #fff 50%, transparent 100%);
+  background-size: 280px 200px;
+  animation: nasaStarsDrift1 90s linear infinite;
+}
+.nasaStarLayer2 {
+  background-image: radial-gradient(1.5px 1.5px at 20% 40%, #fff 50%, transparent 100%),
+                    radial-gradient(1.5px 1.5px at 60% 10%, #dff 50%, transparent 100%),
+                    radial-gradient(1.5px 1.5px at 85% 60%, #fff 50%, transparent 100%);
+  background-size: 340px 260px;
+  animation: nasaStarsDrift2 140s linear infinite;
+  opacity: 0.4;
+}
+.nasaStarLayer3 {
+  background-image: radial-gradient(2px 2px at 40% 75%, #fff 50%, transparent 100%),
+                    radial-gradient(2px 2px at 75% 25%, #fff 50%, transparent 100%);
+  background-size: 420px 320px;
+  animation: nasaStarsDrift3 210s linear infinite;
+  opacity: 0.3;
+}
+@keyframes nasaStarsDrift1 {
+  from { background-position: 0 0; }
+  to   { background-position: -280px -200px; }
+}
+@keyframes nasaStarsDrift2 {
+  from { background-position: 0 0; }
+  to   { background-position: -340px 260px; }
+}
+@keyframes nasaStarsDrift3 {
+  from { background-position: 0 0; }
+  to   { background-position: -420px -320px; }
+}
+.nasaApodImage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+
+/* ISS + Tiangong orbit */
+.issOrbit {
+  width: 100%;
+  height: 130px;
+  margin-bottom: 6px;
+}
+.issOrbit svg { width: 100%; height: 100%; display: block; }
+.issOrbitIss {
+  transform-origin: 100px 75px;
+  animation: issOrbitIss 28s linear infinite;
+}
+.issOrbitTgs {
+  transform-origin: 100px 75px;
+  animation: issOrbitTgs 34s linear infinite reverse;
+}
+@keyframes issOrbitIss {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes issOrbitTgs {
+  from { transform: rotate(45deg); }
+  to   { transform: rotate(405deg); }
+}
+
+/* 24h Market Clock */
+.marketClock {
+  width: 100%;
+  height: 140px;
+  margin-bottom: 6px;
+}
+.marketClock svg { width: 100%; height: 100%; display: block; }
+
+/* Memecoin Radar sweep */
+.memeRadar {
+  width: 100%;
+  height: 150px;
+  margin-bottom: 6px;
+}
+.memeRadar svg { width: 100%; height: 100%; display: block; }
+.memeRadarSweep {
+  transform-origin: 100px 90px;
+  animation: memeRadarSweep 6s linear infinite;
+}
+@keyframes memeRadarSweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.memeRadarBlip {
+  animation: memeRadarBlip 6s ease-in-out infinite;
+}
+@keyframes memeRadarBlip {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newsMarqueeTrack,
+  .ghCascadeLine,
+  .nasaStarLayer,
+  .issOrbitIss,
+  .issOrbitTgs,
+  .memeRadarSweep,
+  .memeRadarBlip {
+    animation: none;
+  }
+}
+
 .recentBlocksWrap {
   margin-top: 4px;
 }

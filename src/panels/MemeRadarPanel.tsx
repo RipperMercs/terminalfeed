@@ -10,8 +10,31 @@ interface Props {
   getGridCols: () => number;
 }
 
+function symbolHash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 export const MemeRadarPanel = memo(function MemeRadarPanel({ tokens, layout, panelHealth, getGridCols }: Props) {
   if (tokens.length === 0) return null;
+
+  // Deterministic blip positions — symbol hash keeps the same token in the same
+  // spot across renders, so motion comes from the sweep arm, not position shuffle.
+  const blips = tokens.slice(0, 8).map(t => {
+    const h = symbolHash(t.symbol || 'x');
+    const angle = (h % 360) * Math.PI / 180;
+    const radius = 22 + (h % 55);
+    const change = t.priceChange24h ?? 0;
+    return {
+      symbol: t.symbol,
+      cx: 100 + radius * Math.cos(angle),
+      cy: 90 + radius * Math.sin(angle) * 0.85,
+      r: 2.5 + Math.min(4.5, Math.log10(Math.max(1, t.volume24h ?? 0) / 1000 + 1)),
+      color: change > 0 ? 'var(--green)' : change < 0 ? 'var(--red)' : 'var(--amber)',
+      delay: (h % 60) / 10,
+    };
+  });
 
   return (<>
     <PanelHead panelId="meme-radar" isStale={panelHealth.isStale('meme-radar')} layout={layout} getGridCols={getGridCols}>
@@ -21,6 +44,22 @@ export const MemeRadarPanel = memo(function MemeRadarPanel({ tokens, layout, pan
       </div>
       <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>60s</span>
     </PanelHead>
+    <div className="memeRadar" aria-hidden="true">
+      <svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet">
+        <circle cx="100" cy="90" r="78" fill="none" stroke="#1f1f24" strokeWidth="1" />
+        <circle cx="100" cy="90" r="52" fill="none" stroke="#1f1f24" strokeWidth="0.5" />
+        <circle cx="100" cy="90" r="24" fill="none" stroke="#1f1f24" strokeWidth="0.5" />
+        <line x1="20" y1="90" x2="180" y2="90" stroke="#1f1f24" strokeWidth="0.5" />
+        <line x1="100" y1="12" x2="100" y2="168" stroke="#1f1f24" strokeWidth="0.5" />
+        <g className="memeRadarSweep">
+          <path d="M 100 90 L 178 90 A 78 78 0 0 0 169 55 Z" fill="var(--green)" opacity="0.14" />
+          <line x1="100" y1="90" x2="178" y2="90" stroke="var(--green)" strokeWidth="1" opacity="0.7" />
+        </g>
+        {blips.map(b => (
+          <circle key={b.symbol} cx={b.cx.toFixed(2)} cy={b.cy.toFixed(2)} r={b.r.toFixed(2)} fill={b.color} className="memeRadarBlip" style={{ animationDelay: `${b.delay}s`, filter: `drop-shadow(0 0 3px ${b.color})` }} />
+        ))}
+      </svg>
+    </div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {tokens.map((t, i) => {
         const change = t.priceChange24h ?? 0;
