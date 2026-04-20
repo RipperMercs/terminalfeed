@@ -123,3 +123,26 @@
   .marker { animation: none; transition: none; }
   .magHigh { animation: none; }
 }
+
+/* Seismograph scribble under the timeline — always animates via rolling samples.
+   Height bounded so the panel stays height: auto within reason. */
+.seismograph {
+  width: 100%;
+  height: 42px;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+.seismographSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.seismographSvg polyline {
+  stroke: var(--red);
+  stroke-width: 0.8;
+  fill: none;
+  filter: drop-shadow(0 0 2px var(--red));
+}
+@media (prefers-reduced-motion: reduce) {
+  .seismographSvg polyline { filter: none; }
+}

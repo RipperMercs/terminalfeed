@@ -14,6 +14,7 @@ import { BtcHero } from './components/BtcHero';
 import { StatusWall } from './components/StatusWall';
 import { LiveNowPanel } from './components/LiveNowPanel';
 import { SeismicTimeline } from './components/SeismicTimeline';
+import { InternetScope } from './components/InternetScope';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -674,6 +675,28 @@ function App() {
       <PanelHead panelId="weather" isStale={panelHealth.isStale('weather')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Weather</span>{weather && <span className="panelTag">{weather.city.toUpperCase()}</span>}</div></PanelHead>
       {weather ? (<div className="weatherContent">
         <WeatherScene weatherCode={weather.weatherCode} isDaytime={weather.isDaytime} />
+        {(() => {
+          const wind = Math.max(0, weather.windSpeed ?? 0);
+          // Faster wind = shorter sway cycle. Clamp so calm days don't stall the animation.
+          const swayDur = (4.5 - Math.min(3.8, wind / 8)).toFixed(2);
+          const baseTilt = Math.min(25, 4 + wind * 0.6);
+          return (
+            <div className="windsock" aria-hidden="true" style={{
+              ['--sock-dur' as string]: `${swayDur}s`,
+              ['--sock-tilt' as string]: `${baseTilt}deg`,
+            }}>
+              <svg viewBox="0 0 40 48" width="28" height="34">
+                <line x1="6" y1="4" x2="6" y2="44" stroke="var(--text-dim)" strokeWidth="1.2" />
+                <circle cx="6" cy="4" r="1.2" fill="var(--text-dim)" />
+                <g className="windsockSock">
+                  <path d="M 6 8 L 36 14 L 32 22 L 6 18 Z" fill="var(--red)" opacity="0.78" />
+                  <path d="M 6 18 L 32 22 L 28 28 L 6 24 Z" fill="var(--text)" opacity="0.85" />
+                  <path d="M 6 24 L 28 28 L 25 33 L 6 30 Z" fill="var(--red)" opacity="0.78" />
+                </g>
+              </svg>
+            </div>
+          );
+        })()}
         <div className="weatherOverlay">
           <div className="weatherTemp">{weather.temperature}°F</div>
           <div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div>
@@ -845,16 +868,15 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {predictionMarkets.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading markets...</div>}
         {predictionMarkets.map((m) => (
-          <div key={m.id} style={{ padding: '4px 0', borderBottom: '1px solid rgba(26,26,34,0.5)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text)', lineHeight: 1.4, marginBottom: 4 }}>{m.title}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600, minWidth: 32 }}>{m.probability}%</span>
-              <div style={{ flex: 1, height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${m.probability}%`, height: '100%', background: m.probability >= 50 ? 'var(--green)' : 'var(--red)', borderRadius: 3, transition: 'width 0.5s ease' }} />
-              </div>
-              <span style={{ fontSize: 10, color: 'var(--red)', fontWeight: 600, minWidth: 32, textAlign: 'right' }}>{100 - m.probability}%</span>
+          <div key={m.id} className="predRibbon">
+            <div className="predRibbonTitle">
+              <span>{m.title}</span>
+              <span className="predRibbonPct">{m.probability}%</span>
             </div>
-            {m.volume > 0 && <div style={{ fontSize: 8, color: 'var(--text-dim)', marginTop: 2 }}>Vol: ${m.volume >= 1e6 ? (m.volume / 1e6).toFixed(1) + 'M' : m.volume >= 1e3 ? (m.volume / 1e3).toFixed(0) + 'K' : m.volume.toFixed(0)}</div>}
+            <div className="predRibbonBar">
+              <div className="predRibbonFill" style={{ width: `${m.probability}%` }} />
+            </div>
+            {m.volume > 0 && <div className="predRibbonVol">Vol: ${m.volume >= 1e6 ? (m.volume / 1e6).toFixed(1) + 'M' : m.volume >= 1e3 ? (m.volume / 1e3).toFixed(0) + 'K' : m.volume.toFixed(0)}</div>}
           </div>
         ))}
         <div style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', paddingTop: 4 }}>data from polymarket.com</div>
@@ -1120,9 +1142,13 @@ function App() {
         ))}
       </div>
     </>),
-    'internet-pulse': (<>
+    'internet-pulse': (() => {
+      const valid = internetPulse.filter(p => p.latency >= 0);
+      const avg = valid.length > 0 ? valid.reduce((s, p) => s + p.latency, 0) / valid.length : null;
+      return (<>
       <PanelHead panelId="internet-pulse" isStale={panelHealth.isStale('internet-pulse')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Internet Pulse</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <InternetScope avgLatencyMs={avg} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
         {internetPulse.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>pinging...</div>}
         {internetPulse.map((p) => {
           const color = p.latency < 0 ? 'var(--red)' : p.latency < 50 ? 'var(--green)' : p.latency < 150 ? 'var(--amber)' : 'var(--red)';
@@ -1136,7 +1162,8 @@ function App() {
           );
         })}
       </div>
-    </>),
+      </>);
+    })(),
     'nasa-apod': (<>
       <PanelHead panelId="nasa-apod" isStale={panelHealth.isStale('nasa-apod')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft">
