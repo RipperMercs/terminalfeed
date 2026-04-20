@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useClaudeStatus } from '../hooks/useClaudeStatus';
 import { useCloudStatus } from '../hooks/useCloudStatus';
 import { useDevStatus } from '../hooks/useDevStatus';
@@ -104,6 +104,20 @@ export const StatusWall = memo(function StatusWall({ layout, panelHealth, getGri
     return c;
   }, [cells]);
 
+  // Rolling 10-sample health history (one sample per minute = 10 min window)
+  const healthRatio = cells.length > 0 ? counts.ok / cells.length : 0;
+  const healthRatioRef = useRef(healthRatio);
+  healthRatioRef.current = healthRatio;
+  const [healthHistory, setHealthHistory] = useState<number[]>([]);
+  useEffect(() => {
+    if (cells.length === 0) return;
+    setHealthHistory(prev => prev.length === 0 ? [healthRatioRef.current] : prev);
+    const tick = setInterval(() => {
+      setHealthHistory(prev => [...prev, healthRatioRef.current].slice(-10));
+    }, 60_000);
+    return () => clearInterval(tick);
+  }, [cells.length === 0]);
+
   const worstState: WallState =
     counts.down > 0 ? 'down' : counts.degr > 0 ? 'degr' : counts.ok > 0 ? 'ok' : 'unk';
 
@@ -149,6 +163,25 @@ export const StatusWall = memo(function StatusWall({ layout, panelHealth, getGri
               </div>
             ))}
           </div>
+          {healthHistory.length >= 2 && (
+            <div className={styles.waveform} title={`Health: ${(healthRatio * 100).toFixed(0)}% operational over last ${healthHistory.length}min`}>
+              <svg viewBox="0 0 100 18" preserveAspectRatio="none" className={styles.waveformSvg}>
+                <polyline
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={healthHistory.map((v, i) => {
+                    const x = healthHistory.length === 1 ? 50 : (i / (healthHistory.length - 1)) * 100;
+                    const y = 17 - v * 16;
+                    return `${x.toFixed(2)},${y.toFixed(2)}`;
+                  }).join(' ')}
+                />
+              </svg>
+              <span className={styles.waveformLabel}>10-min health</span>
+            </div>
+          )}
           <div className={styles.summary}>
             <span className={styles.sumOk}>OK <b>{counts.ok}</b></span>
             <span className={styles.sumDegr}>DEGRADED <b>{counts.degr}</b></span>
