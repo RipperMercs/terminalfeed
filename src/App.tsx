@@ -301,16 +301,6 @@ function App() {
     if (memeTokens.length > 0) panelHealth.reportData('meme-radar');
   });
 
-  // Bump a key whenever a new block lands so the mempool queue replays its entry animation
-  const prevBtcHeightRef = useRef(0);
-  const [mempoolFlashKey, setMempoolFlashKey] = useState(0);
-  useEffect(() => {
-    if (btcNet.blockHeight > 0 && prevBtcHeightRef.current > 0 && btcNet.blockHeight !== prevBtcHeightRef.current) {
-      setMempoolFlashKey(k => k + 1);
-    }
-    prevBtcHeightRef.current = btcNet.blockHeight;
-  }, [btcNet.blockHeight]);
-
   // Smart auto-curation: calculate panel heat scores for new visitors
   const panelHeat = usePanelHeat({
     btcChangeAbs: Math.abs(btcChange),
@@ -351,15 +341,9 @@ function App() {
       const others = crypto.filter(c => !['BTC', 'ETH'].includes(c.symbol) && c.price > 0);
       const cryptoGainers = [...others].filter(c => c.change > 0).sort((a, b) => b.change - a.change).slice(0, 5);
       const cryptoLosers = [...others].filter(c => c.change < 0).sort((a, b) => a.change - b.change).slice(0, 5);
-      const movers = [...cryptoGainers, ...cryptoLosers];
-      const topMoverSymbol = movers.length > 0
-        ? movers.reduce((max, c) => Math.abs(c.change) > Math.abs(max.change) ? c : max).symbol
-        : '';
       const rowClass = (sym: string) => {
         const f = cryptoFlashes[sym];
-        return 'listRow'
-          + (f === 'up' ? ' rowFlashUp' : f === 'dn' ? ' rowFlashDn' : '')
-          + (sym && sym === topMoverSymbol ? ' cryptoTopMover' : '');
+        return 'listRow' + (f === 'up' ? ' rowFlashUp' : f === 'dn' ? ' rowFlashDn' : '');
       };
       return (<>
         <PanelHead panelId="crypto" isStale={panelHealth.isStale('crypto')} layout={layout} getGridCols={getGridCols}>
@@ -406,31 +390,6 @@ function App() {
         <div className="feeItem"><span className="feeLabel">Low</span><span className="feeValue" style={{ color: 'var(--green)' }}>{btcNet.feeHour || '...'}</span><span className="feeSuffix">sat/vB</span></div>
         <div className="feeItem"><span className="feeLabel">Econ</span><span className="feeValue" style={{ color: 'var(--text-dim)' }}>{btcNet.feeEconomy || '...'}</span><span className="feeSuffix">sat/vB</span></div>
       </div>
-      {btcNet.mempoolBlocks.length > 0 && (
-        <div className="mempoolQueue">
-          <div className="mempoolQueueHeader">
-            <span>Mempool Queue</span>
-            <span>{btcNet.mempoolCount > 0 ? `${formatCompact(btcNet.mempoolCount)} pending` : ''}</span>
-          </div>
-          {btcNet.mempoolBlocks.slice(0, 5).map((mb, i) => {
-            const fee = Math.max(0, Math.round(mb.medianFee ?? 0));
-            const tone = fee >= 50 ? 'high' : fee >= 20 ? 'mid' : fee >= 5 ? 'low' : 'min';
-            const sizeMB = ((mb.blockVSize ?? 0) / 1e6).toFixed(2);
-            return (
-              <div
-                key={`mq-${mempoolFlashKey}-${i}`}
-                className={`mempoolBlock mempoolBlock-${tone}${i === 0 ? ' mempoolBlockTop' : ''}`}
-                style={{ animationDelay: `${i * 40}ms` }}
-              >
-                <span className="mempoolBlockLabel">{i === 0 ? 'NEXT' : `+${i}`}</span>
-                <span className="mempoolBlockFee">~{fee}<span className="mempoolBlockUnit"> sat/vB</span></span>
-                <span className="mempoolBlockTx">{(mb.nTx ?? 0).toLocaleString()} tx</span>
-                <span className="mempoolBlockSize">{sizeMB} MvB</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
       {btcNet.diffProgress > 0 && (<div className="diffBarWrap"><div className="diffBarLabel"><span>Epoch Progress</span><span>{btcNet.diffRemainingBlocks} blocks remain</span></div><div className="diffBar"><div className="diffBarFill" style={{ width: `${btcNet.diffProgress}%` }} /></div></div>)}
       {btcNet.recentBlocks.length > 0 && (<div className="recentBlocksWrap"><div className="recentBlocksTitle">Recent Blocks</div><div className="recentBlocksList">{btcNet.recentBlocks.map((b) => (<div key={b.height} className="recentBlockRow"><span className="rbHeight">{b.height.toLocaleString()}</span><span className="rbPool">{b.pool}</span><span className="rbTxCount">{b.txCount} tx</span><span className="rbSize">{(b.size / 1e6).toFixed(2)} MB</span><span className="rbTime">{timeAgo(b.timestamp)}</span></div>))}</div></div>)}
       {whaleTxs.length > 0 && (<div className="recentBlocksWrap"><div className="recentBlocksTitle">Whale Watch</div><div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>{whaleTxs.map((tx) => { const isHuge = tx.btc >= 10; const usdValue = tx.btc * btcPrice; return (<a key={tx.txid} href={`https://mempool.space/tx/${tx.txid}`} target="_blank" rel="noopener noreferrer" className="newsRow"><span style={{ fontSize: 12, flexShrink: 0 }}>🐋</span><span style={{ fontSize: 11, color: isHuge ? 'var(--gold)' : 'var(--amber)', fontWeight: 700, minWidth: 75 }}>{tx.btc.toFixed(4)} BTC</span><span style={{ fontSize: 10, color: 'var(--text-dim)', flex: 1 }}>${usdValue >= 1e6 ? (usdValue / 1e6).toFixed(1) + 'M' : usdValue >= 1e3 ? (usdValue / 1e3).toFixed(0) + 'K' : usdValue.toFixed(0)}</span><span className="newsMeta">{timeAgo(Math.floor(tx.time / 1000))}</span></a>); })}</div></div>)}
@@ -508,18 +467,6 @@ function App() {
           <div className="panelHeaderLeft"><span className="panelTitle">Markets</span><span className="panelTag">US</span></div>
           <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
         </PanelHead>
-        {(() => {
-          const nyse = marketHours.find(m => m.abbr === 'NYSE');
-          const pre = marketHours.find(m => m.abbr === 'PRE');
-          const ah = marketHours.find(m => m.abbr === 'AH');
-          const sessionState = nyse?.isOpen ? 'open' : (pre?.isOpen || ah?.isOpen) ? 'extended' : 'closed';
-          const label = sessionState === 'open' ? 'NYSE OPEN' : sessionState === 'extended' ? (pre?.isOpen ? 'PRE-MARKET' : 'AFTER-HOURS') : 'NYSE CLOSED';
-          return (
-            <div className={`marketSessionStrip marketSession-${sessionState}`} title={label}>
-              <span className="marketSessionLabel">{label}</span>
-            </div>
-          );
-        })()}
         <div className="marketsPanel">
           <div className="marketsSectionLabel">Top Movers</div>
           <div className="marketsBody">
@@ -915,10 +862,10 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">Wikipedia</span><span className="panelTag">LIVE EDITS</span></div>
         <span style={{ fontSize: 9, color: 'var(--cyan)' }}>{wikiEPM > 0 ? `${wikiEPM}/min` : ''}</span>
       </PanelHead>
-      <div className="wikiLiveStream" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {wikiEdits.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>connecting to stream...</div>}
         {wikiEdits.map((e, i) => (
-          <a key={`${e.timestamp}-${e.title}-${e.user}`} href={e.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ animationDelay: `${i * 0.05}s` }}>
+          <a key={`${e.title}-${i}`} href={e.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ animationDelay: `${i * 0.05}s` }}>
             <span style={{ fontSize: 8, color: e.type === 'new' ? 'var(--cyan)' : 'var(--text-dim)', fontWeight: 600, minWidth: 28, flexShrink: 0 }}>{e.type === 'new' ? 'NEW' : 'EDIT'}</span>
             <span className="newsTitle">{e.title}</span>
             <span style={{ fontSize: 9, color: e.sizeDiff >= 0 ? 'var(--green)' : 'var(--red)', flexShrink: 0, fontWeight: 500 }}>{e.sizeDiff >= 0 ? '+' : ''}{e.sizeDiff}B</span>

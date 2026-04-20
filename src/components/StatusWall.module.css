@@ -129,28 +129,6 @@
 .unk .lamp { background: var(--text-dim); }
 .unk .badge { color: var(--text-dim); }
 
-/* Rolling 10-min health waveform — y-axis already encodes the ratio,
-   so line color stays green (operational tone) and lets shape carry the signal. */
-.waveform {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 2px 0;
-  color: var(--green);
-}
-.waveformSvg {
-  flex: 1;
-  height: 18px;
-  display: block;
-}
-.waveformLabel {
-  font-size: 8.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-
 /* Summary row under the grid */
 .summary {
   display: flex;
