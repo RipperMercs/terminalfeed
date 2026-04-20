@@ -10,3 +10,5 @@ export { Cascade } from './Cascade';
 export type { CascadeEvent } from './Cascade';
 
 export { Dial } from './Dial';
+
+export { Typewriter } from './Typewriter';
