@@ -1,8 +1,9 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useBtcPrice } from '../hooks/useBtcPrice';
 import type { PriceTick } from '../hooks/useBtcPrice';
 import { PanelHead } from './PanelHead';
 import { LatencyChip } from './LatencyChip';
+import { CountUp } from '../primitives';
 import type { LayoutManager } from '../hooks/useLayoutManager';
 import styles from './BtcHero.module.css';
 
@@ -13,7 +14,6 @@ interface Props {
 }
 
 const STALE_WINDOW_MS = 10 * 60_000;
-const FLASH_MS = 700;
 const WATCHDOG_MS = 5_000; // "NO TICK" chip appears after 5s of silence
 
 function formatCompact(n: number): string {
@@ -71,23 +71,7 @@ function HeroChart({ ticks }: ChartProps) {
 export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols }: Props) {
   const { data, priceHistory } = useBtcPrice();
   const [paused, setPaused] = useState(false);
-  const [flash, setFlash] = useState<'up' | 'dn' | null>(null);
   const [noTick, setNoTick] = useState(false);
-  const prevPriceRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (paused) return;
-    const price = data?.price;
-    if (typeof price !== 'number' || price <= 0) return;
-    const prev = prevPriceRef.current;
-    if (prev !== null && prev !== price) {
-      setFlash(price > prev ? 'up' : 'dn');
-      const t = setTimeout(() => setFlash(null), FLASH_MS);
-      prevPriceRef.current = price;
-      return () => clearTimeout(t);
-    }
-    prevPriceRef.current = price;
-  }, [data?.price, paused]);
 
   // Watchdog: show a "NO TICK" chip when nothing has updated in WATCHDOG_MS
   useEffect(() => {
@@ -115,8 +99,6 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
   const volume = data?.volume24h ?? 0;
   const range = high - low || 1;
   const markerPct = Math.max(0, Math.min(100, ((price - low) / range) * 100));
-
-  const flashClass = flash === 'up' ? styles.flashUp : flash === 'dn' ? styles.flashDn : '';
 
   return (
     <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
@@ -146,8 +128,15 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
 
       <div className={styles.heroGrid}>
         <div className={styles.left}>
-          <span className={`${styles.price} ${flashClass}`}>
-            ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <span className={styles.price}>
+            <CountUp
+              value={price}
+              prefix="$"
+              decimals={2}
+              minDecimals={2}
+              flashOnChange={!paused}
+              ariaLabel="Bitcoin price in USD"
+            />
           </span>
           <span className={`${styles.change} ${isUp ? styles.up : styles.dn}`}>
             {isUp ? '\u25B2' : '\u25BC'} {Math.abs(changePct).toFixed(2)}% today
