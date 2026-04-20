@@ -1,6 +1,6 @@
 # CLAUDE.md — TerminalFeed.io
 
-Last updated: April 15, 2026
+Last updated: April 17, 2026
 
 ## Project Overview
 
@@ -192,7 +192,7 @@ Sunday:    Buffer day
 ### Other Pages
 ```
 /wifi          — WiFi Speed Test & Diagnostic Tool
-/agent         — AI Agent Tracker (34 agents, 7 categories, live status checks)
+/agent         — AI Agent Tracker (52 agents, 7 categories, live status checks)
 /radio         — Lo-fi/Ambient Terminal Radio (royalty-free streams, original music planned)
 /feed.xml      — RSS feed of all blog articles
 /llms.txt      — AI discovery file listing all API endpoints
@@ -445,7 +445,7 @@ A new panel, feature, or change must NEVER take down the entire site. This is th
 8. **Cleanup all effects**, every setInterval, setTimeout, WebSocket, EventSource must have cleanup in useEffect return
 9. **Self-healing panels**, if an API fails, show stale cache. If no cache, hide the panel. Never show error states to users.
 10. **Save layout on every change**, localStorage auto-save via useEffect watchers, not a save button
-11. **Specs as single files**, all CC specs delivered as one downloadable file, never split across multiple blocks
+11. **Specs as single files, NEVER inline**, all CC specs delivered as ONE downloadable file with a link. NEVER display spec content inline in the chat message. Save the file, provide the link, done. No pasting the full spec into the conversation. The user should copy ONE file, not 20+ blocks from a chat. This is non-negotiable.
 12. **Test after every change**, verify the site still works before committing
 13. **React.memo on all panels**, for performance on dashboards with 30+ panels rendering simultaneously
 14. **Mobile-specific optimizations**, content-visibility: auto, doubled polling intervals, animations disabled, max 8 items per feed
@@ -455,8 +455,38 @@ A new panel, feature, or change must NEVER take down the entire site. This is th
 18. **No ad placeholders or AdSense script tags** until AdSense is approved, they caused the first rejection
 19. **Use wrangler secret put for sensitive values**, never commit keys, even encrypted
 
+### CC Spec Workflow (April 17, 2026)
+
+All CC specs live in the **project root** of `terminalfeed/` as single markdown files. Evan copies the file contents directly into a new CC conversation. Workflow rules:
+
+- **File naming convention:** `cc-spec-<topic>.md` (e.g., `cc-spec-backend-hardening.md`, `cc-spec-new-panels.md`). Use kebab-case. Dated prefixes are NOT needed — git history carries the date.
+- **One spec = one file = one topic.** Never split a topic across files. Never combine unrelated topics.
+- **Location:** `/terminalfeed/cc-spec-*.md` (project root). NOT in a subfolder. Evan finds them by listing the project root.
+- **Workflow on Evan's side:** Opens the `.md` file in editor → select all → paste into new CC conversation in the terminal. The file IS the CC prompt.
+- **Spec structure template:**
+  1. Title + date + priority tier (CRITICAL / HIGH / MEDIUM / LOW)
+  2. Executive summary (2-5 bullets of what this fixes and why)
+  3. Numbered sections, each independently executable as a single commit
+  4. Execution order list at the bottom
+  5. Verification checklist (how to confirm success)
+  6. Explicit "what this spec does NOT cover" to prevent scope creep
+- **Every spec must re-state the infrastructure protection rules** in a "Note to CC" footer, because CC reads specs in fresh sessions without CLAUDE.md context.
+- **Never paste spec content inline in a Cowork chat message** (rule #11 above). Always save as a file and link it via `computer://` URL.
+- **Active spec files currently in root:**
+  - `cc-improvement-spec.md`, `cc-spec-round2.md`, `cc-spec-hardening.md`, `new-panel-specs.md`, `related-content-component-spec.md`, `cc-spec-backend-hardening.md` (April 17, 2026 audit)
+- **Lifecycle:** Once CC has fully executed a spec and it's shipped, move the file to `cc-specs-archive/` (create if missing). Keeps root clean. Do not delete — archive provides history.
+
+### Infrastructure Protection Rules (learned from April 15, 2026 Pages deletion)
+- **NEVER add @cloudflare/vite-plugin to this project.** It converts Pages projects into Workers projects and will destroy the deployment.
+- **NEVER add wrangler.jsonc or wrangler.toml to the project root.** The only wrangler config allowed is inside `worker-additions/` for the API Worker. A root-level wrangler config with `"name": "terminalfeed"` will hijack the domain from the Pages project.
+- **NEVER add `wrangler deploy` or `wrangler dev` as npm scripts.** Those are Workers commands, not Pages commands. Pages deploys via git push to Cloudflare Pages, not via wrangler.
+- **NEVER let Cowork or any non-CC tool directly edit vite.config.ts, package.json, or any Cloudflare config file.** These are critical infrastructure files. Other tools write specs, CC executes.
+- **Before any deploy, verify the Pages project exists:** `npx wrangler pages project list` must show "terminalfeed". If it doesn't, STOP and investigate.
+- **Deploy order: Worker API first (`worker-additions/`), then frontend via git push.** Never mix Workers and Pages deployments.
+
 ### Incident Log
-- **April 15, 2026 - FULL SITE CRASH:** MemeRadarPanel called `.toFixed()` on `t.priceChange24h` which was undefined because DexScreener's token boosts API doesn't include price change data. The ErrorBoundary caught it but wrapped the entire app, taking down all 30+ panels. Root cause: untested API response shape + no per-panel error isolation. Fix: null-safe defaults (`?? 0`) on all API fields. Prevention: per-panel ErrorBoundary wrappers, mandatory null-safe defaults, test with real API data before deploy.
+- **April 17, 2026 - API LEAKAGE & LOADING-STATE STALLS:** Live network audit revealed ~50 direct browser-to-external-API calls bypassing the Worker entirely, violating rule #6. Most urgent: Finnhub paid API key `d6qig99r01qhcrmkbj4gd6qig99r01qhcrmkbj50` exposed in 22+ URLs on every page view (anyone can steal it). Secondary: CoinGecko 503'ing from rate limits (6 direct calls per visitor), 5 status page APIs 503'ing (Anthropic/Slack/Stripe/Zoom/Cloudflare), BTC hero panel stuck on static $75,475 fallback while `/api/btc-price` returns live $77,407 in 150ms (front-end hook does not fall back to HTTP when WebSocket fails), 21 panels stuck on "loading..." indefinitely (no self-healing timeout, violates rule #9). Fix spec: `cc-spec-backend-hardening.md`. Prevention: add `grep` check for `fetch('http` to pre-deploy verification script in `scripts/verify-deploy.js`, fail the build if any direct external API call is detected in `src/`.
+- **April 15, 2026 - FULL SITE DESTRUCTION:** Cowork session added `@cloudflare/vite-plugin` to package.json, created `wrangler.jsonc` at root with `"name": "terminalfeed"`, and changed npm scripts to use `wrangler deploy`. This converted the entire project from Cloudflare Pages to Cloudflare Workers, created a competing Worker that stole the terminalfeed.io domain route, and deleted/orphaned the original Pages project. The MemeRadarPanel also crashed the app by calling `.toFixed()` on undefined API data. Cowork then corrupted package.json while trying to fix it, making rebuilds impossible. CC had to recreate the Pages project from scratch and restore all config files. Root causes: (1) dangerous plugin added without understanding Cloudflare Pages vs Workers distinction, (2) no null-safe defaults on API data, (3) non-CC tool editing critical config files. Prevention: infrastructure protection rules above.
 
 ---
 
