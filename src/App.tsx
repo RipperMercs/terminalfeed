@@ -464,6 +464,18 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">Tech / AI Feed</span><span className="panelTag">HN</span></div>
         <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
       </PanelHead>
+      {stories.length > 0 && (
+        <div className="newsMarquee" aria-hidden="true">
+          <div className="newsMarqueeTrack">
+            {[...stories.slice(0, 6), ...stories.slice(0, 6)].map((s, i) => (
+              <span key={`${s.id}-${i}`} className="newsMarqueeItem">
+                <span className="newsMarqueeTag">{getTag(s.title)}</span>
+                {s.title}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="newsFilters">
         {['ALL', 'AI', 'BTC', 'Markets', 'Tech', 'Dev'].map((f) => (
           <button key={f} className={`newsPill ${(f === 'ALL' && !newsFilter) || newsFilter === f ? 'newsPillActive' : ''}`} onClick={() => setNewsFilter(f === 'ALL' ? null : f)}>{f}</button>
@@ -508,11 +520,54 @@ function App() {
         {trendingRepos.map((repo) => (<a key={repo.fullName} href={repo.url} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="ghStars">{formatStars(repo.stars)}</span><div style={{ flex: 1, minWidth: 0 }}><div className="ghRepoName">{repo.fullName}</div><div className="ghRepoDesc">{repo.description}</div></div>{repo.language && <span className="ghLang">{repo.language}</span>}</a>))}
       </div>
     </>),
-    'market-hours': (<>
+    'market-hours': (() => {
+      const utcHours = now.getUTCHours() + now.getUTCMinutes() / 60;
+      const handAngleDeg = (utcHours / 24) * 360 - 90;
+      const sessions = [
+        { start: 13.5, end: 20, color: '#60A5FA', label: 'NYSE' },
+        { start: 8,    end: 16.5, color: '#A78BFA', label: 'LSE' },
+        { start: 0,    end: 6,  color: '#F59E0B', label: 'TSE' },
+        { start: 1.5,  end: 8,  color: '#22D3EE', label: 'HKG' },
+      ];
+      const arcPath = (startH: number, endH: number) => {
+        const rad = Math.PI / 180;
+        const a1 = (startH / 24) * 360 - 90;
+        const a2 = (endH / 24) * 360 - 90;
+        const x1 = 100 + 70 * Math.cos(a1 * rad);
+        const y1 = 85 + 70 * Math.sin(a1 * rad);
+        const x2 = 100 + 70 * Math.cos(a2 * rad);
+        const y2 = 85 + 70 * Math.sin(a2 * rad);
+        const large = (a2 - a1 + 360) % 360 > 180 ? 1 : 0;
+        return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A 70 70 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+      };
+      const isSessionOpen = (s: typeof sessions[number]) => {
+        return s.start < s.end
+          ? (utcHours >= s.start && utcHours < s.end)
+          : (utcHours >= s.start || utcHours < s.end);
+      };
+      const handRad = handAngleDeg * Math.PI / 180;
+      return (<>
       <PanelHead panelId="market-hours" isStale={panelHealth.isStale('market-hours')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">Market Hours</span><span className="panelTag">GLOBAL</span></div>
         {fearGreed && <span style={{ fontSize: 9, color: fgColor(fearGreed.value) }}>F&G {fearGreed.value}</span>}
       </PanelHead>
+      <div className="marketClock" aria-hidden="true">
+        <svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet">
+          <circle cx="100" cy="85" r="78" fill="none" stroke="#1f1f24" strokeWidth="1" />
+          {sessions.map(s => {
+            const open = isSessionOpen(s);
+            return (
+              <path key={s.label} d={arcPath(s.start, s.end)} fill="none" stroke={s.color} strokeWidth={open ? 3.5 : 2.2} opacity={open ? 0.92 : 0.22} style={open ? { filter: `drop-shadow(0 0 4px ${s.color})` } : undefined} />
+            );
+          })}
+          <line x1="100" y1="85" x2={(100 + 62 * Math.cos(handRad)).toFixed(2)} y2={(85 + 62 * Math.sin(handRad)).toFixed(2)} stroke="var(--green)" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 3px var(--green))' }} />
+          <circle cx="100" cy="85" r="3" fill="var(--green)" />
+          <text x="100" y="12" textAnchor="middle" fill="#7a7a7a" fontSize="8" fontFamily="monospace">00 UTC</text>
+          <text x="192" y="88" textAnchor="end" fill="#7a7a7a" fontSize="8" fontFamily="monospace">06</text>
+          <text x="100" y="166" textAnchor="middle" fill="#7a7a7a" fontSize="8" fontFamily="monospace">12</text>
+          <text x="8" y="88" fill="#7a7a7a" fontSize="8" fontFamily="monospace">18</text>
+        </svg>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {marketHours.map((mkt) => {
           const dotClass = mkt.isOpen ? mkt.isExtended ? 'marketExtended' : 'marketOpen' : 'marketClosed';
@@ -521,7 +576,8 @@ function App() {
           return (<div key={mkt.abbr} className="marketHoursRow"><div className="marketHoursLeft"><span className={`marketDot ${dotClass}`} /><span className="marketAbbr">{mkt.abbr}</span></div><div className="marketHoursRight">{mkt.localTime && <span className="marketTime">{mkt.localTime}</span>}<span className={`marketEvent ${eventClass}`}>{label}</span><span className="marketCountdown">{mkt.nextEvent}</span></div></div>);
         })}
       </div>
-    </>),
+      </>);
+    })(),
     'markets': (() => {
       const indicesData = stocks.filter(s => INDICES.includes(s.symbol));
       const movers = stocks.filter(s => !INDICES.includes(s.symbol) && s.price > 0 && s.change !== 0);
@@ -1034,13 +1090,13 @@ function App() {
     </>),
     'gh-events': (<>
       <PanelHead panelId="gh-events" isStale={panelHealth.isStale('gh-events')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">GitHub</span><span className="panelTag">LIVE</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div className="ghCascade">
         {ghEvents.length === 0 && <LoadingOrHide />}
         {ghEvents.map((e) => (
-          <div key={e.id} className="newsRow" style={{ cursor: 'default' }}>
-            <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 55, flexShrink: 0 }}>{e.action}</span>
-            <span className="newsTitle" style={{ color: 'var(--blue)' }}>{e.repo}</span>
-            <span className="newsMeta">{e.time ? timeAgo(Math.floor(new Date(e.time).getTime() / 1000)) : ''}</span>
+          <div key={e.id} className="ghCascadeLine">
+            <span className="ghCascadeAction">{e.action}</span>
+            <span className="ghCascadeRepo">{e.repo}</span>
+            <span className="ghCascadeTime">{e.time ? timeAgo(Math.floor(new Date(e.time).getTime() / 1000)) : ''}</span>
           </div>
         ))}
       </div>
@@ -1173,8 +1229,13 @@ function App() {
       </PanelHead>
       {nasaApod ? (
         <div>
-          <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer">
-            <img src={nasaApod.url} alt={nasaApod.title} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 3, display: 'block' }} loading="lazy" />
+          <a href={nasaApod.hdurl || nasaApod.url} target="_blank" rel="noopener noreferrer" className="nasaApodFrame">
+            <div className="nasaStarfield" aria-hidden="true">
+              <div className="nasaStarLayer nasaStarLayer1" />
+              <div className="nasaStarLayer nasaStarLayer2" />
+              <div className="nasaStarLayer nasaStarLayer3" />
+            </div>
+            <img src={nasaApod.url} alt={nasaApod.title} className="nasaApodImage" loading="lazy" />
           </a>
           <div style={{ padding: '6px 0 0' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)' }}>{nasaApod.title}</div>
@@ -1232,6 +1293,29 @@ function App() {
       <PanelHead panelId="humans-in-space" isStale={panelHealth.isStale('humans-in-space')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Humans In Space</span><span className="panelTag" style={{ color: 'var(--purple)' }}>LIVE</span></div></PanelHead>
       {humansInSpace ? (
         <>
+          <div className="issOrbit" aria-hidden="true">
+            <svg viewBox="0 0 200 150" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <radialGradient id="earthGlyph">
+                  <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.5" />
+                  <stop offset="60%" stopColor="#1e3a5f" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#0a1020" stopOpacity="0.85" />
+                </radialGradient>
+              </defs>
+              <ellipse cx="100" cy="75" rx="75" ry="40" fill="none" stroke="#1f1f24" strokeWidth="0.6" strokeDasharray="1 2" />
+              <ellipse cx="100" cy="75" rx="55" ry="60" fill="none" stroke="#1f1f24" strokeWidth="0.6" strokeDasharray="1 2" transform="rotate(30 100 75)" />
+              <circle cx="100" cy="75" r="18" fill="url(#earthGlyph)" stroke="#22D3EE" strokeWidth="0.5" />
+              <text x="100" y="78" textAnchor="middle" fill="#22D3EE" fontSize="7" fontFamily="monospace">EARTH</text>
+              <g className="issOrbitIss">
+                <circle cx="175" cy="75" r="3" fill="var(--green)" style={{ filter: 'drop-shadow(0 0 4px var(--green))' }} />
+                <text x="175" y="68" textAnchor="middle" fill="var(--green)" fontSize="6" fontFamily="monospace">ISS</text>
+              </g>
+              <g className="issOrbitTgs">
+                <circle cx="155" cy="75" r="3" fill="var(--amber)" style={{ filter: 'drop-shadow(0 0 4px var(--amber))' }} />
+                <text x="155" y="68" textAnchor="middle" fill="var(--amber)" fontSize="6" fontFamily="monospace">TGS</text>
+              </g>
+            </svg>
+          </div>
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
             <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--green)', fontFamily: 'monospace' }}>{humansInSpace.count}</div>
             <div style={{ fontSize: 10, color: 'var(--text-dim)', fontFamily: 'monospace' }}>humans in orbit right now</div>
