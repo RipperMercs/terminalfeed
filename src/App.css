@@ -2318,6 +2318,144 @@
   }
 }
 
+/* ─── Batch 2 ambient liveness ─── */
+
+/* ETH Gas Speedometer — half-circle gauge with jittering needle */
+.gasDial {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  margin-bottom: 6px;
+}
+.gasDial svg { width: 100%; height: 100%; display: block; }
+.gasNeedle {
+  transform-origin: 100px 100px;
+  transform: rotate(var(--gas-angle, 0deg));
+  transition: transform 1.5s ease-out;
+  animation: gasJitter 0.8s ease-in-out infinite alternate;
+}
+@keyframes gasJitter {
+  0%   { transform: rotate(calc(var(--gas-angle, 0deg) - 1.2deg)); }
+  100% { transform: rotate(calc(var(--gas-angle, 0deg) + 1.2deg)); }
+}
+.gasDialValue {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.gasDialUnit {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+/* T-Minus launch counter */
+.tminus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0;
+}
+.tminusLabel {
+  color: var(--amber);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+}
+.tminusBig {
+  font-size: 34px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  font-weight: 500;
+  text-shadow: 0 0 10px rgba(249, 203, 66, 0.35);
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+.tminusMission {
+  color: var(--text);
+  font-size: 11px;
+  margin-top: 4px;
+  text-align: center;
+}
+.tminusPad {
+  color: var(--text-dim);
+  font-size: 9px;
+  margin-top: 2px;
+  text-align: center;
+}
+.tminusUp {
+  margin-top: 10px;
+  width: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  font-size: 10px;
+}
+.tminusUpRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: var(--text-mid);
+  gap: 6px;
+}
+.tminusUpRow span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tminusUpRow span:last-child {
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Wikipedia edit-velocity sparkline header */
+.wikiHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.wikiRate {
+  font-size: 18px;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.wikiRateUnit {
+  color: var(--text-dim);
+  font-size: 10px;
+  margin-left: 3px;
+}
+.wikiSpark {
+  width: 90px;
+  height: 24px;
+}
+
+/* The Wire typewriter caret */
+.wireCaret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--green);
+  margin-left: 2px;
+  vertical-align: -2px;
+  animation: wireCaretBlink 0.9s step-end infinite;
+}
+@keyframes wireCaretBlink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gasNeedle { animation: none; }
+  .wireCaret { animation: none; opacity: 1; }
+}
+
 .recentBlocksWrap {
   margin-top: 4px;
 }
