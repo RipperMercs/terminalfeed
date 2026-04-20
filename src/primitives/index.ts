@@ -1,0 +1,5 @@
+// Motion primitive library — compose these to build new panels.
+// See claude-design-brief.md for the full spec.
+
+export { StateChip } from './StateChip';
+export type { StateChipKind } from './StateChip';

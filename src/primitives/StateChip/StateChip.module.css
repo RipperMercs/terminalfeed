@@ -1,0 +1,110 @@
+/* StateChip — small status badge for panel empty / collecting / stale / error states.
+   Sits in-line in panel headers OR as the body fallback when a panel has no data yet. */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.label {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.message {
+  color: inherit;
+}
+
+/* Kind: collecting — actively pulling data, pulse the dot green */
+.collecting {
+  color: var(--green);
+  background: rgba(74, 222, 128, 0.06);
+  border-color: rgba(74, 222, 128, 0.22);
+}
+.collecting .dot {
+  background: var(--green);
+  box-shadow: 0 0 5px rgba(74, 222, 128, 0.7);
+  animation: stateChipPulse 1.4s ease-in-out infinite;
+}
+
+/* Kind: waiting — connecting, pinging, initial load. Amber. */
+.waiting {
+  color: var(--amber);
+  background: rgba(239, 159, 39, 0.06);
+  border-color: rgba(239, 159, 39, 0.25);
+}
+.waiting .dot {
+  background: var(--amber);
+  box-shadow: 0 0 5px rgba(239, 159, 39, 0.6);
+  animation: stateChipPulse 1.2s ease-in-out infinite;
+}
+
+/* Kind: error — hook failed, stream dropped. Red, no animation. */
+.error {
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+.error .dot {
+  background: var(--red);
+  box-shadow: 0 0 5px rgba(248, 113, 113, 0.6);
+}
+
+/* Kind: empty — a genuinely empty-is-good state, e.g. "no active disasters".
+   Dim, no pulse. */
+.empty {
+  color: var(--text-dim);
+  background: rgba(60, 60, 70, 0.08);
+  border-color: rgba(60, 60, 70, 0.3);
+}
+.empty .dot {
+  background: var(--text-dim);
+}
+
+/* Kind: stale — data is older than expected. Amber, static. */
+.stale {
+  color: var(--amber);
+  background: rgba(239, 159, 39, 0.04);
+  border-color: rgba(239, 159, 39, 0.22);
+}
+.stale .dot {
+  background: var(--amber);
+}
+
+@keyframes stateChipPulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* Block variant — centered in a panel body as fallback content */
+.block {
+  display: flex;
+  justify-content: center;
+  padding: 20px 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collecting .dot,
+  .waiting .dot {
+    animation: none;
+  }
+}
