@@ -15,7 +15,7 @@ import { StatusWall } from './components/StatusWall';
 import { LiveNowPanel } from './components/LiveNowPanel';
 import { SeismicTimeline } from './components/SeismicTimeline';
 import { InternetScope } from './components/InternetScope';
-import { StateChip, Sparkline } from './primitives';
+import { StateChip, Sparkline, Cascade } from './primitives';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -1082,16 +1082,17 @@ function App() {
     </>),
     'gh-events': (<>
       <PanelHead panelId="gh-events" isStale={panelHealth.isStale('gh-events')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">GitHub</span><span className="panelTag">LIVE</span></div></PanelHead>
-      <div className="ghCascade">
-        {ghEvents.length === 0 && <LoadingOrHide />}
-        {ghEvents.map((e) => (
-          <div key={e.id} className="ghCascadeLine">
+      {ghEvents.length === 0 ? <StateChip kind="waiting" label="GITHUB EVENTS" block /> : (
+        <Cascade
+          events={ghEvents.map(e => ({ id: e.id, action: e.action, repo: e.repo, time: e.time }))}
+          ariaLabel="GitHub events stream"
+          renderLine={(e) => (<>
             <span className="ghCascadeAction">{e.action}</span>
             <span className="ghCascadeRepo">{e.repo}</span>
             <span className="ghCascadeTime">{e.time ? timeAgo(Math.floor(new Date(e.time).getTime() / 1000)) : ''}</span>
-          </div>
-        ))}
-      </div>
+          </>)}
+        />
+      )}
     </>),
     'books': (<>
       <PanelHead panelId="books" isStale={panelHealth.isStale('books')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Books</span><span className="panelTag">TRENDING</span></div></PanelHead>
