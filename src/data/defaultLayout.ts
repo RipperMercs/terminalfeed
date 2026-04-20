@@ -29,7 +29,6 @@ export const DEFAULT_LAYOUT = {
     'predictions',
     'crypto',
     'gas',
-    'meme-radar',
     'uap',
     'the-wire',
     'tcg-market',

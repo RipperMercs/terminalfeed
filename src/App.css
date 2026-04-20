@@ -2741,37 +2741,12 @@
 }
 .marketClock svg { width: 100%; height: 100%; display: block; }
 
-/* Memecoin Radar sweep */
-.memeRadar {
-  width: 100%;
-  height: 150px;
-  margin-bottom: 6px;
-}
-.memeRadar svg { width: 100%; height: 100%; display: block; }
-.memeRadarSweep {
-  transform-origin: 100px 90px;
-  animation: memeRadarSweep 6s linear infinite;
-}
-@keyframes memeRadarSweep {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-.memeRadarBlip {
-  animation: memeRadarBlip 6s ease-in-out infinite;
-}
-@keyframes memeRadarBlip {
-  0%, 100% { opacity: 0.3; }
-  50%      { opacity: 1; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .newsMarqueeTrack,
   .ghCascadeLine,
   .nasaStarLayer,
   .issOrbitIss,
-  .issOrbitTgs,
-  .memeRadarSweep,
-  .memeRadarBlip {
+  .issOrbitTgs {
     animation: none;
   }
 }
