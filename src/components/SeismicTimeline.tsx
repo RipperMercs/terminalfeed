@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useEarthquakes } from '../hooks/useEarthquakes';
 import { PanelHead } from './PanelHead';
 import { LatencyChip } from './LatencyChip';
@@ -73,6 +73,45 @@ export const SeismicTimeline = memo(function SeismicTimeline({ layout, panelHeal
     ? Math.max(...quakes.map(q => q.time))
     : null;
 
+  // Seismograph scribble — 80-point rolling array. Baseline noise every 120ms,
+  // plus an amplitude spike whenever a new quake id appears in the feed.
+  const SEIS_LEN = 80;
+  const [seis, setSeis] = useState<number[]>(() => Array.from({ length: SEIS_LEN }, () => 50));
+  const seenIdsRef = useRef<Set<string>>(new Set(quakes.map(q => q.id)));
+  const spikeAmpRef = useRef(0);
+
+  useEffect(() => {
+    const seen = seenIdsRef.current;
+    let biggestNew = 0;
+    for (const q of quakes) {
+      if (!seen.has(q.id)) {
+        seen.add(q.id);
+        if (q.magnitude > biggestNew) biggestNew = q.magnitude;
+      }
+    }
+    if (biggestNew > 0) {
+      spikeAmpRef.current = Math.max(spikeAmpRef.current, Math.min(35, biggestNew * 7));
+    }
+  }, [quakes]);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setSeis(prev => {
+        const base = 50 + (Math.random() - 0.5) * 3;
+        const spike = spikeAmpRef.current;
+        // Bleed off spike amplitude after consuming it
+        spikeAmpRef.current = Math.max(0, spike - 12);
+        const value = spike > 0
+          ? 50 + (Math.random() < 0.5 ? -spike : spike) * (0.7 + Math.random() * 0.3)
+          : base;
+        return [...prev.slice(1), value];
+      });
+    }, 120);
+    return () => clearInterval(iv);
+  }, []);
+
+  const seisPoints = seis.map((v, i) => `${((i / (SEIS_LEN - 1)) * 100).toFixed(2)},${v.toFixed(2)}`).join(' ');
+
   const isStale = panelHealth.isStale('seismic-timeline');
 
   return (
@@ -137,6 +176,12 @@ export const SeismicTimeline = memo(function SeismicTimeline({ layout, panelHeal
           <span>-1H</span>
           <span style={{ color: 'var(--green)' }}>NOW</span>
         </div>
+      </div>
+
+      <div className={styles.seismograph}>
+        <svg viewBox="0 0 100 60" preserveAspectRatio="none" className={styles.seismographSvg}>
+          <polyline points={seisPoints} vectorEffect="non-scaling-stroke" />
+        </svg>
       </div>
     </>
   );
