@@ -492,7 +492,7 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 
 ## Current Status (April 15, 2026)
 
-- Dashboard: Live with 32+ panels including ETH Gas Tracker, Memecoin Radar, Originals
+- Dashboard: Live with 30+ panels including ETH Gas Tracker, TF Originals
 - API Worker: Live with 23+ data endpoints (/api/gas, /api/meme-radar, /api/error added Apr 15) + X bot
 - X Bot: Live, auto-posts daily briefing at 9 AM ET, manual tweets via POST /api/tweet
 - Blog: 26+ substantial original articles across 5 author personas

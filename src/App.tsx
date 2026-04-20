@@ -76,9 +76,7 @@ import { useCloudStatus } from './hooks/useCloudStatus';
 import { OriginalsPanel } from './components/OriginalsPanel';
 import { LoadingOrHide } from './components/LoadingOrHide';
 import { useGasTracker } from './hooks/useGasTracker';
-import { useMemecoinRadar } from './hooks/useMemecoinRadar';
 import { GasPanel } from './panels/GasPanel';
-import { MemeRadarPanel } from './panels/MemeRadarPanel';
 import './App.css';
 
 function App() {
@@ -173,7 +171,6 @@ function App() {
   const cloudStatus = useCloudStatus();
   const tcgMarket = useTCGMarket();
   const gasData = useGasTracker();
-  const memeTokens = useMemecoinRadar();
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -300,7 +297,6 @@ function App() {
     if (humansInSpace) panelHealth.reportData('humans-in-space');
     if (thisDayEvents.length > 0) panelHealth.reportData('this-day');
     if (gasData) panelHealth.reportData('gas');
-    if (memeTokens.length > 0) panelHealth.reportData('meme-radar');
   });
 
   // Bump a key whenever a new block lands so the mempool queue replays its entry animation
@@ -410,7 +406,6 @@ function App() {
       </>);
     })(),
     'gas': <GasPanel gas={gasData} layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
-    'meme-radar': <MemeRadarPanel tokens={memeTokens} layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
     'btc-network': (<>
       <PanelHead panelId="btc-network" isStale={panelHealth.isStale('btc-network')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">BTC Network</span><span className="panelTag">MEMPOOL</span></div>
