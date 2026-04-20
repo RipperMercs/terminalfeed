@@ -1,11 +1,19 @@
 /* Dial — semicircle gauge with color-gradient arc and a jittering needle.
-   Caller sizes via the parent; the SVG scales to fit. */
+   SVG and value label are stacked in a flex column so the label never
+   overlaps the needle pivot regardless of parent height. */
 
 .root {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
-  min-height: 100px;
+  min-height: 110px;
+}
+
+.svgWrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
 
 .svg {
@@ -30,15 +38,15 @@
 }
 
 .value {
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 22px;
+  text-align: center;
+  padding: 4px 0 2px;
+  font-size: 20px;
   color: var(--text);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+  line-height: 1;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .unit {
