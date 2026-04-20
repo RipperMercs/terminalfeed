@@ -1,0 +1,55 @@
+/* Sparkline — small inline time-series chart. Renders as a polyline in a flexible viewBox;
+   parent decides the final rendered size via CSS width/height. */
+
+.root {
+  display: block;
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.line {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: stroke 180ms ease;
+}
+
+.lineGlow {
+  filter: drop-shadow(0 0 2px currentColor);
+}
+
+.tip {
+  animation: sparkTipPulse 1.6s ease-in-out infinite;
+}
+@keyframes sparkTipPulse {
+  0%, 100% { r: 1.4; opacity: 1; }
+  50%      { r: 2.2; opacity: 0.6; }
+}
+
+/* Low-data state — dashed centerline shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+}
+.skeletonLine {
+  stroke: var(--text-dim);
+  stroke-dasharray: 2 3;
+  stroke-width: 0.6;
+  opacity: 0.35;
+  animation: sparkSkeletonDrift 2.4s linear infinite;
+}
+@keyframes sparkSkeletonDrift {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -10; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip,
+  .skeletonLine { animation: none; }
+}

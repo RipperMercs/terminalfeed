@@ -3,6 +3,7 @@ import { useClaudeStatus } from '../hooks/useClaudeStatus';
 import { useCloudStatus } from '../hooks/useCloudStatus';
 import { useDevStatus } from '../hooks/useDevStatus';
 import { PanelHead } from './PanelHead';
+import { Sparkline, StateChip } from '../primitives';
 import type { LayoutManager } from '../hooks/useLayoutManager';
 import styles from './StatusWall.module.css';
 
@@ -143,9 +144,7 @@ export const StatusWall = memo(function StatusWall({ layout, panelHealth, getGri
       </PanelHead>
 
       {cells.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>
-          loading status...
-        </div>
+        <StateChip kind="waiting" label="STATUS" block />
       ) : (
         <>
           <div className={styles.wall}>
@@ -165,20 +164,15 @@ export const StatusWall = memo(function StatusWall({ layout, panelHealth, getGri
           </div>
           {healthHistory.length >= 2 && (
             <div className={styles.waveform} title={`Health: ${(healthRatio * 100).toFixed(0)}% operational over last ${healthHistory.length}min`}>
-              <svg viewBox="0 0 100 18" preserveAspectRatio="none" className={styles.waveformSvg}>
-                <polyline
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={healthHistory.map((v, i) => {
-                    const x = healthHistory.length === 1 ? 50 : (i / (healthHistory.length - 1)) * 100;
-                    const y = 17 - v * 16;
-                    return `${x.toFixed(2)},${y.toFixed(2)}`;
-                  }).join(' ')}
+              <div className={styles.waveformSpark}>
+                <Sparkline
+                  points={healthHistory}
+                  color="var(--green)"
+                  domain={[0, 1]}
+                  strokeWidth={1.5}
+                  ariaLabel="10-minute operational health"
                 />
-              </svg>
+              </div>
               <span className={styles.waveformLabel}>10-min health</span>
             </div>
           )}

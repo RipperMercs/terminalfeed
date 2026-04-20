@@ -1317,7 +1317,8 @@
 }
 
 .marketHoursRight {
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px 52px 62px;
   align-items: center;
   gap: 8px;
 }
@@ -1325,6 +1326,8 @@
 .marketTime {
   font-size: 9px;
   color: var(--text-dim);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .marketEvent {
@@ -1333,8 +1336,8 @@
   letter-spacing: 0.5px;
   padding: 1px 4px;
   border-radius: 2px;
-  min-width: 40px;
   text-align: center;
+  justify-self: stretch;
 }
 
 .marketEventOpen {
@@ -1361,8 +1364,8 @@
 .marketCountdown {
   font-size: 8px;
   color: var(--text-dim);
-  min-width: 52px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── GitHub Trending ── */
@@ -2431,7 +2434,7 @@
   font-size: 10px;
   margin-left: 3px;
 }
-.wikiSpark {
+.wikiSparkWrap {
   width: 90px;
   height: 24px;
 }

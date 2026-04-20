@@ -15,7 +15,7 @@ import { StatusWall } from './components/StatusWall';
 import { LiveNowPanel } from './components/LiveNowPanel';
 import { SeismicTimeline } from './components/SeismicTimeline';
 import { InternetScope } from './components/InternetScope';
-import { StateChip } from './primitives';
+import { StateChip, Sparkline } from './primitives';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -1045,18 +1045,14 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">Wikipedia</span><span className="panelTag">LIVE EDITS</span></div>
         <span style={{ fontSize: 9, color: 'var(--cyan)' }}>{wikiEPM > 0 ? `${wikiEPM}/min` : ''}</span>
       </PanelHead>
-      {wikiEpmHistory.length >= 2 && (() => {
-        const max = Math.max(...wikiEpmHistory, 1);
-        const points = wikiEpmHistory.map((v, i) => `${((i / (wikiEpmHistory.length - 1)) * 90).toFixed(2)},${(24 - (v / max) * 22).toFixed(2)}`).join(' ');
-        return (
-          <div className="wikiHead">
-            <div className="wikiRate">{wikiEPM}<span className="wikiRateUnit">/min</span></div>
-            <svg className="wikiSpark" viewBox="0 0 90 24" preserveAspectRatio="none">
-              <polyline points={points} fill="none" stroke="var(--green)" strokeWidth="1" style={{ filter: 'drop-shadow(0 0 2px var(--green))' }} />
-            </svg>
+      {wikiEpmHistory.length >= 2 && (
+        <div className="wikiHead">
+          <div className="wikiRate">{wikiEPM}<span className="wikiRateUnit">/min</span></div>
+          <div className="wikiSparkWrap">
+            <Sparkline points={wikiEpmHistory} color="var(--green)" ariaLabel="Wikipedia edits per minute" />
           </div>
-        );
-      })()}
+        </div>
+      )}
       <div className="wikiLiveStream" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {wikiEdits.length === 0 && <StateChip kind="waiting" label="WIKIMEDIA SSE" block />}
         {wikiEdits.map((e, i) => (
