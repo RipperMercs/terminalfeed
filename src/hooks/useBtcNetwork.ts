@@ -27,8 +27,17 @@ export interface BtcNetworkData {
   difficulty: number;
   // Recent blocks
   recentBlocks: RecentBlock[];
+  // Projected upcoming blocks (mempool queue)
+  mempoolBlocks: MempoolBlock[];
   // Connection status
   connected: boolean;
+}
+
+export interface MempoolBlock {
+  medianFee: number; // sat/vB
+  nTx: number;
+  blockVSize: number; // vbytes
+  totalFees: number; // sats
 }
 
 export interface RecentBlock {
@@ -54,6 +63,7 @@ const defaultData: BtcNetworkData = {
   diffProgress: 0, diffChange: 0, diffRemainingBlocks: 0, diffRetargetDate: 0,
   hashrate: 0, difficulty: 0,
   recentBlocks: [],
+  mempoolBlocks: [],
   connected: false,
 };
 
@@ -209,6 +219,19 @@ export function useBtcNetwork(): BtcNetworkData {
             partial.feeHour = msg.fees.hourFee ?? 0;
             partial.feeEconomy = msg.fees.economyFee ?? 0;
             partial.feeMinimum = msg.fees.minimumFee ?? 0;
+          }
+          if (Array.isArray(msg['mempool-blocks'])) {
+            partial.mempoolBlocks = msg['mempool-blocks'].slice(0, 6).map((mb: {
+              medianFee?: number;
+              nTx?: number;
+              blockVSize?: number;
+              totalFees?: number;
+            }) => ({
+              medianFee: mb.medianFee ?? 0,
+              nTx: mb.nTx ?? 0,
+              blockVSize: mb.blockVSize ?? 0,
+              totalFees: mb.totalFees ?? 0,
+            }));
           }
 
           if (Object.keys(partial).length > 0) update(partial);
