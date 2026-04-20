@@ -1,0 +1,54 @@
+/* Dial — semicircle gauge with color-gradient arc and a jittering needle.
+   Caller sizes via the parent; the SVG scales to fit. */
+
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.needle {
+  transform-origin: 100px 100px;
+  transform: rotate(var(--dial-angle, 0deg));
+  transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.needleJitter {
+  animation: dialJitter 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes dialJitter {
+  0%   { transform: rotate(calc(var(--dial-angle, 0deg) - 1.2deg)); }
+  100% { transform: rotate(calc(var(--dial-angle, 0deg) + 1.2deg)); }
+}
+
+.value {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.unit {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .needleJitter { animation: none; }
+  .needle       { transition: none; }
+}
