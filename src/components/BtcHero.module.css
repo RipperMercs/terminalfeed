@@ -29,8 +29,6 @@
   display: inline-block;
   border-radius: 2px;
 }
-.flashUp { animation: priceFlash 0.7s ease-out; }
-.flashDn { animation: priceFlashRed 0.7s ease-out; }
 
 .change {
   font-size: 14px;
@@ -154,7 +152,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flashUp, .flashDn { animation: none; }
   .pulseDot { filter: none; }
   .areaFill { animation: none; }
   .watchdog { animation: none; }

@@ -1,0 +1,33 @@
+/* CountUp — formatted number with a brief color flash on value change.
+   Tabular numerals keep the digit grid stable so longer/shorter numbers
+   don't jiggle adjacent content. */
+
+.root {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  transition: color 120ms ease;
+}
+
+.flashUp {
+  color: var(--green);
+  animation: countUpFlashUp 700ms ease;
+}
+
+.flashDn {
+  color: var(--red);
+  animation: countUpFlashDn 700ms ease;
+}
+
+@keyframes countUpFlashUp {
+  0%   { color: var(--green); text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+  100% { color: inherit;      text-shadow: none; }
+}
+@keyframes countUpFlashDn {
+  0%   { color: var(--red);   text-shadow: 0 0 10px rgba(248, 113, 113, 0.5); }
+  100% { color: inherit;      text-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashUp,
+  .flashDn { animation: none; text-shadow: none; }
+}
