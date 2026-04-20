@@ -2405,24 +2405,6 @@
   height: 24px;
 }
 
-/* The Wire typewriter caret */
-.wireCaret {
-  display: inline-block;
-  width: 7px;
-  height: 13px;
-  background: var(--green);
-  margin-left: 2px;
-  vertical-align: -2px;
-  animation: wireCaretBlink 0.9s step-end infinite;
-}
-@keyframes wireCaretBlink {
-  0%, 50%   { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .wireCaret { animation: none; opacity: 1; }
-}
 
 /* ─── Batch 3 ambient liveness ─── */
 

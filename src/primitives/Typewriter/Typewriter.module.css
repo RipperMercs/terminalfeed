@@ -1,0 +1,26 @@
+/* Typewriter — char-by-char reveal of a single string. Caller handles rotation
+   (swap the text prop to retype); primitive handles the typing animation only. */
+
+.root {
+  display: inline;
+  color: inherit;
+}
+
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--typewriter-caret, var(--green));
+  margin-left: 2px;
+  vertical-align: -2px;
+  animation: typewriterCaret 0.9s step-end infinite;
+}
+
+@keyframes typewriterCaret {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret { animation: none; opacity: 1; }
+}

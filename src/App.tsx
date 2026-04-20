@@ -15,7 +15,7 @@ import { StatusWall } from './components/StatusWall';
 import { LiveNowPanel } from './components/LiveNowPanel';
 import { SeismicTimeline } from './components/SeismicTimeline';
 import { InternetScope } from './components/InternetScope';
-import { StateChip, Sparkline, Cascade } from './primitives';
+import { StateChip, Sparkline, Cascade, Typewriter } from './primitives';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -316,21 +316,6 @@ function App() {
     if (wikiEPM <= 0) return;
     setWikiEpmHistory(h => [...h, wikiEPM].slice(-20));
   }, [wikiEPM]);
-
-  // Typewriter reveal for The Wire — retypes each time the current item rotates
-  const [wireShown, setWireShown] = useState('');
-  useEffect(() => {
-    const text = wire.item.text ?? '';
-    setWireShown('');
-    if (!text) return;
-    let i = 0;
-    const iv = setInterval(() => {
-      i++;
-      setWireShown(text.slice(0, i));
-      if (i >= text.length) clearInterval(iv);
-    }, 32);
-    return () => clearInterval(iv);
-  }, [wire.item.text]);
 
   // Smart auto-curation: calculate panel heat scores for new visitors
   const panelHeat = usePanelHeat({
@@ -1026,7 +1011,7 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">The Wire</span></div>
         <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{wire.index + 1}/{wire.total}</span>
       </PanelHead>
-      <div className="wireTypewriter" style={{ padding: '4px 0' }}>
+      <div style={{ padding: '4px 0' }}>
         <div style={{
           fontSize: wire.item.type === 'quote' ? 12 : 11,
           color: wire.item.type === 'meta' ? 'var(--cyan)' : wire.item.type === 'quote' ? 'var(--text)' : wire.item.type === 'history' ? 'var(--amber)' : 'var(--text-mid)',
@@ -1035,8 +1020,7 @@ function App() {
         }}>
           {wire.item.type === 'history' && <span style={{ color: 'var(--cyan)' }}>+ </span>}
           {wire.item.type === 'fact' && <span style={{ color: 'var(--purple)' }}>+ </span>}
-          {wireShown}
-          <span className="wireCaret" aria-hidden="true" />
+          <Typewriter text={wire.item.text ?? ''} />
         </div>
       </div>
     </>),
