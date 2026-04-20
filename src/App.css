@@ -2323,40 +2323,6 @@
 
 /* ─── Batch 2 ambient liveness ─── */
 
-/* ETH Gas Speedometer — half-circle gauge with jittering needle */
-.gasDial {
-  position: relative;
-  width: 100%;
-  height: 130px;
-  margin-bottom: 6px;
-}
-.gasDial svg { width: 100%; height: 100%; display: block; }
-.gasNeedle {
-  transform-origin: 100px 100px;
-  transform: rotate(var(--gas-angle, 0deg));
-  transition: transform 1.5s ease-out;
-  animation: gasJitter 0.8s ease-in-out infinite alternate;
-}
-@keyframes gasJitter {
-  0%   { transform: rotate(calc(var(--gas-angle, 0deg) - 1.2deg)); }
-  100% { transform: rotate(calc(var(--gas-angle, 0deg) + 1.2deg)); }
-}
-.gasDialValue {
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 22px;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
-.gasDialUnit {
-  font-size: 10px;
-  color: var(--text-dim);
-  margin-left: 4px;
-}
-
 /* T-Minus launch counter */
 .tminus {
   display: flex;
@@ -2455,7 +2421,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gasNeedle { animation: none; }
   .wireCaret { animation: none; opacity: 1; }
 }
 
