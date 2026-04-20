@@ -5,3 +5,6 @@ export { StateChip } from './StateChip';
 export type { StateChipKind } from './StateChip';
 
 export { Sparkline } from './Sparkline';
+
+export { Cascade } from './Cascade';
+export type { CascadeEvent } from './Cascade';

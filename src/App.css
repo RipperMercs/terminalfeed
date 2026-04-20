@@ -2604,23 +2604,8 @@
   to   { transform: translateX(-50%); }
 }
 
-/* GitHub events cascade — IRC log style, new lines fade in from top */
-.ghCascade {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.ghCascadeLine {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 2px 0;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  border-left: 2px solid transparent;
-  padding-left: 6px;
-  animation: ghCascadeFall 320ms ease both;
-}
+/* GitHub Live event line fields — row wrapper + fall-in animation are
+   provided by the Cascade primitive, these styles just handle inner content. */
 .ghCascadeAction {
   color: var(--text-dim);
   min-width: 55px;
@@ -2640,10 +2625,6 @@
   color: var(--text-dim);
   font-size: 8px;
   flex-shrink: 0;
-}
-@keyframes ghCascadeFall {
-  from { opacity: 0; transform: translateY(-6px); border-left-color: rgba(96, 165, 250, 0.6); }
-  to   { opacity: 1; transform: translateY(0);    border-left-color: transparent; }
 }
 
 /* NASA APOD starfield parallax — three drifting star layers behind the image */
@@ -2746,7 +2727,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .newsMarqueeTrack,
-  .ghCascadeLine,
   .nasaStarLayer,
   .issOrbitIss,
   .issOrbitTgs {
