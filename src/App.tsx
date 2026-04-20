@@ -15,6 +15,7 @@ import { StatusWall } from './components/StatusWall';
 import { LiveNowPanel } from './components/LiveNowPanel';
 import { SeismicTimeline } from './components/SeismicTimeline';
 import { InternetScope } from './components/InternetScope';
+import { StateChip } from './primitives';
 import { useGithubTrending } from './hooks/useGithubTrending';
 import { useRedditTech } from './hooks/useRedditTech';
 import { useMarketHours } from './hooks/useMarketHours';
@@ -482,7 +483,7 @@ function App() {
         ))}
       </div>
       <div>
-        {stories.length === 0 && <div style={{ textAlign: 'center', padding: 20, fontSize: 10, color: 'var(--text-dim)' }}>loading headlines...</div>}
+        {stories.length === 0 && <StateChip kind="waiting" label="HN" block />}
         {stories.filter((s) => !newsFilter || getTag(s.title) === newsFilter).map((story) => { const tag = getTag(story.title); const tc = tagColors[tag] || 'var(--text-mid)'; return (
           <a key={story.id} href={story.url || `https://news.ycombinator.com/item?id=${story.id}`} target="_blank" rel="noopener noreferrer" className="newsRow">
             <span className="newsTag" style={{ color: tc, background: `${tc}15` }}>{tag}</span>
@@ -496,7 +497,7 @@ function App() {
         <div className="panelHeaderLeft"><span className="panelTitle">Tech News</span><span className="panelTag">RSS</span></div>
       </PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {rssNews.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading feeds...</div>}
+        {rssNews.length === 0 && <StateChip kind="waiting" label="RSS" block />}
         {rssNews.map((item, i) => (
           <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" className="newsRow">
             <span className="newsTag" style={{ color: 'var(--blue)', background: 'rgba(96,165,250,0.1)', minWidth: 30 }}>{item.source}</span>
@@ -516,7 +517,7 @@ function App() {
     'github': (<>
       <PanelHead panelId="github" isStale={panelHealth.isStale('github')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">GitHub Trending</span><span className="panelTag">7D</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {trendingRepos.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading repos...</div>}
+        {trendingRepos.length === 0 && <StateChip kind="waiting" label="GITHUB" block />}
         {trendingRepos.map((repo) => (<a key={repo.fullName} href={repo.url} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="ghStars">{formatStars(repo.stars)}</span><div style={{ flex: 1, minWidth: 0 }}><div className="ghRepoName">{repo.fullName}</div><div className="ghRepoDesc">{repo.description}</div></div>{repo.language && <span className="ghLang">{repo.language}</span>}</a>))}
       </div>
     </>),
@@ -770,12 +771,12 @@ function App() {
           </div>}
         </div>
         {weather.forecast && <WeatherForecastStrip forecast={weather.forecast} />}
-      </div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>detecting location...</div>}
+      </div>) : <StateChip kind="waiting" label="GEO" block />}
     </>),
     'seismic': (<>
       <PanelHead panelId="seismic" isStale={panelHealth.isStale('seismic')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Seismic</span><span className="panelTag">24H</span></div><span style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>USGS M2.5+</span></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {earthquakes.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading quakes...</div>}
+        {earthquakes.length === 0 && <StateChip kind="waiting" label="USGS" block />}
         {earthquakes.map((q) => { const mc = q.magnitude >= 5 ? 'var(--red)' : q.magnitude >= 4 ? 'var(--amber)' : 'var(--text-mid)'; return (<a key={q.id} href={q.url} target="_blank" rel="noopener noreferrer" className="quakeRow"><span className="quakeMag" style={{ color: mc }}>{q.magnitude.toFixed(1)}</span><span className="quakePlace">{q.place}</span><span className="quakeTime">{timeAgo(Math.floor(q.time / 1000))}</span></a>); })}
       </div>
     </>),
@@ -821,7 +822,7 @@ function App() {
     'stackoverflow': (<>
       <PanelHead panelId="stackoverflow" isStale={panelHealth.isStale('stackoverflow')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Stack Overflow</span><span className="panelTag">HOT</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {soQuestions.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading questions...</div>}
+        {soQuestions.length === 0 && <StateChip kind="waiting" label="STACK" block />}
         {soQuestions.map((q) => (<a key={q.id} href={q.link} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="soScore">{q.score}</span><div style={{ flex: 1, minWidth: 0 }}><div className="newsTitle">{q.title}</div><div className="soTags">{q.tags.join(' · ')}</div></div><span className="soAnswers">{q.answerCount}A</span></a>))}
       </div>
     </>),
@@ -847,7 +848,7 @@ function App() {
             <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{museumArt.artist}{museumArt.date ? ` · ${museumArt.date}` : ''}</div>
           </div>
         </div>
-      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading art...</div>}
+      ) : <StateChip kind="waiting" label="MUSEUM" block />}
     </>),
     'daily-paws': (<>
       <PanelHead panelId="daily-paws" isStale={panelHealth.isStale('daily-paws')} layout={layout} getGridCols={getGridCols}>
@@ -888,7 +889,7 @@ function App() {
     'podcasts': (<>
       <PanelHead panelId="podcasts" isStale={panelHealth.isStale('podcasts')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Podcasts</span><span className="panelTag">LATEST</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {podcastEpisodes.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading episodes...</div>}
+        {podcastEpisodes.length === 0 && <StateChip kind="waiting" label="PODCASTS" block />}
         {podcastEpisodes.map((ep, i) => (
           <a key={i} href={ep.link} target="_blank" rel="noopener noreferrer" className="newsRow">
             <span className="podShow">{ep.show}</span>
@@ -922,7 +923,7 @@ function App() {
     'predictions': predictionsStatus === 'failed' ? null : (<>
       <PanelHead panelId="predictions" isStale={panelHealth.isStale('predictions')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Predictions</span><span className="panelTag">POLYMARKET</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {predictionMarkets.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading markets...</div>}
+        {predictionMarkets.length === 0 && <StateChip kind="waiting" label="POLYMARKET" block />}
         {predictionMarkets.map((m) => (
           <div key={m.id} className="predRibbon">
             <div className="predRibbonTitle">
@@ -969,7 +970,7 @@ function App() {
     'steam': (<>
       <PanelHead panelId="steam" isStale={panelHealth.isStale('steam')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Steam</span><span className="panelTag">LIVE</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {steamGames.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading games...</div>}
+        {steamGames.length === 0 && <StateChip kind="waiting" label="STEAM" block />}
         {steamGames.map((g) => (
           <div key={g.appId} className="listRow">
             <span className="listRowSymbol">{g.name}</span>
@@ -1062,7 +1063,7 @@ function App() {
         );
       })()}
       <div className="wikiLiveStream" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {wikiEdits.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>connecting to stream...</div>}
+        {wikiEdits.length === 0 && <StateChip kind="waiting" label="WIKIMEDIA SSE" block />}
         {wikiEdits.map((e, i) => (
           <a key={`${e.timestamp}-${e.title}-${e.user}`} href={e.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ animationDelay: `${i * 0.05}s` }}>
             <span style={{ fontSize: 8, color: e.type === 'new' ? 'var(--cyan)' : 'var(--text-dim)', fontWeight: 600, minWidth: 28, flexShrink: 0 }}>{e.type === 'new' ? 'NEW' : 'EDIT'}</span>
@@ -1205,7 +1206,7 @@ function App() {
       <PanelHead panelId="internet-pulse" isStale={panelHealth.isStale('internet-pulse')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Internet Pulse</span></div></PanelHead>
       <InternetScope avgLatencyMs={avg} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
-        {internetPulse.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>pinging...</div>}
+        {internetPulse.length === 0 && <StateChip kind="collecting" label="PING" block />}
         {internetPulse.map((p) => {
           const color = p.latency < 0 ? 'var(--red)' : p.latency < 50 ? 'var(--green)' : p.latency < 150 ? 'var(--amber)' : 'var(--red)';
           const pct = p.latency < 0 ? 0 : Math.min(100, (p.latency / 200) * 100);
@@ -1243,7 +1244,7 @@ function App() {
             <div style={{ fontSize: 8, color: 'var(--text-dim)', marginTop: 4 }}>{nasaApod.date}{nasaApod.copyright ? ` · © ${nasaApod.copyright}` : ''}</div>
           </div>
         </div>
-      ) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading photo...</div>}
+      ) : <StateChip kind="waiting" label="APOD" block />}
     </>),
     'good-news': (<>
       <PanelHead panelId="good-news" isStale={panelHealth.isStale('good-news')} layout={layout} getGridCols={getGridCols}>
@@ -1272,7 +1273,7 @@ function App() {
         </div>
       </PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {trendingMovies.length === 0 && <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading movies...</div>}
+        {trendingMovies.length === 0 && <StateChip kind="waiting" label="MOVIES" block />}
         {trendingMovies.map((m) => (
           <div key={m.id} style={{ display: 'flex', gap: 8, padding: '4px 0', borderBottom: '1px solid rgba(26,26,34,0.5)' }}>
             {m.poster && <img src={m.poster} alt={m.title} style={{ width: 32, height: 48, objectFit: 'cover', borderRadius: 2, flexShrink: 0 }} loading="lazy" />}
