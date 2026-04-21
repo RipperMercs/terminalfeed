@@ -529,6 +529,97 @@ async function fetchHnStories(listUrl, limit) {
     });
 }
 
+// GET /api/rss?url=<encoded-feed-url>
+// Proxy for rss2json.com. Whitelisted upstream feeds only; returns normalized
+// { status, items: [{ title, link, pubDate, guid }] } matching rss2json shape.
+const RSS_WHITELIST = [
+  /^https:\/\/www\.gdacs\.org\/xml\/rss\.xml$/,
+  /^https:\/\/www\.reddit\.com\/r\/[A-Za-z0-9_]+\/\.rss$/,
+  /^https:\/\/www\.producthunt\.com\/feed$/,
+  /^https:\/\/feeds\.arstechnica\.com\/arstechnica\/technology-lab$/,
+  /^https:\/\/www\.theverge\.com\/rss\/index\.xml$/,
+  /^https:\/\/techcrunch\.com\/feed\/?$/,
+  /^https:\/\/lexfridman\.com\/feed\/podcast\/?$/,
+  /^https:\/\/feeds\.megaphone\.fm\/darknetdiaries$/,
+  /^https:\/\/changelog\.com\/podcast\/feed$/,
+  /^https:\/\/feed\.syntax\.fm\/rss$/,
+  /^https:\/\/anchor\.fm\/s\/[a-f0-9]+\/podcast\/rss$/,
+];
+
+function rssUrlAllowed(u) {
+  return RSS_WHITELIST.some(function(re) { return re.test(u); });
+}
+
+function stripCdata(s) {
+  return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+}
+
+function rssGetTag(chunk, tag) {
+  var re = new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>', 'i');
+  var m = chunk.match(re);
+  if (!m) return '';
+  return stripCdata(m[1]).trim();
+}
+
+function decodeEntities(s) {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"');
+}
+
+function parseRssItems(xml) {
+  var items = [];
+  var chunks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) || xml.match(/<entry[\s>][\s\S]*?<\/entry>/gi) || [];
+  for (var i = 0; i < chunks.length && items.length < 20; i++) {
+    var chunk = chunks[i];
+    var title = rssGetTag(chunk, 'title');
+    var link = rssGetTag(chunk, 'link');
+    if (!link) {
+      var lm = chunk.match(/<link[^>]*href=["']([^"']+)["']/i);
+      if (lm) link = lm[1];
+    }
+    var pubDate = rssGetTag(chunk, 'pubDate') || rssGetTag(chunk, 'published') || rssGetTag(chunk, 'updated');
+    var guid = rssGetTag(chunk, 'guid') || rssGetTag(chunk, 'id') || link;
+
+    items.push({
+      title: decodeEntities(title.replace(/<[^>]+>/g, '').trim()),
+      link: link.trim(),
+      pubDate: pubDate.trim(),
+      guid: guid.trim(),
+    });
+  }
+  return items;
+}
+
+async function handleRss(url) {
+  var target = url.searchParams.get('url') || '';
+  if (!target || !rssUrlAllowed(target)) {
+    return jsonResponse({ status: 'error', error: 'URL not in whitelist', items: [] }, 400);
+  }
+  var key = 'rss:' + target;
+  var cached = getCached(key, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+
+  try {
+    var res = await fetchWithTimeout(target, {
+      headers: { 'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
+    }, 8000);
+    if (!res.ok) throw new Error('upstream ' + res.status);
+    var text = await res.text();
+    var result = { status: 'ok', items: parseRssItems(text) };
+    setCache(key, result);
+    return jsonResponse(result, 200, 300);
+  } catch (e) {
+    var stale = getStale(key);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ status: 'error', items: [] });
+  }
+}
+
 // GET /api/hackernews — legacy endpoint, fixed 15 top stories
 async function handleHackerNews() {
   var KEY = 'hackernews';
@@ -1319,6 +1410,7 @@ export default {
       case 'earthquake':     return await handleEarthquake();
       case 'predictions':    return await handlePredictions();
       case 'hackernews':     return await handleHackerNews();
+      case 'rss':            return await handleRss(url);
       case 'hn-topstories':  return await handleHnTopStories(url);
       case 'hn-show':        return await handleHnShow(url);
       case 'hn-ask':         return await handleHnAsk(url);

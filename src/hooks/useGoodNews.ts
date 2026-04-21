@@ -11,7 +11,7 @@ export interface GoodNewsItem {
   created: number;
 }
 
-const RSS2JSON_BASE = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const RSS2JSON_BASE = '/api/rss?url=';
 const SUBREDDITS = ['UpliftingNews', 'goodnews', 'MadeMeSmile'];
 const CACHE_KEY = 'good_news';
 const POLL_MS = 5 * 60_000; // 5 min
@@ -43,33 +43,6 @@ async function fetchSubreddit(sub: string): Promise<GoodNewsItem[]> {
         }
         return items;
       }
-    }
-  } catch (e) { if (import.meta.env.DEV) console.warn('[GoodNews]', e); }
-
-  // Fallback: Direct RSS XML
-  try {
-    const res = await fetch(`https://www.reddit.com/r/${sub}/.rss`, { signal: AbortSignal.timeout(5000) });
-    if (res.ok) {
-      const text = await res.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/xml');
-      const entries = doc.querySelectorAll('entry');
-      entries.forEach((entry, i) => {
-        if (i >= 6) return;
-        const title = entry.querySelector('title')?.textContent ?? '';
-        if (BLOCK_WORDS.test(title)) return;
-        const link = entry.querySelector('link')?.getAttribute('href') ?? '';
-        const updated = entry.querySelector('updated')?.textContent ?? '';
-        items.push({
-          id: entry.querySelector('id')?.textContent ?? `${sub}-${i}`,
-          title,
-          subreddit: sub,
-          url: link,
-          permalink: link,
-          score: 0,
-          created: updated ? Math.floor(new Date(updated).getTime() / 1000) : Math.floor(Date.now() / 1000),
-        });
-      });
     }
   } catch (e) { if (import.meta.env.DEV) console.warn('[GoodNews]', e); }
 
