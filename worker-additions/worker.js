@@ -499,37 +499,100 @@ async function handlePredictions() {
 }
 
 
-// GET /api/hackernews
+// Shared: fetch HN story list by kind, hydrate items. Clamped 1..50.
+async function fetchHnStories(listUrl, limit) {
+  limit = Math.max(1, Math.min(50, limit | 0));
+  var idsRes = await fetchWithTimeout(listUrl);
+  var ids = (await idsRes.json()).slice(0, limit);
+
+  var stories = await Promise.allSettled(
+    ids.map(function(id) {
+      return fetchWithTimeout('https://hacker-news.firebaseio.com/v0/item/' + id + '.json', {}, 5000)
+        .then(function(r) { return r.json(); });
+    })
+  );
+
+  return stories
+    .filter(function(r) { return r.status === 'fulfilled' && r.value && r.value.title; })
+    .map(function(r) { return r.value; })
+    .map(function(s) {
+      return {
+        id: s.id,
+        title: s.title,
+        url: s.url || ('https://news.ycombinator.com/item?id=' + s.id),
+        score: s.score || 0,
+        by: s.by || '',
+        time: s.time,
+        descendants: s.descendants || 0,
+        type: s.type || 'story',
+      };
+    });
+}
+
+// GET /api/hackernews — legacy endpoint, fixed 15 top stories
 async function handleHackerNews() {
   var KEY = 'hackernews';
   var cached = getCached(KEY, 120000);
   if (cached) return jsonResponse(cached, 200, 120);
-
   try {
-    var idsRes = await fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json');
-    var ids = (await idsRes.json()).slice(0, 15);
-
-    var stories = await Promise.allSettled(
-      ids.map(function(id) {
-        return fetchWithTimeout('https://hacker-news.firebaseio.com/v0/item/' + id + '.json', {}, 5000)
-          .then(function(r) { return r.json(); });
-      })
-    );
-
-    var data = {
-      data: stories
-        .filter(function(r) { return r.status === 'fulfilled' && r.value && r.value.title; })
-        .map(function(r) { return r.value; })
-        .map(function(s) {
-          return {
-            id: s.id, title: s.title,
-            url: s.url || ('https://news.ycombinator.com/item?id=' + s.id),
-            score: s.score || 0, by: s.by || '', time: s.time, descendants: s.descendants || 0,
-          };
-        }),
-    };
+    var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/topstories.json', 15);
+    var data = { data: items };
     setCache(KEY, data);
     return jsonResponse(data, 200, 120);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: [] });
+  }
+}
+
+// GET /api/hn-topstories?limit=50 — full 50-item pull for keyword-filter hook
+async function handleHnTopStories(url) {
+  var limit = parseInt(url.searchParams.get('limit') || '50', 10);
+  var KEY = 'hn-top-' + limit;
+  var cached = getCached(KEY, 120000);
+  if (cached) return jsonResponse(cached, 200, 120);
+  try {
+    var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/topstories.json', limit);
+    var data = { data: items };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 120);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: [] });
+  }
+}
+
+// GET /api/hn-show?limit=10
+async function handleHnShow(url) {
+  var limit = parseInt(url.searchParams.get('limit') || '10', 10);
+  var KEY = 'hn-show-' + limit;
+  var cached = getCached(KEY, 180000);
+  if (cached) return jsonResponse(cached, 200, 180);
+  try {
+    var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/showstories.json', limit);
+    var data = { data: items };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 180);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: [] });
+  }
+}
+
+// GET /api/hn-ask?limit=10
+async function handleHnAsk(url) {
+  var limit = parseInt(url.searchParams.get('limit') || '10', 10);
+  var KEY = 'hn-ask-' + limit;
+  var cached = getCached(KEY, 180000);
+  if (cached) return jsonResponse(cached, 200, 180);
+  try {
+    var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/askstories.json', limit);
+    var data = { data: items };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 180);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
@@ -1256,6 +1319,9 @@ export default {
       case 'earthquake':     return await handleEarthquake();
       case 'predictions':    return await handlePredictions();
       case 'hackernews':     return await handleHackerNews();
+      case 'hn-topstories':  return await handleHnTopStories(url);
+      case 'hn-show':        return await handleHnShow(url);
+      case 'hn-ask':         return await handleHnAsk(url);
       case 'service-status': return await handleServiceStatus();
       case 'cloud-status':   return await handleCloudStatus();
       case 'claude-status':  return await handleClaudeStatus();

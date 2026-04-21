@@ -12,37 +12,23 @@ export interface HNTopItem {
   type: string; // 'show' | 'ask'
 }
 
-const SHOW_URL = 'https://hacker-news.firebaseio.com/v0/showstories.json';
-const ASK_URL = 'https://hacker-news.firebaseio.com/v0/askstories.json';
-const ITEM_URL = 'https://hacker-news.firebaseio.com/v0/item';
 const CACHE_KEY = 'hn_community';
 const POLL_MS = 3 * 60_000; // 3 min
 
-async function fetchItems(url: string, type: string, limit: number): Promise<HNTopItem[]> {
+async function fetchFromWorker(endpoint: string, type: string, limit: number): Promise<HNTopItem[]> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`/api/${endpoint}?limit=${limit}`, { signal: AbortSignal.timeout(6000) });
     if (!res.ok) return [];
-    const ids: number[] = await res.json();
-
-    const items = await Promise.all(
-      ids.slice(0, limit).map(async (id) => {
-        try {
-          const r = await fetch(`${ITEM_URL}/${id}.json`, { signal: AbortSignal.timeout(3000) });
-          if (!r.ok) return null;
-          const item = await r.json();
-          return {
-            id: item.id,
-            title: item.title || '',
-            score: item.score || 0,
-            comments: item.descendants || 0,
-            url: item.url || `https://news.ycombinator.com/item?id=${item.id}`,
-            type,
-          };
-        } catch { return null; }
-      })
-    );
-
-    return items.filter(Boolean) as HNTopItem[];
+    const json = await res.json();
+    const items = Array.isArray(json?.data) ? json.data : [];
+    return items.map((s: { id: number; title?: string; score?: number; descendants?: number; url?: string }) => ({
+      id: s.id,
+      title: s.title || '',
+      score: s.score || 0,
+      comments: s.descendants || 0,
+      url: s.url || `https://news.ycombinator.com/item?id=${s.id}`,
+      type,
+    }));
   } catch { return []; }
 }
 
@@ -57,8 +43,8 @@ export function useHNShowAsk(): HNTopItem[] {
 
     const fetch_ = async () => {
       const [showItems, askItems] = await Promise.all([
-        fetchItems(SHOW_URL, 'show', 4),
-        fetchItems(ASK_URL, 'ask', 4),
+        fetchFromWorker('hn-show', 'show', 4),
+        fetchFromWorker('hn-ask', 'ask', 4),
       ]);
 
       if (!mountedRef.current) return;

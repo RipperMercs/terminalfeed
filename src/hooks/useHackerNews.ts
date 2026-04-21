@@ -8,14 +8,13 @@ export interface HNStory {
   by: string;
   time: number;
   descendants: number;
+  type?: string;
 }
 
-const TOP_URL = 'https://hacker-news.firebaseio.com/v0/topstories.json';
-const ITEM_URL = 'https://hacker-news.firebaseio.com/v0/item';
+const API_URL = '/api/hn-topstories?limit=50';
 const POLL_MS = 90_000;
 const MAX_STORIES = 20;
 
-// Filter for tech/AI/crypto keywords
 const KEYWORDS = /\b(ai|gpt|llm|claude|openai|anthropic|bitcoin|btc|crypto|gpu|nvidia|amd|mining|blockchain|transformer|deep.?learning|machine.?learning|neural|model|agent|agi|gemini|mistral)\b/i;
 
 export function useHackerNews() {
@@ -27,43 +26,21 @@ export function useHackerNews() {
 
     const fetchStories = async () => {
       try {
-        const res = await fetch(TOP_URL, { signal: AbortSignal.timeout(5000) });
+        const res = await fetch(API_URL, { signal: AbortSignal.timeout(8000) });
         if (!res.ok) return;
-        const ids: number[] = await res.json();
-
-        // Fetch top 50 stories, filter for relevant ones
-        const batch = ids.slice(0, 50);
-        const items = await Promise.all(
-          batch.map(async (id) => {
-            try {
-              const r = await fetch(`${ITEM_URL}/${id}.json`, { signal: AbortSignal.timeout(4000) });
-              return r.ok ? r.json() : null;
-            } catch { return null; }
-          }),
-        );
-
+        const json = await res.json();
+        const items: HNStory[] = Array.isArray(json?.data) ? json.data : [];
         if (!mountedRef.current) return;
 
         const filtered = items
-          .filter((item): item is HNStory =>
-            item !== null &&
-            item.type === 'story' &&
-            item.title &&
-            KEYWORDS.test(item.title),
-          )
+          .filter((s) => s && s.title && KEYWORDS.test(s.title))
           .slice(0, MAX_STORIES);
 
-        // If not enough keyword matches, fill with top stories
         if (filtered.length < 8) {
-          const top = items
-            .filter((item): item is HNStory =>
-              item !== null &&
-              item.type === 'story' &&
-              item.title &&
-              !filtered.some((f) => f.id === item.id),
-            )
+          const fill = items
+            .filter((s) => s && s.title && !filtered.some((f) => f.id === s.id))
             .slice(0, MAX_STORIES - filtered.length);
-          filtered.push(...top);
+          filtered.push(...fill);
         }
 
         setStories(filtered);
