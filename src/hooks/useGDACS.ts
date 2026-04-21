@@ -14,14 +14,9 @@ export interface DisasterAlert {
   url: string;
 }
 
-const API_URL = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ,TC,FL,VO,WF&alertlevel=Green;Orange;Red&limit=10';
-const RSS_URL = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.gdacs.org/xml/rss.xml');
+const RSS_URL = '/api/rss?url=' + encodeURIComponent('https://www.gdacs.org/xml/rss.xml');
 const CACHE_KEY = 'gdacs_alerts';
 const POLL_MS = 5 * 60_000; // 5 min
-
-const TYPE_NAMES: Record<string, string> = {
-  EQ: 'EARTHQUAKE', TC: 'CYCLONE', FL: 'FLOOD', VO: 'VOLCANO', WF: 'WILDFIRE',
-};
 
 export function useGDACS(): DisasterAlert[] {
   const [alerts, setAlerts] = useState<DisasterAlert[]>(() => {
@@ -33,21 +28,18 @@ export function useGDACS(): DisasterAlert[] {
     mountedRef.current = true;
 
     const fetch_ = async () => {
-      // Try RSS feed (more reliable via RSS2JSON)
       try {
         const res = await fetch(RSS_URL, { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) throw new Error('RSS failed');
+        if (!res.ok) return;
         const data = await res.json();
-        if (!data.items?.length) throw new Error('No items');
+        if (!data.items?.length) return;
 
         const results: DisasterAlert[] = data.items.slice(0, 8).map((item: {
           title: string;
           link: string;
           pubDate: string;
-          description: string;
         }, i: number) => {
-          // Parse type from title (e.g., "Green earthquake...")
-          const titleLower = item.title.toLowerCase();
+          const titleLower = (item.title || '').toLowerCase();
           let type = 'EQ';
           let alertLevel = 'Green';
           if (titleLower.includes('cyclone') || titleLower.includes('hurricane')) type = 'TC';
@@ -73,32 +65,7 @@ export function useGDACS(): DisasterAlert[] {
           setAlerts(results);
           setCache(CACHE_KEY, results, 'gdacs');
         }
-      } catch {
-        // Direct API fallback
-        try {
-          const res = await fetch(API_URL, { signal: AbortSignal.timeout(8000) });
-          if (!res.ok || !mountedRef.current) return;
-          const data = await res.json();
-          const features = data.features || [];
-
-          const results: DisasterAlert[] = features.slice(0, 8).map((f: {
-            properties: { eventtype: string; name: string; country: string; alertlevel: string; fromdate: string; url: string };
-          }) => ({
-            id: f.properties.name,
-            type: f.properties.eventtype,
-            title: `${TYPE_NAMES[f.properties.eventtype] || f.properties.eventtype} — ${f.properties.name}`,
-            country: f.properties.country || '',
-            alertLevel: f.properties.alertlevel || 'Green',
-            date: f.properties.fromdate || '',
-            url: f.properties.url || 'https://www.gdacs.org',
-          }));
-
-          if (results.length > 0) {
-            setAlerts(results);
-            setCache(CACHE_KEY, results, 'gdacs');
-          }
-        } catch (e) { if (import.meta.env.DEV) console.warn('[GDACS]', e); }
-      }
+      } catch (e) { if (import.meta.env.DEV) console.warn('[GDACS]', e); }
     };
 
     fetch_();

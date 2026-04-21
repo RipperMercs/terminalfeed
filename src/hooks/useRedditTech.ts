@@ -14,7 +14,7 @@ export interface RedditPost {
 
 // RSS feeds are WAY more reliable than Reddit's JSON API
 const SUBREDDITS = ['technology', 'programming', 'artificial', 'MachineLearning', 'bitcoin'];
-const RSS2JSON_BASE = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const RSS2JSON_BASE = '/api/rss?url=';
 const POLL_MS = 3 * 60_000; // 3 min
 const MAX_POSTS = 12;
 const CACHE_KEY = 'reddit_tech';
@@ -45,61 +45,6 @@ async function fetchSubredditRSS(sub: string): Promise<RedditPost[]> {
           });
         }
         return posts;
-      }
-    }
-  } catch (e) { if (import.meta.env.DEV) console.warn('[RedditTech]', e); }
-
-  // Fallback: Direct RSS XML parsing
-  try {
-    const res = await fetch(`https://www.reddit.com/r/${sub}/.rss`, { signal: AbortSignal.timeout(5000) });
-    if (res.ok) {
-      const text = await res.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/xml');
-      const entries = doc.querySelectorAll('entry');
-      entries.forEach((entry, i) => {
-        if (i >= 6) return;
-        const title = entry.querySelector('title')?.textContent ?? '';
-        if (BLOCK_WORDS.test(title)) return;
-        const link = entry.querySelector('link')?.getAttribute('href') ?? '';
-        const updated = entry.querySelector('updated')?.textContent ?? '';
-        posts.push({
-          id: entry.querySelector('id')?.textContent ?? `${sub}-${i}`,
-          title,
-          subreddit: sub,
-          score: 0,
-          url: link,
-          permalink: link,
-          numComments: 0,
-          created: updated ? Math.floor(new Date(updated).getTime() / 1000) : Math.floor(Date.now() / 1000),
-        });
-      });
-      if (posts.length > 0) return posts;
-    }
-  } catch (e) { if (import.meta.env.DEV) console.warn('[RedditTech]', e); }
-
-  // Last resort: old JSON API
-  try {
-    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`, {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      for (const child of data?.data?.children || []) {
-        const post = child.data;
-        if (!post || post.stickied) continue;
-        if (BLOCK_WORDS.test(post.title)) continue;
-        posts.push({
-          id: post.id,
-          title: post.title,
-          subreddit: post.subreddit,
-          score: post.score,
-          url: post.url,
-          permalink: `https://reddit.com${post.permalink}`,
-          numComments: post.num_comments,
-          created: post.created_utc,
-        });
       }
     }
   } catch (e) { if (import.meta.env.DEV) console.warn('[RedditTech]', e); }

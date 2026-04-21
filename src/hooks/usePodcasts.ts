@@ -9,7 +9,7 @@ export interface PodcastEpisode {
   spotifyId: string; // for embed
 }
 
-const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const RSS2JSON = '/api/rss?url=';
 
 const SHOWS = [
   { name: 'Lex Fridman', rss: 'https://lexfridman.com/feed/podcast/', spotifyShow: '2MAi0BvDc6GTFvKFPXnkCL' },

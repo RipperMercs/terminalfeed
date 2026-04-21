@@ -10,7 +10,7 @@ export interface RSSItem {
   time: number; // unix timestamp
 }
 
-const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const RSS2JSON = '/api/rss?url=';
 
 const FEEDS = [
   { name: 'Ars', url: 'https://feeds.arstechnica.com/arstechnica/technology-lab' },

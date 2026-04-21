@@ -7,7 +7,7 @@ export interface PHProduct {
   pubDate: string;
 }
 
-const RSS_URL = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.producthunt.com/feed');
+const RSS_URL = '/api/rss?url=' + encodeURIComponent('https://www.producthunt.com/feed');
 const CACHE_KEY = 'producthunt';
 const POLL_MS = 10 * 60_000; // 10 min
 
