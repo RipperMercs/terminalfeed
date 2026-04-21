@@ -25,21 +25,24 @@ function getActiveLeagues() {
   const month = new Date().getMonth(); // 0-indexed
   const leagues: { key: string; sport: string; league: string; url: string }[] = [];
 
-  // NBA: Oct (9) – Jun (5)
+  const scoreboard = (sport: string, league: string) =>
+    `/api/sports-scoreboard?sport=${sport}&league=${league}`;
+
+  // NBA: Oct (9) through Jun (5)
   if (month >= 9 || month <= 5) {
-    leagues.push({ key: 'nba', sport: 'basketball', league: 'nba', url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard' });
+    leagues.push({ key: 'nba', sport: 'basketball', league: 'nba', url: scoreboard('basketball', 'nba') });
   }
-  // NHL: Oct (9) – Jun (5)
+  // NHL: Oct (9) through Jun (5)
   if (month >= 9 || month <= 5) {
-    leagues.push({ key: 'nhl', sport: 'hockey', league: 'nhl', url: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard' });
+    leagues.push({ key: 'nhl', sport: 'hockey', league: 'nhl', url: scoreboard('hockey', 'nhl') });
   }
-  // MLB: Mar (2) – Oct (9)
+  // MLB: Mar (2) through Oct (9)
   if (month >= 2 && month <= 9) {
-    leagues.push({ key: 'mlb', sport: 'baseball', league: 'mlb', url: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' });
+    leagues.push({ key: 'mlb', sport: 'baseball', league: 'mlb', url: scoreboard('baseball', 'mlb') });
   }
-  // NFL: Sep (8) – Feb (1)
+  // NFL: Sep (8) through Feb (1)
   if (month >= 8 || month <= 1) {
-    leagues.push({ key: 'nfl', sport: 'football', league: 'nfl', url: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard' });
+    leagues.push({ key: 'nfl', sport: 'football', league: 'nfl', url: scoreboard('football', 'nfl') });
   }
 
   return leagues;
@@ -53,7 +56,7 @@ const CACHE_KEY = 'sports_scores';
 // Fetch play-by-play summary for a live game
 async function fetchGameSummary(sport: string, league: string, eventId: string): Promise<{ lastPlay: string; situation: string }> {
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/summary?event=${eventId}`;
+    const url = `/api/sports-summary?sport=${sport}&league=${league}&event=${eventId}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) return { lastPlay: '', situation: '' };
     const data = await res.json();
