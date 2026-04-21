@@ -5,17 +5,14 @@ export interface PingResult {
   latency: number; // ms, -1 = failed
 }
 
+// Known-good anycast endpoints that do not retain visitor IPs for analytics.
+// Dropped: dynamodb.*.amazonaws.com (exposed IP to AWS), dns.google/quad9/opendns
+// DoH (returned 503 due to bot detection), google.com/generate_204 (503).
 const ENDPOINTS = [
-  { name: 'US East', url: 'https://dynamodb.us-east-1.amazonaws.com/' },
-  { name: 'US West', url: 'https://dynamodb.us-west-2.amazonaws.com/' },
-  { name: 'Europe', url: 'https://dynamodb.eu-west-1.amazonaws.com/' },
-  { name: 'Asia', url: 'https://dynamodb.ap-northeast-1.amazonaws.com/' },
-  { name: 'Cloudflare', url: 'https://1.1.1.1/cdn-cgi/trace' },
-  { name: 'Google', url: 'https://www.google.com/generate_204' },
-  // DNS infrastructure
-  { name: 'DNS: Google', url: 'https://dns.google/resolve?name=example.com&type=A' },
-  { name: 'DNS: Quad9', url: 'https://dns.quad9.net:5053/dns-query?name=example.com&type=A' },
-  { name: 'DNS: OpenDNS', url: 'https://doh.opendns.com/dns-query?name=example.com&type=A' },
+  { name: 'Cloudflare 1.1.1.1', url: 'https://1.1.1.1/cdn-cgi/trace' },
+  { name: 'Cloudflare Edge', url: 'https://speed.cloudflare.com/__down?bytes=0' },
+  { name: 'TerminalFeed', url: '/api/health' },
+  { name: 'Cloudflare DNS (DoH)', url: 'https://cloudflare-dns.com/dns-query?name=example.com&type=A' },
 ];
 
 const POLL_MS = 60_000;
