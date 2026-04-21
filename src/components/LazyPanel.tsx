@@ -1,47 +1,18 @@
-import { useRef, useState, useEffect } from 'react';
-
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
 }
 
+// NOTE: Previously used IntersectionObserver to defer rendering of panels
+// past index 6. That observer was unreliable under CSS columns layout
+// (reported 42 panels stuck on "loading..." on 2026-04-20), and since every
+// data hook is called unconditionally at the top of App.tsx, the observer
+// saved no network or CPU anyway. Now renders eagerly; each panel still
+// manages its own loading state via StateChip / useLoadingTimeout.
 export function LazyPanel({ children, className = '', ...rest }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect(); // once visible, always render
-        }
-      },
-      { rootMargin: '400px' } // start loading 400px before visible
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <div ref={ref} className={className} {...rest}>
-      {isVisible ? children : (
-        <div style={{
-          minHeight: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 9,
-          color: 'var(--text-dim)',
-          fontFamily: 'var(--mono)',
-        }}>
-          loading...
-        </div>
-      )}
+    <div className={className} {...rest}>
+      {children}
     </div>
   );
 }
