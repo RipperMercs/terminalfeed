@@ -171,7 +171,7 @@ function App() {
   const { stats: flightStats, status: flightStatus } = useFlightRadar();
   const cloudStatus = useCloudStatus();
   const tcgMarket = useTCGMarket();
-  const gasData = useGasTracker();
+  const { gas: gasData, trend: gasTrend } = useGasTracker();
 
   // Safety nets: if these panels never get data within their window, hide
   // them rather than wedge the viewer on a placeholder. Resets if data
@@ -399,7 +399,7 @@ function App() {
         </div>
       </>);
     })(),
-    'gas': <GasPanel gas={gasData} layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
+    'gas': <GasPanel gas={gasData} trend={gasTrend} layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
     'btc-network': (<>
       <PanelHead panelId="btc-network" isStale={panelHealth.isStale('btc-network')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">BTC Network</span><span className="panelTag">MEMPOOL</span></div>
