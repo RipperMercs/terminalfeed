@@ -499,6 +499,70 @@ async function handlePredictions() {
 }
 
 
+// ESPN proxy — whitelist sport/league pairs to block arbitrary upstream access.
+const ESPN_LEAGUES = {
+  basketball: { nba: 1, ncaab: 1 },
+  hockey: { nhl: 1 },
+  baseball: { mlb: 1 },
+  football: { nfl: 1, 'college-football': 1 },
+  soccer: { 'eng.1': 1, 'esp.1': 1, 'usa.1': 1 },
+};
+
+function espnPairAllowed(sport, league) {
+  return !!(ESPN_LEAGUES[sport] && ESPN_LEAGUES[sport][league]);
+}
+
+// GET /api/sports-scoreboard?sport=basketball&league=nba
+async function handleSportsScoreboard(url) {
+  var sport = url.searchParams.get('sport') || '';
+  var league = url.searchParams.get('league') || '';
+  if (!espnPairAllowed(sport, league)) {
+    return jsonResponse({ error: 'sport/league not allowed' }, 400);
+  }
+  var KEY = 'sports-sb-' + sport + '-' + league;
+  var cached = getCached(KEY, 30000);
+  if (cached) return jsonResponse(cached, 200, 30);
+  try {
+    var res = await fetchWithTimeout(
+      'https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/scoreboard'
+    );
+    if (!res.ok) throw new Error('espn ' + res.status);
+    var data = await res.json();
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 30);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ events: [] });
+  }
+}
+
+// GET /api/sports-summary?sport=basketball&league=nba&event=1234
+async function handleSportsSummary(url) {
+  var sport = url.searchParams.get('sport') || '';
+  var league = url.searchParams.get('league') || '';
+  var event = url.searchParams.get('event') || '';
+  if (!espnPairAllowed(sport, league) || !/^\d+$/.test(event)) {
+    return jsonResponse({ error: 'invalid params' }, 400);
+  }
+  var KEY = 'sports-sum-' + sport + '-' + league + '-' + event;
+  var cached = getCached(KEY, 20000);
+  if (cached) return jsonResponse(cached, 200, 20);
+  try {
+    var res = await fetchWithTimeout(
+      'https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/summary?event=' + event
+    );
+    if (!res.ok) throw new Error('espn ' + res.status);
+    var data = await res.json();
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 20);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({});
+  }
+}
+
 // GitHub helpers — uses GITHUB_TOKEN secret if set (5000/hr auth vs 60/hr unauth)
 function ghHeaders(env) {
   var h = {
@@ -1487,6 +1551,8 @@ export default {
       case 'predictions':    return await handlePredictions();
       case 'hackernews':     return await handleHackerNews();
       case 'rss':            return await handleRss(url);
+      case 'sports-scoreboard': return await handleSportsScoreboard(url);
+      case 'sports-summary':    return await handleSportsSummary(url);
       case 'gh-trending':    return await handleGhTrending(url, env);
       case 'gh-events':      return await handleGhEvents(env);
       case 'hn-topstories':  return await handleHnTopStories(url);
