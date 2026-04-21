@@ -12,7 +12,7 @@ export interface GHEvent {
   time: string;
 }
 
-const API_URL = 'https://api.github.com/events?per_page=20';
+const API_URL = '/api/gh-events';
 const CACHE_KEY = 'github_events';
 const POLL_MS = 2 * 60_000; // 2 min (60 req/hour limit)
 
@@ -39,21 +39,21 @@ export function useGithubEvents(): GHEvent[] {
       try {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok || !mountedRef.current) return;
-        const data = await res.json();
-        if (!Array.isArray(data)) return;
+        const json = await res.json();
+        const items = Array.isArray(json?.data) ? json.data : [];
 
-        const results: GHEvent[] = data.slice(0, 10).map((e: {
+        const results: GHEvent[] = items.slice(0, 10).map((e: {
           id: string;
           type: string;
-          actor: { login: string };
-          repo: { name: string };
+          actor: string;
+          repo: string;
           created_at: string;
         }) => ({
           id: e.id,
           type: e.type,
-          actor: e.actor?.login || 'unknown',
-          repo: e.repo?.name || '',
-          action: EVENT_ICONS[e.type] || e.type.replace('Event', '').toLowerCase(),
+          actor: e.actor || 'unknown',
+          repo: e.repo || '',
+          action: EVENT_ICONS[e.type] || (e.type || '').replace('Event', '').toLowerCase(),
           time: e.created_at || '',
         }));
 

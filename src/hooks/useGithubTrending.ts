@@ -23,27 +23,25 @@ export function useGithubTrending() {
     const fetchTrending = async () => {
       if (!mountedRef.current) return;
       try {
-        // Use GitHub search API sorted by stars, created in last 7 days
         const date = new Date();
         date.setDate(date.getDate() - 7);
         const since = date.toISOString().split('T')[0];
 
-        const res = await fetch(
-          `https://api.github.com/search/repositories?q=created:>${since}&sort=stars&order=desc&per_page=10`,
-        );
+        const res = await fetch(`/api/gh-trending?since=${since}`, { signal: AbortSignal.timeout(8000) });
         if (!res.ok) return;
-        const data = await res.json();
-        if (!mountedRef.current || !data.items) return;
+        const json = await res.json();
+        const items = Array.isArray(json?.data) ? json.data : [];
+        if (!mountedRef.current) return;
 
         setRepos(
-          data.items.map((item: any) => ({
+          items.map((item: { name: string; fullName: string; description: string; language: string; stars: number; url: string }) => ({
             name: item.name,
-            fullName: item.full_name,
+            fullName: item.fullName,
             description: item.description || '',
             language: item.language || '',
-            stars: item.stargazers_count,
-            todayStars: item.stargazers_count, // approx
-            url: item.html_url,
+            stars: item.stars ?? 0,
+            todayStars: item.stars ?? 0,
+            url: item.url,
           })),
         );
       } catch (e) { if (import.meta.env.DEV) console.warn('[GithubTrending]', e); }

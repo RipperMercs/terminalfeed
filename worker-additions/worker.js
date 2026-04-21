@@ -499,6 +499,82 @@ async function handlePredictions() {
 }
 
 
+// GitHub helpers — uses GITHUB_TOKEN secret if set (5000/hr auth vs 60/hr unauth)
+function ghHeaders(env) {
+  var h = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'terminalfeed.io/1.0 (+https://terminalfeed.io)',
+  };
+  if (env && env.GITHUB_TOKEN) h['Authorization'] = 'Bearer ' + env.GITHUB_TOKEN;
+  return h;
+}
+
+// GET /api/gh-trending?since=YYYY-MM-DD
+async function handleGhTrending(url, env) {
+  var since = (url.searchParams.get('since') || '').match(/^\d{4}-\d{2}-\d{2}$/)
+    ? url.searchParams.get('since')
+    : new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+  var KEY = 'gh-trending-' + since;
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+  try {
+    var res = await fetchWithTimeout(
+      'https://api.github.com/search/repositories?q=created:>' + since + '&sort=stars&order=desc&per_page=10',
+      { headers: ghHeaders(env) }
+    );
+    if (!res.ok) throw new Error('gh ' + res.status);
+    var data = await res.json();
+    var items = (data.items || []).map(function(r) {
+      return {
+        name: r.name,
+        fullName: r.full_name,
+        description: r.description || '',
+        language: r.language || '',
+        stars: r.stargazers_count || 0,
+        url: r.html_url,
+      };
+    });
+    var result = { data: items };
+    setCache(KEY, result);
+    return jsonResponse(result, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: [] });
+  }
+}
+
+// GET /api/gh-events
+async function handleGhEvents(env) {
+  var KEY = 'gh-events';
+  var cached = getCached(KEY, 30000);
+  if (cached) return jsonResponse(cached, 200, 30);
+  try {
+    var res = await fetchWithTimeout(
+      'https://api.github.com/events?per_page=20',
+      { headers: ghHeaders(env) }
+    );
+    if (!res.ok) throw new Error('gh ' + res.status);
+    var data = await res.json();
+    var items = Array.isArray(data) ? data.slice(0, 20).map(function(e) {
+      return {
+        id: e.id,
+        type: e.type,
+        actor: (e.actor && e.actor.login) || 'unknown',
+        repo: (e.repo && e.repo.name) || '',
+        created_at: e.created_at || '',
+      };
+    }) : [];
+    var result = { data: items };
+    setCache(KEY, result);
+    return jsonResponse(result, 200, 30);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: [] });
+  }
+}
+
 // Shared: fetch HN story list by kind, hydrate items. Clamped 1..50.
 async function fetchHnStories(listUrl, limit) {
   limit = Math.max(1, Math.min(50, limit | 0));
@@ -1411,6 +1487,8 @@ export default {
       case 'predictions':    return await handlePredictions();
       case 'hackernews':     return await handleHackerNews();
       case 'rss':            return await handleRss(url);
+      case 'gh-trending':    return await handleGhTrending(url, env);
+      case 'gh-events':      return await handleGhEvents(env);
       case 'hn-topstories':  return await handleHnTopStories(url);
       case 'hn-show':        return await handleHnShow(url);
       case 'hn-ask':         return await handleHnAsk(url);
