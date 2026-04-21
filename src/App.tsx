@@ -76,6 +76,7 @@ import { useCloudStatus } from './hooks/useCloudStatus';
 import { OriginalsPanel } from './components/OriginalsPanel';
 import { LoadingOrHide } from './components/LoadingOrHide';
 import { useGasTracker } from './hooks/useGasTracker';
+import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
 
@@ -171,6 +172,14 @@ function App() {
   const cloudStatus = useCloudStatus();
   const tcgMarket = useTCGMarket();
   const gasData = useGasTracker();
+
+  // Safety nets: if these panels never get data within their window, hide
+  // them rather than wedge the viewer on a placeholder. Resets if data
+  // eventually arrives.
+  const hideLaunches = useLoadingTimeout(spaceLaunches.length > 0, 15000);
+  const hideRecipes = useLoadingTimeout(recipes.length > 0, 12000);
+  const hidePodcasts = useLoadingTimeout(podcastEpisodes.length > 0, 12000);
+  const hideTcgMarket = useLoadingTimeout(!!(tcgMarket && tcgMarket.cards && tcgMarket.cards.length > 0), 12000);
 
   const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -760,7 +769,7 @@ function App() {
         {earthquakes.map((q) => { const mc = q.magnitude >= 5 ? 'var(--red)' : q.magnitude >= 4 ? 'var(--amber)' : 'var(--text-mid)'; return (<a key={q.id} href={q.url} target="_blank" rel="noopener noreferrer" className="quakeRow"><span className="quakeMag" style={{ color: mc }}>{q.magnitude.toFixed(1)}</span><span className="quakePlace">{q.place}</span><span className="quakeTime">{timeAgo(Math.floor(q.time / 1000))}</span></a>); })}
       </div>
     </>),
-    'launches': (() => {
+    'launches': hideLaunches ? null : (() => {
       const upcoming = spaceLaunches.filter(l => l.dateTs > 0 && l.dateTs > now.getTime());
       const nextLaunch = upcoming[0];
       const rest = upcoming.slice(1);
@@ -855,7 +864,7 @@ function App() {
         </div>
       )}
     </>),
-    'recipe': (<>
+    'recipe': hideRecipes ? null : (<>
       <PanelHead panelId="recipe" isStale={panelHealth.isStale('recipe')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Tonight</span><span className="panelTag">RECIPES OF THE DAY</span></div></PanelHead>
       {recipes.length > 0 ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recipes.map((r, i) => (<a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent"><img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" /><div className="recipeInfo"><div className="recipeName">{r.name}</div><div className="recipeMeta">{r.area} · {r.category}</div></div></a>))}</div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>}
     </>),
@@ -866,7 +875,7 @@ function App() {
         <div><div className="dailySectionTitle">Term of the Day</div><div className="termWord">{todayTerm.term}</div><div className="termDef">{todayTerm.definition}</div></div>
       </div>
     </>),
-    'podcasts': (<>
+    'podcasts': hidePodcasts ? null : (<>
       <PanelHead panelId="podcasts" isStale={panelHealth.isStale('podcasts')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Podcasts</span><span className="panelTag">LATEST</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {podcastEpisodes.length === 0 && <StateChip kind="waiting" label="PODCASTS" block />}
@@ -919,7 +928,7 @@ function App() {
         <div style={{ fontSize: 8, color: 'var(--text-dim)', textAlign: 'center', paddingTop: 4 }}>data from polymarket.com</div>
       </div>
     </>),
-    'tcg-market': (<>
+    'tcg-market': hideTcgMarket ? null : (<>
       <PanelHead panelId="tcg-market" isStale={panelHealth.isStale('tcg-market')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">TCG Market</span><span className="panelTag">WATCH</span></div>
       </PanelHead>
