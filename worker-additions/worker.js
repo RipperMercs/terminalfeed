@@ -1042,17 +1042,30 @@ async function handleForex() {
   if (cached) return jsonResponse(cached, 200, 300);
 
   try {
-    var res = await fetchWithTimeout(
-      'https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CAD,AUD,CHF,CNY,INR,MXN,BRL,KRW,SGD,HKD,SEK,NOK'
-    );
-    var d = await res.json();
-    var data = { data: { base: d.base || 'USD', date: d.date, rates: d.rates || {} } };
+    var currencyList = 'EUR,GBP,JPY,CAD,AUD,CHF,CNY,INR,MXN,BRL,KRW,SGD,HKD,SEK,NOK,NZD';
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    var yStr = yesterday.toISOString().slice(0, 10);
+
+    var both = await Promise.allSettled([
+      fetchWithTimeout('https://api.frankfurter.app/latest?from=USD&to=' + currencyList),
+      fetchWithTimeout('https://api.frankfurter.app/' + yStr + '?from=USD&to=' + currencyList),
+    ]);
+
+    if (both[0].status !== 'fulfilled') throw new Error('latest failed');
+    var d = await both[0].value.json();
+    var prevRates = {};
+    if (both[1].status === 'fulfilled') {
+      try { var pd = await both[1].value.json(); prevRates = pd.rates || {}; } catch (e) {}
+    }
+
+    var data = { data: { base: d.base || 'USD', date: d.date, rates: d.rates || {}, prevRates: prevRates } };
     setCache(KEY, data);
     return jsonResponse(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
-    return jsonResponse({ data: { base: 'USD', date: '', rates: {} } });
+    return jsonResponse({ data: { base: 'USD', date: '', rates: {}, prevRates: {} } });
   }
 }
 
