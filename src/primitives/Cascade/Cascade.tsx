@@ -3,7 +3,7 @@ import type { ReactNode, CSSProperties } from 'react';
 import styles from './Cascade.module.css';
 
 export interface CascadeEvent {
-  /** Stable id — only new ids replay the fall-in animation. */
+  /** Stable id: only new ids replay the fall-in animation. */
   id: string | number;
   /** Optional per-line accent color for the left-edge flash during entry. */
   accent?: string;
@@ -23,9 +23,9 @@ interface Props<T extends CascadeEvent> {
 }
 
 /**
- * Cascade — the motion primitive for "event stream where recency matters".
+ * Cascade: the motion primitive for "event stream where recency matters".
  * Each row runs a fall-in animation with a colored edge-flash exactly once
- * on mount. Stable event ids are essential — if a caller uses array indices
+ * on mount. Stable event ids are essential: if a caller uses array indices
  * as keys, every row re-animates on every new event and the effect falls
  * apart.
  */

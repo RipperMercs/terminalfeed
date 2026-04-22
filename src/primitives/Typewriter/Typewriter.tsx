@@ -14,8 +14,8 @@ interface Props {
 }
 
 /**
- * Typewriter — reveals a string char-by-char, with an optional blinking
- * caret at the tail. Rotation through multiple items is the caller's job —
+ * Typewriter: reveals a string char-by-char, with an optional blinking
+ * caret at the tail. Rotation through multiple items is the caller's job:
  * wrap the primitive in a hook that swaps the text prop on whatever cadence
  * makes sense (useWire, a queue, etc.). Keeping rotation external means the
  * primitive stays tiny and composable.

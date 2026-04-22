@@ -40,7 +40,7 @@ export const LatencyChip = memo(function LatencyChip({
     return (
       <span className={`${styles.chip} ${styles.unknown}`}>
         {label && <span className={styles.label}>{label}</span>}
-        <span>—</span>
+        <span>-</span>
       </span>
     );
   }

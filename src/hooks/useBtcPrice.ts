@@ -219,7 +219,7 @@ export function useBtcPrice() {
 
     seedChart();
     connectWS();
-    fetchREST(); // immediate first HTTP fetch — covers ad-blocked / blocked-WS users
+    fetchREST(); // immediate first HTTP fetch: covers ad-blocked / blocked-WS users
 
     // Adaptive polling: fast while WS isn't open, slow once it is.
     // Also drives the `connected` derivation (goes false when last data > FRESH_WINDOW_MS old).

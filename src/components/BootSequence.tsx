@@ -8,7 +8,7 @@ const LINES = [
   { text: '> syncing crypto prices................. [OK]', delay: 600 },
   { text: '> establishing news feeds............... [OK]', delay: 800 },
   { text: '> rendering command center.............. [OK]', delay: 1000 },
-  { text: '> SYSTEM ONLINE — all feeds operational', delay: 1300 },
+  { text: '> SYSTEM ONLINE: all feeds operational', delay: 1300 },
   { text: '> welcome to the terminal.', delay: 1500 },
 ];
 

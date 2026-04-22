@@ -84,7 +84,7 @@ export function AIImageLab() {
     const img = new Image();
     const timeout = setTimeout(() => {
       setIsGenerating(false);
-      setError('Generation timed out — try again');
+      setError('Generation timed out: try again');
     }, 30000);
 
     img.onload = () => {
@@ -97,7 +97,7 @@ export function AIImageLab() {
     img.onerror = () => {
       clearTimeout(timeout);
       setIsGenerating(false);
-      setError('Failed to generate — try again');
+      setError('Failed to generate: try again');
     };
 
     img.src = url;

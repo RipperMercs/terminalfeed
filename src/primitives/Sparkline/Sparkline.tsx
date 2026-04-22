@@ -21,7 +21,7 @@ interface Props {
 }
 
 /**
- * Sparkline — the motion primitive for "rate of change over time".
+ * Sparkline: the motion primitive for "rate of change over time".
  * Renders points as a polyline in a 0-100 × 0-100 viewBox, stretched by the
  * parent via width/height. Stroke is non-scaling so the line stays crisp at
  * any size. On low data it falls back to a dashed skeleton; the caller is

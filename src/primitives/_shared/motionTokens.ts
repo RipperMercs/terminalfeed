@@ -1,17 +1,17 @@
 // Standardized durations and easing curves for the motion primitive library.
 // Every primitive reads from this file so ambient motion feels cohesive
-// across the whole dashboard. Don't add new durations here without a reason —
+// across the whole dashboard. Don't add new durations here without a reason:
 // if a primitive needs something outside this set, it probably wants a tuning
 // CSS variable, not a new token.
 
 export const DURATION = {
-  /** Micro-interaction — hover, focus, state swap. */
+  /** Micro-interaction: hover, focus, state swap. */
   fast: 180,
-  /** Standard transition — width/opacity changes, entry animation. */
+  /** Standard transition: width/opacity changes, entry animation. */
   normal: 340,
-  /** Deliberate transition — value change on a dial, probability bar. */
+  /** Deliberate transition: value change on a dial, probability bar. */
   slow: 800,
-  /** Ambient loop — sweep arm, orbit, sparkline tip pulse. */
+  /** Ambient loop: sweep arm, orbit, sparkline tip pulse. */
   ambient: 3000,
   /** Parallax / background drift. */
   parallax: 90_000,

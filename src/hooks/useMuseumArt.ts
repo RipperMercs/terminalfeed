@@ -11,7 +11,7 @@ export interface ArtworkData {
 }
 
 const CACHE_KEY = 'museum_art';
-const POLL_MS = 60 * 60_000; // 1 hour — rotate hourly
+const POLL_MS = 60 * 60_000; // 1 hour: rotate hourly
 
 export function useMuseumArt(): ArtworkData | null {
   const [art, setArt] = useState<ArtworkData | null>(() => {

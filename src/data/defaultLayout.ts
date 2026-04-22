@@ -53,6 +53,6 @@ export const DEFAULT_LAYOUT = {
     'support',
     'daily-paws',
   ],
-  hiddenPanels: ['status-wall'] as string[], // opt-in tile — shown via Developer preset or manual enable
+  hiddenPanels: ['status-wall'] as string[], // opt-in tile: shown via Developer preset or manual enable
   collapsedPanels: [] as string[],
 };
