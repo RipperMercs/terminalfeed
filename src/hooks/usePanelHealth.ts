@@ -1,4 +1,4 @@
-// Panel Health Monitor — tracks which panels have working data
+// Panel Health Monitor: tracks which panels have working data
 // Panels with no data after timeout become "unhealthy" and can be
 // auto-hidden from the grid, then restored when data returns.
 

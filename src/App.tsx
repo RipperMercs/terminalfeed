@@ -105,7 +105,7 @@ function App() {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
-  // Pause animations when tab is hidden — saves CPU in background
+  // Pause animations when tab is hidden: saves CPU in background
   useEffect(() => {
     const handler = () => {
       document.documentElement.style.setProperty('--anim-state', document.hidden ? 'paused' : 'running');
@@ -279,7 +279,7 @@ function App() {
     return () => clearInterval(id);
   }, [games.length]);
 
-  // Report panel health — auto-hide panels with failed APIs
+  // Report panel health: auto-hide panels with failed APIs
   useEffect(() => {
     if (btcPrice > 0) panelHealth.reportData('bitcoin');
     if (stocks.length > 0) panelHealth.reportData('markets');
@@ -357,7 +357,7 @@ function App() {
     return Math.max(1, Math.floor(w / 320));
   }, []);
 
-  // Panel registry — maps panel IDs to their JSX content
+  // Panel registry: maps panel IDs to their JSX content
   // This enables dynamic rendering from panelOrder array
   const panelRegistry: Record<string, React.ReactNode> = {
     'bitcoin': <BtcHero layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
@@ -1392,7 +1392,7 @@ function App() {
         </div>
       </div>
 
-      {/* ── Ticker Bar — flips between prices and sports ── */}
+      {/* ── Ticker Bar: flips between prices and sports ── */}
       <div className="tickerBar">
         <div className={`tickerLayer ${tickerShowSports ? 'tickerHidden' : ''}`}>
           <div className="tickerTrack">
@@ -1470,7 +1470,7 @@ function App() {
         </div>
       </div>
 
-      {/* ── Main Grid — rendered dynamically from panelOrder ── */}
+      {/* ── Main Grid: rendered dynamically from panelOrder ── */}
       <div id="main-content" className={`grid ${layout.isOrganizing ? 'gridOrganizing' : ''}`}>
         {(() => {
           const userPanels = layout.panelOrder.filter(id =>
@@ -1577,7 +1577,7 @@ function App() {
           <a href="/cleaner" className="footerLink">Disk Cleaner</a>
           <a href="/radio" className="footerLink">Radio</a>
           <a href="/blog" className="footerLink">Blog</a>
-          {/* WiFi link — uncomment after AdSense approval */}
+          {/* WiFi link: uncomment after AdSense approval */}
           {/* <a href="/wifi" className="footerLink">WiFi</a> */}
           <a href="/privacy" className="footerLink">Privacy</a>
           <a href="/terms" className="footerLink">Terms</a>

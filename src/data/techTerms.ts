@@ -1,4 +1,4 @@
-// Tech Term of the Day — 366 entries, one per day-of-year
+// Tech Term of the Day: 366 entries, one per day-of-year
 export const techTerms: { term: string; definition: string }[] = [
   { term: "Mempool", definition: "The waiting room for unconfirmed Bitcoin transactions before they're included in a block." },
   { term: "Sharding", definition: "Splitting a database or blockchain into smaller pieces distributed across multiple servers." },

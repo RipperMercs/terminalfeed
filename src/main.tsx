@@ -3,7 +3,7 @@ import { Component, type ReactNode } from 'react'
 import './index.css'
 import App from './App.tsx'
 
-// Error boundary — prevents white screen on crash
+// Error boundary: prevents white screen on crash
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 // Remove static SEO content now that React is taking over
 document.getElementById('seo-content')?.remove();
 
-// No StrictMode — it double-mounts components which causes
+// No StrictMode: it double-mounts components which causes
 // duplicate WebSocket connections and race conditions
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>

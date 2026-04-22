@@ -144,7 +144,7 @@ export function useWeather(): WeatherData | null {
       let loc = getSavedLocation();
 
       if (!loc) {
-        // IP-based geolocation — no browser prompt needed
+        // IP-based geolocation: no browser prompt needed
         const ipApis = [
           'https://ipapi.co/json/',
           'https://ip-api.com/json/',
@@ -166,7 +166,7 @@ export function useWeather(): WeatherData | null {
             continue;
           }
         }
-        // Final fallback — Los Angeles
+        // Final fallback: Los Angeles
         if (!loc) {
           loc = { lat: 34.05, lon: -118.24, city: 'Los Angeles' };
           saveLocation(loc);

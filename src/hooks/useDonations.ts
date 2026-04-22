@@ -1,4 +1,4 @@
-// Donation leaderboard — auto-fetches from mempool.space
+// Donation leaderboard: auto-fetches from mempool.space
 // Monitors the BTC donation address for incoming transactions
 
 import { useEffect, useState, useRef } from 'react';

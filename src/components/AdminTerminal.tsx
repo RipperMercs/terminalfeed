@@ -12,7 +12,7 @@ interface HistoryEntry {
   text: string;
 }
 
-// SHA-256 hash of the password — never store plaintext in source
+// SHA-256 hash of the password: never store plaintext in source
 // To change the password, hash the new one and replace this value
 const PW_HASH = '9c610d1dde3014a68d87fd034477405c2aa1851298731f70fe2baf611c921ffb';
 

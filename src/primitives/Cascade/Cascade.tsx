@@ -52,5 +52,5 @@ function CascadeInner<T extends CascadeEvent>({
   );
 }
 
-// memo with generic component — cast through unknown to preserve the type parameter.
+// memo with generic component: cast through unknown to preserve the type parameter.
 export const Cascade = memo(CascadeInner) as typeof CascadeInner;

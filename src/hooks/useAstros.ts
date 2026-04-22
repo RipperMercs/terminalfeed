@@ -1,4 +1,4 @@
-// Who's in Space right now — tiny, awe-inspiring
+// Who's in Space right now: tiny, awe-inspiring
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 

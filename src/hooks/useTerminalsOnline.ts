@@ -41,7 +41,7 @@ export function useTerminalsOnline(): number {
 
   useEffect(() => {
     // Small gentle drift every 10-20 seconds
-    // Only drifts ±5-15 from current — never jumps
+    // Only drifts ±5-15 from current: never jumps
     const tick = () => {
       setCount(prev => {
         const drift = Math.floor(Math.random() * 21) - 10; // -10 to +10

@@ -1,4 +1,4 @@
-// AI Hub — real API stats from Worker + simulated activity
+// AI Hub: real API stats from Worker + simulated activity
 import { useEffect, useState, useRef } from 'react';
 
 export interface AgentCall {

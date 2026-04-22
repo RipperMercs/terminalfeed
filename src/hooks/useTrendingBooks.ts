@@ -1,4 +1,4 @@
-// Open Library — Trending books worldwide
+// Open Library: Trending books worldwide
 
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';

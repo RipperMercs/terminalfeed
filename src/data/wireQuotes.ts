@@ -1,5 +1,7 @@
-// 2600 / hacker culture quotes — rotate in the footer strip
-// A nod to the culture that built this kind of thing
+// em-dash-exempt: external quotes preserved per CLAUDE.md rule #1
+// 2600 / hacker culture quotes that rotate in the footer strip.
+// Lint skips this file because the body is direct attribution of
+// external sources where the em-dash is part of the citation format.
 
 export const WIRE_QUOTES = [
   '"Information wants to be free." — Stewart Brand',

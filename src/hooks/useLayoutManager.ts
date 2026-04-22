@@ -187,7 +187,7 @@ export function useLayoutManager(): LayoutManager {
     toastTimer.current = setTimeout(() => setToastMessage(''), 1500);
   }, []);
 
-  // Auto-save — skip initial render to prevent overwriting saved data
+  // Auto-save: skip initial render to prevent overwriting saved data
   // Set custom flag so heat system doesn't override user's choices
   useEffect(() => {
     if (initialRender.current) return;

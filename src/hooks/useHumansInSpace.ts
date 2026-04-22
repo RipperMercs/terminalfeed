@@ -14,7 +14,7 @@ export interface HumansInSpaceData {
 const CACHE_KEY = 'humans_in_space';
 const POLL_MS = 60 * 60_000; // 1 hour
 
-// Fallback data — updated periodically; better than showing nothing
+// Fallback data: updated periodically; better than showing nothing
 const FALLBACK: HumansInSpaceData = {
   count: 7,
   people: [
@@ -51,7 +51,7 @@ export function useHumansInSpace(): HumansInSpaceData | null {
         }
       } catch (e) { if (import.meta.env.DEV) console.warn('[HumansInSpace]', e); }
 
-      // Worker failed — use cache or fallback (open-notify is HTTP-only, no direct fetch from HTTPS site)
+      // Worker failed: use cache or fallback (open-notify is HTTP-only, no direct fetch from HTTPS site)
       if (mountedRef.current && !getCache<HumansInSpaceData>(CACHE_KEY)?.data) {
         setData(FALLBACK);
       }

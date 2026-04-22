@@ -1,15 +1,15 @@
-// AI Model Leaderboard — curated, updated manually
+// AI Model Leaderboard, curated, updated manually
 // Based on Chatbot Arena / LMSYS ELO ratings
-// Last updated: 2026-04-17 (Opus 4.7 launch)
+// Last updated: 2026-04-20
 export const aiLeaderboard = [
-  { rank: 1, name: 'Claude Opus 4.7', company: 'Anthropic', elo: 1522 },
-  { rank: 2, name: 'Claude Opus 4.6', company: 'Anthropic', elo: 1504 },
-  { rank: 3, name: 'Gemini 3.1 Pro', company: 'Google', elo: 1493 },
-  { rank: 4, name: 'Grok 4.20 Beta1', company: 'xAI', elo: 1491 },
-  { rank: 5, name: 'GPT-5.4 High', company: 'OpenAI', elo: 1484 },
-  { rank: 6, name: 'Claude Sonnet 4.6', company: 'Anthropic', elo: 1412 },
-  { rank: 7, name: 'DeepSeek V3', company: 'DeepSeek', elo: 1378 },
-  { rank: 8, name: 'Gemini 2.5 Ultra', company: 'Google', elo: 1362 },
-  { rank: 9, name: 'Llama 4 Scout', company: 'Meta', elo: 1341 },
-  { rank: 10, name: 'Qwen3-235B', company: 'Alibaba', elo: 1318 },
+  { rank: 1, name: 'Claude Opus 4.7', company: 'Anthropic', elo: 1531 },
+  { rank: 2, name: 'Claude Opus 4.6 Thinking', company: 'Anthropic', elo: 1506 },
+  { rank: 3, name: 'Gemini 3.1 Pro Preview', company: 'Google', elo: 1497 },
+  { rank: 4, name: 'Grok 4.20 Beta1', company: 'xAI', elo: 1492 },
+  { rank: 5, name: 'GPT-5.4 High', company: 'OpenAI', elo: 1488 },
+  { rank: 6, name: 'GPT-5.4 Pro', company: 'OpenAI', elo: 1447 },
+  { rank: 7, name: 'Claude Sonnet 4.6', company: 'Anthropic', elo: 1418 },
+  { rank: 8, name: 'GPT-5.3 Codex', company: 'OpenAI', elo: 1398 },
+  { rank: 9, name: 'DeepSeek V3.1', company: 'DeepSeek', elo: 1384 },
+  { rank: 10, name: 'GLM-5', company: 'Z.ai', elo: 1365 },
 ];

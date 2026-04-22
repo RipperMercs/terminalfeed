@@ -1,4 +1,4 @@
-// NPM Download Trends — what devs are building with
+// NPM Download Trends: what devs are building with
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 

@@ -46,7 +46,7 @@ function findVisualNeighbor(panelId: string, direction: 'up' | 'down' | 'left' |
     }
     if (!valid) continue;
 
-    // Distance — weight primary axis more heavily
+    // Distance: weight primary axis more heavily
     const dx = rx - cx;
     const dy = ry - cy;
     let dist: number;

@@ -46,7 +46,7 @@ export function useThisDay(): HistoricalEvent[] {
     };
 
     fetch_();
-    // Daily content — no interval needed, just fetch on mount
+    // Daily content: no interval needed, just fetch on mount
     return () => { mountedRef.current = false; };
   }, []);
 

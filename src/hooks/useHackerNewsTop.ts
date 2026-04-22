@@ -1,4 +1,4 @@
-// Top Show HN / Ask HN — the community-driven content
+// Top Show HN / Ask HN: the community-driven content
 // These are the posts people actually discuss, not just link-share
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';

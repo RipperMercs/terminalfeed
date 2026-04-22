@@ -1,5 +1,5 @@
 // Clean minimal SVG line chart for BTC 24h price movement
-// No candlesticks, no controls, no clutter — just a smooth line
+// No candlesticks, no controls, no clutter: just a smooth line
 
 import type { PriceTick } from '../hooks/useBtcPrice';
 

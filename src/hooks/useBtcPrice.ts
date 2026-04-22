@@ -20,7 +20,7 @@ interface BtcPriceData {
   source: string;
 }
 
-// Binance 24hr ticker — fires every ~1s with full daily stats
+// Binance 24hr ticker: fires every ~1s with full daily stats
 const BINANCE_WS = 'wss://stream.binance.com:9443/ws/btcusdt@ticker';
 
 // Fallback REST (Worker handles upstream)
@@ -33,7 +33,7 @@ const RECONNECT_MS = 3000;
 const MAX_TICKS = 300;
 // When WS is connected, we only need HTTP for volume/market-cap refresh.
 // When WS is NOT connected (ad blockers, corporate proxies, Binance blocked),
-// HTTP is the primary source — poll faster.
+// HTTP is the primary source: poll faster.
 const STATS_POLL_MS_SLOW = 60_000;
 const STATS_POLL_MS_FAST = 10_000;
 const FRESH_WINDOW_MS = 30_000;
@@ -243,7 +243,7 @@ export function useBtcPrice() {
     };
     schedule();
 
-    // Freshness watchdog — independent of polling cadence so `connected` flips within 5s
+    // Freshness watchdog: independent of polling cadence so `connected` flips within 5s
     const freshnessTimer = setInterval(() => {
       if (!mountedRef.current) return;
       const stale = Date.now() - lastDataAtRef.current > FRESH_WINDOW_MS;

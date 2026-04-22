@@ -71,7 +71,7 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
     setLastTs(Date.now());
   };
 
-  // Wikipedia edits — hook already throttles
+  // Wikipedia edits: hook already throttles
   useEffect(() => {
     if (!Array.isArray(edits) || edits.length === 0) return;
     const newOnes: LiveEvent[] = [];
@@ -158,7 +158,7 @@ export const LiveNowPanel = memo(function LiveNowPanel({ layout, panelHealth, ge
     push(newOnes);
   }, [quakes]);
 
-  // BTC — throttle + min-move guard
+  // BTC: throttle + min-move guard
   useEffect(() => {
     const price = btc?.price;
     if (typeof price !== 'number' || price <= 0) return;
