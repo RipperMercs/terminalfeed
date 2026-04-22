@@ -1473,46 +1473,6 @@ async function handleNasaApod() {
 }
 
 
-// --- Memecoin Radar (DexScreener) ---
-async function handleMemeRadar() {
-  var cached = getCached('meme_radar', 60000);
-  if (cached) return jsonResponse(cached);
-
-  try {
-    var res = await fetchWithTimeout(
-      'https://api.dexscreener.com/token-boosts/latest/v1',
-      {}, 8000
-    );
-    var json = await res.json();
-
-    if (Array.isArray(json)) {
-      var tokens = json
-        .filter(function(t) { return t.url; })
-        .slice(0, 10)
-        .map(function(t) {
-          return {
-            name: (t.tokenAddress || 'Unknown').substring(0, 20),
-            symbol: (t.description || t.tokenAddress || '???').substring(0, 15),
-            chain: t.chainId || 'unknown',
-            icon: t.icon || '',
-            url: t.url || '',
-            totalAmount: t.totalAmount || 0,
-          };
-        });
-
-      setCache('meme_radar', tokens);
-      return jsonResponse(tokens);
-    }
-  } catch (e) {
-    console.error('MemeRadar fetch failed:', e.message);
-  }
-
-  var stale = getStale('meme_radar');
-  if (stale) return jsonResponse(stale);
-  return jsonResponse([]);
-}
-
-
 // --- Client Error Reporting ---
 async function handleErrorReport(request) {
   if (request.method !== 'POST') {
@@ -1588,7 +1548,6 @@ export default {
       case 'tweet':          return await handleTweet(request, env);
       case 'auto-briefing':  return await handleAutoBriefing(request, env);
       case 'gas':            return await handleGas(env);
-      case 'meme-radar':     return await handleMemeRadar();
       case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
       case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
