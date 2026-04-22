@@ -48,8 +48,11 @@ try {
   errors++;
 }
 
-// 6. Em-dash guard (CLAUDE.md rule #1). Warning mode by default; set
-// SEO_LINT_STRICT=1 to make it blocking. Scope matches the SEO haul spec:
+// 6. Em-dash guard (CLAUDE.md rule #1). Blocking by default as of
+// 2026-04-22 after the visual-diff gate cleared on homepage,
+// /blog/building-terminalfeed, and /tools/json. Set SEO_LINT_STRICT=0
+// to downgrade to warning mode for emergency deploys. Scope matches
+// the SEO haul spec:
 // .html/.tsx/.ts/.md under src/ and public/. Exemptions:
 //   - file-level: "em-dash-exempt" appears in the first 5 lines
 //   - line-level: "em-dash-exempt" appears on the same line
@@ -117,17 +120,19 @@ function scanEmDashes() {
 }
 
 const emDashViolations = scanEmDashes();
-const strict = process.env.SEO_LINT_STRICT === '1';
+const strict = process.env.SEO_LINT_STRICT !== '0';
 if (emDashViolations.length) {
-  console.warn(`\n[seo-lint] ${emDashViolations.length} em-dash violation(s):`);
+  console.error(`\n[seo-lint] ${emDashViolations.length} em-dash violation(s):`);
   for (const v of emDashViolations) {
-    console.warn(`  ${v.file}:${v.line}  ${v.text}`);
+    console.error(`  ${v.file}:${v.line}  ${v.text}`);
   }
   if (strict) {
-    console.error('\n[seo-lint] SEO_LINT_STRICT=1 set; treating em-dashes as blocking. DO NOT DEPLOY.');
+    console.error('\n[seo-lint] em-dashes are blocking (CLAUDE.md rule #1). DO NOT DEPLOY.');
+    console.error('[seo-lint] Mark legitimate quotes with em-dash-exempt per cc-specs-archive/cc-spec-em-dash-audit.md Section 2.5.');
+    console.error('[seo-lint] For emergency bypass: SEO_LINT_STRICT=0 npm run build (warning mode, use sparingly).');
     errors++;
   } else {
-    console.warn('\n[seo-lint] warning mode (set SEO_LINT_STRICT=1 to make blocking).');
+    console.warn('\n[seo-lint] warning mode (SEO_LINT_STRICT=0). Fix before next full deploy.');
   }
 } else {
   console.log('[seo-lint] em-dash check: clean');
