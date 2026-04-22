@@ -423,10 +423,10 @@
     <h2>Unix Timestamp Converter: Convert Epoch Time Online</h2>
 
     <h3>What Is a Unix Timestamp?</h3>
-    <p>A Unix timestamp (also called Epoch time or POSIX time) is the number of seconds that have elapsed since <strong>January 1, 1970, 00:00:00 UTC</strong> — a moment known as the Unix epoch. This single integer represents an exact point in time without any dependency on time zones, daylight saving rules, or calendar formatting. For example, the timestamp <code>1700000000</code> corresponds to November 14, 2023, at 22:13:20 UTC. Because timestamps are plain numbers, they are trivially easy to compare, sort, and store.</p>
+    <p>A Unix timestamp (also called Epoch time or POSIX time) is the number of seconds that have elapsed since <strong>January 1, 1970, 00:00:00 UTC</strong>, a moment known as the Unix epoch. This single integer represents an exact point in time without any dependency on time zones, daylight saving rules, or calendar formatting. For example, the timestamp <code>1700000000</code> corresponds to November 14, 2023, at 22:13:20 UTC. Because timestamps are plain numbers, they are trivially easy to compare, sort, and store.</p>
 
     <h3>Why Developers Use Unix Time</h3>
-    <p>Unix timestamps are the de facto standard for recording time in software systems. They are language-agnostic — every major programming language can read and produce them. They are timezone-independent, so a timestamp generated in Tokyo means the same thing when consumed in New York. Sorting events chronologically is a simple numeric comparison, and calculating durations is basic subtraction. These properties make Unix time ideal for log files, database records, API responses, caching headers, JWT token claims, and cron scheduling.</p>
+    <p>Unix timestamps are the de facto standard for recording time in software systems. They are language-agnostic. Every major programming language can read and produce them. They are timezone-independent, so a timestamp generated in Tokyo means the same thing when consumed in New York. Sorting events chronologically is a simple numeric comparison, and calculating durations is basic subtraction. These properties make Unix time ideal for log files, database records, API responses, caching headers, JWT token claims, and cron scheduling.</p>
 
     <h3>Seconds vs. Milliseconds</h3>
     <p>Most traditional Unix systems and languages like Python, PHP, and C use timestamps in <strong>seconds</strong>. JavaScript, Java, and some modern APIs use <strong>milliseconds</strong> (the value multiplied by 1,000). A seconds-based timestamp is typically 10 digits (e.g., <code>1700000000</code>), while a millisecond timestamp is 13 digits (e.g., <code>1700000000000</code>). This converter automatically detects which format you enter and handles the conversion for you.</p>
@@ -444,12 +444,12 @@
     <p>Timestamps appear throughout the development stack: REST API responses often include <code>created_at</code> or <code>updated_at</code> fields as epoch integers. Database records in PostgreSQL, MySQL, and MongoDB commonly store time as Unix timestamps. Server log files use them for precise event ordering. JWT tokens store <code>iat</code> (issued at) and <code>exp</code> (expiration) as Unix timestamps. HTTP headers like <code>Last-Modified</code> and <code>If-Modified-Since</code> also rely on epoch-based time.</p>
 
     <h3>How to Use This Tool</h3>
-    <p>Paste or type any Unix timestamp into the top converter to see the corresponding local time, UTC, and ISO 8601 output — along with a relative time label (e.g., "3 hours ago"). Use the quick buttons to jump to common offsets like now, +1 hour, +1 day, or +1 week. To go the other direction, pick a date and time in the bottom converter to get the Unix timestamp in both seconds and milliseconds. The live clock at the top shows the current Unix time updating every second.</p>
+    <p>Paste or type any Unix timestamp into the top converter to see the corresponding local time, UTC, and ISO 8601 output, along with a relative time label (e.g., "3 hours ago"). Use the quick buttons to jump to common offsets like now, +1 hour, +1 day, or +1 week. To go the other direction, pick a date and time in the bottom converter to get the Unix timestamp in both seconds and milliseconds. The live clock at the top shows the current Unix time updating every second.</p>
 
     <h3>Timezone Handling</h3>
     <p>Unix timestamps are inherently UTC. When this tool displays "Local Time," it converts the UTC-based timestamp to your browser's local timezone using the JavaScript <code>Date</code> object. The ISO 8601 output always includes the UTC offset for unambiguous communication.</p>
 
-    <p>This converter runs <strong>100% client-side</strong> — no data is sent to any server. Your timestamps stay in your browser.</p>
+    <p>This converter runs <strong>100% client-side</strong>: no data is sent to any server. Your timestamps stay in your browser.</p>
   </div>
 
   <div class="footer">

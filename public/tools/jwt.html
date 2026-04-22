@@ -334,7 +334,7 @@
   <div class="section">
     <div class="section-title" data-i18n="paste_jwt">Paste JWT Token</div>
     <textarea id="jwtInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U" data-i18n-placeholder="jwt_placeholder" spellcheck="false"></textarea>
-    <div class="disclaimer" data-i18n="jwt_warning">⚠ This tool does not verify signatures. Decoding happens entirely in your browser — tokens never leave your machine.</div>
+    <div class="disclaimer" data-i18n="jwt_warning">⚠ This tool does not verify signatures. Decoding happens entirely in your browser. Tokens never leave your machine.</div>
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
@@ -342,19 +342,19 @@
   <div class="status-bar" id="statusBar">
     <div class="status-item">
       <div class="s-label" data-i18n="algorithm">Algorithm</div>
-      <div class="s-value" id="sAlg">—</div>
+      <div class="s-value" id="sAlg">-</div>
     </div>
     <div class="status-item">
       <div class="s-label" data-i18n="issued_at">Issued At</div>
-      <div class="s-value" id="sIat">—</div>
+      <div class="s-value" id="sIat">-</div>
     </div>
     <div class="status-item">
       <div class="s-label" data-i18n="expires_at">Expires At</div>
-      <div class="s-value" id="sExp">—</div>
+      <div class="s-value" id="sExp">-</div>
     </div>
     <div class="status-item">
       <div class="s-label" data-i18n="is_expired">Expired?</div>
-      <div class="s-value" id="sExpired">—</div>
+      <div class="s-value" id="sExpired">-</div>
     </div>
   </div>
 
@@ -376,7 +376,7 @@
     <div class="section">
       <div class="section-title" data-i18n="signature">Signature</div>
       <div class="sig-block" id="sigBlock"></div>
-      <div class="sig-note">Signature verification requires the secret key — this tool only decodes.</div>
+      <div class="sig-note">Signature verification requires the secret key. This tool only decodes.</div>
     </div>
   </div>
 
@@ -385,10 +385,10 @@
     <h2>JWT Decoder: Decode JSON Web Tokens Online</h2>
 
     <h3>What Is a JWT?</h3>
-    <p>A JSON Web Token (JWT, pronounced "jot") is a compact, URL-safe token format defined by <strong>RFC 7519</strong>. JWTs allow claims — pieces of information about a user or session — to be securely transmitted between parties as a JSON object. They are self-contained, meaning the token itself carries all the data needed to authenticate a request without querying a database or session store. This makes JWTs popular for stateless authentication in modern web applications and APIs.</p>
+    <p>A JSON Web Token (JWT, pronounced "jot") is a compact, URL-safe token format defined by <strong>RFC 7519</strong>. JWTs allow claims (pieces of information about a user or session) to be securely transmitted between parties as a JSON object. They are self-contained, meaning the token itself carries all the data needed to authenticate a request without querying a database or session store. This makes JWTs popular for stateless authentication in modern web applications and APIs.</p>
 
     <h3>JWT Structure: Header.Payload.Signature</h3>
-    <p>Every JWT consists of three parts separated by dots: <code>header.payload.signature</code>. Each part is Base64URL-encoded. The <strong>header</strong> typically contains the signing algorithm (<code>alg</code>) and token type (<code>typ</code>). The <strong>payload</strong> holds the claims — the actual data being transmitted. The <strong>signature</strong> is created by signing the encoded header and payload with a secret key (HMAC) or a private key (RSA/ECDSA), ensuring the token has not been tampered with.</p>
+    <p>Every JWT consists of three parts separated by dots: <code>header.payload.signature</code>. Each part is Base64URL-encoded. The <strong>header</strong> typically contains the signing algorithm (<code>alg</code>) and token type (<code>typ</code>). The <strong>payload</strong> holds the claims (the actual data being transmitted). The <strong>signature</strong> is created by signing the encoded header and payload with a secret key (HMAC) or a private key (RSA/ECDSA), ensuring the token has not been tampered with.</p>
 
     <h3>Common Header Fields</h3>
     <table>
@@ -414,14 +414,14 @@
     <p>JWTs are widely used across the modern development stack. In <strong>API authentication</strong>, clients send a JWT in the <code>Authorization: Bearer</code> header with each request. <strong>OAuth 2.0</strong> and <strong>OpenID Connect</strong> use JWTs as access tokens and ID tokens. <strong>Single Sign-On (SSO)</strong> systems issue JWTs so users can authenticate once and access multiple services. JWTs also appear in <strong>session management</strong>, webhook signatures, and service-to-service communication in microservice architectures.</p>
 
     <h3>Security Considerations</h3>
-    <p><strong>JWTs are encoded, not encrypted.</strong> Anyone who has a JWT can decode the header and payload — no secret key is needed to read the contents. This means you should never put sensitive information (passwords, credit card numbers, personal secrets) in a JWT payload unless you also apply JWE (JSON Web Encryption). This decoder tool demonstrates exactly that: it reads the header and payload without any key at all.</p>
+    <p><strong>JWTs are encoded, not encrypted.</strong> Anyone who has a JWT can decode the header and payload. No secret key is needed to read the contents. This means you should never put sensitive information (passwords, credit card numbers, personal secrets) in a JWT payload unless you also apply JWE (JSON Web Encryption). This decoder tool demonstrates exactly that: it reads the header and payload without any key at all.</p>
 
     <p>This tool <strong>decodes but does not verify signatures</strong>. Signature verification requires the secret key (for HMAC algorithms like HS256) or the public key (for asymmetric algorithms like RS256 or ES256). In production systems, always verify the signature before trusting any claims in the payload.</p>
 
     <h3>How to Use This Tool</h3>
     <p>Paste any JWT into the text area above. The decoder will instantly split the token into its three parts and display the header and payload as formatted, syntax-highlighted JSON. Time-based claims like <code>exp</code>, <code>iat</code>, and <code>nbf</code> are automatically converted to human-readable dates, and the status bar shows whether the token is expired. The raw signature is displayed separately for reference.</p>
 
-    <p>This decoder runs <strong>100% client-side</strong> in your browser. Your tokens are never transmitted to any server — they stay entirely on your machine. This makes it safe to decode production tokens during debugging without risking exposure.</p>
+    <p>This decoder runs <strong>100% client-side</strong> in your browser. Your tokens are never transmitted to any server. They stay entirely on your machine. This makes it safe to decode production tokens during debugging without risking exposure.</p>
   </div>
 
   <div class="footer">
@@ -560,14 +560,14 @@ function decodeJWT() {
   // Status bar
   var now = Math.floor(Date.now() / 1000);
 
-  document.getElementById('sAlg').textContent = header.alg || '—';
+  document.getElementById('sAlg').textContent = header.alg || '-';
   document.getElementById('sAlg').className = 's-value';
 
   if (payload.iat) {
     document.getElementById('sIat').textContent = new Date(payload.iat * 1000).toLocaleString();
     document.getElementById('sIat').className = 's-value';
   } else {
-    document.getElementById('sIat').textContent = '—';
+    document.getElementById('sIat').textContent = '-';
     document.getElementById('sIat').className = 's-value';
   }
 
@@ -580,9 +580,9 @@ function decodeJWT() {
     document.getElementById('sExpired').textContent = isExpired ? 'Yes' : 'No';
     document.getElementById('sExpired').className = 's-value ' + (isExpired ? 'red' : 'green');
   } else {
-    document.getElementById('sExp').textContent = '—';
+    document.getElementById('sExp').textContent = '-';
     document.getElementById('sExp').className = 's-value';
-    document.getElementById('sExpired').textContent = '—';
+    document.getElementById('sExpired').textContent = '-';
     document.getElementById('sExpired').className = 's-value';
   }
 

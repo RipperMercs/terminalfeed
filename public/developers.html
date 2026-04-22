@@ -248,8 +248,8 @@
       <span class="path">/api/weather?lat=34.0&amp;lon=-118.2</span>
     </div>
     <p>Weather for any coordinates on Earth. Returns temperature (Fahrenheit), weather code, wind speed (mph), and humidity.</p>
-    <p class="param"><strong>lat</strong> (required) — latitude</p>
-    <p class="param"><strong>lon</strong> (required) — longitude</p>
+    <p class="param"><strong>lat</strong> (required):latitude</p>
+    <p class="param"><strong>lon</strong> (required):longitude</p>
     <p class="cache">Cache: 10 minutes per location</p>
   </div>
 
@@ -286,7 +286,7 @@
       <span class="method">GET</span>
       <span class="path">/api/service-status</span>
     </div>
-    <p>Operational status of major tech services — GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian.</p>
+    <p>Operational status of major tech services:GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian.</p>
     <p class="cache">Cache: 60 seconds</p>
     <pre><code>{
   <span class="json-key">"data"</span>: [
@@ -310,7 +310,7 @@
       <span class="method">GET</span>
       <span class="path">/api/humans-in-space</span>
     </div>
-    <p>Every human currently in orbit — names and spacecraft.</p>
+    <p>Every human currently in orbit:names and spacecraft.</p>
     <p class="cache">Cache: 1 hour</p>
     <pre><code>{
   <span class="json-key">"data"</span>: {
@@ -336,7 +336,7 @@
       <span class="method">GET</span>
       <span class="path">/api/disaster-alerts</span>
     </div>
-    <p>Global disaster alerts from GDACS (UN/EU) — cyclones, floods, earthquakes, wildfires, volcanoes.</p>
+    <p>Global disaster alerts from GDACS (UN/EU):cyclones, floods, earthquakes, wildfires, volcanoes.</p>
     <p class="cache">Cache: 5 minutes</p>
   </div>
 
@@ -354,7 +354,7 @@
       <span class="method">GET</span>
       <span class="path">/api/economic-data</span>
     </div>
-    <p>US Federal Reserve economic indicators — fed funds rate, CPI inflation, unemployment, 10-year treasury yield, 30-year mortgage rate.</p>
+    <p>US Federal Reserve economic indicators:fed funds rate, CPI inflation, unemployment, 10-year treasury yield, 30-year mortgage rate.</p>
     <p class="cache">Cache: 1 hour</p>
   </div>
 
@@ -372,7 +372,7 @@
       <span class="method">GET</span>
       <span class="path">/api/internet-pulse</span>
     </div>
-    <p>Global latency check — ping times to 6 endpoints across US East, US West, Europe, Asia, Cloudflare, and Google. Latency in milliseconds, -1 means the endpoint is unreachable.</p>
+    <p>Global latency check:ping times to 6 endpoints across US East, US West, Europe, Asia, Cloudflare, and Google. Latency in milliseconds, -1 means the endpoint is unreachable.</p>
     <p class="cache">Cache: 60 seconds</p>
     <pre><code>{
   <span class="json-key">"source"</span>: <span class="json-string">"terminalfeed.io"</span>,
@@ -394,7 +394,7 @@
       <span class="method">GET</span>
       <span class="path">/api/ai-stats</span>
     </div>
-    <p>TerminalFeed API usage statistics — total hits, unique AI agents, recent API calls.</p>
+    <p>TerminalFeed API usage statistics:total hits, unique AI agents, recent API calls.</p>
     <p class="cache">Cache: 30 seconds</p>
   </div>
 
@@ -476,11 +476,11 @@ curl "https://terminalfeed.io/api/weather?lat=34.0&amp;lon=-118.2"</code></pre>
 
   <p>Discovery file: <span class="inline-code">https://terminalfeed.io/llms.txt</span></p>
   <p>OpenAPI spec: <span class="inline-code">https://terminalfeed.io/openapi.json</span></p>
-  <p>Best endpoint for AI: <span class="inline-code">/api/briefing</span> — one call, complete world snapshot with a pre-formatted summary string.</p>
+  <p>Best endpoint for AI: <span class="inline-code">/api/briefing</span>:one call, complete world snapshot with a pre-formatted summary string.</p>
 
   <h2>Rate Limits</h2>
 
-  <p>100,000 requests per day across all endpoints. Keep individual endpoint calls to a maximum of 1 request per 30 seconds. If you exceed limits, you'll receive a 429 status code. There is no penalty — just back off and retry.</p>
+  <p>100,000 requests per day across all endpoints. Keep individual endpoint calls to a maximum of 1 request per 30 seconds. If you exceed limits, you'll receive a 429 status code. There is no penalty:just back off and retry.</p>
 
   <p>Data is cached server-side at the intervals listed above. Calling more frequently than the cache interval will return the same data, so there's no benefit to polling faster.</p>
 
