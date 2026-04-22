@@ -13,7 +13,7 @@ export interface XkcdComic {
 
 const API_URL = '/api/xkcd';
 const CACHE_KEY = 'xkcd_latest';
-const POLL_MS = 300_000; // 5 minutes — comics update infrequently
+const POLL_MS = 300_000; // 5 minutes: comics update infrequently
 
 export function useXkcd() {
   const [comic, setComic] = useState<XkcdComic | null>(() => {

@@ -56,9 +56,9 @@ const MOTD = [
 ];
 
 const DENY_MESSAGES = [
-  'ACCESS DENIED — Credentials do not match.',
-  'AUTHENTICATION FAILURE — Nice try.',
-  'REJECTED — This incident will be reported.',
+  'ACCESS DENIED:Credentials do not match.',
+  'AUTHENTICATION FAILURE:Nice try.',
+  'REJECTED:This incident will be reported.',
 ];
 
 const startTime = Date.now();
@@ -78,10 +78,10 @@ export function AdminTerminal({ layout, onClose }: Props) {
   useEffect(() => {
     setHistory([
       { type: 'output', text: '╔════════════════════════════════════════════════╗' },
-      { type: 'output', text: '║  TERMINALFEED ADMIN CONSOLE v1.0.0 — RIPPERX  ║' },
+      { type: 'output', text: '║  TERMINALFEED ADMIN CONSOLE v1.0.0:RIPPERX  ║' },
       { type: 'output', text: '╚════════════════════════════════════════════════╝' },
       { type: 'output', text: '' },
-      { type: 'warn', text: '⚠ RESTRICTED SYSTEM — AUTHORIZED ACCESS ONLY' },
+      { type: 'warn', text: '⚠ RESTRICTED SYSTEM:AUTHORIZED ACCESS ONLY' },
       { type: 'output', text: '' },
       { type: 'output', text: 'Enter access code:' },
     ]);
@@ -107,7 +107,7 @@ export function AdminTerminal({ layout, onClose }: Props) {
       const secsLeft = Math.ceil((lockedUntil - now) / 1000);
       push([
         { type: 'input', text: '> ••••••••' },
-        { type: 'error', text: `LOCKED OUT — Try again in ${secsLeft}s.` },
+        { type: 'error', text: `LOCKED OUT:Try again in ${secsLeft}s.` },
       ]);
       return;
     }

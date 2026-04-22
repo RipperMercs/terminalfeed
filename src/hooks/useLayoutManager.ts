@@ -349,7 +349,7 @@ export function useLayoutManager(): LayoutManager {
     navigator.clipboard.writeText(code).then(() => {
       showToast('Layout copied to clipboard');
     }).catch(() => {
-      showToast('Export ready — copy failed');
+      showToast('Export ready: copy failed');
     });
 
     return code;

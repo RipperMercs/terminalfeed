@@ -20,7 +20,7 @@ const BASE_PRIORITY: Record<string, number> = {
   'market-hours': 60,   // Context
   'reddit': 55,         // Social
   'github': 50,         // Dev content
-  'dev-status': 65,     // Infra status — spikes when something is down
+  'dev-status': 65,     // Infra status: spikes when something is down
   'stackoverflow': 45,  // Dev questions
   'podcasts': 35,       // Entertainment
   'seismic': 40,        // Earthquakes

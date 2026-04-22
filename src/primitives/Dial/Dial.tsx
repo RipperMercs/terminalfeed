@@ -28,12 +28,12 @@ const DEFAULT_GRADIENT = [
 ];
 
 /**
- * Dial — semicircle gauge primitive for bounded scalar readings.
+ * Dial: semicircle gauge primitive for bounded scalar readings.
  * Fills an arc from the left to the current angle, shows a white
  * needle at the current position, and jitters the needle subtly by
  * default. The endpoint of the progress arc is computed with proper
  * trig so the stroke sits on the 80-radius circle (the naive linear
- * interpolation produces a distorted arc — see fix commit 5d8f542).
+ * interpolation produces a distorted arc: see fix commit 5d8f542).
  */
 function DialInner({
   value,

@@ -21,7 +21,7 @@ interface Props {
 const FLASH_MS = 700;
 
 /**
- * CountUp — formatted number that flashes green or red on change.
+ * CountUp: formatted number that flashes green or red on change.
  * Composes with Sparkline and LatencyChip in hero tiles (BTC price,
  * stocks, counters). Digit-roll animation is a future enhancement;
  * today's implementation is the flash-on-change variant that matches
@@ -56,7 +56,7 @@ function CountUpInner({
         minimumFractionDigits: minDecimals ?? decimals,
         maximumFractionDigits: decimals,
       })
-    : '—';
+    : '-';
 
   const cls =
     flash === 'up' ? `${styles.root} ${styles.flashUp}`

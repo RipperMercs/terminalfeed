@@ -50,7 +50,7 @@ function getActiveLeagues() {
 
 const LEAGUES = getActiveLeagues();
 
-const SUMMARY_POLL_MS = 15_000; // 15s — fast enough for live play-by-play
+const SUMMARY_POLL_MS = 15_000; // 15s: fast enough for live play-by-play
 const CACHE_KEY = 'sports_scores';
 
 // Fetch play-by-play summary for a live game

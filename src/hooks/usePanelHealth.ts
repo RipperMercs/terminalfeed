@@ -12,7 +12,7 @@ interface PanelHealthState {
   };
 }
 
-const STALE_THRESHOLD = 5 * 60_000; // 5 min — if no data for 5 min, consider unhealthy
+const STALE_THRESHOLD = 5 * 60_000; // 5 min: if no data for 5 min, consider unhealthy
 const CHECK_INTERVAL = 30_000; // check every 30s
 
 export function usePanelHealth() {

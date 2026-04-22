@@ -14,7 +14,7 @@ export type FlightStatus = 'loading' | 'ready' | 'failed';
 
 const API_URL = 'https://opensky-network.org/api/states/all';
 const CACHE_KEY = 'flight_radar';
-const POLL_MS = 120_000; // 2 minutes — respectful to free API
+const POLL_MS = 120_000; // 2 minutes: respectful to free API
 const FETCH_TIMEOUT_MS = 8_000;
 const FAIL_AFTER_MS = 10_000;
 

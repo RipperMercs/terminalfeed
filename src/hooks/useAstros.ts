@@ -9,7 +9,7 @@ export interface AstroData {
 
 const API_URL = 'http://api.open-notify.org/astros.json';
 const CACHE_KEY = 'astros';
-const POLL_MS = 30 * 60_000; // 30 min — crew doesn't change often
+const POLL_MS = 30 * 60_000; // 30 min: crew doesn't change often
 
 export function useAstros(): AstroData | null {
   const [data, setData] = useState<AstroData | null>(() => {

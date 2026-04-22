@@ -74,7 +74,7 @@ export function useDailyPaws() {
         if (mountedRef.current) { setPaw(result); setFading(false); }
       };
       img.onerror = () => {
-        // Image failed (Tumblr removed, 404, etc.) — try a dog instead
+        // Image failed (Tumblr removed, 404, etc.): try a dog instead
         if (!mountedRef.current) return;
         fetchDog().then(fallback => {
           if (fallback && mountedRef.current) {
