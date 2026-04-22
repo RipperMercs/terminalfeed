@@ -74,16 +74,22 @@
         "priceCurrency": "USD"
       },
       "featureList": [
-        "Real-time Bitcoin price via WebSocket",
-        "Live stock market data",
-        "Cryptocurrency prices and market cap",
-        "Tech and AI news feeds",
-        "Earthquake monitoring",
+        "Real-time Bitcoin ticker via WebSocket",
+        "Live stock prices",
+        "Top crypto movers by 24 hour change",
+        "Fear and Greed Index",
+        "Polymarket prediction markets",
+        "USGS earthquake feed",
         "Space launch tracking",
-        "Wikipedia live edit stream",
+        "GitHub trending repositories",
+        "Hacker News live feed",
         "Global disaster alerts",
-        "Weather with animated visuals",
-        "Developer status monitoring",
+        "Cyber threat intelligence feed",
+        "ETH gas tracker",
+        "Weather forecast",
+        "Global market hours",
+        "Forex exchange rates",
+        "Wikipedia live edit stream",
         "Customizable panel layout"
       ],
       "screenshot": "https://terminalfeed.io/og-image.png",
@@ -120,6 +126,45 @@
         "target": "https://terminalfeed.io/search?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is TerminalFeed free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. No signup, no subscription, no rate limit. Every data feed is free to use and the public API is free for any client including AI agents." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the Bitcoin ticker real time?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The ticker updates every second on desktop via Binance WebSocket with automatic fallback to CoinCap. Mobile throttles to three seconds to preserve battery." }
+        },
+        {
+          "@type": "Question",
+          "name": "How many live data feeds does TerminalFeed have?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The dashboard shows 30+ real time feeds including Bitcoin price, stocks, top crypto movers, Fear and Greed Index, Polymarket odds, earthquakes, space launches, GitHub trending, Hacker News, and more." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I embed the Bitcoin ticker on my site?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Embeds are available at terminalfeed.io/widgets. The embeddable Bitcoin ticker is sandboxed, ad free, and requires no signup." }
+        },
+        {
+          "@type": "Question",
+          "name": "What data sources does TerminalFeed use?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Binance, CoinCap, CoinGecko, Finnhub, Polymarket, USGS, The Space Devs, Alternative.me, Open Meteo, mempool.space, Etherscan, Frankfurter, FRED, and more. Every source is public and API backed." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a public API?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every feed is exposed at terminalfeed.io/api with CORS enabled and no authentication required. The one call world snapshot at /api/briefing is used by AI agents." }
+        }
+      ]
     }
     </script>
 
