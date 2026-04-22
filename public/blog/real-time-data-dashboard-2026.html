@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard | TerminalFeed</title>
+  <meta name="description" content="A live Bitcoin ticker is the hook. The real product is everything around it. How TerminalFeed evolved from one price feed into a 30-panel real-time dashboard for the whole world.">
+  <meta property="og:title" content="Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard">
+  <meta property="og:description" content="A live Bitcoin ticker is the hook. The real product is everything around it. How TerminalFeed evolved into a 30-panel real-time dashboard.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:url" content="https://terminalfeed.io/blog/real-time-data-dashboard-2026">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard">
+  <meta name="twitter:description" content="A live BTC ticker is the hook. The real product is everything around it.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/real-time-data-dashboard-2026">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed" href="https://terminalfeed.io/feed.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "Real-Time Data Dashboard 2026", "item": "https://terminalfeed.io/blog/real-time-data-dashboard-2026"}
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard",
+    "description": "A live Bitcoin ticker is the hook. The real product is everything around it. How TerminalFeed evolved from one price feed into a 30-panel real-time dashboard for the whole world.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-22T00:00:00Z",
+    "dateModified": "2026-04-22T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper",
+      "url": "https://terminalfeed.io/team/ripper",
+      "jobTitle": "Founder and Editor-in-Chief"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 760px; margin: 0 auto; }
+    header { margin-bottom: 48px; border-bottom: 1px solid #1E1E24; padding-bottom: 32px; }
+    .breadcrumbs { font-size: 11px; color: #8A8880; margin-bottom: 16px; letter-spacing: 0.5px; }
+    .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    .breadcrumbs span { margin: 0 6px; }
+    h1 { font-size: 28px; color: #F0EDE6; margin: 20px 0 16px 0; font-weight: 600; line-height: 1.3; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #8A8880; margin-top: 12px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; }
+    .tag { display: inline-block; background: rgba(93, 202, 165, 0.12); color: #5DCAA5; padding: 3px 8px; border-radius: 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-right: 6px; }
+    .article-body { color: #D4D2CB; }
+    .article-body p { margin-bottom: 16px; line-height: 1.7; }
+    .article-body h2 { font-size: 18px; color: #4ADE80; margin: 32px 0 16px 0; font-weight: 600; border-left: 3px solid #4ADE80; padding-left: 12px; }
+    .article-body h3 { font-size: 14px; color: #5DCAA5; margin: 20px 0 12px 0; font-weight: 600; }
+    .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 16px; }
+    .article-body li { margin-bottom: 8px; line-height: 1.6; }
+    .article-body code { background: #111114; color: #5DCAA5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .article-body blockquote { border-left: 3px solid #5DCAA5; padding: 8px 16px; margin: 20px 0; color: #8A8880; font-style: italic; background: rgba(93, 202, 165, 0.04); }
+    .cta-box { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #5DCAA5; padding: 20px; margin: 32px 0; border-radius: 3px; }
+    .cta-box h3 { margin-top: 0; color: #5DCAA5; font-size: 14px; }
+    .cta-box p { margin-bottom: 12px; font-size: 13px; }
+    .cta-link { display: inline-block; background: rgba(93, 202, 165, 0.15); color: #5DCAA5; padding: 8px 12px; text-decoration: none; border-radius: 3px; font-size: 12px; border: 1px solid #5DCAA5; transition: all 0.2s; margin-right: 6px; }
+    .cta-link:hover { background: rgba(93, 202, 165, 0.25); }
+    .author-box { background: #111114; border: 1px solid #1E1E24; padding: 20px; margin-top: 40px; border-radius: 3px; }
+    .author-box h3 { font-size: 13px; color: #F0EDE6; margin-top: 0; margin-bottom: 8px; }
+    .author-info { font-size: 12px; color: #8A8880; line-height: 1.6; }
+    .author-info a { color: #5DCAA5; text-decoration: none; }
+    .author-info a:hover { text-decoration: underline; }
+    footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1E1E24; font-size: 11px; color: #4E4D49; text-align: center; }
+    footer a { color: #5DCAA5; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .glossary-links { background: rgba(93, 202, 165, 0.05); border: 1px solid #1E1E24; padding: 16px; margin: 24px 0; border-radius: 3px; font-size: 12px; }
+    .glossary-links strong { color: #5DCAA5; display: block; margin-bottom: 8px; }
+    .glossary-links a { display: inline-block; margin-right: 12px; margin-bottom: 6px; color: #5DCAA5; text-decoration: none; border: 1px solid #1E1E24; padding: 4px 8px; border-radius: 2px; }
+    .glossary-links a:hover { background: rgba(93, 202, 165, 0.1); border-color: #5DCAA5; }
+    @media (max-width: 600px) { html, body { padding: 24px 16px; } h1 { font-size: 22px; } .article-body h2 { font-size: 16px; } }
+  </style>
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="breadcrumbs">
+        <a href="https://terminalfeed.io">Home</a>
+        <span>&gt;</span>
+        <a href="https://terminalfeed.io/blog">Blog</a>
+        <span>&gt;</span>
+        <span>Real-Time Data Dashboard 2026</span>
+      </div>
+      <h1>Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard</h1>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="tag">FOUNDER FRIDAY</span>
+          <span class="tag">PRODUCT</span>
+          <span class="tag">REAL-TIME</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">By <strong><a href="https://terminalfeed.io/team/ripper" style="color: #5DCAA5; text-decoration: none;">Ripper</a></strong></div>
+        <div class="meta-item">April 22, 2026</div>
+        <div class="meta-item">~10 min read</div>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <p>The first thing I built for TerminalFeed was a Bitcoin ticker. A single number at the top of a black page, updating once per second. I watched it for an hour and thought: that's it. That's the feeling. The site needs to feel like looking at a terminal.</p>
+
+      <p>Then I added a second panel. Then ten more. Now there are over thirty, and the original ticker is still at the top, but it's no longer the product. The product is the ambient feeling of being connected to thirty things happening in the world at once. This is a founder's note on what I've learned building that, and why a single-number dashboard is only ever a waypoint, never a destination.</p>
+
+      <h2>The Ticker Was the Hook, Not the Answer</h2>
+      <p>People find TerminalFeed by searching for Bitcoin tickers. They stay because of the panels around it. Space launches, earthquake alerts, prediction markets, GitHub trending, a live Wikipedia edits stream, which cloud services are currently down. The ticker earns the click. Everything else earns the tab pin.</p>
+
+      <p>This was not the plan. The plan was a crypto dashboard. What happened is that every time I added a non-crypto panel, my own time on the site went up. I started leaving it open on a second monitor for the feeling of being plugged in. Friends said the same thing. Something about the combination of real-time feeds was more compelling than any single one.</p>
+
+      <p>I think the reason is that real-time data has a psychological quality polling data does not. When numbers update in front of you, your brain treats them as presence. You feel like you're observing the world, not retrieving a stale report. The ticker was teaching me that feeling; the other panels scaled it.</p>
+
+      <h2>The Panel Is the Atomic Unit</h2>
+      <p>Every feed on TerminalFeed fits a single pattern: a rectangle with a title, a data surface, and a self-healing lifecycle. It fetches its own data. It handles its own errors. It doesn't care about the other panels. It can be moved, reordered, hidden, or dragged anywhere on the page, and nothing else breaks.</p>
+
+      <p>This seems obvious once you see it. It is not obvious when you're building. The naive version is to centralize state: one store that knows about all feeds, one fetcher that runs everything on a shared schedule. That's the version I started with. It broke every time I added a new panel, because every new feed forced me to modify the central store, which touched every other panel.</p>
+
+      <p>The working version is: every panel is its own universe. Its own hook for data. Its own error boundary. Its own rendering. If one panel crashes, the site doesn't. If one API goes down, one panel goes dim and the other 29 keep running. This pattern is not elegant. It duplicates code. It's the right pattern.</p>
+
+      <blockquote>Never trust a single shared pipeline. If one thing breaks, don't let it take down anything else.</blockquote>
+
+      <h2>Self-Healing Is the Feature, Not the Error Handling</h2>
+      <p>A real-time dashboard that shows error states is a broken product. The user didn't sign up to debug your API reliability. If a feed is down, you have three options: show stale data with a subtle indicator, hide the panel, or reconnect silently and hope. Never: show a red error banner and dump a stack trace.</p>
+
+      <p>TerminalFeed panels do all three depending on the failure mode. Soft failures (one slow fetch) show stale data and retry in the background. Hard failures (endpoint returns 500 for minutes) hide the panel from the layout until recovery. Reconnections happen without any UI event. The user should never know anything went wrong.</p>
+
+      <p>This sounds like coddling, but it's the only honest design. Users come to the dashboard to see the world. Any moment they spend processing an error state is a moment they're not consuming the data the site exists to deliver. Error handling should be invisible if at all possible.</p>
+
+      <h2>The Worker Is Not a Proxy, It's a Trust Layer</h2>
+      <p>A lot of real-time dashboards make one critical mistake: they let the browser call third-party APIs directly. CORS headers get set permissively, someone's API key gets exposed, rate limits fire, and the site breaks under load. We tried this. We paid for it. It doesn't scale and it leaks secrets.</p>
+
+      <p>Every external API on TerminalFeed now runs through a Cloudflare Worker that sits between the browser and the source. The Worker handles authentication, caches aggressively, applies per-endpoint TTLs, times out at 8 seconds, falls through to secondary sources, and never returns a 5xx to the client. On failure, it returns last-known-good data with a staleness flag.</p>
+
+      <p>This trust layer is what makes the dashboard robust at scale. The same Worker serves 10 users or 10,000 users at similar cost because the cache absorbs most of the work. When a source API is degraded, we feel it for a minute before our cache expires; the user feels it never because we're serving from the cache.</p>
+
+      <h2>Latency Budgets Are Real</h2>
+      <p>A 30-panel dashboard has 30 latency budgets. Each panel has its own frequency of truth: some things change every second (BTC), some every minute (stocks), some every hour (economic data). Treating them all with the same cadence wastes bandwidth on the slow-changing feeds and undercooks the fast ones.</p>
+
+      <p>The pattern: each panel declares its freshness requirement. The Worker caches accordingly. The client polls or subscribes accordingly. A stock price panel has no business running a WebSocket. A BTC ticker has no business polling on a 15-second interval.</p>
+
+      <p>The tricky part is the long tail: disaster alerts that may fire once a month or twice a day. There's no reasonable polling cadence. Solution: SSE streams where available, long-TTL caches where not, and a banner only when something actually changes. If I poll for disaster alerts every 30 seconds and render "nothing" 98% of the time, I've wasted 98% of the fetches.</p>
+
+      <h2>The Mobile Constraint Is a Feature</h2>
+      <p>Phones force you to make hard choices you'd otherwise dodge. A ticker that looks fine on a 4K desktop looks garish at 375px wide. A 30-panel layout that's fun on a widescreen monitor is a scroll nightmare on a phone.</p>
+
+      <p>We ended up with a mobile layout that's narrower, slower to update, and deliberately less dense. Panels that make sense only on a desktop ("watch the Wikipedia firehose scroll past") are deprioritized on mobile. The ticker pauses when the tab is backgrounded. Animations are disabled.</p>
+
+      <p>Designing for mobile forced us to answer: which panels are truly essential? The answer turned out to be about eight. On mobile, you want BTC, Fear and Greed, prediction markets, top stories, stock movers, earthquake alerts, what's trending, and the weather. Everything else is optional. We surface those first on small screens. The full 30+ panel experience is desktop-first, and we're at peace with that.</p>
+
+      <h2>The Static HTML Is for Google, the React Is for Humans</h2>
+      <p>Real-time dashboards have a fundamental SEO problem: everything interesting is hydrated by JavaScript. Googlebot can execute JS, but it doesn't do so reliably or promptly on every page. If all your content lives inside React, Google sees an empty shell.</p>
+
+      <p>Our solution: every page ships a static HTML content block with the latest article titles, descriptions, and internal links. On page load, React renders the live dashboard on top of it and the static block is hidden. Humans see the dashboard; crawlers see structured content. Both are happy.</p>
+
+      <p>This is not a hack. It's recognizing that "real-time" and "indexable" are orthogonal goals and serving each appropriately. The real-time layer lives in the browser. The indexable layer lives in the initial HTML. Neither interferes with the other.</p>
+
+      <h2>Community Forms Around Panels, Not Products</h2>
+      <p>The most delightful thing about running TerminalFeed is the feedback about individual panels. People write in because they love the Space Launches panel. They suggest new feeds for the Cyber Threats panel. They argue for and against the inclusion of specific prediction markets. Nobody writes in about the "product" as a whole.</p>
+
+      <p>This tells me the panel is the right unit of engagement. When someone cares about a panel, they care deeply. They want it to be better. They have opinions about its styling, its data source, its update cadence. Treating panels as mini-products rather than features has been the right model. Each one has its own maintainer mentality even though I'm the only maintainer.</p>
+
+      <h2>The Ticker Is Still at the Top</h2>
+      <p>After thirty panels and two years of iteration, the Bitcoin ticker is still the first thing you see when you load the site. I've thought about moving it. I've thought about rotating the hero between BTC, ETH, and stocks. I've kept coming back to the ticker.</p>
+
+      <p>It's partly an anchor: that one number tells you the site is live, that everything below it is real. It's partly a shorthand: most of our visitors arrive looking for crypto data, and the ticker confirms they're in the right place. It's partly identity: TerminalFeed without a BTC hero is a different site.</p>
+
+      <p>So the ticker stays. But the dashboard around it is the thing. If you only see the ticker, you missed the product. Scroll. There are earthquakes happening, space missions launching, prediction markets settling, code being committed, APIs going down and coming back up. The world is noisy. Watching it in real-time, one panel at a time, is the most satisfying second monitor I've ever built.</p>
+
+      <p>If you're building your own real-time thing, start with the hook: one live number that earns the click. Then build the dashboard around it slowly. The magic is not in any single panel. It's in the composition.</p>
+
+      <p>For the nuts and bolts of the ticker itself, see <a href="https://terminalfeed.io/blog/bitcoin-ticker-explained" style="color: #5DCAA5;">Bitcoin Ticker: How Live BTC Price Updates Actually Work</a>. For the broader case on second monitors, <a href="https://terminalfeed.io/blog/why-second-monitor-dashboards-matter" style="color: #5DCAA5;">Why Second Monitor Dashboards Matter</a>.</p>
+
+      <div class="cta-box">
+        <h3>See the Whole Thing</h3>
+        <p>30+ real-time feeds on one page. The ticker is at the top. The product is below it.</p>
+        <a href="https://terminalfeed.io" class="cta-link">Open the Dashboard</a>
+        <a href="https://terminalfeed.io/about" class="cta-link">About</a>
+      </div>
+
+      <div class="glossary-links">
+        <strong>Learn More:</strong>
+        <a href="https://terminalfeed.io/glossary/bitcoin">Bitcoin</a>
+        <a href="https://terminalfeed.io/glossary/real-time">Real-Time</a>
+        <a href="https://terminalfeed.io/glossary/dashboard">Dashboard</a>
+        <a href="https://terminalfeed.io/glossary/websocket">WebSocket</a>
+      </div>
+    
+<div class="related-content">
+  <h3>RELATED ARTICLES</h3>
+  <a href="/blog/building-terminalfeed" class="related-article">
+    <div class="related-title">How I Built a Real-Time Dashboard with 30+ Live Data Feeds</div>
+    <div class="related-meta">By Ripper | BUILDING | March 2026</div>
+  </a>
+  <a href="/blog/why-second-monitor-dashboards-matter" class="related-article">
+    <div class="related-title">Why Your Second Monitor Should Be a Dashboard, Not a Distraction</div>
+    <div class="related-meta">By Ripper | PRODUCTIVITY | April 2026</div>
+  </a>
+  <a href="/blog/free-apis-2026" class="related-article">
+    <div class="related-title">30+ Free APIs Every Developer Should Know in 2026</div>
+    <div class="related-meta">By Ripper | Article | March 2026</div>
+  </a>
+
+  <div class="related-tools">
+    <h3>RELATED TOOLS</h3>
+    <a href="/tools/satoshi" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> Satoshi Converter
+      <span class="tool-desc">BTC to sats</span>
+    </a>
+    <a href="/tools/gwei" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> Gwei Calculator
+      <span class="tool-desc">Gas math in ETH and USD</span>
+    </a>
+    <a href="/tools/json" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> JSON Formatter
+      <span class="tool-desc">Format and validate JSON</span>
+    </a>
+  </div>
+</div>
+
+    </article>
+
+    <div class="author-box">
+      <h3>About Ripper</h3>
+      <div class="author-info">
+        <p>Ripper is the founder and editor-in-chief of TerminalFeed. Writes the weekly Founder Friday dispatch on product, real-time data, and building independent software.</p>
+        <p><a href="https://terminalfeed.io/team/ripper">View all articles by Ripper</a></p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Published on April 22, 2026 at TerminalFeed</p>
+      <p><a href="https://terminalfeed.io/feed.xml">Subscribe via RSS</a> | <a href="https://terminalfeed.io/blog">Back to Blog</a> | <a href="https://terminalfeed.io">Home</a></p>
+    </footer>
+  </div>
+</body>
+</html>

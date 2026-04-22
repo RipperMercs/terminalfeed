@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Inject Related Articles + Related Tools block into every blog article.
-// Run once; idempotent — skips articles that already have the block.
+// Safe to re-run: if an article already has the block, it is replaced with a
+// freshly rendered one from the current MAPPING so the source of truth stays
+// in this file rather than in 25+ hand-edited HTML files.
 
 import fs from 'fs';
 import path from 'path';
@@ -14,36 +16,54 @@ const BLOG_DIR = path.resolve('public/blog');
 // the original spec (2600-hz-whistle-history, claude-vs-chatgpt,
 // rest-vs-graphql, websocket-vs-sse) I hand-picked 3 category neighbors.
 const MAPPING = {
-  'fear-greed-guide':                      { related: ['btc-extreme-fear-data', 'what-the-fear-greed-index-got-wrong', 'why-data-matters-for-traders'], tools: [] },
-  'bitcoin-mempool':                       { related: ['fear-greed-guide', 'why-data-matters-for-traders', 'building-terminalfeed'], tools: [] },
+  // Crypto / markets. Reverse-linked to the Bitcoin Ticker batch where the
+  // topic overlap is tight (mempool primer -> bitcoin-ticker-explained,
+  // fear-greed -> best-bitcoin-ticker for "which ticker to use").
+  'fear-greed-guide':                      { related: ['btc-extreme-fear-data', 'what-the-fear-greed-index-got-wrong', 'best-bitcoin-ticker'], tools: [] },
+  'bitcoin-mempool':                       { related: ['fear-greed-guide', 'why-data-matters-for-traders', 'bitcoin-ticker-explained'], tools: [] },
   'prediction-markets':                    { related: ['fear-greed-guide', 'why-data-matters-for-traders', 'what-the-fear-greed-index-got-wrong'], tools: [] },
   'why-data-matters-for-traders':          { related: ['fear-greed-guide', 'prediction-markets', 'bitcoin-mempool'], tools: [] },
   'btc-extreme-fear-data':                 { related: ['fear-greed-guide', 'what-the-fear-greed-index-got-wrong', 'why-data-matters-for-traders'], tools: [] },
   'what-the-fear-greed-index-got-wrong':   { related: ['fear-greed-guide', 'btc-extreme-fear-data', 'prediction-markets'], tools: [] },
 
-  'free-apis-2026':                        { related: ['api-rate-limits-explained', 'free-api-testing-tools', 'cron-decoded'], tools: ['json', 'jwt'] },
+  // Dev tools. free-apis-2026 gets the ticker tutorial; websocket-vs-sse gets
+  // the architecture deep dive.
+  'free-apis-2026':                        { related: ['api-rate-limits-explained', 'free-api-testing-tools', 'bitcoin-ticker-for-your-site'], tools: ['json', 'jwt'] },
   'api-rate-limits-explained':             { related: ['free-apis-2026', 'free-api-testing-tools', 'rest-vs-graphql'], tools: ['json', 'timestamp'] },
   'free-api-testing-tools':                { related: ['free-apis-2026', 'api-rate-limits-explained', 'building-terminalfeed'], tools: ['json', 'base64'] },
   'cron-decoded':                          { related: ['free-apis-2026', 'free-api-testing-tools', 'self-hosting-is-back'], tools: ['cron', 'timestamp'] },
   'rest-vs-graphql':                       { related: ['free-apis-2026', 'api-rate-limits-explained', 'websocket-vs-sse'], tools: ['json', 'base64'] },
-  'websocket-vs-sse':                      { related: ['real-time-vs-near-real-time', 'free-apis-2026', 'rest-vs-graphql'], tools: ['json', 'timestamp'] },
+  'websocket-vs-sse':                      { related: ['real-time-vs-near-real-time', 'rest-vs-graphql', 'bitcoin-ticker-websocket-vs-polling'], tools: ['json', 'timestamp'] },
 
+  // Security / culture.
   'read-your-browser-console':             { related: ['browser-extensions-watching', 'building-terminalfeed', '2600-still-matters'], tools: ['json', 'regex'] },
   'browser-extensions-watching':           { related: ['read-your-browser-console', '2600-still-matters', '2600-hz-whistle-history'], tools: [] },
   '2600-hz-whistle-history':               { related: ['2600-still-matters', 'read-your-browser-console', 'self-hosting-is-back'], tools: [] },
 
+  // AI / models.
   'how-ai-agents-browse':                  { related: ['websites-humans-ai-agents', 'claude-vs-chatgpt', 'building-terminalfeed'], tools: ['json', 'regex'] },
   'claude-mythos-project-glasswing':       { related: ['how-ai-agents-browse', 'claude-vs-chatgpt', 'websites-humans-ai-agents'], tools: [] },
   'websites-humans-ai-agents':             { related: ['how-ai-agents-browse', 'claude-vs-chatgpt', 'free-apis-2026'], tools: ['json', 'uuid'] },
   'claude-vs-chatgpt':                     { related: ['how-ai-agents-browse', 'websites-humans-ai-agents', 'claude-mythos-project-glasswing'], tools: ['json', 'jwt'] },
 
-  'building-terminalfeed':                 { related: ['self-hosting-is-back', 'why-second-monitor-dashboards-matter', '2600-still-matters'], tools: ['json', 'timestamp'] },
+  // Product / meta. building-terminalfeed and why-second-monitor-dashboards-matter
+  // get the new Ripper Founder Friday piece.
+  'building-terminalfeed':                 { related: ['self-hosting-is-back', 'why-second-monitor-dashboards-matter', 'real-time-data-dashboard-2026'], tools: ['json', 'timestamp'] },
   '2600-still-matters':                    { related: ['2600-hz-whistle-history', 'read-your-browser-console', 'self-hosting-is-back'], tools: [] },
   'self-hosting-is-back':                  { related: ['free-tier-is-dead', 'building-terminalfeed', 'free-apis-2026'], tools: ['json', 'cron'] },
   'free-tier-is-dead':                     { related: ['self-hosting-is-back', 'free-apis-2026', 'free-api-testing-tools'], tools: [] },
-  'why-second-monitor-dashboards-matter':  { related: ['building-terminalfeed', 'real-time-vs-near-real-time', 'self-hosting-is-back'], tools: [] },
+  'why-second-monitor-dashboards-matter':  { related: ['building-terminalfeed', 'real-time-vs-near-real-time', 'real-time-data-dashboard-2026'], tools: [] },
 
   'real-time-vs-near-real-time':           { related: ['websocket-vs-sse', 'building-terminalfeed', 'free-apis-2026'], tools: ['json', 'timestamp'] },
+
+  // Bitcoin Ticker batch (April 22, 2026). Each is cross-linked back through
+  // the reverse-link edits above so topical clusters reinforce each other.
+  'bitcoin-ticker-explained':              { related: ['bitcoin-ticker-websocket-vs-polling', 'bitcoin-mempool', 'fear-greed-guide'], tools: ['satoshi', 'timestamp'] },
+  'best-bitcoin-ticker':                   { related: ['bitcoin-ticker-explained', 'prediction-markets', 'why-data-matters-for-traders'], tools: ['satoshi', 'gwei'] },
+  'bitcoin-ticker-for-your-site':          { related: ['bitcoin-ticker-websocket-vs-polling', 'free-apis-2026', 'websocket-vs-sse'], tools: ['json', 'base64'] },
+  'bitcoin-ticker-websocket-vs-polling':   { related: ['websocket-vs-sse', 'real-time-vs-near-real-time', 'api-rate-limits-explained'], tools: ['json'] },
+  'bitcoin-ticker-mobile':                 { related: ['bitcoin-ticker-websocket-vs-polling', 'why-second-monitor-dashboards-matter', 'read-your-browser-console'], tools: ['timestamp'] },
+  'real-time-data-dashboard-2026':         { related: ['building-terminalfeed', 'why-second-monitor-dashboards-matter', 'free-apis-2026'], tools: ['satoshi', 'gwei', 'json'] },
 };
 
 const TOOLS = {
@@ -165,16 +185,19 @@ function injectIntoArticle(html, block) {
     out = out.replace(/<\/head>/, '  <link rel="stylesheet" href="/css/blog-related.css">\n</head>');
   }
 
+  // If a block is already present, strip it so we can replace with the
+  // freshly rendered one. This makes the script re-runnable so MAPPING is
+  // the single source of truth.
+  out = out.replace(/\s*<div class="related-content">[\s\S]*?<\/div>\s*(?=<\/article>|<footer class="footer">)/, '\n');
+
   // Inject block before </article> if present; otherwise before the shared
   // site footer. Some older articles use <div class="article-body"> with a
   // complex close structure and no <article> tag, so the footer is the
   // most reliable universal anchor.
-  if (!/class="related-content"/.test(out)) {
-    if (/<\/article>/.test(out)) {
-      out = out.replace(/<\/article>/, block + '\n    </article>');
-    } else {
-      out = out.replace(/<footer class="footer">/, block + '\n  <footer class="footer">');
-    }
+  if (/<\/article>/.test(out)) {
+    out = out.replace(/<\/article>/, block + '\n    </article>');
+  } else {
+    out = out.replace(/<footer class="footer">/, block + '\n  <footer class="footer">');
   }
 
   return out;
@@ -191,23 +214,24 @@ function main() {
     allMeta[slug] = parseArticle(fs.readFileSync(f, 'utf8'));
   }
 
-  let updated = 0;
+  let written = 0;
+  let unchanged = 0;
   let skipped = 0;
   for (const f of files) {
     const slug = path.basename(f, '.html');
     const html = fs.readFileSync(f, 'utf8');
 
-    if (/class="related-content"/.test(html)) { skipped++; continue; }
-
     const block = buildBlock(slug, allMeta[slug], allMeta);
     if (!block) { skipped++; continue; }
 
     const out = injectIntoArticle(html, block);
+    if (out === html) { unchanged++; continue; }
+
     fs.writeFileSync(f, out, 'utf8');
-    updated++;
+    written++;
   }
 
-  console.log(`Updated: ${updated}, Skipped: ${skipped}`);
+  console.log(`Written: ${written}, Unchanged: ${unchanged}, Skipped (no mapping): ${skipped}`);
 }
 
 main();

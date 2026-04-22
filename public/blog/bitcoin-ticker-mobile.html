@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Your Mobile Bitcoin Ticker Lies | TerminalFeed</title>
+  <meta name="description" content="Mobile Bitcoin tickers often show stale prices long after you've opened the app. Tab suspension, radio handoff, and battery throttling are the hidden culprits. Here's how to build one that doesn't lie.">
+  <meta property="og:title" content="Why Your Mobile Bitcoin Ticker Lies">
+  <meta property="og:description" content="Mobile Bitcoin tickers often show stale prices. Tab suspension, radio handoff, and battery throttling explained, with fixes.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:url" content="https://terminalfeed.io/blog/bitcoin-ticker-mobile">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Why Your Mobile Bitcoin Ticker Lies">
+  <meta name="twitter:description" content="Mobile Bitcoin tickers often show stale prices. Here's why, and how to fix it.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/bitcoin-ticker-mobile">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed" href="https://terminalfeed.io/feed.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "Mobile Bitcoin Ticker", "item": "https://terminalfeed.io/blog/bitcoin-ticker-mobile"}
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Why Your Mobile Bitcoin Ticker Lies",
+    "description": "Mobile Bitcoin tickers often show stale prices long after you've opened the app. Tab suspension, radio handoff, and battery throttling are the hidden culprits.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-22T00:00:00Z",
+    "dateModified": "2026-04-22T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team/node",
+      "jobTitle": "Developer Advocate"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 760px; margin: 0 auto; }
+    header { margin-bottom: 48px; border-bottom: 1px solid #1E1E24; padding-bottom: 32px; }
+    .breadcrumbs { font-size: 11px; color: #8A8880; margin-bottom: 16px; letter-spacing: 0.5px; }
+    .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    .breadcrumbs span { margin: 0 6px; }
+    h1 { font-size: 28px; color: #F0EDE6; margin: 20px 0 16px 0; font-weight: 600; line-height: 1.3; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #8A8880; margin-top: 12px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; }
+    .tag { display: inline-block; background: rgba(248, 113, 113, 0.12); color: #F87171; padding: 3px 8px; border-radius: 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-right: 6px; }
+    .article-body { color: #D4D2CB; }
+    .article-body p { margin-bottom: 16px; line-height: 1.7; }
+    .article-body h2 { font-size: 18px; color: #4ADE80; margin: 32px 0 16px 0; font-weight: 600; border-left: 3px solid #4ADE80; padding-left: 12px; }
+    .article-body h3 { font-size: 14px; color: #5DCAA5; margin: 20px 0 12px 0; font-weight: 600; }
+    .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 16px; }
+    .article-body li { margin-bottom: 8px; line-height: 1.6; }
+    .article-body code { background: #111114; color: #5DCAA5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .code-block { background: #111114; border: 1px solid #1E1E24; padding: 16px; margin: 20px 0; border-radius: 4px; overflow-x: auto; font-size: 12px; color: #5DCAA5; white-space: pre; }
+    .cta-box { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #F87171; padding: 20px; margin: 32px 0; border-radius: 3px; }
+    .cta-box h3 { margin-top: 0; color: #F87171; font-size: 14px; }
+    .cta-box p { margin-bottom: 12px; font-size: 13px; }
+    .cta-link { display: inline-block; background: rgba(93, 202, 165, 0.15); color: #5DCAA5; padding: 8px 12px; text-decoration: none; border-radius: 3px; font-size: 12px; border: 1px solid #5DCAA5; transition: all 0.2s; margin-right: 6px; }
+    .cta-link:hover { background: rgba(93, 202, 165, 0.25); }
+    .author-box { background: #111114; border: 1px solid #1E1E24; padding: 20px; margin-top: 40px; border-radius: 3px; }
+    .author-box h3 { font-size: 13px; color: #F0EDE6; margin-top: 0; margin-bottom: 8px; }
+    .author-info { font-size: 12px; color: #8A8880; line-height: 1.6; }
+    .author-info a { color: #5DCAA5; text-decoration: none; }
+    .author-info a:hover { text-decoration: underline; }
+    footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1E1E24; font-size: 11px; color: #4E4D49; text-align: center; }
+    footer a { color: #5DCAA5; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .glossary-links { background: rgba(93, 202, 165, 0.05); border: 1px solid #1E1E24; padding: 16px; margin: 24px 0; border-radius: 3px; font-size: 12px; }
+    .glossary-links strong { color: #5DCAA5; display: block; margin-bottom: 8px; }
+    .glossary-links a { display: inline-block; margin-right: 12px; margin-bottom: 6px; color: #5DCAA5; text-decoration: none; border: 1px solid #1E1E24; padding: 4px 8px; border-radius: 2px; }
+    .glossary-links a:hover { background: rgba(93, 202, 165, 0.1); border-color: #5DCAA5; }
+    @media (max-width: 600px) { html, body { padding: 24px 16px; } h1 { font-size: 22px; } .article-body h2 { font-size: 16px; } }
+  </style>
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="breadcrumbs">
+        <a href="https://terminalfeed.io">Home</a>
+        <span>&gt;</span>
+        <a href="https://terminalfeed.io/blog">Blog</a>
+        <span>&gt;</span>
+        <span>Mobile Bitcoin Ticker</span>
+      </div>
+      <h1>Why Your Mobile Bitcoin Ticker Lies</h1>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="tag">MOBILE</span>
+          <span class="tag">BITCOIN</span>
+          <span class="tag">PERFORMANCE</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">By <strong><a href="https://terminalfeed.io/team/node" style="color: #5DCAA5; text-decoration: none;">Node</a></strong></div>
+        <div class="meta-item">April 22, 2026</div>
+        <div class="meta-item">~8 min read</div>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <p>You open your crypto app on your phone. A Bitcoin ticker loads. You glance at the number, put the phone down, pick it up a minute later, and the number is exactly the same. Either BTC hasn't moved a cent in 60 seconds, which is extremely unlikely, or your mobile ticker is lying.</p>
+
+      <p>Mobile browsers and native apps behave very differently from a desktop tab. Every ticker that feels fast on a laptop has subtle failure modes on a phone. This post walks through the three big ones, and the defensive patterns that fix them.</p>
+
+      <h2>Failure 1: Tab Suspension</h2>
+      <p>When you switch apps or lock your phone, both iOS Safari and Chrome on Android aggressively suspend background tabs. Timers stop firing. WebSocket connections are kept open at the TCP level in some cases, but message handlers don't run. From the JavaScript's point of view, time stops.</p>
+
+      <p>When you refocus the tab, the ticker's last rendered price is still whatever it was when you switched away. The element shows that number confidently. There is no loading state, no stale indicator, nothing to tell you the feed is behind. The browser resumes JS execution and the ticker starts updating again within a second, but for one long second, you're looking at a lie.</p>
+
+      <p>The fix is a <code>visibilitychange</code> listener that treats regained visibility as a trigger for a fresh fetch.</p>
+
+      <div class="code-block">document.addEventListener('visibilitychange', () =&gt; {
+  if (!document.hidden) {
+    // immediate REST refresh so user sees fresh price
+    fetchBtcPrice().then(renderPrice);
+    // then resume WebSocket
+    reconnectSocket();
+  } else {
+    // close socket and stop timers to save battery
+    pauseUpdates();
+  }
+});</div>
+
+      <p>This pattern is non-negotiable on mobile. Without it, every ticker on every phone lies for a beat after refocus. With it, the user sees a fresh price almost instantly when they come back.</p>
+
+      <h2>Failure 2: Radio Handoff</h2>
+      <p>Your phone's network changes constantly. WiFi to cell, cell to WiFi, one tower to another, 5G to 4G when you step into an elevator. Each handoff breaks open TCP connections. The WebSocket was alive on WiFi; the handoff happens; the new connection is on LTE; the old socket is dead.</p>
+
+      <p>The browser doesn't always notice quickly. From the app's perspective, the WebSocket looks open but no messages arrive. Ten seconds, twenty seconds pass with no updates. The ticker freezes.</p>
+
+      <p>The fix is a heartbeat. Expect at least one message within N seconds. If the deadline passes with no activity, assume the connection is dead, close it, and reconnect.</p>
+
+      <div class="code-block">let lastMessageAt = Date.now();
+let heartbeatTimer = null;
+
+socket.onmessage = (event) =&gt; {
+  lastMessageAt = Date.now();
+  handleMessage(event);
+};
+
+heartbeatTimer = setInterval(() =&gt; {
+  const gap = Date.now() - lastMessageAt;
+  if (gap &gt; 15000) {
+    // assume dead, force reconnect
+    socket.close();
+  }
+}, 5000);</div>
+
+      <p>15 seconds is a conservative threshold for a BTC stream during active hours. During low-activity periods (weekend pre-dawn hours), Binance may genuinely send no trades for 10+ seconds. Tune based on your feed.</p>
+
+      <h2>Failure 3: Battery Throttling</h2>
+      <p>iOS and Android actively throttle JavaScript execution on backgrounded or low-power tabs. A <code>setInterval(fn, 1000)</code> on the foreground tab fires every second. The same interval on a phone in low-power mode might fire every 5 seconds or pause entirely.</p>
+
+      <p>The OS does this to save battery. From a ticker's perspective, it means even if the tab is technically "active," your polling cadence is a suggestion, not a guarantee. And if you fight it, you lose: running a high-frequency timer is exactly the pattern battery-savers are designed to kill.</p>
+
+      <p>The fix is not to fight it. Throttle more aggressively on mobile. Accept slower updates. Pair that with a clear "last updated" timestamp so the user can see the actual cadence.</p>
+
+      <p>TerminalFeed's approach: desktop paints at 1 second, mobile at 3 seconds. WebSocket throttled at the render layer, not the socket layer. The socket still receives every trade event, the renderer just batches.</p>
+
+      <h2>Failure 4: Silent Stream Failures</h2>
+      <p>Mobile networks drop packets quietly. A WebSocket connection may silently lose a message without any retransmission at the application layer. Your client sees a gap in the price stream but has no way to know it's a gap.</p>
+
+      <p>Mitigation: always display a "last updated" timestamp prominently. If the user sees "2 minutes ago" next to the price, they know the number is stale before they act on it. If the UI just shows the price with no time context, they have no defense.</p>
+
+      <div class="code-block">function renderPrice(price, ts) {
+  priceEl.textContent = '$' + price.toFixed(2);
+  const age = Math.floor((Date.now() - ts) / 1000);
+  timeEl.textContent = age &lt; 5 ? 'just now'
+    : age &lt; 60 ? age + 's ago'
+    : Math.floor(age / 60) + 'm ago';
+
+  // visual staleness indicator
+  priceEl.classList.toggle('stale', age &gt; 30);
+}</div>
+
+      <p>Combined with a CSS rule like <code>.stale { color: #8A8880 }</code>, the UI visually dims when the feed falls behind. The user sees the problem without needing to read the timestamp.</p>
+
+      <h2>Failure 5: Animation and Layout Thrash</h2>
+      <p>Every pixel you paint on mobile costs battery and frame budget. A ticker that pulses, animates, or re-renders adjacent elements on every tick turns into a performance problem when layered into a dashboard with 30 panels.</p>
+
+      <p>Rules we enforce on mobile:</p>
+
+      <ul>
+        <li>Use <code>content-visibility: auto</code> on panels so offscreen elements don't render.</li>
+        <li>Disable the "flash" animation on price changes on mobile. Flash up/down color change, not a full transition.</li>
+        <li>Skip shimmer skeletons. Mobile users see the loading state for milliseconds, shimmer just costs CPU.</li>
+        <li>Prefer <code>textContent</code> updates over DOM manipulation. Replacing a text node is cheaper than replacing elements.</li>
+      </ul>
+
+      <h2>Failure 6: The Zombie Connection</h2>
+      <p>When the user navigates away from the ticker page to another page inside your SPA, the WebSocket should close. If it doesn't, it keeps running in the background, using battery and bandwidth, never surfacing data anywhere. Users open five tabs, each spawns a BTC WebSocket, none close, the phone gets hot.</p>
+
+      <p>Always close sockets in cleanup:</p>
+
+      <div class="code-block">useEffect(() =&gt; {
+  const socket = new WebSocket(BTC_STREAM);
+  socket.onmessage = handleMessage;
+
+  return () =&gt; {
+    socket.close();
+    // also clear any timers
+  };
+}, []);</div>
+
+      <p>For non-React apps, attach a <code>beforeunload</code> or <code>pagehide</code> handler that closes the socket. It's one of the easiest resource leaks to miss and one of the most frequent.</p>
+
+      <h2>What TerminalFeed Does on Mobile</h2>
+      <p>Our mobile BTC hero follows the same WebSocket-primary, REST-fallback pattern as desktop, with these adjustments:</p>
+
+      <ul>
+        <li>Paint throttle raised from 1s to 3s.</li>
+        <li><code>visibilitychange</code> listener force-refreshes the REST endpoint on tab refocus, then reconnects the socket.</li>
+        <li>Heartbeat at 15s. Missing heartbeat triggers socket close and reconnect.</li>
+        <li>Live dot animation disabled. Color-change on up/down, no pulsing.</li>
+        <li>Stale indicator dims the price after 30 seconds without an update.</li>
+        <li>Socket closes on route change (dashboard to article, or hash navigation).</li>
+        <li>All polling intervals globally doubled on mobile as a cheap default (3s desktop becomes 6s mobile for non-hero panels).</li>
+      </ul>
+
+      <h2>The Pattern, Condensed</h2>
+      <p>Mobile tickers are a trust problem. The user cannot tell when a price is stale. They will make decisions based on what they see. Build accordingly:</p>
+
+      <ol>
+        <li>Always show a "last updated" timestamp or age indicator.</li>
+        <li>Refresh immediately on tab refocus.</li>
+        <li>Heartbeat-driven reconnect on dead sockets.</li>
+        <li>Throttle paints to conserve battery.</li>
+        <li>Visually dim stale values.</li>
+        <li>Clean up on unmount, always.</li>
+      </ol>
+
+      <p>A ticker that follows all six rules tells the truth. A ticker that skips any of them lies sometimes, and you will not know when.</p>
+
+      <p>For the desktop architecture, see <a href="https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling" style="color: #5DCAA5;">Why We Built a WebSocket Bitcoin Ticker Instead of Polling</a>. For the full code walkthrough, <a href="https://terminalfeed.io/blog/bitcoin-ticker-for-your-site" style="color: #5DCAA5;">How to Add a Free Bitcoin Ticker to Your Website</a>.</p>
+
+      <div class="cta-box">
+        <h3>Test the Ticker on Your Phone</h3>
+        <p>Open TerminalFeed on mobile, background the tab, come back. The ticker refreshes immediately and tells you how old the last update is.</p>
+        <a href="https://terminalfeed.io" class="cta-link">Open on Mobile</a>
+        <a href="https://terminalfeed.io/developers" class="cta-link">API Docs</a>
+      </div>
+
+      <div class="glossary-links">
+        <strong>Learn More:</strong>
+        <a href="https://terminalfeed.io/glossary/websocket">WebSocket</a>
+        <a href="https://terminalfeed.io/glossary/bitcoin">Bitcoin</a>
+        <a href="https://terminalfeed.io/glossary/real-time">Real-Time</a>
+        <a href="https://terminalfeed.io/glossary/api">API</a>
+      </div>
+    
+<div class="related-content">
+  <h3>RELATED ARTICLES</h3>
+  <a href="/blog/bitcoin-ticker-websocket-vs-polling" class="related-article">
+    <div class="related-title">Why We Built a WebSocket Bitcoin Ticker Instead of Polling</div>
+    <div class="related-meta">By Ripper | Article</div>
+  </a>
+  <a href="/blog/why-second-monitor-dashboards-matter" class="related-article">
+    <div class="related-title">Why Your Second Monitor Should Be a Dashboard, Not a Distraction</div>
+    <div class="related-meta">By Ripper | PRODUCTIVITY | April 2026</div>
+  </a>
+  <a href="/blog/read-your-browser-console" class="related-article">
+    <div class="related-title">Why You Should Read Your Browser Console Tonight</div>
+    <div class="related-meta">By zer0day | SECURITY | April 2026</div>
+  </a>
+
+  <div class="related-tools">
+    <h3>RELATED TOOLS</h3>
+    <a href="/tools/timestamp" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> Unix Timestamp
+      <span class="tool-desc">Convert to and from dates</span>
+    </a>
+  </div>
+</div>
+
+    </article>
+
+    <div class="author-box">
+      <h3>About Node</h3>
+      <div class="author-info">
+        <p>Node is TerminalFeed's Developer Advocate, covering APIs, dev tools, and programming patterns. Tests every change on a five-year-old phone before shipping.</p>
+        <p><a href="https://terminalfeed.io/team/node">View all articles by Node</a></p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Published on April 22, 2026 at TerminalFeed</p>
+      <p><a href="https://terminalfeed.io/feed.xml">Subscribe via RSS</a> | <a href="https://terminalfeed.io/blog">Back to Blog</a> | <a href="https://terminalfeed.io">Home</a></p>
+    </footer>
+  </div>
+</body>
+</html>

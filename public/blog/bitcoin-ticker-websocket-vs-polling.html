@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why We Built a WebSocket Bitcoin Ticker Instead of Polling | TerminalFeed</title>
+  <meta name="description" content="A deep dive into the architectural decision behind TerminalFeed's live BTC ticker: why WebSocket beat polling on latency, cost, and battery, and where polling still wins.">
+  <meta property="og:title" content="Why We Built a WebSocket Bitcoin Ticker Instead of Polling">
+  <meta property="og:description" content="The architectural decision behind TerminalFeed's live BTC ticker: WebSocket vs polling on latency, cost, and battery.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:url" content="https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Why We Built a WebSocket Bitcoin Ticker Instead of Polling">
+  <meta name="twitter:description" content="WebSocket vs polling for a live BTC ticker: latency, cost, battery, and the fallback logic.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed" href="https://terminalfeed.io/feed.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "Bitcoin Ticker WebSocket vs Polling", "item": "https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling"}
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Why We Built a WebSocket Bitcoin Ticker Instead of Polling",
+    "description": "A deep dive into the architectural decision behind TerminalFeed's live BTC ticker: why WebSocket beat polling on latency, cost, and battery, and where polling still wins.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-22T00:00:00Z",
+    "dateModified": "2026-04-22T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team/node",
+      "jobTitle": "Developer Advocate"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 760px; margin: 0 auto; }
+    header { margin-bottom: 48px; border-bottom: 1px solid #1E1E24; padding-bottom: 32px; }
+    .breadcrumbs { font-size: 11px; color: #8A8880; margin-bottom: 16px; letter-spacing: 0.5px; }
+    .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    .breadcrumbs span { margin: 0 6px; }
+    h1 { font-size: 28px; color: #F0EDE6; margin: 20px 0 16px 0; font-weight: 600; line-height: 1.3; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #8A8880; margin-top: 12px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; }
+    .tag { display: inline-block; background: rgba(93, 202, 165, 0.12); color: #5DCAA5; padding: 3px 8px; border-radius: 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-right: 6px; }
+    .article-body { color: #D4D2CB; }
+    .article-body p { margin-bottom: 16px; line-height: 1.7; }
+    .article-body h2 { font-size: 18px; color: #4ADE80; margin: 32px 0 16px 0; font-weight: 600; border-left: 3px solid #4ADE80; padding-left: 12px; }
+    .article-body h3 { font-size: 14px; color: #5DCAA5; margin: 20px 0 12px 0; font-weight: 600; }
+    .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 16px; }
+    .article-body li { margin-bottom: 8px; line-height: 1.6; }
+    .article-body code { background: #111114; color: #5DCAA5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .code-block { background: #111114; border: 1px solid #1E1E24; padding: 16px; margin: 20px 0; border-radius: 4px; overflow-x: auto; font-size: 12px; color: #5DCAA5; white-space: pre; }
+    .compare-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 12px; border: 1px solid #1E1E24; }
+    .compare-table th { text-align: left; padding: 12px 12px; border-bottom: 2px solid #1E1E24; color: #5DCAA5; font-weight: 600; background: rgba(93, 202, 165, 0.05); }
+    .compare-table td { padding: 12px 12px; border-bottom: 1px solid #1A1A1E; color: #D4D2CB; }
+    .compare-table tr:nth-child(odd) td { background: rgba(17, 17, 20, 0.5); }
+    .compare-table tr:hover td { background: rgba(93, 202, 165, 0.08); }
+    .compare-table td:first-child { color: #F0EDE6; font-weight: 500; }
+    .cta-box { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #5DCAA5; padding: 20px; margin: 32px 0; border-radius: 3px; }
+    .cta-box h3 { margin-top: 0; color: #5DCAA5; font-size: 14px; }
+    .cta-box p { margin-bottom: 12px; font-size: 13px; }
+    .cta-link { display: inline-block; background: rgba(93, 202, 165, 0.15); color: #5DCAA5; padding: 8px 12px; text-decoration: none; border-radius: 3px; font-size: 12px; border: 1px solid #5DCAA5; transition: all 0.2s; margin-right: 6px; }
+    .cta-link:hover { background: rgba(93, 202, 165, 0.25); }
+    .author-box { background: #111114; border: 1px solid #1E1E24; padding: 20px; margin-top: 40px; border-radius: 3px; }
+    .author-box h3 { font-size: 13px; color: #F0EDE6; margin-top: 0; margin-bottom: 8px; }
+    .author-info { font-size: 12px; color: #8A8880; line-height: 1.6; }
+    .author-info a { color: #5DCAA5; text-decoration: none; }
+    .author-info a:hover { text-decoration: underline; }
+    footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1E1E24; font-size: 11px; color: #4E4D49; text-align: center; }
+    footer a { color: #5DCAA5; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .glossary-links { background: rgba(93, 202, 165, 0.05); border: 1px solid #1E1E24; padding: 16px; margin: 24px 0; border-radius: 3px; font-size: 12px; }
+    .glossary-links strong { color: #5DCAA5; display: block; margin-bottom: 8px; }
+    .glossary-links a { display: inline-block; margin-right: 12px; margin-bottom: 6px; color: #5DCAA5; text-decoration: none; border: 1px solid #1E1E24; padding: 4px 8px; border-radius: 2px; }
+    .glossary-links a:hover { background: rgba(93, 202, 165, 0.1); border-color: #5DCAA5; }
+    @media (max-width: 600px) { html, body { padding: 24px 16px; } h1 { font-size: 22px; } .article-body h2 { font-size: 16px; } .compare-table { font-size: 11px; } .compare-table th, .compare-table td { padding: 8px 8px; } }
+  </style>
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="breadcrumbs">
+        <a href="https://terminalfeed.io">Home</a>
+        <span>&gt;</span>
+        <a href="https://terminalfeed.io/blog">Blog</a>
+        <span>&gt;</span>
+        <span>WebSocket vs Polling</span>
+      </div>
+      <h1>Why We Built a WebSocket Bitcoin Ticker Instead of Polling</h1>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="tag">ARCHITECTURE</span>
+          <span class="tag">BITCOIN</span>
+          <span class="tag">PERFORMANCE</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">By <strong><a href="https://terminalfeed.io/team/node" style="color: #5DCAA5; text-decoration: none;">Node</a></strong></div>
+        <div class="meta-item">April 22, 2026</div>
+        <div class="meta-item">~10 min read</div>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <p>When we started TerminalFeed, the default approach was polling. A timer fires every few seconds, hits a REST endpoint, updates the UI. It's how 90% of crypto sites do their ticker. It's simple, it's cacheable, and it doesn't require learning a new protocol.</p>
+
+      <p>We threw it out and rebuilt the Bitcoin ticker on WebSocket. This post is the decision record: what polling cost us, what WebSocket bought us, what we gave up, and where the fallback to polling still matters.</p>
+
+      <h2>The Polling Version</h2>
+      <p>Our first implementation was 10 lines of JavaScript. Every 3 seconds, fetch Binance's REST ticker endpoint, parse JSON, update the DOM. Shipped it, worked fine, moved on to other panels.</p>
+
+      <div class="code-block">setInterval(async () =&gt; {
+  const res = await fetch(
+    'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
+  );
+  const data = await res.json();
+  priceEl.textContent = '$' + parseFloat(data.price).toFixed(2);
+}, 3000);</div>
+
+      <p>Then we started looking at it on the dashboard for a few hours a day. Two problems emerged.</p>
+
+      <p>First: during volatile minutes, a lot happens in 3 seconds. When BTC moves $300 in 90 seconds, you see a staircase that updates every 3 seconds and feels jerky. The price appears to jump in chunks rather than flow. That's the visual tell that your ticker is polling.</p>
+
+      <p>Second: after we deployed to production and traffic grew, we started tripping into Cloudflare's caching behavior and Binance's client rate limits. At 3-second polls across a few hundred concurrent visitors, that's a lot of redundant outbound calls. We could proxy through our Worker and cache, but then the cache TTL becomes the ticker's real update frequency, and we'd just moved the lag one hop upstream.</p>
+
+      <h2>The WebSocket Version</h2>
+      <p>Binance publishes a WebSocket trade stream at <code>wss://stream.binance.com:9443/ws/btcusdt@trade</code>. One connection per client, server pushes a message for every trade that clears on the BTC/USDT book. Typical message rate during active trading is 5 to 30 events per second.</p>
+
+      <p>Compared to polling, the differences are immediate:</p>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Polling (3s)</th>
+            <th>WebSocket</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Latency</td>
+            <td>0 to 3000ms</td>
+            <td>50 to 300ms</td>
+          </tr>
+          <tr>
+            <td>Updates per minute (active)</td>
+            <td>20</td>
+            <td>300 to 1800</td>
+          </tr>
+          <tr>
+            <td>HTTP requests per hour</td>
+            <td>1200</td>
+            <td>1 (initial handshake)</td>
+          </tr>
+          <tr>
+            <td>Bandwidth per hour (idle)</td>
+            <td>~300 KB</td>
+            <td>~20 KB</td>
+          </tr>
+          <tr>
+            <td>Bandwidth per hour (active)</td>
+            <td>~300 KB</td>
+            <td>~200 KB</td>
+          </tr>
+          <tr>
+            <td>Proxy compatibility</td>
+            <td>Perfect</td>
+            <td>Some proxies block upgrade</td>
+          </tr>
+          <tr>
+            <td>Reconnection</td>
+            <td>Trivial (every call independent)</td>
+            <td>Manual, with backoff</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The latency win is the headline. A polling ticker averages 1.5 seconds of lag behind the market. A WebSocket ticker averages around 150ms. For a dashboard that a trader glances at, that's the difference between "real-time" and "slightly stale." For an idle browser tab, it doesn't matter at all.</p>
+
+      <h2>The Throttle Question</h2>
+      <p>Receiving 30 trade events per second is wasteful if you only paint 1 per second. Why not poll once per second then? Two reasons.</p>
+
+      <p>First: polling once per second at scale creates thundering-herd traffic patterns. Every connected client sends a request within a narrow time window. The server sees a traffic sawtooth. WebSocket traffic is steady because each client's messages arrive independently.</p>
+
+      <p>Second: a WebSocket stream paired with a 1-second paint throttle is effectively a 1-second ticker with 150ms worst-case lag instead of 1000ms worst-case lag. You get the visual smoothness of slower updates without the freshness penalty.</p>
+
+      <p>Our render logic: keep the latest price in a ref, paint at most once per second.</p>
+
+      <div class="code-block">let pending = null;
+let scheduled = false;
+
+socket.onmessage = (event) =&gt; {
+  const trade = JSON.parse(event.data);
+  const price = parseFloat(trade?.p);
+  if (!isFinite(price)) return;
+  pending = price;
+  if (scheduled) return;
+  scheduled = true;
+  setTimeout(() =&gt; {
+    if (pending !== null) renderPrice(pending);
+    pending = null;
+    scheduled = false;
+  }, 1000);
+};</div>
+
+      <h2>What WebSocket Cost Us</h2>
+      <p>WebSocket isn't free. The trade-offs we accepted:</p>
+
+      <p><strong>Reconnection logic is now our problem.</strong> Polling has no connection state. If one call fails, the next call tries again. WebSocket requires explicit reconnection with exponential backoff, or the ticker silently dies on the first network blip. We wrote ~20 lines of reconnect logic and accepted the maintenance burden.</p>
+
+      <p><strong>Proxy compatibility is worse.</strong> Some corporate proxies block the WebSocket upgrade handshake. Some older mobile networks don't route <code>wss://</code> cleanly. In those environments, the ticker must fall back to REST polling. We wrote that fallback.</p>
+
+      <p><strong>Server-side state.</strong> If you run the WebSocket yourself (rather than connecting directly to Binance), each connected client holds a connection open. Sticky sessions, memory per connection, and horizontal scaling all get harder. We sidestepped this by letting the browser talk directly to Binance's WebSocket, but if you're building a proxy, be aware.</p>
+
+      <p><strong>Rate limit shape is different.</strong> Binance's WebSocket has its own connection limits (5 messages per second outbound from client, 300 connections per 5 minutes). These rarely bite for passive tickers but trip you up when you try to subscribe to too many symbols at once.</p>
+
+      <h2>The Fallback Logic</h2>
+      <p>We run both. WebSocket primary, REST polling as fallback. The decision flow:</p>
+
+      <ol>
+        <li>On page load, attempt WebSocket connection with 5-second timeout.</li>
+        <li>If it opens, stop polling. Subscribe to <code>btcusdt@trade</code>.</li>
+        <li>If it fails to open, or closes later, start polling at 3-second interval.</li>
+        <li>On any fall-through, try to reconnect the WebSocket with exponential backoff (1s, 2s, 4s, 8s, up to 30s).</li>
+        <li>When the WebSocket comes back, stop polling.</li>
+      </ol>
+
+      <p>The user sees a ticker that just works. They don't see the protocol dance underneath.</p>
+
+      <p>On our Cloudflare Worker side, <code>/api/btc-price</code> is a REST-only endpoint (no WebSocket from the Worker because Workers don't hold long-lived outbound connections the same way). The Worker polls Binance and CoinCap and caches in memory. Client falls through to it when the direct WebSocket fails. Triple-redundant: direct Binance WS → our Worker (Binance REST) → our Worker (CoinCap fallback) → stale cache.</p>
+
+      <h2>When Polling Actually Wins</h2>
+      <p>WebSocket is not always the right answer. For prices that are not volatile or do not need sub-second freshness, polling is simpler and cheaper. Specifically:</p>
+
+      <ul>
+        <li><strong>Prices that only matter at rest.</strong> A weekly newsletter widget doesn't need WebSocket. Poll once on render, done.</li>
+        <li><strong>Prices aggregated across many sources.</strong> CoinGecko's volume-weighted price updates every 60 seconds anyway. WebSocket would be pointless.</li>
+        <li><strong>Behind heavy CDN caching.</strong> If you're serving the same endpoint to millions of visitors, cache-friendly REST with short TTL beats a per-client WebSocket connection.</li>
+        <li><strong>Low-frequency background updates.</strong> Portfolio dashboards checked once an hour don't benefit from push.</li>
+      </ul>
+
+      <h2>Generalizing the Decision</h2>
+      <p>The rule we follow for every panel on TerminalFeed: if the data changes faster than the polling interval we'd need to look responsive, use push. Otherwise poll.</p>
+
+      <p>BTC: changes every second or two during active trading. Push.</p>
+      <p>Stock quotes (15-minute delayed): changes every 15 minutes. Poll.</p>
+      <p>Earthquake alerts: arrive in unpredictable bursts. Push (via SSE from USGS).</p>
+      <p>GitHub trending repos: changes slowly. Poll every 5 minutes.</p>
+      <p>Wikipedia edits: firehose of events. Push (SSE).</p>
+
+      <p>If you pick push for push's sake, you pay in complexity for no user-visible benefit. If you pick poll for everything, you quietly lag every time-sensitive feed.</p>
+
+      <h2>Closing Thought</h2>
+      <p>A ticker is one of the most user-visible pieces of any data app. If it feels laggy, the whole site feels laggy. If it feels crisp, the site feels fast. Bitcoin is especially unforgiving because users who care about it have seen faster tickers elsewhere. WebSocket is the correct default for this use case, with REST fallback for robustness.</p>
+
+      <p>If you want the code walkthrough, see <a href="https://terminalfeed.io/blog/bitcoin-ticker-for-your-site" style="color: #5DCAA5;">How to Add a Free Bitcoin Ticker to Your Website</a>. For the protocol choice in general, <a href="https://terminalfeed.io/blog/websocket-vs-sse" style="color: #5DCAA5;">WebSocket vs Server-Sent Events</a> covers the broader trade-off.</p>
+
+      <div class="cta-box">
+        <h3>See the Architecture Live</h3>
+        <p>The BTC hero at the top of TerminalFeed runs this exact pattern. Open the dashboard and watch the number tick.</p>
+        <a href="https://terminalfeed.io" class="cta-link">Open the Dashboard</a>
+        <a href="https://terminalfeed.io/developers" class="cta-link">API Docs</a>
+      </div>
+
+      <div class="glossary-links">
+        <strong>Learn More:</strong>
+        <a href="https://terminalfeed.io/glossary/websocket">WebSocket</a>
+        <a href="https://terminalfeed.io/glossary/polling">Polling</a>
+        <a href="https://terminalfeed.io/glossary/real-time">Real-Time</a>
+        <a href="https://terminalfeed.io/glossary/api">API</a>
+      </div>
+    
+<div class="related-content">
+  <h3>RELATED ARTICLES</h3>
+  <a href="/blog/websocket-vs-sse" class="related-article">
+    <div class="related-title">WebSocket vs Server-Sent Events: Choosing the Right Real-Time Protocol</div>
+    <div class="related-meta">By Ripper | Article</div>
+  </a>
+  <a href="/blog/real-time-vs-near-real-time" class="related-article">
+    <div class="related-title">Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026</div>
+    <div class="related-meta">By Signal | DATA | April 2026</div>
+  </a>
+  <a href="/blog/api-rate-limits-explained" class="related-article">
+    <div class="related-title">How API Rate Limits Actually Work (And How to Work Around Them)</div>
+    <div class="related-meta">By Node | APIs | April 2026</div>
+  </a>
+
+  <div class="related-tools">
+    <h3>RELATED TOOLS</h3>
+    <a href="/tools/json" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> JSON Formatter
+      <span class="tool-desc">Format and validate JSON</span>
+    </a>
+  </div>
+</div>
+
+    </article>
+
+    <div class="author-box">
+      <h3>About Node</h3>
+      <div class="author-info">
+        <p>Node is TerminalFeed's Developer Advocate, covering APIs, dev tools, and programming patterns. Picks boring protocols on purpose.</p>
+        <p><a href="https://terminalfeed.io/team/node">View all articles by Node</a></p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Published on April 22, 2026 at TerminalFeed</p>
+      <p><a href="https://terminalfeed.io/feed.xml">Subscribe via RSS</a> | <a href="https://terminalfeed.io/blog">Back to Blog</a> | <a href="https://terminalfeed.io">Home</a></p>
+    </footer>
+  </div>
+</body>
+</html>
