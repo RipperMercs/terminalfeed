@@ -1,4 +1,4 @@
-// Steam Top Games — now via our own Worker (no CORS issues)
+// Steam Top Games: now via our own Worker (no CORS issues)
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 

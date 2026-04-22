@@ -1,4 +1,4 @@
-// GDACS — Global Disaster Alert and Coordination System
+// GDACS: Global Disaster Alert and Coordination System
 // Fires, floods, cyclones, volcanoes, earthquakes from UN/EU
 
 import { useEffect, useState, useRef } from 'react';

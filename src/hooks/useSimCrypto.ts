@@ -13,7 +13,7 @@ const ASSETS = 'ethereum,solana,dogecoin,ripple,cardano,polkadot,avalanche-2,cha
 const COINCAP_WS = `wss://ws.coincap.io/prices?assets=${ASSETS.replace(/-2/g, '')}`;
 const RECONNECT_MS = 5000;
 
-// 24h stats via Worker proxy — top 30 coins by market cap
+// 24h stats via Worker proxy: top 30 coins by market cap
 const MARKETS_URL = '/api/coingecko/markets';
 const STATS_POLL_MS = 120_000;
 

@@ -1,4 +1,4 @@
-// Certificate Transparency Stream — watch the internet being built in real-time
+// Certificate Transparency Stream: watch the internet being built in real-time
 // WebSocket stream of SSL certificates being issued worldwide
 
 import { useEffect, useState, useRef } from 'react';

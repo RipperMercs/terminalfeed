@@ -1,4 +1,4 @@
-// Additional tech news from RSS feeds — Ars Technica, The Verge, TechCrunch
+// Additional tech news from RSS feeds: Ars Technica, The Verge, TechCrunch
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 

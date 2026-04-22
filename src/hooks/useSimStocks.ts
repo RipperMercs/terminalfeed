@@ -112,7 +112,7 @@ export function useSimStocks(customSymbols: string[] = []) {
           setCache('stock_prices', next, 'worker');
           return next;
         });
-      } catch { /* swallow — keep last known values */ }
+      } catch { /* swallow: keep last known values */ }
     };
 
     fetchQuotes();

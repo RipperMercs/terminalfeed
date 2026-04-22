@@ -1,4 +1,4 @@
-// This Day in Tech History — keyed by MM-DD
+// This Day in Tech History: keyed by MM-DD
 // Multiple events per date supported
 export const techHistory: Record<string, { year: number; event: string }[]> = {
   "01-01": [{ year: 1983, event: "ARPANET officially switches to TCP/IP, birthing the modern internet" }],

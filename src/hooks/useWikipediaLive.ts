@@ -1,4 +1,4 @@
-// Wikipedia Recent Changes — SSE stream of live edits worldwide
+// Wikipedia Recent Changes: SSE stream of live edits worldwide
 // The heartbeat of human knowledge in real-time
 
 import { useEffect, useState, useRef } from 'react';

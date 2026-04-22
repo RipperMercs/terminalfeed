@@ -1,4 +1,4 @@
-// World Clocks — shows time in major financial/tech cities
+// World Clocks: shows time in major financial/tech cities
 // Pure client-side, no API needed
 
 import { useState, useEffect } from 'react';

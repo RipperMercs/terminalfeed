@@ -11,7 +11,7 @@ export interface TrendingMovie {
   mediaType: 'movie' | 'tv';
 }
 
-// TMDB API — free tier, register at https://www.themoviedb.org/settings/api
+// TMDB API: free tier, register at https://www.themoviedb.org/settings/api
 // Paste your "API Read Access Token" (v4 bearer token) below
 const API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzNTJjNWEzNThmYzQ5ZTQ5ODZjODU4OTRiM2Y1ODhiMSIsIm5iZiI6MTc3MzU5ODE1OS4xNDgsInN1YiI6IjY5YjZmNWNmYjU5NzI2M2FhYzVjOWRlNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.rkZR1HpfyhHcyTnbkSSMiqmWf0P6pcVBCAq380cWTFw';
 const CACHE_KEY = 'trending_movies';

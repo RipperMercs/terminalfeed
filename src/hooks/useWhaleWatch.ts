@@ -1,4 +1,4 @@
-// Whale Watch — large BTC transactions from mempool.space
+// Whale Watch: large BTC transactions from mempool.space
 // Shows recent transactions > 1 BTC flowing through the mempool
 
 import { useEffect, useState, useRef } from 'react';

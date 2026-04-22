@@ -1,4 +1,8 @@
-// The Wire — rotating hacker culture quotes, history, and 2600 references
+// em-dash-exempt: external quotes preserved per CLAUDE.md rule #1
+// The Wire: rotating hacker culture quotes, history, and 2600 references.
+// Lint skips this file because the body is direct citations from 2600,
+// DEF CON, and period-accurate cultural sources where the em-dash
+// attribution format is part of the artifact.
 import { useState, useEffect } from 'react';
 
 export interface WireItem {

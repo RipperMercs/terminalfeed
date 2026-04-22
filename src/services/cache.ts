@@ -1,4 +1,4 @@
-// localStorage cache layer — every successful API response gets cached
+// localStorage cache layer: every successful API response gets cached
 // On next load, panels show cached data instantly while fresh data loads
 
 const PREFIX = 'tf_cache_';
@@ -14,7 +14,7 @@ export function setCache<T>(key: string, data: T, source: string): void {
     const entry: CacheEntry<T> = { data, timestamp: Date.now(), source };
     localStorage.setItem(PREFIX + key, JSON.stringify(entry));
   } catch {
-    // localStorage full or unavailable — silently skip
+    // localStorage full or unavailable: silently skip
   }
 }
 

@@ -1,4 +1,4 @@
-// GitHub Public Events — real-time stream of global coding activity
+// GitHub Public Events: real-time stream of global coding activity
 
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';

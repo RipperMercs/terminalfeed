@@ -1,4 +1,4 @@
-// Daily Paws — random cats and dogs between earthquake data and market crashes
+// Daily Paws: random cats and dogs between earthquake data and market crashes
 // The internet was built for this.
 
 import { useEffect, useState, useRef } from 'react';
@@ -22,7 +22,7 @@ async function fetchCat(): Promise<PawData | null> {
       const data = await res.json();
       const url = data?.[0]?.url;
       if (!url) return null;
-      // Skip Tumblr-hosted images — they frequently get removed
+      // Skip Tumblr-hosted images: they frequently get removed
       if (url.includes('tumblr') || url.includes('media.tumblr')) continue;
       return {
         url,
@@ -68,7 +68,7 @@ export function useDailyPaws() {
     if (!result) result = isCat ? await fetchDog() : await fetchCat(); // fallback
 
     if (result && mountedRef.current) {
-      // Preload image — retry on error
+      // Preload image: retry on error
       const img = new Image();
       img.onload = () => {
         if (mountedRef.current) { setPaw(result); setFading(false); }

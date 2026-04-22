@@ -1,5 +1,5 @@
-// Default curated layout — what new visitors see
-// Updated 2026-03-16 — ads injected at fixed positions, not in panelOrder
+// Default curated layout: what new visitors see
+// Updated 2026-03-16: ads injected at fixed positions, not in panelOrder
 
 export const DEFAULT_LAYOUT = {
   panelOrder: [

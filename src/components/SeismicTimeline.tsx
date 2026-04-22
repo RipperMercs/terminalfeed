@@ -73,7 +73,7 @@ export const SeismicTimeline = memo(function SeismicTimeline({ layout, panelHeal
     ? Math.max(...quakes.map(q => q.time))
     : null;
 
-  // Seismograph scribble — 80-point rolling array. Baseline noise every 120ms,
+  // Seismograph scribble: 80-point rolling array. Baseline noise every 120ms,
   // plus an amplitude spike whenever a new quake id appears in the feed.
   const SEIS_LEN = 80;
   const [seis, setSeis] = useState<number[]>(() => Array.from({ length: SEIS_LEN }, () => 50));

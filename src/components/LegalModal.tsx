@@ -83,7 +83,7 @@ function PrivacyPolicy() {
         <li><strong>Cloudflare DNS (1.1.1.1):</strong> Provides DNS resolution speed testing for the WiFi Health Monitor tool via DNS-over-HTTPS. Receives DNS queries when a WiFi test is run.</li>
       </ul>
 
-      <h3>4A. WiFi Health Monitor Tool — Data Practices</h3>
+      <h3>4A. WiFi Health Monitor Tool: Data Practices</h3>
       <p>
         The WiFi Health Monitor tool at terminalfeed.io/wifi computes all measurements and diagnostics
         client-side in your browser. No WiFi Tool data is sent to TerminalFeed.io servers.
@@ -176,7 +176,7 @@ function TermsOfService() {
         investment decisions.
       </p>
 
-      <h3>3A. WiFi Health Monitor Tool — Disclaimer</h3>
+      <h3>3A. WiFi Health Monitor Tool: Disclaimer</h3>
       <p>
         The WiFi Health Monitor tool at terminalfeed.io/wifi provides browser-based network
         diagnostics including approximate speed measurements, latency tests, DNS resolution timing,
