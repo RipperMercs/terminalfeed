@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitcoin Ticker: How Live BTC Price Updates Actually Work | TerminalFeed</title>
+  <meta name="description" content="A live Bitcoin ticker looks simple, but the plumbing behind it is not. Here's exactly how real-time BTC price updates get from exchange to your screen in under a second.">
+  <meta property="og:title" content="Bitcoin Ticker: How Live BTC Price Updates Actually Work">
+  <meta property="og:description" content="How real-time BTC price updates get from exchange to your screen in under a second. The plumbing behind a live Bitcoin ticker explained.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:url" content="https://terminalfeed.io/blog/bitcoin-ticker-explained">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bitcoin Ticker: How Live BTC Price Updates Actually Work">
+  <meta name="twitter:description" content="How real-time BTC price updates get from exchange to your screen in under a second.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/bitcoin-ticker-explained">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed" href="https://terminalfeed.io/feed.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "Bitcoin Ticker Explained", "item": "https://terminalfeed.io/blog/bitcoin-ticker-explained"}
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Bitcoin Ticker: How Live BTC Price Updates Actually Work",
+    "description": "A live Bitcoin ticker looks simple, but the plumbing behind it is not. Here's exactly how real-time BTC price updates get from exchange to your screen in under a second.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-04-22T00:00:00Z",
+    "dateModified": "2026-04-22T00:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team/node",
+      "jobTitle": "Developer Advocate"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 760px; margin: 0 auto; }
+    header { margin-bottom: 48px; border-bottom: 1px solid #1E1E24; padding-bottom: 32px; }
+    .breadcrumbs { font-size: 11px; color: #8A8880; margin-bottom: 16px; letter-spacing: 0.5px; }
+    .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    .breadcrumbs span { margin: 0 6px; }
+    h1 { font-size: 28px; color: #F0EDE6; margin: 20px 0 16px 0; font-weight: 600; line-height: 1.3; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #8A8880; margin-top: 12px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; }
+    .tag { display: inline-block; background: rgba(249, 203, 66, 0.12); color: #F9CB42; padding: 3px 8px; border-radius: 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-right: 6px; }
+    .article-body { color: #D4D2CB; }
+    .article-body p { margin-bottom: 16px; line-height: 1.7; }
+    .article-body h2 { font-size: 18px; color: #4ADE80; margin: 32px 0 16px 0; font-weight: 600; border-left: 3px solid #4ADE80; padding-left: 12px; }
+    .article-body h3 { font-size: 14px; color: #5DCAA5; margin: 20px 0 12px 0; font-weight: 600; }
+    .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 16px; }
+    .article-body li { margin-bottom: 8px; line-height: 1.6; }
+    .article-body code { background: #111114; color: #5DCAA5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .code-block { background: #111114; border: 1px solid #1E1E24; padding: 16px; margin: 20px 0; border-radius: 4px; overflow-x: auto; font-size: 12px; color: #5DCAA5; white-space: pre; }
+    .cta-box { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #F9CB42; padding: 20px; margin: 32px 0; border-radius: 3px; }
+    .cta-box h3 { margin-top: 0; color: #F9CB42; font-size: 14px; }
+    .cta-box p { margin-bottom: 12px; font-size: 13px; }
+    .cta-link { display: inline-block; background: rgba(93, 202, 165, 0.15); color: #5DCAA5; padding: 8px 12px; text-decoration: none; border-radius: 3px; font-size: 12px; border: 1px solid #5DCAA5; transition: all 0.2s; margin-right: 6px; }
+    .cta-link:hover { background: rgba(93, 202, 165, 0.25); }
+    .author-box { background: #111114; border: 1px solid #1E1E24; padding: 20px; margin-top: 40px; border-radius: 3px; }
+    .author-box h3 { font-size: 13px; color: #F0EDE6; margin-top: 0; margin-bottom: 8px; }
+    .author-info { font-size: 12px; color: #8A8880; line-height: 1.6; }
+    .author-info a { color: #5DCAA5; text-decoration: none; }
+    .author-info a:hover { text-decoration: underline; }
+    footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1E1E24; font-size: 11px; color: #4E4D49; text-align: center; }
+    footer a { color: #5DCAA5; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .glossary-links { background: rgba(93, 202, 165, 0.05); border: 1px solid #1E1E24; padding: 16px; margin: 24px 0; border-radius: 3px; font-size: 12px; }
+    .glossary-links strong { color: #5DCAA5; display: block; margin-bottom: 8px; }
+    .glossary-links a { display: inline-block; margin-right: 12px; margin-bottom: 6px; color: #5DCAA5; text-decoration: none; border: 1px solid #1E1E24; padding: 4px 8px; border-radius: 2px; }
+    .glossary-links a:hover { background: rgba(93, 202, 165, 0.1); border-color: #5DCAA5; }
+    @media (max-width: 600px) { html, body { padding: 24px 16px; } h1 { font-size: 22px; } .article-body h2 { font-size: 16px; } }
+  </style>
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="breadcrumbs">
+        <a href="https://terminalfeed.io">Home</a>
+        <span>&gt;</span>
+        <a href="https://terminalfeed.io/blog">Blog</a>
+        <span>&gt;</span>
+        <span>Bitcoin Ticker Explained</span>
+      </div>
+      <h1>Bitcoin Ticker: How Live BTC Price Updates Actually Work</h1>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="tag">BITCOIN</span>
+          <span class="tag">REAL-TIME</span>
+          <span class="tag">TUTORIAL</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">By <strong><a href="https://terminalfeed.io/team/node" style="color: #5DCAA5; text-decoration: none;">Node</a></strong></div>
+        <div class="meta-item">April 22, 2026</div>
+        <div class="meta-item">~8 min read</div>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <p>Open any crypto site and you'll see a Bitcoin ticker: a number that updates every second or so, usually green when BTC is up and red when it's down. It looks like one of the simpler things on the page. It is not.</p>
+
+      <p>Behind that one number sits a pipeline of exchanges, order books, matching engines, WebSocket servers, CDNs, fallback REST endpoints, and client-side rendering code. When any of those pieces slow down or fail, the number on your screen quietly lies. This post walks through exactly how a live Bitcoin ticker gets from the exchange to your browser, what can go wrong, and why the ticker on TerminalFeed.io uses the architecture it does.</p>
+
+      <h2>What "Bitcoin Price" Actually Means</h2>
+      <p>There is no single Bitcoin price. There are thousands. Every exchange runs its own order book, and each trade that clears on that book produces a new last-trade price. Binance's BTC/USDT book is different from Coinbase's BTC/USD book, which is different from Kraken's BTC/EUR book. They are usually within a few dollars of each other because of arbitrage, but they are never identical.</p>
+
+      <p>When a site shows you "the Bitcoin price," it's making a choice: one exchange, or a weighted average across many. Aggregators like CoinGecko and CoinCap publish volume-weighted averages across dozens of venues. Exchange-direct tickers like Binance's show raw last-trade prices from a single book. Both are valid. They answer slightly different questions.</p>
+
+      <p>TerminalFeed's default ticker reads from Binance's BTC/USDT stream because it has the highest spot volume in the world, the lowest latency public feed, and a free WebSocket endpoint. When that fails, we fall back to CoinCap's aggregated price over HTTP. Two answers to two different questions, used in priority order.</p>
+
+      <h2>The Three Ways to Move a Price</h2>
+      <p>Exchanges expose prices to the outside world through three transport mechanisms. They differ in latency, complexity, and cost.</p>
+
+      <h3>Polling via REST</h3>
+      <p>Your browser hits <code>GET /api/v3/ticker/price?symbol=BTCUSDT</code> on a timer, say every 3 seconds. You get back a JSON object with the last price. This is simple: every request is independent, caches work, proxies work, firewalls are happy. It's also slow. You only see changes on the interval you poll, which means you miss every move that happens between requests.</p>
+
+      <p>Polling is fine for prices that don't need to be real-time. A news widget showing "Bitcoin is near $75,000 today" can poll every 30 seconds without anyone noticing. A ticker on a live dashboard cannot.</p>
+
+      <h3>Server-Sent Events</h3>
+      <p>SSE opens a one-way HTTP stream from server to client. The server pushes new prices as text events whenever they occur. The client uses the native <code>EventSource</code> API, which handles reconnection automatically. SSE is efficient for push-only use cases and passes through every proxy because it rides on standard HTTP.</p>
+
+      <p>Exchanges rarely expose BTC price over SSE directly. It's more common for aggregators to wrap a WebSocket feed into an SSE stream for easier client consumption.</p>
+
+      <h3>WebSocket</h3>
+      <p>A persistent, bidirectional TCP connection upgraded from HTTP. After a single handshake, the server streams trade updates as they happen, often within 50 to 200 milliseconds of the match. This is what exchanges use for their public feeds. This is what TerminalFeed uses for BTC.</p>
+
+      <p>WebSocket is fast but it has sharp edges. If the connection drops, you have to reconnect manually. If the browser tab goes to sleep, the stream pauses. If the user is behind an intercepting proxy, the upgrade handshake might fail. Every production ticker wraps the raw WebSocket in heartbeat logic, reconnect logic, and a REST fallback.</p>
+
+      <h2>The Binance BTC WebSocket, Concretely</h2>
+      <p>Here's the minimal code to open a Bitcoin ticker stream from Binance:</p>
+
+      <div class="code-block">const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
+
+ws.onmessage = (event) =&gt; {
+  const trade = JSON.parse(event.data);
+  const price = parseFloat(trade.p);
+  const ts = trade.T;
+  document.getElementById('btc-price').textContent = price.toFixed(2);
+};
+
+ws.onerror = () =&gt; {
+  // fall back to REST polling
+};</div>
+
+      <p>That's the happy path. In production you also need: a reconnect backoff if the connection drops, a throttle so you don't re-render 50 times per second during volatile minutes, a visibility listener to pause when the tab is backgrounded, a fallback to <code>/api/v3/ticker/price</code> if the WebSocket won't open, and null-safe defaults in case a message arrives without a price field.</p>
+
+      <h2>Why Your Ticker Stops Updating</h2>
+      <p>Every ticker you've ever used has failed silently at some point. The price freezes and you don't notice for five minutes. There are three common causes.</p>
+
+      <p><strong>The tab went to sleep.</strong> Modern browsers throttle or suspend JavaScript in backgrounded tabs. WebSocket connections may be kept alive but message handlers may not fire. When you refocus the tab, the displayed price is still the last value received before you switched away. A good ticker detects visibility changes and pulls a fresh REST price on refocus.</p>
+
+      <p><strong>The WebSocket silently died.</strong> TCP connections can die without the browser noticing, especially over mobile networks and corporate VPNs. The connection looks open but no messages arrive. The fix is a heartbeat: expect a ping or at least one message every N seconds, and if nothing arrives, close and reconnect.</p>
+
+      <p><strong>The exchange rate-limited or degraded.</strong> Exchanges rotate endpoints, deprecate streams, and throttle under load. A hardcoded endpoint will eventually break. Good tickers maintain a prioritized list of sources and fall through gracefully.</p>
+
+      <h2>How TerminalFeed's Bitcoin Ticker Is Built</h2>
+      <p>The top of our dashboard has a BTC hero that updates every second on desktop and every three seconds on mobile. The priority chain is:</p>
+
+      <ol>
+        <li>Open <code>wss://stream.binance.com/ws/btcusdt@trade</code>. Render on every message, throttled to one paint per second.</li>
+        <li>If the WebSocket fails to open within 5 seconds, fall through to our Worker at <code>/api/btc-price</code>. The Worker itself runs Binance REST first, then CoinCap, and caches the last good value in memory.</li>
+        <li>If both fail, show the stale cache value with a dimmed color so the user knows it's not fresh.</li>
+      </ol>
+
+      <p>On mobile, the WebSocket is throttled to 3-second paints because sub-second updates waste battery and scroll frame budget. When the tab is hidden, all polling pauses. On refocus, a single REST call fetches the current price before the WebSocket resumes streaming.</p>
+
+      <h2>Exchange vs Aggregator: The Trade-off</h2>
+      <p>An exchange-direct ticker gives you the lowest latency and the cleanest signal: an actual trade just cleared at this price, right now. The downside is you see that one venue's price, which can briefly diverge during arbitrage lag.</p>
+
+      <p>An aggregator ticker (CoinGecko, CoinCap, CoinMarketCap) gives you a smoothed, volume-weighted blend across dozens of exchanges. It's more representative of "the market," but it's also higher latency (aggregators typically update every 10 to 60 seconds) and API quota constrained.</p>
+
+      <p>The right answer depends on why you want the ticker. Traders want the exchange they're about to trade on. Dashboards want something representative that won't go weird during a flash move on one venue. TerminalFeed defaults to Binance because it dominates global spot volume, but falls back to the aggregated price when Binance is unavailable.</p>
+
+      <h2>The Trust Problem</h2>
+      <p>A ticker with no source attribution is worthless. You have no way to evaluate whether the number is fresh, accurate, or from a venue you trust. Every live Bitcoin ticker should tell you:</p>
+
+      <ul>
+        <li>Which exchange or aggregator the price comes from</li>
+        <li>When the last update happened (so you can see if the feed is stale)</li>
+        <li>Whether the ticker is connected or is showing a cached value</li>
+        <li>The currency pair being quoted (USD, USDT, EUR all differ slightly)</li>
+      </ul>
+
+      <p>If a ticker just shows a number with no context, assume it's cached, assume it's lagged, and assume you should verify before acting on it.</p>
+
+      <h2>Build One Yourself in 20 Lines</h2>
+      <p>If you want your own live Bitcoin ticker on a site or dashboard, it's roughly 20 lines of JavaScript. We walk through the full implementation, including reconnection and REST fallback, in <a href="https://terminalfeed.io/blog/bitcoin-ticker-for-your-site" style="color: #5DCAA5;">How to Add a Free Bitcoin Ticker to Your Website</a>.</p>
+
+      <p>If you want a comparison of free Bitcoin ticker services, we benchmarked the main ones in <a href="https://terminalfeed.io/blog/best-bitcoin-ticker" style="color: #5DCAA5;">The Best Free Bitcoin Ticker in 2026</a>.</p>
+
+      <div class="cta-box">
+        <h3>See the Ticker Live</h3>
+        <p>TerminalFeed runs a free live Bitcoin ticker at the top of every page, alongside 30+ other real-time data feeds.</p>
+        <a href="https://terminalfeed.io" class="cta-link">Open the Dashboard</a>
+        <a href="https://terminalfeed.io/developers" class="cta-link">Free API</a>
+      </div>
+
+      <div class="glossary-links">
+        <strong>Learn More:</strong>
+        <a href="https://terminalfeed.io/glossary/websocket">WebSocket</a>
+        <a href="https://terminalfeed.io/glossary/real-time">Real-Time</a>
+        <a href="https://terminalfeed.io/glossary/api">API</a>
+        <a href="https://terminalfeed.io/glossary/bitcoin">Bitcoin</a>
+      </div>
+    
+<div class="related-content">
+  <h3>RELATED ARTICLES</h3>
+  <a href="/blog/bitcoin-ticker-websocket-vs-polling" class="related-article">
+    <div class="related-title">Why We Built a WebSocket Bitcoin Ticker Instead of Polling</div>
+    <div class="related-meta">By Ripper | Article</div>
+  </a>
+  <a href="/blog/bitcoin-mempool" class="related-article">
+    <div class="related-title">How to Monitor Bitcoin Network Health: Mempool, Hashrate & Fees Explained</div>
+    <div class="related-meta">By Ripper | BITCOIN | March 2026</div>
+  </a>
+  <a href="/blog/fear-greed-guide" class="related-article">
+    <div class="related-title">What is the Crypto Fear & Greed Index and How to Actually Use It</div>
+    <div class="related-meta">By Ripper | CRYPTO | March 2026</div>
+  </a>
+
+  <div class="related-tools">
+    <h3>RELATED TOOLS</h3>
+    <a href="/tools/satoshi" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> Satoshi Converter
+      <span class="tool-desc">BTC to sats</span>
+    </a>
+    <a href="/tools/timestamp" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> Unix Timestamp
+      <span class="tool-desc">Convert to and from dates</span>
+    </a>
+  </div>
+</div>
+
+    </article>
+
+    <div class="author-box">
+      <h3>About Node</h3>
+      <div class="author-info">
+        <p>Node is TerminalFeed's Developer Advocate, covering APIs, dev tools, and programming patterns. Writes about the plumbing most tutorials skip.</p>
+        <p><a href="https://terminalfeed.io/team/node">View all articles by Node</a></p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Published on April 22, 2026 at TerminalFeed</p>
+      <p><a href="https://terminalfeed.io/feed.xml">Subscribe via RSS</a> | <a href="https://terminalfeed.io/blog">Back to Blog</a> | <a href="https://terminalfeed.io">Home</a></p>
+    </footer>
+  </div>
+</body>
+</html>
