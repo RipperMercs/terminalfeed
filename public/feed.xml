@@ -6,12 +6,66 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Thu, 16 Apr 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 22 Apr 2026 17:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard</title>
+      <link>https://terminalfeed.io/blog/real-time-data-dashboard-2026</link>
+      <description>A live Bitcoin ticker is the hook. The real product is everything around it. How TerminalFeed evolved from one price feed into a 30-panel real-time dashboard for the whole world.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Wed, 22 Apr 2026 17:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/real-time-data-dashboard-2026</guid>
+    </item>
+
+    <item>
+      <title>The Best Free Bitcoin Ticker in 2026</title>
+      <link>https://terminalfeed.io/blog/best-bitcoin-ticker</link>
+      <description>We benchmarked the main free Bitcoin ticker services on update speed, accuracy, reliability, and features. Here's which live BTC ticker actually deserves your second monitor.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Wed, 22 Apr 2026 16:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/best-bitcoin-ticker</guid>
+    </item>
+
+    <item>
+      <title>Bitcoin Ticker: How Live BTC Price Updates Actually Work</title>
+      <link>https://terminalfeed.io/blog/bitcoin-ticker-explained</link>
+      <description>A live Bitcoin ticker looks simple, but the plumbing behind it is not. Here's exactly how real-time BTC price updates get from exchange to your screen in under a second.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Wed, 22 Apr 2026 15:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/bitcoin-ticker-explained</guid>
+    </item>
+
+    <item>
+      <title>Why We Built a WebSocket Bitcoin Ticker Instead of Polling</title>
+      <link>https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling</link>
+      <description>A deep dive into the architectural decision behind TerminalFeed's live BTC ticker: why WebSocket beat polling on latency, cost, and battery, and where polling still wins.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Wed, 22 Apr 2026 14:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling</guid>
+    </item>
+
+    <item>
+      <title>How to Add a Free Bitcoin Ticker to Your Website</title>
+      <link>https://terminalfeed.io/blog/bitcoin-ticker-for-your-site</link>
+      <description>Drop a live Bitcoin ticker on any website in under 20 lines of JavaScript. WebSocket primary, REST fallback, reconnection, and null-safe defaults included. Free, no API key.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Wed, 22 Apr 2026 13:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/bitcoin-ticker-for-your-site</guid>
+    </item>
+
+    <item>
+      <title>Why Your Mobile Bitcoin Ticker Lies</title>
+      <link>https://terminalfeed.io/blog/bitcoin-ticker-mobile</link>
+      <description>Mobile Bitcoin tickers often show stale prices long after you've opened the app. Tab suspension, radio handoff, and battery throttling are the hidden culprits. Here's how to build one that doesn't lie.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Wed, 22 Apr 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/bitcoin-ticker-mobile</guid>
+    </item>
 
     <item>
       <title>Real-Time vs Near-Real-Time: What 'Live Data' Actually Means in 2026</title>
