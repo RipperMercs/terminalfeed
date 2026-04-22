@@ -520,6 +520,14 @@
   <url><loc>https://terminalfeed.io/tools/gwei</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://terminalfeed.io/tools/hex</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
+  <!-- Bitcoin Ticker article batch (April 22, 2026) -->
+  <url><loc>https://terminalfeed.io/blog/real-time-data-dashboard-2026</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/best-bitcoin-ticker</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/bitcoin-ticker-explained</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/bitcoin-ticker-websocket-vs-polling</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/bitcoin-ticker-for-your-site</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/blog/bitcoin-ticker-mobile</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
   <!-- New blog posts (April 14-16, 2026) -->
   <url><loc>https://terminalfeed.io/blog/real-time-vs-near-real-time</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://terminalfeed.io/blog/browser-extensions-watching</loc><lastmod>2026-04-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
