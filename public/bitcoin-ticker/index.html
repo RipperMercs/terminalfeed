@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitcoin Ticker: Free Real-Time BTC Price | TerminalFeed</title>
+  <meta name="description" content="The fastest free real-time Bitcoin ticker on the web. Sub-second BTC price updates via Binance WebSocket with CoinCap fallback. No signup, no ads, no rate limit.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta name="theme-color" content="#0A0A0C">
+  <link rel="canonical" href="https://terminalfeed.io/bitcoin-ticker">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://terminalfeed.io/bitcoin-ticker">
+  <meta property="og:title" content="Bitcoin Ticker: Free Real-Time BTC Price">
+  <meta property="og:description" content="The fastest free real-time Bitcoin ticker on the web. Sub-second BTC price updates, no signup, no ads.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="TerminalFeed">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bitcoin Ticker: Free Real-Time BTC Price">
+  <meta name="twitter:description" content="Sub-second BTC price updates. Free. No signup. No rate limit.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:site" content="@terminalfeed">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Real-Time Bitcoin Price",
+    "description": "Live Bitcoin price from Binance WebSocket with CoinCap fallback, updated every second on desktop and every three seconds on mobile.",
+    "url": "https://terminalfeed.io/bitcoin-ticker",
+    "keywords": ["Bitcoin Ticker", "BTC Price", "Real-Time Bitcoin", "Live BTC", "Free Bitcoin Ticker"],
+    "creator": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "license": "https://terminalfeed.io/terms",
+    "temporalCoverage": "2025-01-01/..",
+    "variableMeasured": "Bitcoin price in USD",
+    "distribution": {
+      "@type": "DataDownload",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://terminalfeed.io/api/btc-price"
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Bitcoin Ticker", "item": "https://terminalfeed.io/bitcoin-ticker" }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is the Bitcoin ticker free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. No signup, no subscription, no rate limit. Anyone can view the ticker, embed it, or pull the price from the public API." }
+      },
+      {
+        "@type": "Question",
+        "name": "How often does the Bitcoin price update?",
+        "acceptedAnswer": { "@type": "Answer", "text": "On desktop the ticker updates every second via Binance WebSocket. On mobile it throttles to every three seconds to preserve battery. Most competing free tickers update every 5 to 60 seconds." }
+      },
+      {
+        "@type": "Question",
+        "name": "What if Binance goes down?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The ticker automatically falls back to CoinCap. The switchover is silent. Users see no interruption." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I embed the Bitcoin ticker on my site?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Embed code is available at terminalfeed.io/widgets. The embeddable ticker is sandboxed and ad free." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does the ticker have an API?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The endpoint is https://terminalfeed.io/api/btc-price. It returns JSON, is CORS enabled, and requires no authentication. Full API docs at /developers." }
+      },
+      {
+        "@type": "Question",
+        "name": "Where else can I see real time data on TerminalFeed?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The main TerminalFeed dashboard shows 30+ live data feeds in one view including top crypto movers, stock prices, the Fear and Greed Index, Polymarket prediction markets, earthquakes, and space launches." }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+
+    .breadcrumbs {
+      font-size: 11px;
+      color: #4E4D49;
+      margin-bottom: 24px;
+      letter-spacing: 1px;
+    }
+    .breadcrumbs a { color: #8A8880; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .bc-sep { margin: 0 8px; color: #3A3A44; }
+
+    h1 {
+      font-size: 28px;
+      color: #F0EDE6;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    .lede {
+      font-size: 15px;
+      color: #8A8880;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    h2 {
+      font-size: 14px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 40px 0 16px;
+      font-weight: 500;
+    }
+    h2:first-of-type { margin-top: 32px; }
+
+    p { font-size: 13px; color: #8A8880; margin-bottom: 14px; }
+    p strong { color: #F0EDE6; font-weight: 600; }
+    p a { color: #5DCAA5; text-decoration: none; }
+    p a:hover { text-decoration: underline; }
+
+    ul { list-style: none; margin-bottom: 18px; }
+    ul li {
+      font-size: 13px;
+      color: #8A8880;
+      padding: 6px 0 6px 16px;
+      position: relative;
+    }
+    ul li::before {
+      content: "▸";
+      color: #5DCAA5;
+      position: absolute;
+      left: 0;
+    }
+    ul li strong { color: #F0EDE6; font-weight: 600; }
+
+    .ticker-hero {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+    .ticker-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #4E4D49;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+    }
+    .pulse {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ADE80;
+      margin-right: 8px;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
+
+    .ticker-price {
+      font-size: 42px;
+      font-weight: 600;
+      color: #5DCAA5;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+    .ticker-change { font-size: 14px; color: #8A8880; }
+    .ticker-change.up { color: #4ADE80; }
+    .ticker-change.down { color: #F87171; }
+    .ticker-source {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: #3A3A44;
+      text-transform: uppercase;
+    }
+
+    details {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    details summary {
+      font-size: 14px;
+      color: #F0EDE6;
+      font-weight: 600;
+      list-style: none;
+      position: relative;
+      padding-right: 24px;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after {
+      content: "+";
+      position: absolute;
+      right: 0;
+      top: -2px;
+      font-size: 18px;
+      color: #5DCAA5;
+      font-weight: 300;
+    }
+    details[open] summary::after { content: "\2212"; }
+    details p {
+      margin-top: 10px;
+      margin-bottom: 0;
+      font-size: 13px;
+      color: #8A8880;
+    }
+
+    .feed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+      list-style: none;
+      padding: 0;
+    }
+    .feed-grid li {
+      padding: 0;
+    }
+    .feed-grid li::before { content: none; }
+    .feed-grid a {
+      display: block;
+      padding: 12px 14px;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #D4D2CB;
+      text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .feed-grid a:hover { border-color: #5DCAA5; color: #5DCAA5; }
+    .feed-grid a .feed-prefix { color: #4ADE80; margin-right: 6px; }
+
+    .cta-card {
+      margin-top: 40px;
+      padding: 24px 28px;
+      background: linear-gradient(135deg, #111114 0%, #0D0D10 100%);
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .cta-card p { font-size: 14px; color: #D4D2CB; margin-bottom: 4px; }
+    .cta-card a {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #5DCAA5;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+    .cta-card a:hover { color: #F0EDE6; }
+
+    footer.site-footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid #1E1E24;
+      font-size: 11px;
+      color: #4E4D49;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    footer.site-footer a {
+      color: #8A8880;
+      text-decoration: none;
+    }
+    footer.site-footer a:hover { color: #5DCAA5; }
+    footer.site-footer .sep { margin: 0 8px; color: #3A3A44; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      h1 { font-size: 22px; }
+      .ticker-hero { padding: 20px; }
+      .ticker-price { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Bitcoin Ticker</span>
+    </nav>
+
+    <h1>Bitcoin Ticker</h1>
+    <p class="lede">The fastest free Bitcoin ticker on the web. Sub second BTC price updates, direct from Binance, with automatic fallback to CoinCap when the primary stream drops. No signup, no paywall, no ads.</p>
+
+    <section class="ticker-hero" aria-label="Live Bitcoin Price">
+      <div class="ticker-source" id="source">BINANCE</div>
+      <div class="ticker-label"><span class="pulse"></span>BTC / USD LIVE</div>
+      <div class="ticker-price" id="price">loading</div>
+      <div class="ticker-change" id="change">fetching live price</div>
+    </section>
+
+    <h2>Why TerminalFeed's Bitcoin Ticker</h2>
+    <ul>
+      <li><strong>Sub second updates.</strong> Direct WebSocket connection to Binance on the live dashboard. Most free tickers poll every 5 to 60 seconds.</li>
+      <li><strong>Automatic failover.</strong> If the primary stream drops, the ticker silently switches to CoinCap and keeps ticking.</li>
+      <li><strong>Free forever.</strong> No account, no subscription, no rate limit on the public API.</li>
+      <li><strong>Ad free.</strong> No banners, no popups, no crypto shill.</li>
+      <li><strong>Embeddable.</strong> Put a live Bitcoin ticker on your own site from <a href="/widgets">terminalfeed.io/widgets</a>.</li>
+      <li><strong>Mobile optimized.</strong> The ticker throttles to three second updates on mobile to save battery without going stale.</li>
+    </ul>
+
+    <h2>Real-Time Bitcoin Price Sources</h2>
+    <p>The Bitcoin ticker on this page pulls from a primary and a fallback source. The primary is <strong>Binance</strong>, streaming trade tick data via WebSocket with zero polling interval. When the WebSocket connection fails, which can happen on corporate networks, with aggressive ad blockers that block Binance, or during library upgrades, the ticker falls back to <strong>CoinCap</strong>, polling every few seconds.</p>
+    <p>This dual source architecture means TerminalFeed's Bitcoin ticker keeps working when single source tickers go stale. You can also pull the latest price directly from the public API at <a href="/api/btc-price"><code>/api/btc-price</code></a>, which returns JSON with CORS enabled and no authentication required.</p>
+
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>Is the Bitcoin ticker free?</summary>
+      <p>Yes. No signup, no subscription, no rate limit. Anyone can view the ticker, embed it, or pull the price from the public API.</p>
+    </details>
+
+    <details>
+      <summary>How often does the Bitcoin price update?</summary>
+      <p>On desktop the main dashboard ticker updates every second via Binance WebSocket. On mobile it throttles to every three seconds to preserve battery life. Most competing free tickers update every 5 to 60 seconds.</p>
+    </details>
+
+    <details>
+      <summary>What if Binance goes down?</summary>
+      <p>The ticker automatically falls back to CoinCap. The switchover is silent. Users see no interruption.</p>
+    </details>
+
+    <details>
+      <summary>Can I embed the Bitcoin ticker on my site?</summary>
+      <p>Yes. Embed code is available at <a href="/widgets">terminalfeed.io/widgets</a>. The embeddable ticker is sandboxed and ad free.</p>
+    </details>
+
+    <details>
+      <summary>Does the ticker have an API?</summary>
+      <p>Yes. The endpoint is <code>https://terminalfeed.io/api/btc-price</code>. It returns JSON, is CORS enabled, and requires no authentication. Full API docs at <a href="/developers">/developers</a>.</p>
+    </details>
+
+    <details>
+      <summary>Where else can I see real time data on TerminalFeed?</summary>
+      <p>The main <a href="/">TerminalFeed dashboard</a> shows 30+ live data feeds in one view: top crypto movers, stock prices, the Fear and Greed Index, Polymarket prediction markets, earthquake activity, space launches, and more.</p>
+    </details>
+
+    <h2>More Real-Time Data on TerminalFeed</h2>
+    <ul class="feed-grid">
+      <li><a href="/"><span class="feed-prefix">&gt;_</span>Main Dashboard</a></li>
+      <li><a href="/live"><span class="feed-prefix">&gt;_</span>Live World Briefing</a></li>
+      <li><a href="/blog/bitcoin-mempool"><span class="feed-prefix">&gt;_</span>Bitcoin Network Health</a></li>
+      <li><a href="/blog/fear-greed-guide"><span class="feed-prefix">&gt;_</span>Fear and Greed Index</a></li>
+      <li><a href="/blog/prediction-markets"><span class="feed-prefix">&gt;_</span>Prediction Markets</a></li>
+      <li><a href="/blog/why-data-matters-for-traders"><span class="feed-prefix">&gt;_</span>Data for Traders</a></li>
+      <li><a href="/tools/satoshi"><span class="feed-prefix">&gt;_</span>Satoshi Converter</a></li>
+      <li><a href="/tools/gwei"><span class="feed-prefix">&gt;_</span>Gwei Calculator</a></li>
+      <li><a href="/developers"><span class="feed-prefix">&gt;_</span>Free Public API</a></li>
+      <li><a href="/widgets"><span class="feed-prefix">&gt;_</span>Embeddable Widgets</a></li>
+    </ul>
+
+    <div class="cta-card">
+      <p><strong>Open the full TerminalFeed dashboard.</strong></p>
+      <p>Bitcoin ticker plus 30+ live feeds in one view.</p>
+      <a href="/">&gt;_ Launch Dashboard</a>
+    </div>
+
+    <footer class="site-footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/live">Live</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/tools">Tools</a><span class="sep">|</span>
+      <a href="/developers">API</a><span class="sep">|</span>
+      <a href="/widgets">Widgets</a><span class="sep">|</span>
+      <a href="/about">About</a><span class="sep">|</span>
+      <a href="/team">Team</a>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var priceEl = document.getElementById('price');
+      var changeEl = document.getElementById('change');
+      var sourceEl = document.getElementById('source');
+
+      function fmt(n) {
+        return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      }
+
+      function render(data) {
+        if (!data) return;
+        var p = (data.data && data.data.price_usd) || data.price_usd || data.price;
+        var c = (data.data && data.data.change_24h_percent) || data.change_24h_percent || data.change_24h;
+        var src = (data.data && data.data.source) || data.source || '';
+        if (p) priceEl.textContent = fmt(p);
+        if (c !== null && c !== undefined) {
+          var v = parseFloat(c);
+          changeEl.textContent = (v >= 0 ? '+' : '') + v.toFixed(2) + '% (24h)';
+          changeEl.className = 'ticker-change ' + (v >= 0 ? 'up' : 'down');
+        }
+        if (src) sourceEl.textContent = String(src).toUpperCase();
+      }
+
+      function load() {
+        fetch('/api/btc-price', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(render)
+          .catch(function () { /* keep last known value */ });
+      }
+
+      load();
+      setInterval(load, 3000);
+
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) load();
+      });
+    })();
+  </script>
+</body>
+</html>
