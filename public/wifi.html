@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WiFi Speed Test & Network Diagnostic Tool — Free | TerminalFeed</title>
+<title>WiFi Speed Test & Network Diagnostic Tool: Free | TerminalFeed</title>
 <meta name="description" content="Free browser-based WiFi diagnostics. Test your connection speed, latency, jitter, DNS resolution, and get actionable recommendations. No app required.">
 <link rel="canonical" href="https://terminalfeed.io/wifi">
-<meta property="og:title" content="WiFi Speed Test & Network Diagnostic Tool — Free | TerminalFeed">
-<meta property="og:description" content="Free browser-based WiFi health check. Speed, latency, DNS, diagnostics — all in your browser.">
+<meta property="og:title" content="WiFi Speed Test & Network Diagnostic Tool: Free | TerminalFeed">
+<meta property="og:description" content="Free browser-based WiFi health check. Speed, latency, DNS, diagnostics: all in your browser.">
 <meta property="og:url" content="https://terminalfeed.io/wifi">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -856,7 +856,7 @@
 
 <script>
 // ============================================================
-// WiFi Health Monitor v2 — TerminalFeed.io/wifi
+// WiFi Health Monitor v2: TerminalFeed.io/wifi
 // APIs: Cloudflare network-info, speed.cloudflare.com, CF DoH, Google generate_204
 // ============================================================
 
@@ -884,7 +884,7 @@ function clearProgress() {
   document.getElementById('testProgress').classList.remove('active');
 }
 
-// ---- Network Info (Cloudflare Pages Function — reads CF headers, no external API) ----
+// ---- Network Info (Cloudflare Pages Function: reads CF headers, no external API) ----
 async function detectNetwork() {
   try {
     var r = await fetch('/api/network-info');
@@ -915,7 +915,7 @@ function detectConn() {
   }
 }
 
-// ---- Latency Test (Google generate_204 — fine for timing round-trips) ----
+// ---- Latency Test (Google generate_204: fine for timing round-trips) ----
 async function measureLatency(samples) {
   samples = samples || 24;
   var results = [];
@@ -958,7 +958,7 @@ async function measureLatency(samples) {
   };
 }
 
-// ---- Download Speed (Cloudflare speed.cloudflare.com/__down — exact byte counts) ----
+// ---- Download Speed (Cloudflare speed.cloudflare.com/__down: exact byte counts) ----
 async function measureDownload() {
   var sizes = [100000, 500000, 1000000, 5000000]; // 100KB, 500KB, 1MB, 5MB progressive
   var results = [];
@@ -1001,7 +1001,7 @@ async function measureDownload() {
   return Math.round(p90 * 10) / 10;
 }
 
-// ---- Upload Speed (Cloudflare speed.cloudflare.com/__up — known payload POST) ----
+// ---- Upload Speed (Cloudflare speed.cloudflare.com/__up: known payload POST) ----
 async function measureUpload() {
   var sizes = [100000, 500000, 1000000]; // 100KB, 500KB, 1MB progressive
   var results = [];
@@ -1045,7 +1045,7 @@ async function measureUpload() {
   return Math.round(p90 * 10) / 10;
 }
 
-// ---- DNS Resolution Test (Cloudflare DoH — free, HTTPS, no key) ----
+// ---- DNS Resolution Test (Cloudflare DoH: free, HTTPS, no key) ----
 async function testDNS(domain) {
   var t0 = performance.now();
   try {
@@ -1268,7 +1268,7 @@ async function runFullTest() {
   document.getElementById('statusText').textContent = 'Testing';
   S.latHistory = [];
 
-  // Step 0: Network detection (CF headers — no external API)
+  // Step 0: Network detection (CF headers: no external API)
   setProgress(0, 'Detecting network info...');
   await detectNetwork();
 
@@ -1284,12 +1284,12 @@ async function runFullTest() {
   document.getElementById('plBar').style.width = Math.max(2, 100 - pl * 5) + '%';
   document.getElementById('plBar').style.background = pl > 5 ? 'var(--red)' : pl > 1 ? 'var(--amber)' : 'var(--green)';
 
-  // Step 2: Download (Cloudflare speed test — progressive payloads)
+  // Step 2: Download (Cloudflare speed test: progressive payloads)
   setProgress(2, 'Testing download speed...');
   var dl = await measureDownload();
   setMetric('dlVal', 'dlSt', 'dl', dl);
 
-  // Step 3: Upload (Cloudflare speed test — progressive payloads)
+  // Step 3: Upload (Cloudflare speed test: progressive payloads)
   setProgress(3, 'Testing upload speed...');
   var ul = await measureUpload();
   setMetric('ulVal', 'ulSt', 'ul', ul);
