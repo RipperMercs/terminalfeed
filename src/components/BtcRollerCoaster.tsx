@@ -82,18 +82,26 @@ export const BtcRollerCoaster = memo(function BtcRollerCoaster({ pathRef, hostRe
 
   const inert = IS_MOBILE || reducedMotion;
 
-  // Force-trigger via "+" key (App.tsx dispatches this). Bypasses cooldown
-  // and EMA threshold, but still respects reduced-motion / mobile.
+  // Mirror latest ticks into a ref so timers can read fresh data
+  // without re-creating themselves on every websocket tick.
+  const ticksRef = useRef<PriceTick[]>(ticks);
+  useEffect(() => { ticksRef.current = ticks; }, [ticks]);
+
+  // Force-trigger via the chip click and via "+" key (App.tsx dispatches this).
+  // Marks the cooldown clock as just-fired so the auto-trigger effect cannot
+  // immediately stack a second ride on top.
   useEffect(() => {
     if (inert) return;
     let toggle = false;
     const onTest = () => {
       toggle = !toggle;
-      lastEventRef.current = 0;
+      const now = Date.now();
+      lastEventRef.current = now;
+      wasAboveRef.current = true;
       setEvent({
         direction: toggle ? 'up' : 'down',
         magnitude: toggle ? 'big' : 'small',
-        startedAt: Date.now(),
+        startedAt: now,
       });
     };
     window.addEventListener(TEST_EVENT, onTest);
@@ -126,21 +134,23 @@ export const BtcRollerCoaster = memo(function BtcRollerCoaster({ pathRef, hostRe
 
   // Heartbeat: during calm markets, fire a small ride every HEARTBEAT_MS
   // so the mascot stays visible. Direction follows recent price drift.
+  // Reads ticks via ticksRef so the interval is not torn down each tick.
   useEffect(() => {
     if (inert || !enabled) return;
     const iv = window.setInterval(() => {
       const now = Date.now();
       if (now - lastEventRef.current < HEARTBEAT_MS) return;
       let direction: 'up' | 'down' = 'up';
-      if (ticks && ticks.length >= 2) {
-        const tail = ticks.slice(-6);
+      const t = ticksRef.current;
+      if (t && t.length >= 2) {
+        const tail = t.slice(-6);
         direction = tail[tail.length - 1].price >= tail[0].price ? 'up' : 'down';
       }
       lastEventRef.current = now;
       setEvent({ direction, magnitude: 'small', startedAt: now });
     }, 5_000);
     return () => window.clearInterval(iv);
-  }, [inert, enabled, ticks]);
+  }, [inert, enabled]);
 
   useEffect(() => {
     if (!event) return;
