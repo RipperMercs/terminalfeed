@@ -31,6 +31,16 @@ CoinGecko, Binance WebSocket, Finnhub, mempool.space, ESPN, USGS, GDACS, NASA DO
 Open-Meteo, Hacker News Firebase, RSS2JSON, GitHub API, StackExchange, Frankfurter,
 Open Library, Art Institute of Chicago, TheMealDB, Dog CEO, The Cat API, and more.
 
+## Editorial Team
+
+Original articles credited to one of five author personas. Each persona has a permanent profile page listing every article they have bylined.
+
+- Ripper: https://terminalfeed.io/team/ripper (founder, weekly originals, product)
+- zer0day: https://terminalfeed.io/team/zer0day (security, privacy, hacker culture)
+- Pulse: https://terminalfeed.io/team/pulse (markets, crypto, prediction markets)
+- Node: https://terminalfeed.io/team/node (APIs, developer tools, tutorials)
+- Signal: https://terminalfeed.io/team/signal (AI agents, data, automation)
+
 ## Sister Sites
 
 - https://tensorfeed.ai — AI news aggregation and intelligence tracking
