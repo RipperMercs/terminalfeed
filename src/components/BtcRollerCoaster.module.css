@@ -10,8 +10,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   pointer-events: none;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55))
           drop-shadow(0 0 10px rgba(250, 204, 21, 0.35));
