@@ -13,11 +13,12 @@ const TEST_EVENT = 'tf:btcroller-test';
 const SVG_W = 600;
 const SVG_H = 180;
 
-const THRESHOLD_PCT = 0.5;
-const RIDE_MS = 4000;
-const BIG_RIDE_MS = 6000;
-const COOLDOWN_MS = 12_000;
-const SPARK_INTERVAL_MS = 130;
+const THRESHOLD_PCT = 0.3;
+const RIDE_MS = 7000;
+const BIG_RIDE_MS = 10_000;
+const COOLDOWN_MS = 8_000;
+const HEARTBEAT_MS = 30_000;
+const SPARK_INTERVAL_MS = 160;
 const EMA_LOOKBACK_MS = 5 * 60_000;
 
 interface RollerEvent {
@@ -121,6 +122,24 @@ export const BtcRollerCoaster = memo(function BtcRollerCoaster({ pathRef, hostRe
     }
     wasAboveRef.current = above;
   }, [ticks, inert, enabled]);
+
+  // Heartbeat: during calm markets, fire a small ride every HEARTBEAT_MS
+  // so the mascot stays visible. Direction follows recent price drift.
+  useEffect(() => {
+    if (inert || !enabled) return;
+    const iv = window.setInterval(() => {
+      const now = Date.now();
+      if (now - lastEventRef.current < HEARTBEAT_MS) return;
+      let direction: 'up' | 'down' = 'up';
+      if (ticks && ticks.length >= 2) {
+        const tail = ticks.slice(-6);
+        direction = tail[tail.length - 1].price >= tail[0].price ? 'up' : 'down';
+      }
+      lastEventRef.current = now;
+      setEvent({ direction, magnitude: 'small', startedAt: now });
+    }, 5_000);
+    return () => window.clearInterval(iv);
+  }, [inert, enabled, ticks]);
 
   useEffect(() => {
     if (!event) return;
