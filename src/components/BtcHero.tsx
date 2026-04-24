@@ -1,9 +1,11 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import type { RefObject } from 'react';
 import { useBtcPrice } from '../hooks/useBtcPrice';
 import type { PriceTick } from '../hooks/useBtcPrice';
 import { PanelHead } from './PanelHead';
 import { LatencyChip } from './LatencyChip';
 import { CountUp } from '../primitives';
+import { BtcRollerCoaster } from './BtcRollerCoaster';
 import type { LayoutManager } from '../hooks/useLayoutManager';
 import styles from './BtcHero.module.css';
 
@@ -26,9 +28,11 @@ function formatCompact(n: number): string {
 
 interface ChartProps {
   ticks: PriceTick[];
+  hostRef?: RefObject<HTMLDivElement | null>;
+  pathRef?: RefObject<SVGPathElement | null>;
 }
 
-function HeroChart({ ticks }: ChartProps) {
+function HeroChart({ ticks, hostRef, pathRef }: ChartProps) {
   if (!ticks || ticks.length < 2) {
     return <div className={styles.chartEmpty}>loading chart...</div>;
   }
@@ -44,7 +48,7 @@ function HeroChart({ ticks }: ChartProps) {
   const dFill = d + ` L${W},${H} L0,${H} Z`;
   const last = pts[pts.length - 1];
   return (
-    <div className={styles.chart}>
+    <div className={styles.chart} ref={hostRef}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
         <defs>
           <linearGradient id="btcHeroGrad" x1="0" y1="0" x2="0" y2="1">
@@ -57,7 +61,7 @@ function HeroChart({ ticks }: ChartProps) {
                 stroke="var(--border)" strokeWidth="0.5" strokeDasharray="2 3" />
         ))}
         <path d={dFill} fill="url(#btcHeroGrad)" className={styles.areaFill} />
-        <path d={d} fill="none" stroke="var(--gold)" strokeWidth="1.4" />
+        <path ref={pathRef} d={d} fill="none" stroke="var(--gold)" strokeWidth="1.4" />
         <circle cx={last[0]} cy={last[1]} r="2.5" className={styles.pulseDot} />
         <circle cx={last[0]} cy={last[1]} r="5" fill="var(--gold)" opacity="0.3">
           <animate attributeName="r"       values="2.5;10;2.5" dur="2s" repeatCount="indefinite" />
@@ -72,6 +76,8 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
   const { data, priceHistory } = useBtcPrice();
   const [paused, setPaused] = useState(false);
   const [noTick, setNoTick] = useState(false);
+  const chartHostRef = useRef<HTMLDivElement | null>(null);
+  const chartPathRef = useRef<SVGPathElement | null>(null);
 
   // Watchdog: show a "NO TICK" chip when nothing has updated in WATCHDOG_MS
   useEffect(() => {
@@ -160,7 +166,8 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
         </div>
         <div style={{ position: 'relative' }}>
           {noTick && !isStale && <span className={styles.watchdog}>NO TICK</span>}
-          <HeroChart ticks={priceHistory} />
+          <HeroChart ticks={priceHistory} hostRef={chartHostRef} pathRef={chartPathRef} />
+          <BtcRollerCoaster pathRef={chartPathRef} hostRef={chartHostRef} ticks={priceHistory} />
         </div>
       </div>
     </div>

@@ -223,6 +223,14 @@ function App() {
         setShowTerminal(prev => !prev);
         return;
       }
+      if (e.key === '+') {
+        try {
+          window.localStorage.setItem('tf_btc_roller', 'on');
+          window.dispatchEvent(new Event('tf:btcroller-toggle'));
+          window.dispatchEvent(new Event('tf:btcroller-test'));
+        } catch { /* ignore */ }
+        return;
+      }
       if (e.key === 'Escape') {
         if (showTerminal) setShowTerminal(false);
         else if (layout.isOrganizing) layout.setIsOrganizing(false);

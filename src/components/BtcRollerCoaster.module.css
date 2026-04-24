@@ -1,0 +1,67 @@
+.host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 4;
+}
+
+.roller {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 10px rgba(250, 204, 21, 0.35));
+  opacity: 0;
+  will-change: offset-distance, opacity;
+}
+
+.roller img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: rotate(-12deg);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.label {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  padding: 2px 7px;
+  border: 1px solid;
+  background: rgba(0, 0, 0, 0.55);
+  font-weight: 600;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  animation: tfRollerLabel 1.8s ease-out forwards;
+}
+.up   { color: var(--green); border-color: var(--green); text-shadow: 0 0 5px var(--green); }
+.down { color: var(--red);   border-color: var(--red);   text-shadow: 0 0 5px var(--red); }
+
+@keyframes tfRollerLabel {
+  0%      { opacity: 0; transform: translateY(-6px); }
+  10%, 75% { opacity: 1; transform: translateY(0); }
+  100%    { opacity: 0; transform: translateY(-6px); }
+}
+
+.spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 5px var(--gold);
+  pointer-events: none;
+  animation: tfRollerSpark 0.7s ease-out forwards;
+}
+@keyframes tfRollerSpark {
+  from { opacity: 0.9; transform: scale(1); }
+  to   { opacity: 0;   transform: scale(0.3) translateY(14px); }
+}

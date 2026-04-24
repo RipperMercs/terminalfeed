@@ -42,7 +42,11 @@ const COMMANDS: Record<string, string> = {
   theme: 'Show current theme info',
   stats: 'Show panel statistics',
   motd: 'Show message of the day',
+  'btcroller <on|off|status>': 'Toggle the BTC chart mascot easter egg',
 };
+
+const BTC_ROLLER_KEY = 'tf_btc_roller';
+const BTC_ROLLER_EVENT = 'tf:btcroller-toggle';
 
 const MOTD = [
   'Stay curious. Stay informed.',
@@ -345,6 +349,26 @@ export function AdminTerminal({ layout, onClose }: Props) {
 
       case 'motd': {
         push([{ type: 'success', text: MOTD[Math.floor(Math.random() * MOTD.length)] }]);
+        break;
+      }
+
+      case 'btcroller': {
+        const sub = (args[0] || '').toLowerCase();
+        if (sub === 'on' || sub === 'off') {
+          try {
+            window.localStorage.setItem(BTC_ROLLER_KEY, sub);
+            window.dispatchEvent(new Event(BTC_ROLLER_EVENT));
+            push([{ type: 'success', text: `BTC roller coaster ${sub.toUpperCase()}.` }]);
+          } catch {
+            push([{ type: 'error', text: 'Could not write to localStorage.' }]);
+          }
+        } else if (sub === 'status' || sub === '') {
+          let cur = 'off';
+          try { cur = window.localStorage.getItem(BTC_ROLLER_KEY) === 'on' ? 'on' : 'off'; } catch { /* ignore */ }
+          push([{ type: 'output', text: `BTC roller coaster: ${cur.toUpperCase()}` }]);
+        } else {
+          push([{ type: 'error', text: 'Usage: btcroller <on|off|status>' }]);
+        }
         break;
       }
 
