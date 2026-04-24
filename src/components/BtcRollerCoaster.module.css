@@ -77,27 +77,32 @@
   letter-spacing: 0.14em;
   padding: 2px 7px;
   background: rgba(0, 0, 0, 0.55);
-  color: var(--text-dim);
-  border: 1px solid var(--border);
+  border: 1px solid currentColor;
   border-radius: 2px;
   cursor: pointer;
   font-variant-numeric: tabular-nums;
   text-transform: uppercase;
-  transition: color 140ms ease, border-color 140ms ease, background 140ms ease, text-shadow 140ms ease;
-}
-.toggle:hover {
-  color: var(--gold);
-  border-color: var(--gold);
+  transition: color 140ms ease, background 140ms ease, text-shadow 140ms ease;
 }
 .toggle:focus-visible {
-  outline: 1px solid var(--gold);
+  outline: 1px solid currentColor;
   outline-offset: 1px;
 }
 .toggleOn {
-  color: var(--gold);
-  border-color: var(--gold);
-  background: rgba(250, 204, 21, 0.06);
-  text-shadow: 0 0 4px rgba(250, 204, 21, 0.45);
+  color: var(--green);
+  background: rgba(74, 222, 128, 0.08);
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.45);
+}
+.toggleOn:hover {
+  background: rgba(74, 222, 128, 0.16);
+}
+.toggleOff {
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.06);
+  text-shadow: 0 0 4px rgba(248, 113, 113, 0.35);
+}
+.toggleOff:hover {
+  background: rgba(248, 113, 113, 0.14);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -363,9 +363,9 @@ export function AdminTerminal({ layout, onClose }: Props) {
             push([{ type: 'error', text: 'Could not write to localStorage.' }]);
           }
         } else if (sub === 'status' || sub === '') {
-          let cur = 'off';
-          try { cur = window.localStorage.getItem(BTC_ROLLER_KEY) === 'on' ? 'on' : 'off'; } catch { /* ignore */ }
-          push([{ type: 'output', text: `BTC roller coaster: ${cur.toUpperCase()}` }]);
+          let cur = 'on';
+          try { cur = window.localStorage.getItem(BTC_ROLLER_KEY) === 'off' ? 'off' : 'on'; } catch { /* ignore */ }
+          push([{ type: 'output', text: `BTC roller coaster: ${cur.toUpperCase()} (default ON)` }]);
         } else {
           push([{ type: 'error', text: 'Usage: btcroller <on|off|status>' }]);
         }

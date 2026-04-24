@@ -47,11 +47,12 @@ function calcEma(ticks: PriceTick[]): number | null {
 }
 
 function readEnabled(): boolean {
-  if (typeof window === 'undefined') return false;
+  // Default ON: the only OFF state is when the user has explicitly opted out.
+  if (typeof window === 'undefined') return true;
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'on';
+    return window.localStorage.getItem(STORAGE_KEY) !== 'off';
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -261,13 +262,13 @@ export const BtcRollerCoaster = memo(function BtcRollerCoaster({ pathRef, hostRe
       </div>
       <button
         type="button"
-        className={`${styles.toggle} ${enabled ? styles.toggleOn : ''}`}
+        className={`${styles.toggle} ${enabled ? styles.toggleOn : styles.toggleOff}`}
         onClick={onToggleClick}
         aria-pressed={enabled}
         aria-label={enabled ? 'Disable BTC roller coaster animation' : 'Enable BTC roller coaster animation'}
-        title={enabled ? 'Click to disable BTC roller' : 'Click to enable BTC roller (mascot rides chart on big moves)'}
+        title={enabled ? 'BTC roller is on. Click to turn off.' : 'BTC roller is off. Click to turn on.'}
       >
-        ROLLER {enabled ? 'ON' : 'OFF'}
+        ROLLER
       </button>
     </div>
   );
