@@ -1,6 +1,6 @@
 # CLAUDE.md — TerminalFeed.io
 
-Last updated: April 17, 2026
+Last updated: April 20, 2026
 
 ## Project Overview
 
@@ -60,7 +60,7 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 /api/weather       — Weather from Open-Meteo (params: lat, lon)
 /api/ai-stats      — API call tracking for AI Hub panel
 /api/gas           — ETH gas prices from Etherscan (15s cache)
-/api/meme-radar    — Trending tokens from DexScreener (60s cache)
+/api/meme-radar    — DEPRECATED as of April 20, 2026. Remove in next cleanup. See Editorial Policy: No Dedicated Memecoin Surfaces.
 /api/error         — POST client error reports (logged to Cloudflare Workers dashboard)
 /api/tweet         — POST tweet to @terminalfeed (Bearer ADMIN_SECRET)
 /api/auto-briefing — Generate and post automated briefing tweet (Bearer ADMIN_SECRET)
@@ -269,6 +269,15 @@ Font:          JetBrains Mono, SF Mono, Fira Code, Consolas, monospace
 
 ### REMOVED
 - Fitness panel (was a joke for Rupture, removed April 2026 for professionalism)
+- Memecoin Radar panel (removed April 20, 2026 — see Editorial Policy below)
+
+### Editorial Policy: No Dedicated Memecoin Surfaces
+Memecoins are not a viable long-term asset class. Industry data consistently shows more retail participants lose money on memecoins than make money, and surfacing them prominently on a data dashboard implicitly endorses them. TerminalFeed's editorial stance, effective April 20, 2026:
+
+- **No dedicated memecoin panels.** The general `crypto` panel (top movers by market cap / 24h change) is fine and stays.
+- **Focus on durable projects.** Bitcoin is the primary crypto subject. A small number of established alts with long-term utility (ETH, SOL for network activity data) are acceptable as supporting context, but not as dedicated panels.
+- **No memecoin-focused blog content, tools, or API endpoints.** The `/api/meme-radar` Worker route should be deprecated and removed in the next cleanup pass (see Roadmap).
+- **Apply this policy to any sister site** (TensorFeed, VR.org, DramaRadar) that adds crypto surfaces.
 
 ---
 
@@ -493,7 +502,7 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 ## Current Status (April 15, 2026)
 
 - Dashboard: Live with 30+ panels including ETH Gas Tracker, TF Originals
-- API Worker: Live with 23+ data endpoints (/api/gas, /api/meme-radar, /api/error added Apr 15) + X bot
+- API Worker: Live with 23+ data endpoints (/api/gas, /api/error added Apr 15; /api/meme-radar deprecated Apr 20 — remove next cleanup) + X bot
 - X Bot: Live, auto-posts daily briefing at 9 AM ET, manual tweets via POST /api/tweet
 - Blog: 26+ substantial original articles across 5 author personas
 - Tools: 24 live (added satoshi, gwei, hex converters)
