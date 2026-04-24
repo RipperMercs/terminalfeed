@@ -729,28 +729,6 @@ function App() {
       <PanelHead panelId="weather" isStale={panelHealth.isStale('weather')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Weather</span>{weather && <span className="panelTag">{weather.city.toUpperCase()}</span>}</div></PanelHead>
       {weather ? (<div className="weatherContent">
         <WeatherScene weatherCode={weather.weatherCode} isDaytime={weather.isDaytime} />
-        {(() => {
-          const wind = Math.max(0, weather.windSpeed ?? 0);
-          // Faster wind = shorter sway cycle. Clamp so calm days don't stall the animation.
-          const swayDur = (4.5 - Math.min(3.8, wind / 8)).toFixed(2);
-          const baseTilt = Math.min(25, 4 + wind * 0.6);
-          return (
-            <div className="windsock" aria-hidden="true" style={{
-              ['--sock-dur' as string]: `${swayDur}s`,
-              ['--sock-tilt' as string]: `${baseTilt}deg`,
-            }}>
-              <svg viewBox="0 0 40 48" width="28" height="34">
-                <line x1="6" y1="4" x2="6" y2="44" stroke="var(--text-dim)" strokeWidth="1.2" />
-                <circle cx="6" cy="4" r="1.2" fill="var(--text-dim)" />
-                <g className="windsockSock">
-                  <path d="M 6 8 L 36 14 L 32 22 L 6 18 Z" fill="var(--red)" opacity="0.78" />
-                  <path d="M 6 18 L 32 22 L 28 28 L 6 24 Z" fill="var(--text)" opacity="0.85" />
-                  <path d="M 6 24 L 28 28 L 25 33 L 6 30 Z" fill="var(--red)" opacity="0.78" />
-                </g>
-              </svg>
-            </div>
-          );
-        })()}
         <div className="weatherOverlay">
           <div className="weatherTemp">{weather.temperature}°F</div>
           <div className="weatherDesc">{weatherDescription(weather.weatherCode).desc}</div>

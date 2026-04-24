@@ -2442,24 +2442,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Weather windsock — swaying pennant overlay in the corner of the scene.
-   Duration (--sock-dur) and base tilt (--sock-tilt) are set per render. */
-.windsock {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 3;
-  pointer-events: none;
-}
-.windsockSock {
-  transform-origin: 6px 12px;
-  animation: windsockSway var(--sock-dur, 3.5s) ease-in-out infinite alternate;
-}
-@keyframes windsockSway {
-  0%   { transform: rotate(calc(var(--sock-tilt, 8deg) * 0.35)); }
-  100% { transform: rotate(var(--sock-tilt, 8deg)); }
-}
-
 /* Prediction ribbons — green YES fill over red NO background, with a gentle
    width transition whenever Polymarket probability updates. */
 .predRibbon {
@@ -2504,7 +2486,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .windsockSock { animation: none; }
   .predRibbonFill { transition: none; }
 }
 
