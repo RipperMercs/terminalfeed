@@ -216,18 +216,40 @@ export const BtcRollerCoaster = memo(function BtcRollerCoaster({ pathRef, hostRe
 
   if (inert) return null;
 
+  const onToggleClick = () => {
+    const next = enabled ? 'off' : 'on';
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+      window.dispatchEvent(new Event(TOGGLE_EVENT));
+      if (next === 'on') window.dispatchEvent(new Event(TEST_EVENT));
+    } catch { /* ignore */ }
+  };
+
   return (
-    <div className={styles.host} aria-hidden="true">
+    <div className={styles.host}>
       {event && (
-        <span className={`${styles.label} ${event.direction === 'up' ? styles.up : styles.down}`}>
+        <span
+          className={`${styles.label} ${event.direction === 'up' ? styles.up : styles.down}`}
+          aria-hidden="true"
+        >
           {event.magnitude === 'big'
             ? (event.direction === 'up' ? '▲ SURGE' : '▼ DUMP')
             : (event.direction === 'up' ? '▲ MOVE'  : '▼ MOVE')}
         </span>
       )}
-      <div ref={rollerRef} className={styles.roller}>
+      <div ref={rollerRef} className={styles.roller} aria-hidden="true">
         <img src="/btc-roller.png" alt="" draggable={false} />
       </div>
+      <button
+        type="button"
+        className={`${styles.toggle} ${enabled ? styles.toggleOn : ''}`}
+        onClick={onToggleClick}
+        aria-pressed={enabled}
+        aria-label={enabled ? 'Disable BTC roller coaster animation' : 'Enable BTC roller coaster animation'}
+        title={enabled ? 'Click to disable BTC roller' : 'Click to enable BTC roller (mascot rides chart on big moves)'}
+      >
+        ROLLER {enabled ? 'ON' : 'OFF'}
+      </button>
     </div>
   );
 });
