@@ -14,11 +14,11 @@ const SVG_W = 600;
 const SVG_H = 180;
 
 const THRESHOLD_PCT = 0.3;
-const RIDE_MS = 7000;
-const BIG_RIDE_MS = 10_000;
+const RIDE_MS = 9500;
+const BIG_RIDE_MS = 13_000;
 const COOLDOWN_MS = 8_000;
 const HEARTBEAT_MS = 30_000;
-const SPARK_INTERVAL_MS = 160;
+const SPARK_INTERVAL_MS = 180;
 const EMA_LOOKBACK_MS = 5 * 60_000;
 
 interface RollerEvent {
