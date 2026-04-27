@@ -29,6 +29,7 @@ last_updated = 2026-04-27
 - query weather by lat/lon
 - buy premium credits with USDC on Base mainnet
 - spend credits across TerminalFeed and TensorFeed (cross-site bundle)
+- fetch pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint here (paste directly into your tool-use scaffold, no auth required)
 
 [free_tier]
 auth = none
@@ -93,6 +94,7 @@ llms_txt = https://terminalfeed.io/llms.txt
 openapi_json = https://terminalfeed.io/openapi.json
 well_known_openapi = https://terminalfeed.io/.well-known/openapi.json
 well_known_agent_payments = https://terminalfeed.io/.well-known/agent-payments
+llm_tools = "https://terminalfeed.io/api/llm-tools?format=anthropic   (or ?format=openai)"
 sitemap = https://terminalfeed.io/sitemap.xml
 robots_allows_ai = "GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot, Meta-ExternalAgent, cohere-ai, plus 9 more"
 response_header_advertising_premium = "X-TerminalFeed-Pricing"

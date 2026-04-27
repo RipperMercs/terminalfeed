@@ -451,6 +451,24 @@
 
   <p>Credits and bearer tokens are jointly redeemable on terminalfeed.io and tensorfeed.ai. One USDC purchase, two data sources. The TensorFeed payment Worker is the system of record; TerminalFeed authenticates each premium call against it via an internal contract. Same wallet, same chain, shared credit pool. See the <a href="https://tensorfeed.ai/agent-payments" rel="external">TensorFeed agent payments page</a> for the parallel surface.</p>
 
+  <h2>Function-Calling Tool Definitions (Free)</h2>
+
+  <p>Building an agent with OpenAI function-calling, Anthropic tool-use, or any LLM tool-call layer? Skip writing the tool definitions yourself. <span class="inline-code">GET /api/llm-tools</span> returns ready-to-paste tool definitions for every TerminalFeed endpoint (free + premium) in either format.</p>
+
+  <pre><code># Anthropic format
+import requests, anthropic
+tools = requests.get("https://terminalfeed.io/api/llm-tools?format=anthropic").json()["anthropic"]
+
+client = anthropic.Anthropic()
+resp = client.messages.create(
+    model="claude-opus-4-7",
+    tools=tools,                              # ready to use, no manual schema writing
+    messages=[{"role": "user", "content": "What is the current Fed funds rate?"}],
+    max_tokens=1024,
+)</code></pre>
+
+  <p>Optional <span class="inline-code">?tier=free</span> or <span class="inline-code">?tier=premium</span> filters. <span class="inline-code">?format=openai</span>, <span class="inline-code">?format=anthropic</span>, <span class="inline-code">?format=raw</span>, or <span class="inline-code">?format=both</span> (default). The endpoint costs no credits; the listed tools have their own pricing.</p>
+
   <h2>SDK</h2>
 
   <p>No PyPI release in v1. Bearer tokens minted by the TensorFeed payment Worker work on TerminalFeed too (shared credit pool), so any agent that has <a href="https://pypi.org/project/tensorfeed" rel="external"><span class="inline-code">pip install tensorfeed</span></a> already has a token format that authenticates here. Pass it in <span class="inline-code">requests.get(..., headers={"Authorization": f"Bearer {token}"})</span> and you are done.</p>
