@@ -402,6 +402,17 @@
     <p><strong>Methodology:</strong> sentiment scores derive from regex pattern matching against curated positive/negative word lists. Crude but signal-bearing. Treat as one input to a broader analysis, not as a high-frequency trading edge. Cached at 5min.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/world-deltas</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Time-sorted event stream for monitor agents that poll periodically. Aggregates events from four upstream sources into one feed: USGS earthquakes M4.0+, Hacker News current front-page items (within the since window), recently updated Polymarket markets with $10K+ 24h volume, and space launches in a [-1h, +12h] window. Each event has type, timestamp, severity, and structured data.</p>
+    <p><strong>Optional params:</strong> <span class="inline-code">?since=&lt;ISO 8601 timestamp&gt;</span> returns only events newer than this. Defaults to 1 hour ago. Clamped to 1 hour ago if older (the rolling-cache horizon). Pass your last poll timestamp on each call.</p>
+    <p><strong>Why this exists:</strong> a monitor agent today has to poll USGS, HN, Polymarket, and TheSpaceDevs separately and reconcile timestamps client-side. This endpoint does the merge server-side. 1-hour rolling cache means sub-second response when warm.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>

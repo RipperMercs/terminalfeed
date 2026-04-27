@@ -65,6 +65,7 @@ atomic_charge = "credits decrement before upstream fetch; partial-fetch response
 "/api/pro/macro" = "2, $0.04, FRED economic series + forex + commodities + US indices + VIX"
 "/api/pro/crypto-deep" = "2, $0.04, top 50 coins + Binance ticker + Bitcoin network stats + Ethereum gas"
 "/api/pro/sentiment" = "2, $0.04, Fear & Greed + VIX + trending ticker mentions across HN/Reddit with sentiment scores + Polymarket signals"
+"/api/pro/world-deltas" = "2, $0.04, time-sorted event stream of recent earthquakes, HN front-page items, Polymarket market updates, and space launches; ?since= for poll-friendly diff semantics"
 
 [failure_modes]
 # 402 Payment Required reason codes for /api/pro/* endpoints

@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -886,6 +886,78 @@
                 "type": "integer"
               }
             }
+          },
+          "notes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WorldDeltasPro": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "example": "terminalfeed-pro"
+          },
+          "endpoint": {
+            "type": "string",
+            "example": "/api/pro/world-deltas"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "since_clamped": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "earthquake",
+                    "hn_story",
+                    "polymarket_update",
+                    "space_launch"
+                  ]
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "minor",
+                    "moderate",
+                    "major"
+                  ]
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "sample_size": {
+            "type": "object"
           },
           "notes": {
             "type": "object",
@@ -1849,6 +1921,76 @@
             "lang": "JavaScript",
             "label": "JavaScript (fetch)",
             "source": "const res = await fetch(\"https://terminalfeed.io/api/pro/sentiment\", {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst data = await res.json();\nfor (const t of data.trending.slice(0, 5)) {\n  console.log(t.symbol, t.sentiment_label, t.mention_count_24h);\n}"
+          }
+        ]
+      }
+    },
+    "/api/pro/world-deltas": {
+      "get": {
+        "tags": [
+          "Premium: Composed"
+        ],
+        "summary": "Premium time-sorted event stream (2 credits)",
+        "description": "Aggregates time-stamped events from 4 upstream sources into one time-sorted feed: USGS earthquakes M4.0+, Hacker News current front-page items (within the since window), recently updated Polymarket markets >= $10K 24h volume, and space launches in [-1h, +12h] window. Accepts ?since=<ISO timestamp>, defaults to 1 hour ago and clamped to the 1-hour cache horizon. Each event has type, timestamp, severity, and structured data. Saves a monitor agent from polling 4 separate upstream feeds and time-merging client-side. 2 credits ($0.04). Bearer auth. 1-hour rolling cache; sub-second response when warm.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "ISO 8601 timestamp. Returns events newer than this. Defaults to 1 hour ago. Clamped to 1 hour ago if older."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time-sorted event stream.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorldDeltasPro"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl \"https://terminalfeed.io/api/pro/world-deltas?since=2026-04-27T22:00:00Z\" \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python (monitor loop)",
+            "source": "import requests, time\nfrom datetime import datetime, timezone, timedelta\n\nTOKEN = \"tf_live_<64-char-hex>\"\nlast_poll = datetime.now(timezone.utc) - timedelta(minutes=5)\n\nwhile True:\n    res = requests.get(\n        \"https://terminalfeed.io/api/pro/world-deltas\",\n        params={\"since\": last_poll.isoformat()},\n        headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n        timeout=15,\n    )\n    data = res.json()\n    for ev in data[\"events\"]:\n        print(ev[\"type\"], ev[\"severity\"], ev[\"data\"])\n    last_poll = datetime.now(timezone.utc)\n    time.sleep(300)  # 5 min cadence"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript (polling)",
+            "source": "const url = new URL(\"https://terminalfeed.io/api/pro/world-deltas\");\nurl.searchParams.set(\"since\", new Date(Date.now() - 5*60_000).toISOString());\nconst res = await fetch(url, { headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" } });\nconst data = await res.json();\nfor (const ev of data.events) console.log(ev.type, ev.severity, ev.data);"
           }
         ]
       }

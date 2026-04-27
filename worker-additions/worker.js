@@ -171,6 +171,7 @@ function handleIndex() {
         { path: '/api/pro/macro', cost_credits: 2 },
         { path: '/api/pro/crypto-deep', cost_credits: 2 },
         { path: '/api/pro/sentiment', cost_credits: 2 },
+        { path: '/api/pro/world-deltas', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -1664,6 +1665,19 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_world_deltas',
+    short_description: 'Time-sorted event stream: earthquakes + HN + Polymarket + launches (2 credits).',
+    description: 'Premium event-stream endpoint for monitor agents. Aggregates time-stamped events from 4 sources into one time-sorted feed: USGS earthquakes M4.0+, Hacker News new stories via Algolia, recently updated Polymarket markets, and space launches in [-1h, +12h] window. Accepts ?since=<ISO timestamp> (defaults 1h ago, clamped to 1h cache horizon). Each event has type, timestamp, severity, and structured data. Saves an agent from polling 5 separate upstream feeds and merging client-side. Costs 2 credits ($0.04 USDC). Bearer auth required. 1-hour rolling cache; sub-second when warm.',
+    url: 'https://terminalfeed.io/api/pro/world-deltas',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {
+      since: { type: 'string', description: 'ISO 8601 timestamp. Returns events newer than this. Defaults to 1 hour ago. Clamped to 1 hour ago if older.' }
+    }
+  },
+  {
     name: 'tf_premium_sentiment',
     short_description: 'Composite market sentiment: Fear & Greed + VIX + trending tickers (2 credits).',
     description: 'Premium composite sentiment snapshot. Aggregates Crypto Fear and Greed Index (alternative.me), VIX volatility index (Finnhub), trending ticker mentions across Hacker News top 30 + Reddit r/CryptoCurrency / r/wallstreetbets / r/stocks hot posts with per-headline keyword-based sentiment scoring, and top Polymarket prediction-market signals. Output includes per-ticker mention_count_24h, sentiment_score (-1 to +1), sentiment_label, and sample headlines. Use to gauge market mood before a trading or research decision. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. The notes field documents that scoring is keyword-based (crude but signal-bearing), not LLM-derived; treat as one input to a broader analysis.',
@@ -2238,6 +2252,219 @@ function _vixLabel(v) {
   return 'high_volatility';
 }
 
+// ----- World deltas: time-stamped event stream from multiple upstreams -----
+//
+// Design: agents that want "what changed in the world since I last polled"
+// today have to fetch USGS, HN, Polymarket, space launches separately and
+// reconcile timestamps client-side. This endpoint does the aggregation +
+// time sort + filtering server-side.
+//
+// We don't have persistent state (no KV/D1 binding), so "delta since X" is
+// implemented as: always fetch the last hour of events from sources that
+// expose time-filterable feeds, cache that for 60s, then filter to the
+// client's ?since on the way out. Cache key is shared across all clients.
+
+async function fetchProWorldDeltasOneHour() {
+  var oneHourAgoMs = Date.now() - 3600 * 1000;
+  var oneHourAgoSec = Math.floor(oneHourAgoMs / 1000);
+  var sinceISO = new Date(oneHourAgoMs).toISOString();
+  // USGS fdsnws supports ISO times but expects unzoned format
+  var usgsStart = sinceISO.replace(/\.\d{3}Z$/, '');
+
+  var sources = await Promise.allSettled([
+    // 1) Earthquakes M4.0+ in the last hour (USGS fdsnws)
+    fetchWithTimeout(
+      'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=4.0&starttime=' + encodeURIComponent(usgsStart),
+      {}, 8000
+    ),
+    // 2) HN current front-page stories (Algolia). No time filter; the front
+    // page is HN's notion of "what's notable right now" regardless of post age.
+    // Client-side ?since filtering on the wrapper still applies.
+    fetchWithTimeout(
+      'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=15',
+      {}, 6000
+    ),
+    // 3) Polymarket markets recently updated (proxy for closures + new markets)
+    fetchWithTimeout(
+      'https://gamma-api.polymarket.com/markets?limit=30&order=updatedAt&ascending=false&closed=true',
+      {}, 6000
+    ),
+    // 4) Space launches (no time filter param; pull last 5 ordered by net desc)
+    fetchWithTimeout(
+      'https://ll.thespacedevs.com/2.2.0/launch/?limit=5&ordering=-net&mode=list',
+      {}, 8000
+    ),
+  ]);
+
+  var events = [];
+
+  // 1) Earthquakes
+  if (sources[0].status === 'fulfilled' && sources[0].value) {
+    try {
+      var quakeData = await sources[0].value.json();
+      var feats = (quakeData && quakeData.features) || [];
+      feats.forEach(function(f) {
+        if (!f.properties || !f.properties.time) return;
+        var coords = (f.geometry && f.geometry.coordinates) || [];
+        events.push({
+          type: 'earthquake',
+          timestamp: new Date(f.properties.time).toISOString(),
+          severity: f.properties.mag >= 6 ? 'major' : (f.properties.mag >= 5 ? 'moderate' : 'minor'),
+          data: {
+            magnitude: f.properties.mag,
+            place: f.properties.place,
+            depth_km: coords[2] != null ? coords[2] : null,
+            url: f.properties.url || null,
+            mag_type: f.properties.magType || null,
+          },
+        });
+      });
+    } catch (e) {}
+  }
+
+  // 2) HN new stories. Algolia returns chronological newest; filter to >=5 points
+  // to drop firehose noise (most stories never get engagement).
+  if (sources[1].status === 'fulfilled' && sources[1].value) {
+    try {
+      var hnData = await sources[1].value.json();
+      var hits = (hnData && hnData.hits) || [];
+      hits.forEach(function(h) {
+        if (!h.created_at) return;
+        var pts = h.points || 0;
+        events.push({
+          type: 'hn_story',
+          timestamp: h.created_at,
+          severity: pts >= 100 ? 'major' : (pts >= 25 ? 'moderate' : 'minor'),
+          data: {
+            title: h.title,
+            url: h.url || ('https://news.ycombinator.com/item?id=' + h.objectID),
+            points: pts,
+            num_comments: h.num_comments || 0,
+            author: h.author || null,
+          },
+        });
+      });
+    } catch (e) {}
+  }
+
+  // 3) Polymarket recently updated. Drop low-volume sports microaggregates;
+  // require at least $1K 24h volume so we keep signal-bearing markets only.
+  if (sources[2].status === 'fulfilled' && sources[2].value) {
+    try {
+      var pm = await sources[2].value.json();
+      if (Array.isArray(pm)) {
+        pm.forEach(function(m) {
+          var vol = parseFloat(m.volume24hr) || 0;
+          if (vol < 10000) return;  // noise threshold; drops low-volume sports microaggregates
+          var ts = m.updatedAt || m.endDate || m.resolutionTime;
+          if (!ts) return;
+          var tsISO = new Date(ts).toISOString();
+          if (new Date(tsISO).getTime() < oneHourAgoMs) return;
+          events.push({
+            type: 'polymarket_update',
+            timestamp: tsISO,
+            severity: vol > 100000 ? 'major' : (vol > 10000 ? 'moderate' : 'minor'),
+            data: {
+              question: m.question,
+              outcome: m.outcome || null,
+              yes_probability: m.lastTradePrice != null ? parseFloat(m.lastTradePrice) : null,
+              volume_24h: vol,
+              url: m.slug ? 'https://polymarket.com/event/' + m.slug : null,
+            },
+          });
+        });
+      }
+    } catch (e) {}
+  }
+
+  // 4) Space launches (recent, regardless of exact time fit; agents value upcoming + just-passed)
+  if (sources[3].status === 'fulfilled' && sources[3].value) {
+    try {
+      var sl = await sources[3].value.json();
+      var results = (sl && sl.results) || [];
+      results.forEach(function(launch) {
+        if (!launch.net) return;
+        var netMs = Date.parse(launch.net);
+        if (isNaN(netMs)) return;
+        // Include launches in [-1h, +12h] window so agents see what's about to fly
+        var twelveHoursAhead = Date.now() + 12 * 3600 * 1000;
+        if (netMs < oneHourAgoMs || netMs > twelveHoursAhead) return;
+        events.push({
+          type: 'space_launch',
+          timestamp: new Date(netMs).toISOString(),
+          severity: 'moderate',
+          data: {
+            mission: (launch.mission && launch.mission.name) || launch.name,
+            vehicle: launch.rocket && launch.rocket.configuration && launch.rocket.configuration.name,
+            provider: launch.launch_service_provider && launch.launch_service_provider.name,
+            status: launch.status && launch.status.name,
+            net: launch.net,
+            url: launch.url,
+            window: netMs > Date.now() ? 'upcoming' : 'recent',
+          },
+        });
+      });
+    } catch (e) {}
+  }
+
+  events.sort(function(a, b) { return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(); });
+  return events;
+}
+
+async function fetchProWorldDeltas(env, url) {
+  var sinceParam = url.searchParams.get('since');
+  var sinceMs;
+  if (sinceParam) {
+    var parsed = Date.parse(sinceParam);
+    if (!isNaN(parsed)) sinceMs = parsed;
+  }
+  if (!sinceMs) sinceMs = Date.now() - 3600 * 1000;  // default 1h ago
+  // Clamp: don't allow > 1 hour back since our cache only holds 1h
+  var oneHourAgoMs = Date.now() - 3600 * 1000;
+  var clamped = sinceMs < oneHourAgoMs;
+  if (clamped) sinceMs = oneHourAgoMs;
+
+  var BUCKET_KEY = 'pro:world-deltas:1h';
+  var bucket = getCached(BUCKET_KEY, 60000);  // 60s cache on the rolling 1h fetch
+  if (!bucket) {
+    bucket = await fetchProWorldDeltasOneHour();
+    setCache(BUCKET_KEY, bucket);
+  }
+
+  var sinceMsLocal = sinceMs;
+  var filtered = bucket.filter(function(e) {
+    return new Date(e.timestamp).getTime() > sinceMsLocal;
+  });
+
+  var counts = {};
+  filtered.forEach(function(e) {
+    counts[e.type] = (counts[e.type] || 0) + 1;
+  });
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/world-deltas',
+    generated_at: new Date().toISOString(),
+    since: new Date(sinceMs).toISOString(),
+    since_clamped: clamped,
+    events: filtered,
+    counts: counts,
+    sample_size: {
+      events_in_rolling_hour: bucket.length,
+      events_after_since_filter: filtered.length,
+    },
+    notes: {
+      window: 'Server caches the last 1 hour of upstream events. Requests with ?since older than 1 hour ago are clamped to the cache horizon (since_clamped: true).',
+      types: 'earthquake (USGS M4.0+), hn_story (HN current front-page items created within the since window), polymarket_update (recently updated markets >= $10K 24h volume), space_launch (window -1h to +12h).',
+      hn_coverage: 'HN events are front-page items whose created_at falls within the since window. Front-page items take hours to climb the ranks, so this field is often empty for tight since windows. For broader HN coverage call /api/hackernews directly or use /api/pro/briefing.',
+      severity: 'Coarse bucket. earthquake: minor < M5.0 <= moderate < M6.0 <= major. hn_story: minor < 25 points <= moderate < 100 points <= major. polymarket_update: moderate or major (>$100K 24h volume). space_launch: always moderate.',
+      poll_recommendation: 'For monitor agents, poll every 60-300 seconds with ?since= set to your last poll time. The endpoint sub-second responds when the rolling cache is warm.',
+      saves_polling: 'Replaces five separate upstream calls + client-side time merging.',
+    },
+  };
+}
+
+
 async function fetchProSentiment(env, url) {
   // Parallel-fetch every signal source; never fail the whole call on one source.
   var sources = await Promise.allSettled([
@@ -2615,6 +2842,15 @@ async function handleProSentiment(request, env, url) {
   });
 }
 
+async function handleProWorldDeltas(request, env, url) {
+  // Cache strategy lives inside fetchProWorldDeltas (it caches the rolling 1h
+  // bucket and filters to ?since on the way out). The premium wrapper just
+  // gates auth and bills.
+  return handlePremium(request, env, url, '/api/pro/world-deltas', 2, async function(env2, url2) {
+    return await fetchProWorldDeltas(env2, url2);
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -2746,6 +2982,7 @@ export default {
       case 'pro/macro':       return await handleProMacro(request, env, url);
       case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
       case 'pro/sentiment':   return await handleProSentiment(request, env, url);
+      case 'pro/world-deltas': return await handleProWorldDeltas(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
