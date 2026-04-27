@@ -1329,7 +1329,17 @@ async function handleBriefing() {
     try { var d5 = await results[4].value.json(); sections.humans_in_space = { count: d5.number || 0 }; } catch (e) {}
   }
 
-  var data = { source: 'terminalfeed', generated_at: new Date().toISOString(), sections: sections };
+  var data = {
+    source: 'terminalfeed',
+    generated_at: new Date().toISOString(),
+    sections: sections,
+    upgrade: {
+      premium_endpoint: 'https://terminalfeed.io/api/pro/briefing',
+      adds: 'Polymarket prediction markets, ?include= filter, ?history=24h BTC series',
+      cost_credits: 1,
+      docs: 'https://terminalfeed.io/developers/agent-payments',
+    },
+  };
   setCache(KEY, data);
   return jsonResponse(data, 200, 60);
 }
