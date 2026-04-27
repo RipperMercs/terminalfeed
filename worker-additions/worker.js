@@ -161,15 +161,16 @@ function handleIndex() {
       docs: 'https://terminalfeed.io/developers/agent-payments',
       payment_chain: 'Base mainnet (USDC)',
       pricing: '$1 USDC = 50 credits',
-      buy_credits: 'POST /api/buy-credits',
-      confirm_payment: 'POST /api/confirm-payment',
-      balance: 'GET /api/balance (Bearer auth)',
+      payment_info: 'GET /api/payment/info',
+      buy_credits: 'POST /api/payment/buy-credits',
+      confirm_payment: 'POST /api/payment/confirm',
+      balance: 'GET /api/payment/balance (Bearer auth)',
       endpoints: [
         { path: '/api/pro/briefing', cost_credits: 1 },
         { path: '/api/pro/macro', cost_credits: 2 },
         { path: '/api/pro/crypto-deep', cost_credits: 2 },
       ],
-      cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool.',
+      cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
   });
 }
@@ -1527,7 +1528,7 @@ async function handleErrorReport(request) {
 // =============================================================================
 //
 // Auth flow:
-//   1. Agent buys credits (POST /api/buy-credits, USDC on Base, POST /api/confirm-payment)
+//   1. Agent buys credits (POST /api/payment/buy-credits, USDC on Base, POST /api/payment/confirm)
 //      All three proxy to the TensorFeed payment Worker, which is the system of record.
 //   2. Agent calls /api/pro/* with `Authorization: Bearer tf_live_<32-hex>`.
 //   3. TerminalFeed Worker calls TensorFeed `/internal/validate-and-charge` to
@@ -2130,19 +2131,24 @@ async function proxyToTensorFeed(request, env, targetPath) {
   }
 }
 
+async function handlePaymentInfo(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  return proxyToTensorFeed(request, env, '/api/payment/info');
+}
+
 async function handleBuyCredits(request, env) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
-  return proxyToTensorFeed(request, env, '/api/buy-credits');
+  return proxyToTensorFeed(request, env, '/api/payment/buy-credits');
 }
 
 async function handleConfirmPayment(request, env) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
-  return proxyToTensorFeed(request, env, '/api/confirm-payment');
+  return proxyToTensorFeed(request, env, '/api/payment/confirm');
 }
 
 async function handleBalance(request, env) {
   if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
-  return proxyToTensorFeed(request, env, '/api/balance');
+  return proxyToTensorFeed(request, env, '/api/payment/balance');
 }
 
 
@@ -2208,9 +2214,12 @@ export default {
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
       case 'pro/macro':       return await handleProMacro(request, env, url);
       case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
-      case 'buy-credits':     return await handleBuyCredits(request, env);
-      case 'confirm-payment': return await handleConfirmPayment(request, env);
-      case 'balance':         return await handleBalance(request, env);
+      // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
+      // so agent code is interchangeable between domains).
+      case 'payment/info':       return await handlePaymentInfo(request, env);
+      case 'payment/buy-credits': return await handleBuyCredits(request, env);
+      case 'payment/confirm':    return await handleConfirmPayment(request, env);
+      case 'payment/balance':    return await handleBalance(request, env);
 
       default:
         return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);

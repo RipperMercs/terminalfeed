@@ -63,7 +63,7 @@ class TerminalFeed:
     """Thin wrapper over the TerminalFeed HTTP API.
 
     Args:
-        token: a `tf_live_<32-char-hex>` bearer token. May be None if the
+        token: a `tf_live_<64-char-hex>` bearer token. May be None if the
             client is only used for the buy/confirm flow.
         base_url: override for testing. Defaults to https://terminalfeed.io.
         timeout: request timeout in seconds.
@@ -84,20 +84,24 @@ class TerminalFeed:
 
     # ------------------------------ Billing ------------------------------
 
+    def payment_info(self) -> dict[str, Any]:
+        """GET /api/payment/info. Returns wallet address, pricing tiers, supported flows."""
+        return self._get("/api/payment/info", auth=False)
+
     def buy_credits(self, amount_usd: float) -> dict[str, Any]:
-        """POST /api/buy-credits. Returns wallet, memo, quote, expires_at."""
-        return self._post("/api/buy-credits", {"amount_usd": amount_usd})
+        """POST /api/payment/buy-credits. Returns wallet, memo, quote, expires_at."""
+        return self._post("/api/payment/buy-credits", {"amount_usd": amount_usd})
 
     def confirm_payment(self, tx_hash: str, nonce: str) -> dict[str, Any]:
-        """POST /api/confirm-payment. Returns token + credits."""
-        body = self._post("/api/confirm-payment", {"tx_hash": tx_hash, "nonce": nonce})
+        """POST /api/payment/confirm. Returns token + credits."""
+        body = self._post("/api/payment/confirm", {"tx_hash": tx_hash, "nonce": nonce})
         if "token" in body:
             self.token = body["token"]
         return body
 
     def balance(self) -> dict[str, Any]:
-        """GET /api/balance. Returns credits remaining."""
-        return self._get("/api/balance", auth=True)
+        """GET /api/payment/balance. Returns credits remaining."""
+        return self._get("/api/payment/balance", auth=True)
 
     # --------------------------- Premium data ----------------------------
 

@@ -32,8 +32,8 @@
       "BearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "tf_live_<32-char-hex>",
-        "description": "Premium tier authentication. Obtain a token by buying credits via POST /api/buy-credits, sending USDC on Base, and POST /api/confirm-payment. Cross-redeemable on tensorfeed.ai."
+        "bearerFormat": "tf_live_<64-char-hex>",
+        "description": "Premium tier authentication. Obtain a token by buying credits via POST /api/payment/buy-credits, sending USDC on Base, and POST /api/payment/confirm. Cross-redeemable on tensorfeed.ai."
       }
     },
     "schemas": {
@@ -324,13 +324,13 @@
         "required": ["tx_hash", "nonce"],
         "properties": {
           "tx_hash": { "type": "string", "description": "On-chain Base mainnet USDC transfer hash." },
-          "nonce": { "type": "string", "description": "The memo string returned from /api/buy-credits." }
+          "nonce": { "type": "string", "description": "The memo string returned from /api/payment/buy-credits." }
         }
       },
       "ConfirmPaymentResponse": {
         "type": "object",
         "properties": {
-          "token": { "type": "string", "example": "tf_live_<32-char-hex>" },
+          "token": { "type": "string", "example": "tf_live_<64-char-hex>" },
           "credits": { "type": "integer", "example": 50 }
         }
       },
@@ -573,11 +573,24 @@
         }
       }
     },
-    "/api/buy-credits": {
+    "/api/payment/info": {
+      "get": {
+        "tags": ["Premium: Billing"],
+        "summary": "Self-describing payment metadata",
+        "description": "Returns the published USDC wallet address, pricing tiers, supported payment flows (credits-first and x402 fallback), and verification metadata. No auth required. Useful as the first call in an agent's onboarding sequence.",
+        "responses": {
+          "200": {
+            "description": "Payment metadata.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/payment/buy-credits": {
       "post": {
         "tags": ["Premium: Billing"],
         "summary": "Quote a credit purchase, return wallet + memo",
-        "description": "Returns the published USDC wallet, a unique memo, and a quote tying the USD amount to credits. Send USDC on Base mainnet to the wallet, then call POST /api/confirm-payment with the tx hash and memo. Proxies to the TensorFeed payment Worker; the wallet returned must match the address published at /terms section 17, /developers/agent-payments, /llms.txt, and the GitHub README.",
+        "description": "Returns the published USDC wallet, a unique memo, and a quote tying the USD amount to credits. Send USDC on Base mainnet to the wallet, then call POST /api/payment/confirm with the tx hash and memo. Proxies to the TensorFeed payment Worker; the wallet returned must match the address published at /terms section 17, /developers/agent-payments, /llms.txt, and the GitHub README.",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BuyCreditsRequest" } } }
@@ -588,7 +601,7 @@
         }
       }
     },
-    "/api/confirm-payment": {
+    "/api/payment/confirm": {
       "post": {
         "tags": ["Premium: Billing"],
         "summary": "Confirm USDC transfer, mint bearer token",
@@ -603,7 +616,7 @@
         }
       }
     },
-    "/api/balance": {
+    "/api/payment/balance": {
       "get": {
         "tags": ["Premium: Billing"],
         "summary": "Check remaining credits for a bearer token",
