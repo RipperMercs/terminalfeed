@@ -1,6 +1,12 @@
 # Product page redirects
 /clean /cleaner 301
 
+# Well-known URI aliases (RFC 5785) for AI agent discovery.
+# Agents that follow well-known conventions check these paths first.
+/.well-known/openapi.json /openapi.json 200
+/.well-known/llms.txt /llms.txt 200
+/.well-known/agents.txt /agents.txt 200
+
 # Language rewrites — serve the same HTML file for translated URLs
 # Use clean URL paths (not .html) so Cloudflare Pages HTML normalization
 # does not convert these 200 rewrites into 307 redirects.

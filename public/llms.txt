@@ -31,32 +31,95 @@ CoinGecko, Binance WebSocket, Finnhub, mempool.space, ESPN, USGS, GDACS, NASA DO
 Open-Meteo, Hacker News Firebase, RSS2JSON, GitHub API, StackExchange, Frankfurter,
 Open Library, Art Institute of Chicago, TheMealDB, Dog CEO, The Cat API, and more.
 
-## Premium API (USDC micropayments)
+## Free API Endpoints (no auth, no key, no signup)
 
-Pay-as-you-go premium tier for autonomous agents that need composed multi-source
-payloads. Bearer-token auth. Credits are cross-redeemable on tensorfeed.ai (same
-wallet, same chain, shared credit pool).
+All free endpoints return JSON, support CORS, and follow a stale-cache-on-failure contract (always 200 with usable data). Rate limit: 100,000 requests/day per IP, target no more than 1 call per 30 seconds per endpoint.
 
-Base path: https://terminalfeed.io/api/pro/
-Buy credits: POST https://terminalfeed.io/api/payment/buy-credits
-Confirm payment: POST https://terminalfeed.io/api/payment/confirm
-Check balance: GET https://terminalfeed.io/api/payment/balance (Bearer auth required)
+- GET /api/                     directory of all endpoints
+- GET /api/health               version + uptime
+- GET /api/briefing             one-call world snapshot (BTC + Fear&Greed + quakes + HN + ISS)
+- GET /api/btc-price            Bitcoin live ticker (Binance with CoinCap fallback)
+- GET /api/stocks               top US stocks (Finnhub, optional ?symbols= filter)
+- GET /api/crypto-movers        top 15 crypto movers by 24h change
+- GET /api/fear-greed           Crypto Fear & Greed Index 0-100
+- GET /api/forex                USD-base currency rates (Frankfurter)
+- GET /api/economic-data        FRED Fed rate, CPI, unemployment, GDP
+- GET /api/predictions          active Polymarket prediction markets
+- GET /api/earthquake           recent earthquakes M2.5+ from USGS
+- GET /api/disaster-alerts      global disaster alerts from GDACS
+- GET /api/launches             upcoming space launches (The Space Devs)
+- GET /api/humans-in-space      ISS crew (Open Notify)
+- GET /api/cyber-threats        URLhaus + ThreatFox malware/IOCs
+- GET /api/service-status       GitHub, Cloudflare, OpenAI, Anthropic status
+- GET /api/gas                  Ethereum gas oracle (Etherscan)
+- GET /api/weather              weather by ?lat=&lon= (Open-Meteo)
+- GET /api/hackernews           Hacker News top stories
+- GET /api/nasa-apod            NASA Astronomy Picture of the Day
 
-Premium endpoints:
-- GET /api/pro/briefing (1 credit; ?include= filter, ?history=24h)
-- GET /api/pro/macro (2 credits; ?history=30d)
-- GET /api/pro/crypto-deep (2 credits; ?coins= filter, ?history=30d)
+Full machine-readable contract: https://terminalfeed.io/openapi.json
+Agent capability manifest: https://terminalfeed.io/agents.txt
 
-Pricing: $1 USDC on Base mainnet = 50 credits. No subscription. No expiry.
-License: inference and reasoning only; not licensed as training data.
+## Premium API (USDC micropayments on Base mainnet)
+
+Pay-as-you-go premium tier for autonomous agents that need composed multi-source payloads. Bearer-token auth. Credits are cross-redeemable on tensorfeed.ai (same wallet, same chain, shared credit pool). One purchase, both sites.
+
+Discovery:
+  /.well-known/agent-payments     JSON descriptor with auth flow + endpoints
+  /openapi.json                   full OpenAPI 3.1 contract
+  /agents.txt                     agent capability manifest
+
+Payment flow:
+  1. POST /api/payment/buy-credits {amount_usd}      -> wallet, memo, quote
+  2. Send USDC on Base to wallet (memo optional)
+  3. POST /api/payment/confirm {tx_hash, nonce}      -> bearer token + 50 credits
+  4. GET  /api/pro/<endpoint> with Authorization: Bearer tf_live_<64-char-hex>
+  5. GET  /api/payment/balance                       -> credits remaining (any time)
+
+Premium endpoints (price per call at $1 USDC = 50 credits):
+
+  Endpoint              Credits  Approx USD  Composes
+  /api/pro/briefing     1        $0.02       BTC + Fear&Greed + quakes + HN + ISS + Polymarket
+  /api/pro/macro        2        $0.04       FRED (5 series) + forex + commodities + indices + VIX
+  /api/pro/crypto-deep  2        $0.04       top 50 + Binance top 20 + mempool.space + Etherscan gas
+
+Optional query params:
+  /api/pro/briefing     ?include=btc,fear-greed,predictions   ?history=24h
+  /api/pro/macro        ?history=30d
+  /api/pro/crypto-deep  ?coins=btc,eth,sol                    ?history=30d
+
+Example invocations:
+
+  curl -X POST https://terminalfeed.io/api/payment/buy-credits \
+       -H "Content-Type: application/json" \
+       -d '{"amount_usd":1.00}'
+
+  curl -X POST https://terminalfeed.io/api/payment/confirm \
+       -H "Content-Type: application/json" \
+       -d '{"tx_hash":"0x...","nonce":"tf-..."}'
+
+  curl https://terminalfeed.io/api/pro/macro \
+       -H "Authorization: Bearer tf_live_<64-char-hex>"
+
+Response includes header X-Credits-Remaining: <int>.
+
+Failure modes (HTTP 402 Payment Required, body field `error`):
+  missing_token         no Authorization header sent
+  invalid_token         token format wrong or token does not exist
+  insufficient_credits  token valid but balance too low
+  expired               token revoked
+  billing_unavailable   auth service unreachable, retry
+
+Pricing: $1 USDC on Base mainnet = 50 credits. No subscription. No expiry. No KYC.
+License: inference and reasoning only; not licensed as training data, fine-tuning input, model distillation, or dataset redistribution.
 Refund window: 24 hours from purchase, manual USDC return on email request.
 Atomic charge: credits decrement before upstream fetch; partial responses still count.
-Auth failures return HTTP 402 Payment Required with a `reason` field.
+SLA: best-effort, stale-cache-on-failure means always-200 with usable data.
 
-Cross-site bundle: credits work on https://tensorfeed.ai too.
+Cross-site bundle: credits work on https://tensorfeed.ai (AI news + model intelligence). Same wallet, shared pool.
 Full docs: https://terminalfeed.io/developers/agent-payments
-Wallet (published, cross-verified at /terms, /developers/agent-payments,
-/llms.txt, GitHub README): 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
+Mainnet proof: https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c
+
+Wallet (published, cross-verified at /terms, /developers/agent-payments, /llms.txt, GitHub README): 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
 
 ## Editorial Team
 

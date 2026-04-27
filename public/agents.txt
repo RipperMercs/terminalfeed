@@ -1,0 +1,103 @@
+# TerminalFeed Agent Manifest
+# Capability and pricing descriptor for autonomous AI agents.
+# Companion to /llms.txt (which targets human-readable agent context)
+# and /openapi.json (which targets machine-readable API contracts).
+
+[meta]
+name = TerminalFeed
+url = https://terminalfeed.io
+operator = Pizza Robot Studios LLC
+contact = hello@terminalfeed.io
+sister_sites = tensorfeed.ai
+last_updated = 2026-04-27
+
+[capabilities]
+# What an agent can accomplish here. Plain-language verbs, not endpoint paths.
+- query real-time crypto prices and market data
+- query US stock prices, indices (SPY, DIA, QQQ), and VIX
+- query macroeconomic indicators (Fed rate, CPI, unemployment, GDP, treasury yields)
+- query foreign-exchange rates with USD base
+- query commodity prices (gold, WTI oil, natural gas)
+- query Bitcoin network statistics (block height, fees, hashrate, mempool)
+- query Ethereum gas prices
+- query recent earthquakes globally
+- query upcoming space launches
+- query active prediction markets from Polymarket
+- query global disaster alerts from GDACS
+- query trending stories from Hacker News and tech news sources
+- query infrastructure status of major dev platforms (GitHub, Cloudflare, OpenAI, Anthropic)
+- query weather by lat/lon
+- buy premium credits with USDC on Base mainnet
+- spend credits across TerminalFeed and TensorFeed (cross-site bundle)
+
+[free_tier]
+auth = none
+endpoints = https://terminalfeed.io/openapi.json
+rate_limit_per_day = 100000
+rate_limit_per_endpoint_per_minute = 2
+license = permissive (cite as "TerminalFeed.io" if used in published derived work)
+trust_signal = stale-cache-on-failure (always 200 with usable data)
+
+[premium_tier]
+auth = bearer_token
+auth_format = "tf_live_<64-char-hex>"
+auth_obtained_via = "POST /api/payment/buy-credits + USDC on Base + POST /api/payment/confirm"
+docs = https://terminalfeed.io/developers/agent-payments
+contract = https://terminalfeed.io/openapi.json
+discovery = https://terminalfeed.io/.well-known/agent-payments
+pricing_model = pay_per_call
+pricing = "$1 USDC = 50 credits"
+chain = base_mainnet
+wallet = 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
+wallet_cross_verified_at = ["/terms#premium", "/developers/agent-payments", "/llms.txt", "github.com/RipperMercs/terminalfeed/README.md"]
+expiry = none
+refund_window_hours = 24
+license = inference_only
+training_data_use = prohibited
+mainnet_proof = https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c
+sla = best_effort
+atomic_charge = "credits decrement before upstream fetch; partial-fetch responses still count"
+
+[premium_endpoints]
+# endpoint, cost_credits, cost_usd, primary_value
+"/api/pro/briefing" = "1, $0.02, world-state snapshot composed from BTC + Fear&Greed + earthquakes + HN + Polymarket"
+"/api/pro/macro" = "2, $0.04, FRED economic series + forex + commodities + US indices + VIX"
+"/api/pro/crypto-deep" = "2, $0.04, top 50 coins + Binance ticker + Bitcoin network stats + Ethereum gas"
+
+[failure_modes]
+# 402 Payment Required reason codes for /api/pro/* endpoints
+missing_token = "no Authorization header sent"
+invalid_token = "token format wrong or token does not exist"
+insufficient_credits = "token valid but balance too low for this endpoint"
+billing_unavailable = "auth service unreachable; retry"
+expired = "token revoked"
+
+[cross_site_bundle]
+partner = tensorfeed.ai
+partner_capabilities = "AI news aggregation, model leaderboards, AI infrastructure intelligence"
+partner_endpoints_directory = https://tensorfeed.ai/.well-known/openapi.json
+shared_credit_pool = true
+shared_wallet = 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
+shared_token_format = "tf_live_<64-char-hex>"
+note = "A token minted on either site spends on either site. One purchase, both data sources."
+
+[sdk]
+python_reference = https://github.com/RipperMercs/terminalfeed/blob/master/sdk-python/terminalfeed_client.py
+python_pypi = "Phase 2 (not yet published; use the reference client above)"
+typescript = "Phase 2"
+go = "Phase 2"
+note = "Bearer-token auth is plain HTTP; any HTTP client works. The reference client wraps it with typed methods and 402 reason parsing."
+
+[discovery_signals]
+llms_txt = https://terminalfeed.io/llms.txt
+openapi_json = https://terminalfeed.io/openapi.json
+well_known_openapi = https://terminalfeed.io/.well-known/openapi.json
+well_known_agent_payments = https://terminalfeed.io/.well-known/agent-payments
+sitemap = https://terminalfeed.io/sitemap.xml
+robots_allows_ai = "GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot, Meta-ExternalAgent, cohere-ai, plus 9 more"
+response_header_advertising_premium = "X-TerminalFeed-Pricing"
+
+[partner_integrations]
+status = open
+contact = hello@terminalfeed.io
+note = "We work with agent platforms, model registries, and SDK frameworks who want to surface TerminalFeed as a paid data option to their users. No revenue share required for v1; we want distribution."

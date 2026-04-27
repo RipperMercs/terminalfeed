@@ -44,6 +44,97 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        "name": "TerminalFeed Premium Briefing API",
+        "description": "Composed world-state snapshot for AI agents. Aggregates BTC ticker, Fear and Greed Index, recent earthquakes, top Hacker News story count, ISS crew, and live Polymarket prediction markets. One bearer-authenticated HTTP call.",
+        "category": "AI Agent Data API",
+        "brand": { "@type": "Organization", "name": "TerminalFeed" },
+        "url": "https://terminalfeed.io/api/pro/briefing",
+        "image": "https://terminalfeed.io/og-image.png",
+        "offers": {
+          "@type": "Offer",
+          "price": "0.02",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://terminalfeed.io/developers/agent-payments",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "0.02",
+            "priceCurrency": "USD",
+            "unitText": "API call",
+            "billingDuration": "PT0S",
+            "billingIncrement": 1
+          },
+          "acceptedPaymentMethod": {
+            "@type": "PaymentMethod",
+            "name": "USDC on Base mainnet"
+          }
+        }
+      },
+      {
+        "@type": "Product",
+        "name": "TerminalFeed Premium Macro API",
+        "description": "Composed macroeconomic snapshot for AI agents. Aggregates FRED economic series (Fed funds rate, CPI, unemployment, GDP, 10-year treasury), USD-base forex (EUR, JPY, GBP, CHF), commodities (gold via PAXG, WTI oil, natural gas), and US market context (SPY, DIA, QQQ, VIX). Optional 30-day historical series.",
+        "category": "AI Agent Data API",
+        "brand": { "@type": "Organization", "name": "TerminalFeed" },
+        "url": "https://terminalfeed.io/api/pro/macro",
+        "image": "https://terminalfeed.io/og-image.png",
+        "offers": {
+          "@type": "Offer",
+          "price": "0.04",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://terminalfeed.io/developers/agent-payments",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "0.04",
+            "priceCurrency": "USD",
+            "unitText": "API call",
+            "billingDuration": "PT0S",
+            "billingIncrement": 1
+          },
+          "acceptedPaymentMethod": {
+            "@type": "PaymentMethod",
+            "name": "USDC on Base mainnet"
+          }
+        }
+      },
+      {
+        "@type": "Product",
+        "name": "TerminalFeed Premium Crypto Deep API",
+        "description": "Composed crypto snapshot for AI agents. Aggregates top 50 coins by market cap with 1h/24h/7d change, Binance live ticker for top 20 USDT pairs, Bitcoin network statistics from mempool.space (block height, fees, hashrate, mempool size), and Ethereum gas oracle from Etherscan. Optional 30-day BTC OHLCV.",
+        "category": "AI Agent Data API",
+        "brand": { "@type": "Organization", "name": "TerminalFeed" },
+        "url": "https://terminalfeed.io/api/pro/crypto-deep",
+        "image": "https://terminalfeed.io/og-image.png",
+        "offers": {
+          "@type": "Offer",
+          "price": "0.04",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://terminalfeed.io/developers/agent-payments",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "0.04",
+            "priceCurrency": "USD",
+            "unitText": "API call",
+            "billingDuration": "PT0S",
+            "billingIncrement": 1
+          },
+          "acceptedPaymentMethod": {
+            "@type": "PaymentMethod",
+            "name": "USDC on Base mainnet"
+          }
+        }
+      }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
     "@type": "HowTo",
     "name": "How to pay TerminalFeed for premium API access with USDC on Base",
     "description": "Buy credits with USDC on Base mainnet, receive a bearer token, and call /api/pro/* premium endpoints. Credits are jointly redeemable on tensorfeed.ai.",
