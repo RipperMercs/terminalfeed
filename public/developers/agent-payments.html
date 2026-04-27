@@ -392,6 +392,16 @@
     <p><strong>Optional params:</strong> <span class="inline-code">?coins=btc,eth,sol</span> filters the top-50 list. <span class="inline-code">?history=30d</span> adds 30 daily BTC OHLCV candles.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/sentiment</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Composite market sentiment for trading and research agents. Aggregates the Crypto Fear and Greed Index, VIX volatility, top 15 trending ticker mentions across Hacker News top 30 + Reddit r/CryptoCurrency / r/wallstreetbets / r/stocks hot posts with per-headline keyword-based sentiment scoring, and Polymarket-implied probabilities for top markets. Each ticker entry includes mention_count_24h, sources breakdown, sentiment_score (-1 to +1), sentiment_label, and 3 sample headlines with URLs. Notes field documents the scoring methodology so agents can calibrate trust.</p>
+    <p><strong>Methodology:</strong> sentiment scores derive from regex pattern matching against curated positive/negative word lists. Crude but signal-bearing. Treat as one input to a broader analysis, not as a high-frequency trading edge. Cached at 5min.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>

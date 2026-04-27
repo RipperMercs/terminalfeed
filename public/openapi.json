@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -719,6 +719,179 @@
           "issued_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "SentimentPro": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "example": "terminalfeed-pro"
+          },
+          "endpoint": {
+            "type": "string",
+            "example": "/api/pro/sentiment"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "market_indices": {
+            "type": "object",
+            "properties": {
+              "crypto_fear_greed": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "example": "alternative.me"
+                  }
+                }
+              },
+              "stocks_vix": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "change_percent": {
+                    "type": "number"
+                  },
+                  "label": {
+                    "type": "string",
+                    "enum": [
+                      "low_volatility",
+                      "normal",
+                      "elevated",
+                      "high_volatility",
+                      "unknown"
+                    ]
+                  },
+                  "source": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "trending": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                },
+                "asset_class": {
+                  "type": "string",
+                  "enum": [
+                    "crypto",
+                    "equity",
+                    "crypto-equity"
+                  ]
+                },
+                "mention_count_24h": {
+                  "type": "integer"
+                },
+                "sources": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
+                },
+                "sentiment_score": {
+                  "type": "number",
+                  "minimum": -1,
+                  "maximum": 1
+                },
+                "sentiment_label": {
+                  "type": "string",
+                  "enum": [
+                    "negative",
+                    "moderately_negative",
+                    "neutral",
+                    "moderately_positive",
+                    "positive"
+                  ]
+                },
+                "sample_headlines": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "sentiment_signal": {
+                        "type": "string",
+                        "enum": [
+                          "+",
+                          "-",
+                          "neutral"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "prediction_markets_signals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question": {
+                  "type": "string"
+                },
+                "yes_probability": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "volume_24h": {
+                  "type": "number"
+                },
+                "url": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "sample_size": {
+            "type": "object",
+            "properties": {
+              "headlines_scanned": {
+                "type": "integer"
+              },
+              "tickers_with_mentions": {
+                "type": "integer"
+              }
+            }
+          },
+          "notes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       }
@@ -1617,6 +1790,65 @@
             "lang": "JavaScript",
             "label": "JavaScript (OpenAI SDK)",
             "source": "import OpenAI from \"openai\";\nconst tools = (await fetch(\"https://terminalfeed.io/api/llm-tools?format=openai\").then(r => r.json())).openai;\nconst openai = new OpenAI();\nconst resp = await openai.chat.completions.create({\n  model: \"gpt-4o\",\n  tools,\n  messages: [{ role: \"user\", content: \"Get the latest BTC price.\" }],\n});"
+          }
+        ]
+      }
+    },
+    "/api/pro/sentiment": {
+      "get": {
+        "tags": [
+          "Premium: Composed"
+        ],
+        "summary": "Premium composite market sentiment (2 credits)",
+        "description": "Composite market sentiment for AI trading and research agents. Aggregates Crypto Fear and Greed Index, VIX volatility (when Finnhub key has access), trending ticker mentions across Hacker News top 30 + Reddit hot posts (r/CryptoCurrency, r/wallstreetbets, r/stocks) with per-headline keyword-based sentiment scoring, and Polymarket-implied probabilities for top markets. Output includes per-ticker mention_count_24h, sentiment_score (-1 to +1), sentiment_label, and sample headlines with URLs. Notes field documents the scoring methodology (keyword-based, crude but signal-bearing) so agents can calibrate trust appropriately. 2 credits ($0.04). Bearer auth required. Cached at 5min.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Composite sentiment snapshot.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentimentPro"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/sentiment \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python (requests)",
+            "source": "import requests\nres = requests.get(\n    \"https://terminalfeed.io/api/pro/sentiment\",\n    headers={\"Authorization\": \"Bearer tf_live_<64-char-hex>\"},\n    timeout=15,\n)\ndata = res.json()\nprint(\"Crypto F&G:\", data[\"market_indices\"][\"crypto_fear_greed\"])\nfor t in data[\"trending\"][:5]:\n    print(t[\"symbol\"], t[\"sentiment_label\"], t[\"mention_count_24h\"], \"mentions\")"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript (fetch)",
+            "source": "const res = await fetch(\"https://terminalfeed.io/api/pro/sentiment\", {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst data = await res.json();\nfor (const t of data.trending.slice(0, 5)) {\n  console.log(t.symbol, t.sentiment_label, t.mention_count_24h);\n}"
           }
         ]
       }
