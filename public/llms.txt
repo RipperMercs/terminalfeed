@@ -38,9 +38,9 @@ payloads. Bearer-token auth. Credits are cross-redeemable on tensorfeed.ai (same
 wallet, same chain, shared credit pool).
 
 Base path: https://terminalfeed.io/api/pro/
-Buy credits: POST https://terminalfeed.io/api/buy-credits
-Confirm payment: POST https://terminalfeed.io/api/confirm-payment
-Check balance: GET https://terminalfeed.io/api/balance (Bearer auth required)
+Buy credits: POST https://terminalfeed.io/api/payment/buy-credits
+Confirm payment: POST https://terminalfeed.io/api/payment/confirm
+Check balance: GET https://terminalfeed.io/api/payment/balance (Bearer auth required)
 
 Premium endpoints:
 - GET /api/pro/briefing (1 credit; ?include= filter, ?history=24h)

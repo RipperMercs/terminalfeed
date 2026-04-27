@@ -9,7 +9,7 @@ their own codebase without waiting for a published SDK.
 
 Bearer tokens minted by TensorFeed already work on TerminalFeed (shared
 credit pool). Any agent that has `pip install tensorfeed` and a
-`tf_live_<32-char-hex>` token can hit `/api/pro/*` with a plain
+`tf_live_<64-char-hex>` token can hit `/api/pro/*` with a plain
 `requests.get(..., headers={"Authorization": f"Bearer {token}"})`. Until
 real traffic justifies a separate dependency, this reference client is
 enough.
