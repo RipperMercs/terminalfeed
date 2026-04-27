@@ -175,6 +175,7 @@ function handleIndex() {
         { path: '/api/pro/agent-context', cost_credits: 2 },
         { path: '/api/pro/correlation-matrix', cost_credits: 2 },
         { path: '/api/pro/whales', cost_credits: 2 },
+        { path: '/api/pro/exchange-flows', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -1668,6 +1669,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_exchange_flows',
+    short_description: 'ETH net inflow/outflow to major CEX hot wallets, last 3 blocks (2 credits).',
+    description: 'Tracks ETH transfers in/out of major centralized exchange hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin) in the last 3 blocks. Each transfer tagged as inflow (user -> exchange, often precedes selling), outflow (exchange -> user, often HODL withdrawal), or inter_exchange. Aggregated per-exchange and globally with net_eth, net_usd, and bias label (inflow_dominant / outflow_dominant / balanced). Threshold 5 ETH minimum (~$11K at $2300/ETH) to filter retail noise. Useful for trading bots detecting regime shifts: sustained large net inflow signals selling pressure ahead, sustained outflow signals accumulation. Pair with tf_premium_whales for context. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required. v1 covers ETH only; BTC requires a labeled-address dataset.',
+    url: 'https://terminalfeed.io/api/pro/exchange-flows',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_whales',
     short_description: 'Large on-chain BTC and ETH transactions in real time (2 credits).',
     description: 'Tracks whale-sized on-chain transactions on Bitcoin and Ethereum. BTC: scans the last 30 unconfirmed mempool transactions via mempool.space and surfaces any with output >=50 BTC; tagged with USD-equivalent at current BTC spot. ETH: scans the latest confirmed block via Etherscan eth_getBlockByNumber and surfaces transfers >=100 ETH; tagged with USD-equivalent at current ETH spot. Each whale entry includes tx_hash, value in native and USD units, from/to addresses (ETH only), and explorer URL. Useful for trading bots watching for institutional flow signals (large exchange in/outflows, treasury moves, OTC settlements). Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.',
@@ -2287,6 +2299,211 @@ function _vixLabel(v) {
   if (v < 40) return 'elevated';
   return 'high_volatility';
 }
+
+// ----- Exchange flows: net ETH movement in/out of major CEX hot wallets -----
+//
+// Net inflow to exchanges historically correlates with selling pressure.
+// Net outflow correlates with accumulation. Bots watching for regime shifts
+// pay close attention to this signal. We hardcode a small list of well-known,
+// publicly-documented exchange hot wallets and scan recent blocks for
+// transfers touching them.
+//
+// We keep BTC out of this v1 because BTC exchange address tagging requires a
+// labeled-address dataset (CryptoQuant, Arkham) that we don't have for free.
+// ETH is feasible because hot wallets are a small set of well-known addresses.
+
+var ETH_EXCHANGE_ADDRESSES = {
+  // All addresses lowercase for case-insensitive comparison. Documentation:
+  // https://etherscan.io/accounts/label/exchange and individual exchange disclosures.
+  '0x28c6c06298d514db089934071355e5743bf21d60': 'Binance',
+  '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be': 'Binance',
+  '0xdfd5293d8e347dfe59e90efd55b2956a1343963d': 'Binance',
+  '0x56eddb7aa87536c09ccc2793473599fd21a8b17f': 'Binance',
+  '0x9696f59e4d72e237be84ffd425dcad154bf96976': 'Binance',
+  '0x71660c4005ba85c37ccec55d0c4493e66fe775d3': 'Coinbase',
+  '0x503828976d22510aad0201ac7ec88293211d23da': 'Coinbase',
+  '0xddfabcdc4d8ffc6d5beaf154f18b778f892a0740': 'Coinbase',
+  '0x3cd751e6b0078be393132286c442345e5dc49699': 'Coinbase',
+  '0x5041ed759dd4afc3a72b8192c143f72f4724081a': 'OKX',
+  '0xa7efae728d2936e78bda97dc267687568dd593f3': 'OKX',
+  '0x2910543af39aba0cd09dbb2d50200b3e800a63d2': 'Kraken',
+  '0xe853c56864a2ebe4576a807d26fdc4a0ada63919': 'Kraken',
+  '0xf89d7b9c864f589bbf53a82105107622b35eaa40': 'Bybit',
+  '0xa929022c9107643515f5c777ce9a910f0d1e490c': 'Bybit',
+  '0x46340b20830761efd32832a74d7169b29feb9758': 'Crypto.com',
+  '0x6262998ced04146fa42253a5c0af90ca02dfd2a3': 'Crypto.com',
+  '0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec': 'KuCoin',
+  '0x2b5634c42055806a59e9107ed44d43c426e58258': 'KuCoin',
+};
+
+var ETH_FLOW_WEI_THRESHOLD = 5n * 1000000000000000000n;  // 5 ETH (~$11K at $2,300/ETH)
+
+async function fetchProExchangeFlows(env, url) {
+  // Spot price for USD-tagging
+  var ethPriceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT', {}, 6000)
+    .then(function(r) { return r.json(); })
+    .catch(function() { return null; });
+
+  // Latest block number
+  var blockNumFetch = fetchWithTimeout(
+    'https://ethereum-rpc.publicnode.com',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+    },
+    6000
+  ).then(function(r) { return r.json(); }).catch(function() { return null; });
+
+  var firstResults = await Promise.allSettled([ethPriceFetch, blockNumFetch]);
+
+  var ethPriceUsd = 0;
+  if (firstResults[0].status === 'fulfilled' && firstResults[0].value && firstResults[0].value.price) {
+    ethPriceUsd = parseFloat(firstResults[0].value.price) || 0;
+  }
+
+  var latestNum = null;
+  if (firstResults[1].status === 'fulfilled' && firstResults[1].value && firstResults[1].value.result) {
+    try { latestNum = parseInt(firstResults[1].value.result, 16); } catch (e) {}
+  }
+
+  var blocksScanned = [];
+  var transfers = [];
+  if (latestNum) {
+    var blockNums = [latestNum, latestNum - 1, latestNum - 2];
+    var blockFetches = blockNums.map(function(n) {
+      return fetchWithTimeout(
+        'https://ethereum-rpc.publicnode.com',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getBlockByNumber', params: ['0x' + n.toString(16), true], id: 1 }),
+        },
+        10000
+      ).then(function(r) { return r.json(); }).catch(function() { return null; });
+    });
+    var blockResults = await Promise.allSettled(blockFetches);
+    blockResults.forEach(function(br) {
+      if (br.status !== 'fulfilled' || !br.value || !br.value.result) return;
+      var blk = br.value.result;
+      var blockNumber = blk.number ? parseInt(blk.number, 16) : null;
+      var blockTime = blk.timestamp ? new Date(parseInt(blk.timestamp, 16) * 1000).toISOString() : null;
+      var txs = Array.isArray(blk.transactions) ? blk.transactions : [];
+      blocksScanned.push({ number: blockNumber, time: blockTime, tx_count: txs.length });
+      txs.forEach(function(tx) {
+        if (!tx || typeof tx.value !== 'string' || !tx.from || !tx.to) return;
+        var fromLower = tx.from.toLowerCase();
+        var toLower = tx.to.toLowerCase();
+        var fromExch = ETH_EXCHANGE_ADDRESSES[fromLower];
+        var toExch = ETH_EXCHANGE_ADDRESSES[toLower];
+        if (!fromExch && !toExch) return;
+        var wei = _hexToBigInt(tx.value);
+        if (wei < ETH_FLOW_WEI_THRESHOLD) return;
+        var ethAmount = _weiToEth(wei);
+        var direction, exchange, counterparty;
+        if (toExch && !fromExch) {
+          direction = 'inflow';   // user -> exchange (often selling intent)
+          exchange = toExch;
+          counterparty = tx.from;
+        } else if (fromExch && !toExch) {
+          direction = 'outflow';  // exchange -> user (often withdrawal/HODLing)
+          exchange = fromExch;
+          counterparty = tx.to;
+        } else {
+          // exchange -> exchange (rebalance / internal)
+          direction = 'inter_exchange';
+          exchange = fromExch + ' -> ' + toExch;
+          counterparty = tx.to;
+        }
+        transfers.push({
+          tx_hash: tx.hash,
+          direction: direction,
+          exchange: exchange,
+          counterparty: counterparty,
+          value_eth: ethAmount,
+          value_usd: ethPriceUsd > 0 ? Math.round(ethAmount * ethPriceUsd) : null,
+          block_number: blockNumber,
+          block_time: blockTime,
+          explorer_url: 'https://etherscan.io/tx/' + tx.hash,
+        });
+      });
+    });
+  }
+
+  // Aggregate per exchange
+  var byExchange = {};
+  transfers.forEach(function(t) {
+    if (t.direction === 'inter_exchange') return;  // skip from per-exchange aggregates
+    var name = t.exchange;
+    if (!byExchange[name]) {
+      byExchange[name] = {
+        exchange: name,
+        inflow_eth: 0,
+        outflow_eth: 0,
+        inflow_count: 0,
+        outflow_count: 0,
+        net_eth: 0,
+      };
+    }
+    if (t.direction === 'inflow') {
+      byExchange[name].inflow_eth += t.value_eth;
+      byExchange[name].inflow_count += 1;
+    } else if (t.direction === 'outflow') {
+      byExchange[name].outflow_eth += t.value_eth;
+      byExchange[name].outflow_count += 1;
+    }
+  });
+  Object.keys(byExchange).forEach(function(k) {
+    byExchange[k].inflow_eth = parseFloat(byExchange[k].inflow_eth.toFixed(4));
+    byExchange[k].outflow_eth = parseFloat(byExchange[k].outflow_eth.toFixed(4));
+    byExchange[k].net_eth = parseFloat((byExchange[k].inflow_eth - byExchange[k].outflow_eth).toFixed(4));
+    if (ethPriceUsd > 0) {
+      byExchange[k].inflow_usd = Math.round(byExchange[k].inflow_eth * ethPriceUsd);
+      byExchange[k].outflow_usd = Math.round(byExchange[k].outflow_eth * ethPriceUsd);
+      byExchange[k].net_usd = Math.round(byExchange[k].net_eth * ethPriceUsd);
+    }
+  });
+
+  // Top 10 transfers by USD value
+  transfers.sort(function(a, b) { return (b.value_usd || 0) - (a.value_usd || 0); });
+
+  var totalInflow = transfers.filter(function(t) { return t.direction === 'inflow'; }).reduce(function(s, t) { return s + t.value_eth; }, 0);
+  var totalOutflow = transfers.filter(function(t) { return t.direction === 'outflow'; }).reduce(function(s, t) { return s + t.value_eth; }, 0);
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/exchange-flows',
+    generated_at: new Date().toISOString(),
+    spot_eth_usd: ethPriceUsd || null,
+    blocks_scanned: blocksScanned,
+    flows_by_exchange: Object.values(byExchange).sort(function(a, b) { return Math.abs(b.net_eth) - Math.abs(a.net_eth); }),
+    recent_transfers: transfers.slice(0, 15),
+    aggregate: {
+      transfer_count: transfers.length,
+      total_inflow_eth: parseFloat(totalInflow.toFixed(4)),
+      total_outflow_eth: parseFloat(totalOutflow.toFixed(4)),
+      net_flow_eth: parseFloat((totalInflow - totalOutflow).toFixed(4)),
+      total_inflow_usd: ethPriceUsd > 0 ? Math.round(totalInflow * ethPriceUsd) : null,
+      total_outflow_usd: ethPriceUsd > 0 ? Math.round(totalOutflow * ethPriceUsd) : null,
+      net_flow_usd: ethPriceUsd > 0 ? Math.round((totalInflow - totalOutflow) * ethPriceUsd) : null,
+      bias: (function() {
+        var net = totalInflow - totalOutflow;
+        if (Math.abs(net) < 100) return 'balanced';
+        return net > 0 ? 'inflow_dominant' : 'outflow_dominant';
+      })(),
+    },
+    threshold: { min_eth: 5, rationale: 'Filters retail-scale moves; surfaces meaningful flow.' },
+    exchanges_tracked: Array.from(new Set(Object.values(ETH_EXCHANGE_ADDRESSES))).sort(),
+    notes: {
+      asset: 'ETH only in v1. BTC exchange flow tracking requires a labeled-address dataset that is not available for free; can be added in v2 via CryptoQuant or Arkham integration.',
+      addresses_source: 'Hardcoded list of publicly-documented exchange hot wallets (Etherscan labels, exchange disclosures). Coverage is intentionally narrow and will be wrong for unlabeled wallets; treat absence of an exchange as "no flow detected on tracked addresses" not "no flow occurred".',
+      direction_meaning: 'inflow = funds moving TO an exchange (often precedes selling). outflow = funds moving FROM an exchange to a user wallet (often HODL withdrawal). inter_exchange = both ends are exchanges (rebalance / arbitrage).',
+      use_case: 'Trading bots watching for regime shifts. Sustained large net inflow can precede price drops; sustained large net outflow can precede price rallies. Pair with /api/pro/whales for context.',
+      cache_ttl: '5 minutes.',
+    },
+  };
+}
+
 
 // ----- Whales: large on-chain BTC and ETH transactions -----
 //
@@ -3602,6 +3819,17 @@ async function handleProWhales(request, env, url) {
   });
 }
 
+async function handleProExchangeFlows(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/exchange-flows', 2, async function(env2, url2) {
+    var KEY = 'pro:exchange-flows';
+    var cached = getCached(KEY, 300000);  // 5 min cache
+    if (cached) return cached;
+    var data = await fetchProExchangeFlows(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -3737,6 +3965,7 @@ export default {
       case 'pro/agent-context': return await handleProAgentContext(request, env, url);
       case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
       case 'pro/whales': return await handleProWhales(request, env, url);
+      case 'pro/exchange-flows': return await handleProExchangeFlows(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);

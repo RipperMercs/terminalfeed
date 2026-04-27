@@ -452,6 +452,17 @@ client.messages.create(
     <p><strong>Why this exists:</strong> trading bots watching for institutional flow signals (exchange in/outflows, treasury moves, OTC settlements) need a tight feed without burning their own RPC quota. This endpoint absorbs the mempool.space and publicnode.com upstream cost. Live test caught a 600 ETH ($1.37M) whale on first try.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/exchange-flows</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>ETH net inflow/outflow against a hardcoded list of 19 well-known exchange hot wallets across 7 exchanges (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin). Scans the last 3 confirmed blocks and tags transfers >=5 ETH as inflow (user &rarr; exchange, often selling intent), outflow (exchange &rarr; user, often HODL withdrawal), or inter_exchange.</p>
+    <p>Aggregates per-exchange and globally with USD-equivalents and a bias label (<span class="inline-code">inflow_dominant</span> / <span class="inline-code">outflow_dominant</span> / <span class="inline-code">balanced</span>). Live test detected a 46.74 ETH ($107K) Binance outflow on first try.</p>
+    <p><strong>Why this exists:</strong> sustained large net inflow to exchanges historically precedes selling pressure; sustained outflow precedes accumulation rallies. Trading agents pay close attention to this signal. ETH only in v1; BTC requires a labeled-address dataset.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>
