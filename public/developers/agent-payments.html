@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium API for AI Agents: USDC Micropayments | TerminalFeed</title>
+  <meta name="description" content="TerminalFeed Premium API for AI agents. Pay in USDC on Base, get aggregated real-time data: macro, crypto-deep, briefing. Bearer token auth. No subscription. Credits work on tensorfeed.ai too.">
+  <link rel="canonical" href="https://terminalfeed.io/developers/agent-payments">
+  <meta property="og:title" content="Premium API for AI Agents: USDC Micropayments | TerminalFeed">
+  <meta property="og:description" content="Pay in USDC on Base. Get aggregated real-time data via three premium endpoints. Cross-redeemable on TensorFeed.">
+  <meta property="og:url" content="https://terminalfeed.io/developers/agent-payments">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="ai-content" content="Premium real-time data API for AI agents. Pay in USDC on Base mainnet. Bearer token auth. Cross-site credits with TensorFeed.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "TerminalFeed Premium API for AI Agents",
+    "description": "Pay-as-you-go premium API tier for autonomous agents. USDC micropayments on Base mainnet. Three composite endpoints: briefing, macro, crypto-deep.",
+    "author": { "@type": "Organization", "name": "TerminalFeed" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" }
+    },
+    "url": "https://terminalfeed.io/developers/agent-payments",
+    "datePublished": "2026-04-27",
+    "dateModified": "2026-04-27"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "API Docs", "item": "https://terminalfeed.io/developers" },
+      { "@type": "ListItem", "position": 3, "name": "Agent Payments", "item": "https://terminalfeed.io/developers/agent-payments" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 880px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 22px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 40px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #C8C8C0; font-size: 13px; margin: 24px 0 8px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 24px; }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 16px; letter-spacing: 1px; }
+    .badge-green { background: #14532d; color: #4ADE80; }
+    .badge-blue { background: #1e3a5f; color: #60A5FA; }
+    .badge-amber { background: #422006; color: #FBBF24; }
+    .badge-purple { background: #2E1065; color: #A78BFA; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; color: #D4D2CB; }
+    code { font-family: inherit; font-size: 12px; }
+    .inline-code, .wallet-box code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 12px; }
+    th { text-align: left; color: #5DCAA5; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1A1A22; }
+    td { color: #8A8880; padding: 6px 12px; border-bottom: 1px solid #0D0D12; vertical-align: top; }
+    td:first-child { color: #60A5FA; font-weight: 600; }
+    .endpoint { margin-bottom: 24px; padding: 14px 16px; background: #0B0B0F; border: 1px solid #14141A; border-radius: 6px; }
+    .endpoint-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+    .method { font-size: 11px; font-weight: 700; color: #4ADE80; background: #14532d; padding: 2px 8px; border-radius: 3px; }
+    .path { font-size: 13px; color: #60A5FA; }
+    .cost { font-size: 11px; color: #FBBF24; padding: 1px 6px; background: #2A1B05; border-radius: 3px; }
+    .wallet-box { padding: 14px 16px; background: #0B0B0F; border: 1px solid #1A1A22; border-radius: 6px; margin: 12px 0 16px; }
+    .wallet-box .label { font-size: 10px; color: #5DCAA5; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .wallet-box code { font-size: 13px; color: #4ADE80; word-break: break-all; }
+    .footer { margin-top: 56px; font-size: 10px; color: #3E3E3A; padding-top: 16px; border-top: 1px solid #1A1A22; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .callout { padding: 12px 16px; background: #0B0F12; border-left: 3px solid #5DCAA5; border-radius: 4px; margin: 12px 0 16px; font-size: 12px; color: #B5B3AB; }
+    .callout strong { color: #5DCAA5; }
+    @media (max-width: 600px) {
+      body { padding: 24px 14px; }
+      h1 { font-size: 19px; }
+      pre { font-size: 11px; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/developers">API Docs</a><span class="bc-sep">&rsaquo;</span><span>Agent Payments</span>
+  </nav>
+
+  <h1>&gt;_ Premium API for AI Agents</h1>
+  <p class="subtitle">Pay in USDC on Base. Get aggregated real-time data, one call at a time.</p>
+
+  <span class="badge badge-purple">PREMIUM</span>
+  <span class="badge badge-green">USDC ON BASE</span>
+  <span class="badge badge-blue">BEARER AUTH</span>
+  <span class="badge badge-amber">NO SUBSCRIPTION</span>
+
+  <p>The free <a href="/developers">TerminalFeed API</a> is staying free. Premium is a separate, additive tier for AI agents and applications that need composed multi-source payloads in a single request: macro indicators with forex and commodities, crypto with on-chain network stats, world briefings with prediction-market context. The credits work on <a href="https://tensorfeed.ai" rel="external">TensorFeed.ai</a> too. One purchase, both data sources.</p>
+
+  <h2>Quick Start</h2>
+
+  <p>Three steps to start querying premium endpoints. No SDK required in v1; standard HTTP works fine.</p>
+
+  <h3>1. Buy credits (returns wallet, memo, quote)</h3>
+  <pre><code>curl -X POST https://terminalfeed.io/api/buy-credits \
+  -H "Content-Type: application/json" \
+  -d '{"amount_usd": 1.00}'
+
+# Response
+{
+  "wallet": "0x...",
+  "memo": "tf_buy_a1b2c3...",
+  "quote": { "amount_usd": 1.00, "credits": 50, "chain": "base" },
+  "expires_at": "2026-04-27T18:30:00Z"
+}</code></pre>
+
+  <h3>2. Send USDC to the wallet on Base mainnet</h3>
+  <p>Use any wallet that supports Base and USDC. Include the memo as a transaction note where supported, or just keep the tx hash. Both work.</p>
+
+  <h3>3. Confirm the payment, receive your bearer token</h3>
+  <pre><code>curl -X POST https://terminalfeed.io/api/confirm-payment \
+  -H "Content-Type: application/json" \
+  -d '{"tx_hash": "0xabc...", "nonce": "tf_buy_a1b2c3..."}'
+
+# Response
+{
+  "token": "tf_live_&lt;32-char-hex&gt;",
+  "credits": 50
+}</code></pre>
+
+  <h3>4. Call any premium endpoint</h3>
+  <pre><code>curl https://terminalfeed.io/api/pro/macro \
+  -H "Authorization: Bearer tf_live_&lt;32-char-hex&gt;"
+
+# Response includes the composed payload plus a header:
+#   X-Credits-Remaining: 48</code></pre>
+
+  <h2>Endpoints</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/briefing</span>
+      <span class="cost">1 credit</span>
+    </div>
+    <p>One-call world briefing composed from BTC ticker, Fear &amp; Greed index, recent earthquakes, top Hacker News story count, ISS crew, and live Polymarket prediction markets sorted by 24h volume.</p>
+    <p><strong>Optional params:</strong> <span class="inline-code">?include=btc,fear-greed,predictions</span> filters which sections appear. <span class="inline-code">?history=24h</span> adds an hourly BTC price series.</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/macro</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Macro snapshot: FRED economic indicators (Fed funds rate, CPI, unemployment, GDP growth, 10-year treasury), forex rates from Frankfurter (EUR, JPY, GBP, CHF against USD), commodities (gold via PAXG, WTI oil, Henry Hub natural gas), and US market context from Finnhub (SPY, DIA, QQQ, VIX).</p>
+    <p><strong>Optional params:</strong> <span class="inline-code">?history=30d</span> adds 30 daily observations for FRED series and a daily forex time-series.</p>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/crypto-deep</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Deep crypto snapshot: top 50 coins by market cap (with 1h/24h/7d change), Binance live ticker for the top 20 USDT pairs by volume, Bitcoin network statistics from mempool.space (block height, fees, hashrate, mempool size), and Ethereum gas oracle from Etherscan.</p>
+    <p><strong>Optional params:</strong> <span class="inline-code">?coins=btc,eth,sol</span> filters the top-50 list. <span class="inline-code">?history=30d</span> adds 30 daily BTC OHLCV candles.</p>
+  </div>
+
+  <h2>Pricing</h2>
+
+  <table>
+    <tr><th>Item</th><th>Detail</th></tr>
+    <tr><td>Rate</td><td>$1 USDC = 50 credits</td></tr>
+    <tr><td>Chain</td><td>Base mainnet</td></tr>
+    <tr><td>Briefing</td><td>1 credit per call</td></tr>
+    <tr><td>Macro</td><td>2 credits per call</td></tr>
+    <tr><td>Crypto-deep</td><td>2 credits per call</td></tr>
+    <tr><td>Subscription</td><td>None. Pay only for what you call.</td></tr>
+    <tr><td>Expiry</td><td>None. Credits never expire.</td></tr>
+    <tr><td>Bulk discount</td><td>Not available in v1. Larger purchases coming.</td></tr>
+  </table>
+
+  <p>Each successful premium response returns the remaining credit count in an <span class="inline-code">X-Credits-Remaining</span> header. You can also poll <span class="inline-code">GET /api/balance</span> with your bearer token any time.</p>
+
+  <h2>Published Wallet</h2>
+
+  <p>The same wallet TensorFeed publishes. Cross-verified at four locations: this page, <a href="/terms">/terms</a>, <a href="/llms.txt">/llms.txt</a>, and the GitHub repo README. If any disagree, do not send funds. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a>.</p>
+
+  <div class="wallet-box">
+    <div class="label">USDC on Base</div>
+    <code>0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</code>
+  </div>
+
+  <h2>Authentication</h2>
+
+  <p>Pass your bearer token in the <span class="inline-code">Authorization</span> header on every premium call:</p>
+  <pre><code>Authorization: Bearer tf_live_&lt;32-char-hex&gt;</code></pre>
+  <p>Tokens are bearer credentials. Treat them like API keys. Store securely. Do not commit them. Rotate by purchasing a new pack and abandoning the old token if compromised. Replay protection is server-side; the same purchase nonce or tx hash will not credit twice.</p>
+
+  <h3>Failure modes (HTTP 402 Payment Required)</h3>
+  <table>
+    <tr><th>Reason</th><th>Meaning</th></tr>
+    <tr><td>missing_token</td><td>No Authorization header was sent.</td></tr>
+    <tr><td>invalid_token</td><td>Token format is wrong or token does not exist.</td></tr>
+    <tr><td>insufficient_credits</td><td>Token is valid but balance is too low for this endpoint.</td></tr>
+    <tr><td>billing_unavailable</td><td>Auth service unreachable. Retry; if persistent, contact support.</td></tr>
+    <tr><td>expired</td><td>Token revoked. Buy a new pack.</td></tr>
+  </table>
+
+  <h2>Atomic Charge Property</h2>
+
+  <p>Credits are decremented before the upstream fetch begins. If TerminalFeed&#39;s upstream sources partially fail, you still receive a 200 response with whatever data we successfully composed, and the credit still counts. The credit pays for the routing decision and the aggregation work, not a guaranteed upstream success. This matches TensorFeed&#39;s existing model. We monitor upstream reliability and will surface degraded sections in a <span class="inline-code">warning</span> field on partial responses.</p>
+
+  <h2>License (Inference Only)</h2>
+
+  <div class="callout">
+    <strong>Premium responses are licensed for inference and reasoning use only.</strong> They are not licensed for use as training data, fine-tuning input, model distillation, or redistribution. The free tier endpoints retain their existing permissive license. See <a href="/terms#premium">/terms</a> for the full clauses.
+  </div>
+
+  <h2>Refund Policy</h2>
+
+  <p>24-hour window from credit purchase. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with your tx hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours, credits are non-refundable but never expire, so they remain spendable.</p>
+
+  <h2>Cross-Site Bundle</h2>
+
+  <p>Credits and bearer tokens are jointly redeemable on terminalfeed.io and tensorfeed.ai. One USDC purchase, two data sources. The TensorFeed payment Worker is the system of record; TerminalFeed authenticates each premium call against it via an internal contract. Same wallet, same chain, shared credit pool. See the <a href="https://tensorfeed.ai/agent-payments" rel="external">TensorFeed agent payments page</a> for the parallel surface.</p>
+
+  <h2>SDK?</h2>
+
+  <p>Not in v1. Standard HTTP and a bearer header is enough to integrate. The TensorFeed Python SDK on PyPI may grow TerminalFeed methods in a later release. If you build wrappers, share them and we will link from here.</p>
+
+  <h2>Support</h2>
+
+  <p>General questions: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a>. Billing, refunds, or token issues: <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a>. Status of upstream sources is on the free <a href="/api/service-status">/api/service-status</a> endpoint.</p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Built by <a href="/team/ripper">Ripper</a></p>
+    <p><a href="/">Home</a> &middot; <a href="/developers">API Docs</a> &middot; <a href="/llms.txt">/llms.txt</a> &middot; <a href="/terms">Terms</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="https://x.com/terminalfeed" rel="external">@terminalfeed</a></p>
+  </div>
+</body>
+</html>
