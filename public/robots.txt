@@ -13,6 +13,16 @@ Disallow: /embed/
 # so the free tier and premium discovery surfaces are reachable.
 Disallow: /api/
 
+# But allow the canonical agent-builder landing pages even for general
+# crawlers, since these are SEO-targeted documentation surfaces, not data
+# feeds. More-specific Allow rules override the broader Disallow above.
+Allow: /api/for-agents
+Allow: /api/usdc-payable
+
+# Internal pages backing the /api/for-agents and /api/usdc-payable proxies.
+# Disallow so crawlers do not duplicate-index the same content under two URLs.
+Disallow: /_internal/
+
 # AdSense crawler, needs explicit permission to evaluate pages for ad relevance
 User-agent: Mediapartners-Google
 Allow: /

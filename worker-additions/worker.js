@@ -1525,6 +1525,34 @@ async function handleNasaApod() {
 
 
 // --- Client Error Reporting ---
+// Proxy a static HTML page from /_internal/<name>.html to a /api/<name> URL.
+// Cloudflare's Worker route only intercepts /api/*; /_internal/* falls
+// through to Pages, which serves the static file. The proxy here is purely
+// to give the agent-discovery URLs a /api/ prefix without needing to inline
+// HTML constants in the Worker bundle.
+async function proxyInternalPage(slug) {
+  try {
+    var res = await fetchWithTimeout('https://terminalfeed.io/_internal/' + slug + '.html', {}, 8000);
+    if (!res.ok) {
+      return new Response('Page not found', { status: 404, headers: { 'Content-Type': 'text/plain' } });
+    }
+    var body = await res.text();
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300, s-maxage=300',
+        'Access-Control-Allow-Origin': '*',
+        'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+        'Link': LINK_HEADER,
+      },
+    });
+  } catch (e) {
+    return new Response('Internal page fetch failed', { status: 502, headers: { 'Content-Type': 'text/plain' } });
+  }
+}
+
+
 async function handleErrorReport(request) {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'POST only' }, 405);
@@ -3993,6 +4021,11 @@ export default {
       case 'error':          return await handleErrorReport(request);
       case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
       case 'llm-tools':      return handleLLMTools(url);
+
+      // Canonical agent-builder landing pages. Worker proxies static HTML
+      // from /_internal/ since Pages can't serve files under /api/* directly.
+      case 'for-agents':     return await proxyInternalPage('for-agents');
+      case 'usdc-payable':   return await proxyInternalPage('usdc-payable');
 
       // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
