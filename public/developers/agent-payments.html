@@ -135,6 +135,54 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
+    "@type": "WebAPI",
+    "name": "TerminalFeed Premium API",
+    "url": "https://terminalfeed.io/api/pro/",
+    "documentation": "https://terminalfeed.io/developers/agent-payments",
+    "serviceType": "Real-time data API for AI agents",
+    "termsOfService": "https://terminalfeed.io/terms",
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "AI agents and autonomous applications"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io"
+    },
+    "offers": {
+      "@type": "Offer",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0.02",
+        "priceCurrency": "USD",
+        "unitText": "credit",
+        "description": "1 USDC = 50 credits. Premium calls cost 1 to 3 credits each."
+      },
+      "acceptedPaymentMethod": {
+        "@type": "PaymentMethod",
+        "name": "USDC on Base mainnet"
+      }
+    },
+    "potentialAction": {
+      "@type": "ConsumeAction",
+      "target": [
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/macro", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/crypto-deep", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/briefing", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/agent-context", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/sentiment", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/world-deltas", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/correlation-matrix", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/whales", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/exchange-flows", "httpMethod": "GET", "contentType": "application/json" }
+      ]
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
     "@type": "HowTo",
     "name": "How to pay TerminalFeed for premium API access with USDC on Base",
     "description": "Buy credits with USDC on Base mainnet, receive a bearer token, and call /api/pro/* premium endpoints. Credits are jointly redeemable on tensorfeed.ai.",
