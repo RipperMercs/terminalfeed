@@ -86,6 +86,7 @@ Premium endpoints (price per call at $1 USDC = 50 credits):
   /api/pro/world-deltas 2        $0.04       Time-sorted event stream: earthquakes + HN front-page + Polymarket + launches
   /api/pro/agent-context 2       $0.04       Curated world-state snapshot for LLMs + paste-ready system_prompt (~350 tokens)
   /api/pro/correlation-matrix 2  $0.04       30-day Pearson correlations across BTC, ETH, SOL, AVAX, LINK, gold, treasuries, USD, oil
+  /api/pro/whales       2        $0.04       Large on-chain BTC (>=10 BTC) and ETH (>=100 ETH) transactions in real time
 
 Optional query params:
   /api/pro/briefing     ?include=btc,fear-greed,predictions   ?history=24h

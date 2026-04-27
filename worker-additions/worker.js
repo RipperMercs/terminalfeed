@@ -174,6 +174,7 @@ function handleIndex() {
         { path: '/api/pro/world-deltas', cost_credits: 2 },
         { path: '/api/pro/agent-context', cost_credits: 2 },
         { path: '/api/pro/correlation-matrix', cost_credits: 2 },
+        { path: '/api/pro/whales', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -1667,6 +1668,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_whales',
+    short_description: 'Large on-chain BTC and ETH transactions in real time (2 credits).',
+    description: 'Tracks whale-sized on-chain transactions on Bitcoin and Ethereum. BTC: scans the last 30 unconfirmed mempool transactions via mempool.space and surfaces any with output >=50 BTC; tagged with USD-equivalent at current BTC spot. ETH: scans the latest confirmed block via Etherscan eth_getBlockByNumber and surfaces transfers >=100 ETH; tagged with USD-equivalent at current ETH spot. Each whale entry includes tx_hash, value in native and USD units, from/to addresses (ETH only), and explorer URL. Useful for trading bots watching for institutional flow signals (large exchange in/outflows, treasury moves, OTC settlements). Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.',
+    url: 'https://terminalfeed.io/api/pro/whales',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_correlation_matrix',
     short_description: '30-day Pearson correlation matrix across BTC, ETH, SOL, SPY, QQQ, GLD (2 credits).',
     description: 'Pre-computed cross-asset correlation matrix for AI trading and portfolio agents. Returns 30-day Pearson correlations on daily simple returns for 6 assets: BTC, ETH, SOL (Coinbase candles), and SPY, QQQ, GLD (Stooq.com CSVs). Output includes both a pairs array (sorted by absolute r descending) and an NxN matrix object for easy lookup. Each pair tagged with relationship strength (negligible / weak / moderate / strong) and direction (positive / negative). Saves the agent from fetching 6 historical price series and running the covariance math. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
@@ -2275,6 +2287,199 @@ function _vixLabel(v) {
   if (v < 40) return 'elevated';
   return 'high_volatility';
 }
+
+// ----- Whales: large on-chain BTC and ETH transactions -----
+//
+// For BTC: pull mempool.space recent mempool transactions (free, public API)
+// and filter for outputs >= 50 BTC. These are unconfirmed but already
+// broadcast, so an agent watching for institutional flow gets near-real-time
+// signal. Sats threshold: 50 * 100M = 5,000,000,000.
+//
+// For ETH: pull the latest block from Etherscan via eth_getBlockByNumber
+// (uses our existing key) and filter for transactions >= 100 ETH. Confirmed.
+//
+// Both feeds are tagged with USD-equivalent computed from current BTC and ETH
+// spot prices fetched alongside.
+
+var BTC_WHALE_SATS_THRESHOLD = 10 * 100000000;  // 10 BTC (institutional-scale, more frequent than 50)
+var ETH_WHALE_WEI_THRESHOLD = 100n * 1000000000000000000n;  // 100 ETH
+
+function _hexToBigInt(hex) {
+  if (!hex || typeof hex !== 'string') return 0n;
+  try {
+    return BigInt(hex);
+  } catch (e) {
+    return 0n;
+  }
+}
+
+function _weiToEth(wei) {
+  if (typeof wei === 'bigint') {
+    var w = Number(wei) / 1e18;
+    return parseFloat(w.toFixed(6));
+  }
+  return 0;
+}
+
+async function fetchProWhales(env, url) {
+  var btcPriceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT', {}, 6000)
+    .then(function(r) { return r.json(); })
+    .catch(function() { return null; });
+
+  var ethPriceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT', {}, 6000)
+    .then(function(r) { return r.json(); })
+    .catch(function() { return null; });
+
+  // BTC: mempool.space recent mempool txs (last 10 by default)
+  var btcMempoolFetch = fetchWithTimeout('https://mempool.space/api/mempool/recent', {}, 6000)
+    .then(function(r) { return r.json(); })
+    .catch(function() { return null; });
+
+  // ETH: publicnode.com JSON-RPC, no auth required. Scan the last 3 blocks
+  // (~36 seconds of history) to catch whale activity even when the latest
+  // block is light. Single RPC also fetches blockNumber so we know what to
+  // walk back from.
+  var ethLatestNumberFetch = fetchWithTimeout(
+    'https://ethereum-rpc.publicnode.com',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+    },
+    6000
+  ).then(function(r) { return r.json(); }).catch(function() { return null; });
+
+  var firstResults = await Promise.allSettled([btcPriceFetch, ethPriceFetch, btcMempoolFetch, ethLatestNumberFetch]);
+
+  var btcPriceUsd = 0;
+  if (firstResults[0].status === 'fulfilled' && firstResults[0].value && firstResults[0].value.price) {
+    btcPriceUsd = parseFloat(firstResults[0].value.price) || 0;
+  }
+  var ethPriceUsd = 0;
+  if (firstResults[1].status === 'fulfilled' && firstResults[1].value && firstResults[1].value.price) {
+    ethPriceUsd = parseFloat(firstResults[1].value.price) || 0;
+  }
+
+  // Now fetch the last 3 ETH blocks in parallel
+  var latestNum = null;
+  if (firstResults[3].status === 'fulfilled' && firstResults[3].value && firstResults[3].value.result) {
+    try { latestNum = parseInt(firstResults[3].value.result, 16); } catch (e) {}
+  }
+  var ethBlocks = [];
+  if (latestNum) {
+    var blockNums = [latestNum, latestNum - 1, latestNum - 2];
+    var blockFetches = blockNums.map(function(n) {
+      return fetchWithTimeout(
+        'https://ethereum-rpc.publicnode.com',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getBlockByNumber', params: ['0x' + n.toString(16), true], id: 1 }),
+        },
+        10000
+      ).then(function(r) { return r.json(); }).catch(function() { return null; });
+    });
+    var blockResults = await Promise.allSettled(blockFetches);
+    blockResults.forEach(function(br) {
+      if (br.status === 'fulfilled' && br.value && br.value.result) {
+        ethBlocks.push(br.value.result);
+      }
+    });
+  }
+  var results = firstResults;  // alias for the BTC processing below
+
+  // Process BTC mempool whales
+  var btcWhales = [];
+  if (results[2].status === 'fulfilled' && Array.isArray(results[2].value)) {
+    var mp = results[2].value;
+    mp.forEach(function(tx) {
+      if (!tx || typeof tx.value !== 'number') return;
+      if (tx.value < BTC_WHALE_SATS_THRESHOLD) return;
+      var btcAmount = tx.value / 100000000;
+      btcWhales.push({
+        tx_hash: tx.txid,
+        value_btc: parseFloat(btcAmount.toFixed(8)),
+        value_usd: btcPriceUsd > 0 ? Math.round(btcAmount * btcPriceUsd) : null,
+        fee_sats: tx.fee || 0,
+        vsize: tx.vsize || 0,
+        first_seen: tx.time ? new Date(tx.time * 1000).toISOString() : null,
+        confirmed: false,
+        explorer_url: 'https://mempool.space/tx/' + tx.txid,
+      });
+    });
+    btcWhales.sort(function(a, b) { return b.value_btc - a.value_btc; });
+  }
+
+  // Process ETH whales across the last 3 blocks
+  var ethWhales = [];
+  var blocksScanned = [];
+  ethBlocks.forEach(function(blk) {
+    var blockNumber = blk.number ? parseInt(blk.number, 16) : null;
+    var blockTime = blk.timestamp ? new Date(parseInt(blk.timestamp, 16) * 1000).toISOString() : null;
+    blocksScanned.push({ number: blockNumber, time: blockTime, tx_count: Array.isArray(blk.transactions) ? blk.transactions.length : 0 });
+    var txs = Array.isArray(blk.transactions) ? blk.transactions : [];
+    txs.forEach(function(tx) {
+      if (!tx || typeof tx.value !== 'string') return;
+      var wei = _hexToBigInt(tx.value);
+      if (wei < ETH_WHALE_WEI_THRESHOLD) return;
+      var ethAmount = _weiToEth(wei);
+      ethWhales.push({
+        tx_hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value_eth: ethAmount,
+        value_usd: ethPriceUsd > 0 ? Math.round(ethAmount * ethPriceUsd) : null,
+        block_number: blockNumber,
+        block_time: blockTime,
+        confirmed: true,
+        explorer_url: 'https://etherscan.io/tx/' + tx.hash,
+      });
+    });
+  });
+  ethWhales.sort(function(a, b) { return b.value_eth - a.value_eth; });
+  var ethBlockNumber = blocksScanned[0] ? blocksScanned[0].number : null;
+  var ethBlockTime = blocksScanned[0] ? blocksScanned[0].time : null;
+
+  // Aggregate stats
+  var btcTotalUsd = btcWhales.reduce(function(s, w) { return s + (w.value_usd || 0); }, 0);
+  var ethTotalUsd = ethWhales.reduce(function(s, w) { return s + (w.value_usd || 0); }, 0);
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/whales',
+    generated_at: new Date().toISOString(),
+    spot_prices: {
+      btc_usd: btcPriceUsd || null,
+      eth_usd: ethPriceUsd || null,
+    },
+    btc_whales_unconfirmed: btcWhales,
+    eth_whales_latest_block: ethWhales,
+    eth_block: {
+      number: ethBlockNumber,
+      time: ethBlockTime,
+    },
+    eth_blocks_scanned: blocksScanned,
+    aggregate: {
+      btc_whale_count: btcWhales.length,
+      btc_whale_total_usd: btcTotalUsd || null,
+      eth_whale_count: ethWhales.length,
+      eth_whale_total_usd: ethTotalUsd || null,
+    },
+    thresholds: {
+      btc_min_btc: 10,
+      eth_min_eth: 100,
+      rationale: 'Thresholds chosen to surface institutional-scale flow without firehosing retail movements. BTC at 10 (lower because mempool.space recent endpoint only returns 10 unconfirmed txs at a time).',
+    },
+    notes: {
+      btc_source: 'mempool.space /api/mempool/recent (last 10 unconfirmed transactions). Updates within seconds of broadcast.',
+      eth_source: 'publicnode.com Ethereum JSON-RPC. Scans the last 3 blocks (~36 seconds of history) via eth_getBlockByNumber to catch whale activity even when the latest single block is light. Free public endpoint, no auth.',
+      use_case: 'Trading bots watching for institutional flow signals. Large outflows from exchanges often precede price movements; large inflows often presage selling pressure. Consult a labeled-address service (Arkham, Nansen) to correlate from/to addresses with known entities.',
+      caveat: 'BTC mempool transactions can be replaced (RBF) or dropped before confirmation. ETH txs in the latest block could still be reorged within 1-2 blocks. Treat as signal, not certainty.',
+      cache_ttl: '5 minutes. Whale transactions are not high-frequency events; tighter polling does not surface more signal.',
+    },
+  };
+}
+
 
 // ----- Correlation matrix: cross-asset 30d daily-return correlations -----
 //
@@ -3386,6 +3591,17 @@ async function handleProCorrelationMatrix(request, env, url) {
   });
 }
 
+async function handleProWhales(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/whales', 2, async function(env2, url2) {
+    var KEY = 'pro:whales';
+    var cached = getCached(KEY, 300000);  // 5 min cache
+    if (cached) return cached;
+    var data = await fetchProWhales(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -3520,6 +3736,7 @@ export default {
       case 'pro/world-deltas': return await handleProWorldDeltas(request, env, url);
       case 'pro/agent-context': return await handleProAgentContext(request, env, url);
       case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
+      case 'pro/whales': return await handleProWhales(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);

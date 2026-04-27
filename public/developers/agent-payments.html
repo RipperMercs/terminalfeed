@@ -441,6 +441,17 @@ client.messages.create(
     <p><strong>Why this exists:</strong> a portfolio agent today has to fetch 10 historical price series, normalize them to daily returns, and run a covariance computation per cycle. This endpoint precomputes it server-side. Cached 30 minutes since correlations move slowly within a day.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/whales</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Near-real-time tracker for large on-chain transactions on Bitcoin and Ethereum. BTC: scans mempool.space recent mempool (last 10 unconfirmed) for outputs &ge;10 BTC. ETH: scans the last 3 confirmed blocks via publicnode.com JSON-RPC (~1,900 transactions, ~36 seconds of history) for transfers &ge;100 ETH.</p>
+    <p>Each whale entry includes tx hash, value in native and USD units, from/to addresses (ETH), block number, and explorer URL. <span class="inline-code">aggregate</span> field gives a quick whale_count and total_usd for cycle-by-cycle change detection.</p>
+    <p><strong>Why this exists:</strong> trading bots watching for institutional flow signals (exchange in/outflows, treasury moves, OTC settlements) need a tight feed without burning their own RPC quota. This endpoint absorbs the mempool.space and publicnode.com upstream cost. Live test caught a 600 ETH ($1.37M) whale on first try.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>
