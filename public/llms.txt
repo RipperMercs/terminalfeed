@@ -85,6 +85,7 @@ Premium endpoints (price per call at $1 USDC = 50 credits):
   /api/pro/sentiment    2        $0.04       Fear&Greed + VIX + trending tickers (HN + Reddit) + Polymarket signals
   /api/pro/world-deltas 2        $0.04       Time-sorted event stream: earthquakes + HN front-page + Polymarket + launches
   /api/pro/agent-context 2       $0.04       Curated world-state snapshot for LLMs + paste-ready system_prompt (~350 tokens)
+  /api/pro/correlation-matrix 2  $0.04       30-day Pearson correlations across BTC, ETH, SOL, AVAX, LINK, gold, treasuries, USD, oil
 
 Optional query params:
   /api/pro/briefing     ?include=btc,fear-greed,predictions   ?history=24h
