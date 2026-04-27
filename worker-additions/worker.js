@@ -156,6 +156,7 @@ function handleIndex() {
       '/api/humans-in-space', '/api/disaster-alerts', '/api/launches',
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
+      '/api/llm-tools',
     ],
     premium: {
       docs: 'https://terminalfeed.io/developers/agent-payments',
@@ -1524,6 +1525,246 @@ async function handleErrorReport(request) {
 
 
 // =============================================================================
+// LLM Tools — pre-baked function-calling tool definitions for agent devs
+// Returns OpenAI / Anthropic / both formats. Free endpoint by design: the
+// moat is widening adoption, not metering lookups.
+// =============================================================================
+
+const LLM_TOOL_DEFINITIONS = [
+  {
+    name: 'tf_briefing',
+    short_description: 'One-call world snapshot from TerminalFeed.',
+    description: 'Fetches a real-time world-state snapshot composed from BTC ticker, Fear and Greed Index, recent earthquakes (USGS), top Hacker News story count, and ISS crew. Returns JSON. No auth required. Cache TTL 60s. Use when the agent needs a quick global pulse before deciding what to investigate.',
+    url: 'https://terminalfeed.io/api/briefing',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_btc_price',
+    short_description: 'Live Bitcoin price ticker.',
+    description: 'Fetches the current Bitcoin price in USD with 24h change, high, low, and volume. Source: Binance with CoinCap fallback. Cache TTL 15s. No auth required. Use for crypto trading decisions or when the agent needs a fresh BTC quote.',
+    url: 'https://terminalfeed.io/api/btc-price',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_fear_greed',
+    short_description: 'Crypto Fear and Greed Index 0-100.',
+    description: 'Fetches the current Crypto Fear and Greed Index value (0-100) with classification label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed). Source: Alternative.me. Cache TTL 5min. Use as a sentiment signal for crypto trading decisions.',
+    url: 'https://terminalfeed.io/api/fear-greed',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_crypto_movers',
+    short_description: 'Top 15 crypto by 24h change.',
+    description: 'Fetches the top 15 cryptocurrencies sorted by 24h price change. Includes price, market cap, and percentage move. Source: CoinGecko/CoinLore. Cache TTL 30s. Use when the agent needs to surface notable crypto market moves.',
+    url: 'https://terminalfeed.io/api/crypto-movers',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_predictions',
+    short_description: 'Active Polymarket prediction markets.',
+    description: 'Fetches active Polymarket prediction markets sorted by 24h volume. Each market includes question, outcomes, and volume. Cache TTL 60s. Use when the agent needs market-implied probabilities on world events (elections, sports, macro).',
+    url: 'https://terminalfeed.io/api/predictions',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_earthquakes',
+    short_description: 'Recent global earthquakes M2.5+.',
+    description: 'Fetches recent earthquakes magnitude 2.5 or greater from USGS. Returns count and most recent quake details (magnitude, place, time). Cache TTL 2min. Use for disaster monitoring or when the agent needs current seismic activity.',
+    url: 'https://terminalfeed.io/api/earthquake',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_service_status',
+    short_description: 'Status of GitHub, Cloudflare, OpenAI, Anthropic, etc.',
+    description: 'Fetches operational status of major dev infrastructure (GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian, Anthropic). Cache TTL 60s. Use when the agent needs to know if a dependency is up or to explain a recent outage.',
+    url: 'https://terminalfeed.io/api/service-status',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_economic_data',
+    short_description: 'Free FRED indicators (Fed rate, CPI, unemployment, GDP).',
+    description: 'Fetches latest FRED economic indicators: Fed funds rate, CPI, unemployment rate, GDP growth. Cache TTL 1h. Use when the agent needs current US macro indicators. For deeper macro (treasury yields, forex, commodities, indices) use tf_premium_macro.',
+    url: 'https://terminalfeed.io/api/economic-data',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_forex',
+    short_description: 'USD-base currency exchange rates.',
+    description: 'Fetches current foreign exchange rates with USD as base for 16 major currencies (EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, MXN, BRL, KRW, SGD, HKD, SEK, NOK, NZD). Source: Frankfurter (ECB-based). Cache TTL 5min. Use for currency conversion or FX-aware decisions.',
+    url: 'https://terminalfeed.io/api/forex',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_premium_briefing',
+    short_description: 'Composed world briefing including prediction markets (1 credit).',
+    description: 'Premium version of tf_briefing. Adds Polymarket prediction markets to the standard briefing payload, supports section filtering via ?include=, and supports ?history=24h for hourly BTC chart. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Use when the agent needs prediction-market context or recent BTC trajectory in addition to the basic snapshot.',
+    url: 'https://terminalfeed.io/api/pro/briefing',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 1,
+    parameters: {
+      include: { type: 'string', description: 'Comma-separated subset of sections: btc, fear-greed, earthquakes, hackernews, humans-in-space, predictions. Omit for all sections.' },
+      history: { type: 'string', enum: ['24h'], description: 'When set to 24h, response includes a series.btc_24h hourly array (24 data points).' }
+    }
+  },
+  {
+    name: 'tf_premium_macro',
+    short_description: 'Composed macro snapshot: FRED + forex + commodities + indices (2 credits).',
+    description: 'Premium composed macroeconomic snapshot in one HTTP call. Includes 7 FRED economic series (Fed rate, CPI, unemployment, GDP growth, 10-year treasury), 4 USD-base forex pairs (EUR, JPY, GBP, CHF), gold via PAXG/Kraken, US market context (SPY, DIA, QQQ, VIX), and oil/natural gas via FRED. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Optional ?history=30d adds 30-day historical series. Use this instead of calling 14 different upstream APIs separately.',
+    url: 'https://terminalfeed.io/api/pro/macro',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {
+      history: { type: 'string', enum: ['30d'], description: 'When set to 30d, FRED entries include a series array of 30 daily observations and forex.series is populated.' }
+    }
+  },
+  {
+    name: 'tf_premium_crypto_deep',
+    short_description: 'Top 50 coins + Binance + on-chain BTC + ETH gas (2 credits).',
+    description: 'Premium deep crypto snapshot. Includes top 50 coins by market cap with 1h/24h/7d change, Binance live ticker for top 20 USDT pairs by volume, Bitcoin network statistics from mempool.space (block height, fee tiers, hashrate, mempool size), and Ethereum gas oracle from Etherscan. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Optional ?coins= filter and ?history=30d for daily BTC OHLCV. Use this instead of calling CoinGecko + Binance + mempool.space + Etherscan separately.',
+    url: 'https://terminalfeed.io/api/pro/crypto-deep',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {
+      coins: { type: 'string', description: 'Comma-separated symbol filter, e.g. btc,eth,sol. Omit to get all top 50.' },
+      history: { type: 'string', enum: ['30d'], description: 'When set to 30d, response includes series.btc_30d with daily OHLCV candles.' }
+    }
+  },
+  {
+    name: 'tf_payment_buy_credits',
+    short_description: 'Quote a USDC credit purchase.',
+    description: 'POST endpoint that returns the published USDC wallet address (0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1 on Base mainnet), a unique memo, and a quote tying the dollar amount to credits at $1 USDC = 50 credits. Use as the first step when the agent needs to buy credits to access /api/pro/* endpoints.',
+    url: 'https://terminalfeed.io/api/payment/buy-credits',
+    method: 'POST',
+    auth: 'none',
+    tier: 'free',
+    parameters: {
+      amount_usd: { type: 'number', description: 'USDC amount to convert. Minimum $1 = 50 credits.' }
+    }
+  },
+  {
+    name: 'tf_payment_confirm',
+    short_description: 'Confirm USDC payment, mint bearer token.',
+    description: 'POST endpoint that verifies an on-chain Base mainnet USDC transfer to the published wallet and returns a bearer token (tf_live_<64-char-hex>) plus credit count. Use after the agent has sent USDC, with the tx hash and the memo from tf_payment_buy_credits. The returned token is cross-redeemable on tensorfeed.ai.',
+    url: 'https://terminalfeed.io/api/payment/confirm',
+    method: 'POST',
+    auth: 'none',
+    tier: 'free',
+    parameters: {
+      tx_hash: { type: 'string', description: 'On-chain Base mainnet USDC transaction hash.' },
+      nonce: { type: 'string', description: 'The memo string returned from tf_payment_buy_credits (optional but recommended).' }
+    }
+  },
+  {
+    name: 'tf_payment_balance',
+    short_description: 'Check remaining credits for a bearer token.',
+    description: 'GET endpoint that returns remaining credits for the bearer token in the Authorization header. Requires Authorization: Bearer tf_live_<64-char-hex>. Costs 0 credits. Use to monitor agent budget.',
+    url: 'https://terminalfeed.io/api/payment/balance',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'free',
+    parameters: {}
+  }
+];
+
+function toolToOpenAI(def) {
+  return {
+    type: 'function',
+    function: {
+      name: def.name,
+      description: def.description,
+      parameters: {
+        type: 'object',
+        properties: def.parameters || {},
+        required: [],
+      },
+    },
+  };
+}
+
+function toolToAnthropic(def) {
+  return {
+    name: def.name,
+    description: def.description,
+    input_schema: {
+      type: 'object',
+      properties: def.parameters || {},
+      required: [],
+    },
+  };
+}
+
+function handleLLMTools(parsedUrl) {
+  var format = (parsedUrl.searchParams.get('format') || 'both').toLowerCase();
+  var tier = (parsedUrl.searchParams.get('tier') || 'all').toLowerCase();
+
+  var filtered = LLM_TOOL_DEFINITIONS.filter(function(d) {
+    if (tier === 'free') return d.tier === 'free';
+    if (tier === 'premium') return d.tier === 'premium';
+    return true;
+  });
+
+  var payload = {
+    source: 'terminalfeed',
+    generated_at: new Date().toISOString(),
+    docs: 'https://terminalfeed.io/developers/agent-payments',
+    contract: 'https://terminalfeed.io/openapi.json',
+    note: 'Pre-baked function-calling tool definitions for AI agents. Paste the openai or anthropic block directly into your tool-use scaffold. Cross-redeemable on tensorfeed.ai.',
+    cost: 'free (this endpoint costs no credits; the tools listed have their own pricing)',
+    bearer_format: 'tf_live_<64-char-hex>',
+    auth_flow: 'POST /api/payment/buy-credits -> send USDC on Base -> POST /api/payment/confirm -> use returned bearer token on /api/pro/*',
+  };
+
+  if (format === 'openai') {
+    payload.openai = filtered.map(toolToOpenAI);
+  } else if (format === 'anthropic') {
+    payload.anthropic = filtered.map(toolToAnthropic);
+  } else if (format === 'raw') {
+    payload.tools = filtered;
+  } else {
+    payload.openai = filtered.map(toolToOpenAI);
+    payload.anthropic = filtered.map(toolToAnthropic);
+    payload.raw = filtered;
+  }
+
+  // 24h cache: tool definitions only change with worker deploys.
+  return jsonResponse(payload, 200, 86400);
+}
+
+
+// =============================================================================
 // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
 // =============================================================================
 //
@@ -2209,6 +2450,7 @@ export default {
       case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
       case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
+      case 'llm-tools':      return handleLLMTools(url);
 
       // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
