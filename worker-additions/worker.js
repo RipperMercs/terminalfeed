@@ -2139,8 +2139,15 @@ async function fetchProMacro(env, url) {
   var vixFetch = (env && env.FINNHUB_API_KEY)
     ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
         .then(function(res) { return res.json(); })
-        .then(function(d) { return d && d.c ? { price: d.c, change: d.d || 0, change_percent: d.dp || 0 } : null; })
+        .then(function(d) { return d && d.c ? { price: d.c, change: d.d || 0, change_percent: d.dp || 0, source: 'finnhub:^VIX' } : null; })
         .catch(function() { return null; })
+    : Promise.resolve(null);
+  // Fallback for VIX via FRED VIXCLS (daily close)
+  var vixFallbackFetch = (env && env.FRED_API_KEY)
+    ? _fetchFredDailyValues(env, 'VIXCLS', 1).then(function(arr) {
+        if (arr && arr.length > 0) return { price: arr[arr.length - 1], source: 'fred:VIXCLS', freshness: 'previous_day_close' };
+        return null;
+      }).catch(function() { return null; })
     : Promise.resolve(null);
 
   var all = await Promise.allSettled([
@@ -2150,6 +2157,7 @@ async function fetchProMacro(env, url) {
     Promise.all(stockFetches),
     vixFetch,
     forexHistory,
+    vixFallbackFetch,
   ]);
 
   var econ = {};
@@ -2190,7 +2198,12 @@ async function fetchProMacro(env, url) {
       if (entry && entry[1]) markets[entry[0].toLowerCase()] = entry[1];
     });
   }
-  if (all[4].status === 'fulfilled' && all[4].value) markets.vix = all[4].value;
+  if (all[4].status === 'fulfilled' && all[4].value) {
+    markets.vix = all[4].value;
+  } else if (all[6] && all[6].status === 'fulfilled' && all[6].value) {
+    // Fallback to FRED VIXCLS (previous-day close) when Finnhub VIX unavailable
+    markets.vix = all[6].value;
+  }
 
   var out = {
     source: 'terminalfeed-pro',
@@ -2973,7 +2986,16 @@ async function fetchProAgentContext(env, url) {
   if (sources[2].status === 'fulfilled' && sources[2].value) {
     try {
       var v = await sources[2].value.json();
-      if (v && v.c) vix = { value: parseFloat(v.c), change_percent: parseFloat(v.dp) || 0 };
+      if (v && v.c) vix = { value: parseFloat(v.c), change_percent: parseFloat(v.dp) || 0, source: 'finnhub:^VIX', freshness: 'real-time' };
+    } catch (e) {}
+  }
+  // Fallback to FRED VIXCLS (daily close) when Finnhub doesn't return VIX
+  if (!vix && env && env.FRED_API_KEY) {
+    try {
+      var fredVix = await _fetchFredDailyValues(env, 'VIXCLS', 1);
+      if (fredVix && fredVix.length > 0) {
+        vix = { value: fredVix[fredVix.length - 1], change_percent: null, source: 'fred:VIXCLS', freshness: 'previous_day_close' };
+      }
     } catch (e) {}
   }
 
