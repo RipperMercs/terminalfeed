@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -1137,6 +1137,45 @@
             "type": "object"
           },
           "sample_size": {
+            "type": "object"
+          },
+          "notes": {
+            "type": "object"
+          }
+        }
+      },
+      "WhalesPro": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "spot_prices": {
+            "type": "object"
+          },
+          "btc_whales_unconfirmed": {
+            "type": "array"
+          },
+          "eth_whales_latest_block": {
+            "type": "array"
+          },
+          "eth_block": {
+            "type": "object"
+          },
+          "eth_blocks_scanned": {
+            "type": "array"
+          },
+          "aggregate": {
+            "type": "object"
+          },
+          "thresholds": {
             "type": "object"
           },
           "notes": {
@@ -2280,6 +2319,59 @@
             "lang": "JavaScript",
             "label": "JavaScript",
             "source": "const m = await fetch(\"https://terminalfeed.io/api/pro/correlation-matrix\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nconst btcEth = m.matrix.BTC.ETH;\nconsole.log(\"BTC-ETH:\", btcEth);"
+          }
+        ]
+      }
+    },
+    "/api/pro/whales": {
+      "get": {
+        "tags": [
+          "Premium: Composed"
+        ],
+        "summary": "Premium large on-chain transaction tracker (2 credits)",
+        "description": "Tracks whale-sized BTC and ETH transactions in near real time. BTC: scans mempool.space recent mempool (last 10 unconfirmed) for outputs >=10 BTC. ETH: scans the last 3 confirmed blocks (~36s of history, ~1900 transactions) via publicnode.com JSON-RPC for transfers >=100 ETH. Each whale entry tagged with USD-equivalent at current BTC/ETH spot, tx hash, addresses (ETH only), and explorer URL. Useful for trading bots watching for institutional flow signals: large exchange in/outflows, treasury moves, OTC settlements. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whale activity snapshot.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhalesPro"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/whales \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python",
+            "source": "import requests\nw = requests.get(\n    \"https://terminalfeed.io/api/pro/whales\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n    timeout=15,\n).json()\nfor eth in w[\"eth_whales_latest_block\"]:\n    print(f\"{eth['value_eth']} ETH ~ ${eth['value_usd']:,}\")"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript",
+            "source": "const w = await fetch(\"https://terminalfeed.io/api/pro/whales\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nfor (const tx of w.eth_whales_latest_block) {\n  console.log(`${tx.value_eth} ETH = $${tx.value_usd}`);\n}"
           }
         ]
       }
