@@ -41,6 +41,86 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do AI agents pay for API access without a human in the loop?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The agent buys credits with USDC on Base mainnet, gets a bearer token, and signs every premium request with Authorization: Bearer tf_live_<32-char-hex>. No KYC, no credit-card form, no signup flow. An autonomous agent that holds a wallet can complete the entire payment loop on its own: POST /api/buy-credits, send the USDC, POST /api/confirm-payment, then call any /api/pro/* endpoint."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use the same bearer token on TensorFeed.ai?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Credits and tokens are cross-redeemable across both sites. The TensorFeed payment Worker is the system of record for the credit balance, and both TerminalFeed and TensorFeed authenticate against it. One $1 USDC purchase, two data sources."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the cheapest way to get aggregated real-time market data for an AI agent?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Per request, TerminalFeed premium endpoints cost 2 to 4 cents (1 to 2 credits at $1 USDC = 50 credits). Comparable paid aggregators like Messari, CoinAPI, and Alpha Vantage paid tiers start at $50 to $500 per month with KYC and monthly commits. The free DIY alternative requires managing 5 to 15 separate keys."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Are premium API responses licensed as AI training data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Premium responses are licensed for inference and reasoning use only. They are not licensed for use as training data, fine-tuning input, model distillation, or redistribution as a dataset. Free tier endpoints retain their existing permissive license."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if an upstream source fails after my credit was charged?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Credits decrement before the upstream fetch begins (the atomic-charge property). If one or more upstream sources fail, the response still returns 200 with whatever data we successfully composed, and the credit still counts. The credit pays for routing and aggregation, not guaranteed upstream success."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I rotate a compromised bearer token?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Buy a new pack to mint a new token, then stop using the old one. The compromised token continues to spend its remaining balance until depleted. Email support@terminalfeed.io with the affected token if you suspect theft and want it deactivated faster."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I get a refund if I bought too many credits?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes within 24 hours of purchase. Email support@terminalfeed.io with the on-chain transaction hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours credits are non-refundable but never expire."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a free tier for testing the integration?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The full free TerminalFeed API requires no auth and is the right place to verify HTTP plumbing before spending USDC. The free /api/briefing endpoint is structurally similar to the premium /api/pro/briefing, so you can dry-run parsing logic against it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I verify the published wallet address is the real one?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The address is published at four locations that are cross-verified on every release: /developers/agent-payments, /terms section 17.6, /llms.txt, and the public GitHub repository README. If any of the four show a different address, do not send funds and contact support@terminalfeed.io."
+        }
+      }
+    ]
+  }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 880px; margin: 0 auto; line-height: 1.7; }
@@ -229,9 +309,54 @@
 
   <p>Credits and bearer tokens are jointly redeemable on terminalfeed.io and tensorfeed.ai. One USDC purchase, two data sources. The TensorFeed payment Worker is the system of record; TerminalFeed authenticates each premium call against it via an internal contract. Same wallet, same chain, shared credit pool. See the <a href="https://tensorfeed.ai/agent-payments" rel="external">TensorFeed agent payments page</a> for the parallel surface.</p>
 
-  <h2>SDK?</h2>
+  <h2>SDK</h2>
 
-  <p>Not in v1. Standard HTTP and a bearer header is enough to integrate. The TensorFeed Python SDK on PyPI may grow TerminalFeed methods in a later release. If you build wrappers, share them and we will link from here.</p>
+  <p>No PyPI release in v1. Bearer tokens minted by the TensorFeed payment Worker work on TerminalFeed too (shared credit pool), so any agent that has <a href="https://pypi.org/project/tensorfeed" rel="external"><span class="inline-code">pip install tensorfeed</span></a> already has a token format that authenticates here. Pass it in <span class="inline-code">requests.get(..., headers={"Authorization": f"Bearer {token}"})</span> and you are done.</p>
+
+  <p>For agents that prefer typed methods, a single-file Python reference client lives in the public repo at <a href="https://github.com/RipperMercs/terminalfeed/blob/master/sdk-python/terminalfeed_client.py" rel="external"><span class="inline-code">sdk-python/terminalfeed_client.py</span></a>. Copy it into your codebase. It depends only on <span class="inline-code">requests</span>.</p>
+
+  <pre><code>from terminalfeed_client import TerminalFeed
+
+tf = TerminalFeed()
+quote = tf.buy_credits(amount_usd=1.00)            # $1 = 50 credits
+# Send USDC on Base to quote["wallet"] with memo quote["memo"]
+tf.confirm_payment(tx_hash="0x...", nonce=quote["memo"])
+
+print(tf.macro(history="30d"))                     # 2 credits
+print(tf.crypto_deep(coins=["btc", "eth"]))        # 2 credits
+print(tf.briefing(include=["btc", "predictions"])) # 1 credit
+print("balance:", tf.balance())</code></pre>
+
+  <p>When the integration sees real traffic, this file is the seed for either an extension to the <span class="inline-code">tensorfeed</span> PyPI package or a standalone <span class="inline-code">terminalfeed</span> package. TypeScript and Rust wrappers welcome; share yours and we will link from this section.</p>
+
+  <h2>FAQ</h2>
+
+  <h3>How do AI agents pay for API access without a human in the loop?</h3>
+  <p>The agent buys credits with USDC on Base mainnet, gets a bearer token, and signs every premium request with <span class="inline-code">Authorization: Bearer tf_live_&lt;32-char-hex&gt;</span>. No KYC, no credit-card form, no signup flow. An autonomous agent that holds a wallet can complete the entire payment loop on its own: POST <span class="inline-code">/api/buy-credits</span>, send the USDC, POST <span class="inline-code">/api/confirm-payment</span>, then call any <span class="inline-code">/api/pro/*</span> endpoint.</p>
+
+  <h3>Can I use the same bearer token on TensorFeed.ai?</h3>
+  <p>Yes. Credits and tokens are cross-redeemable across both sites. The TensorFeed payment Worker is the system of record for the credit balance, and both TerminalFeed and TensorFeed authenticate against it. One $1 USDC purchase, two data sources: real-time markets and infrastructure on TerminalFeed plus AI news and intelligence on TensorFeed.</p>
+
+  <h3>What is the cheapest way to get aggregated real-time market data for an AI agent?</h3>
+  <p>Per request, premium endpoints are 2 cents to 4 cents (1 to 2 credits at $1 = 50 credits). The closest paid alternatives (Messari, CoinAPI, Alpha Vantage paid tiers) start at $50 to $500 per month with KYC and monthly commits. The free DIY alternative is to manage 5 to 15 separate keys, each with its own auth flow, rate-limit pool, and key rotation burden.</p>
+
+  <h3>Are premium API responses licensed as training data?</h3>
+  <p>No. Premium responses are licensed for inference and reasoning use only. They are not licensed for use as training data, fine-tuning input, model distillation, or redistribution as a dataset. Free tier endpoints retain their existing permissive license. Full clauses live in <a href="/terms#premium">Terms section 17</a>.</p>
+
+  <h3>What happens if an upstream source fails after my credit was charged?</h3>
+  <p>Credits are decremented before the upstream fetch begins (the atomic-charge property). If one or more upstream sources fail, the response still returns a 200 with whatever data we successfully composed, and the credit still counts. The credit pays for the routing decision and the aggregation work, not a guaranteed upstream success. We cache aggressively (60 seconds for briefing and crypto-deep, 5 minutes for macro), so successive calls within the cache window cost no additional fetches.</p>
+
+  <h3>How do I rotate a compromised bearer token?</h3>
+  <p>Bearer tokens are first-class credentials. If yours leaks, treat it as lost: buy a new pack to mint a new token, then stop using the old one. The compromised token will continue to spend its remaining balance until depleted. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the affected token if you suspect theft and want it deactivated faster.</p>
+
+  <h3>Can I get a refund if I bought too many credits?</h3>
+  <p>Yes within 24 hours of purchase. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the on-chain transaction hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours credits are non-refundable, but they never expire and remain spendable indefinitely.</p>
+
+  <h3>Is there a free tier for testing the integration?</h3>
+  <p>The full <a href="/developers">free TerminalFeed API</a> requires no auth and is the right place to verify your HTTP plumbing before spending USDC. The free <span class="inline-code">/api/briefing</span> endpoint is structurally similar (composed payload) to the premium <span class="inline-code">/api/pro/briefing</span>, so you can dry-run your parsing logic against it. Premium adds Polymarket prediction markets, the optional include filter, and the optional 24-hour history series.</p>
+
+  <h3>How do I verify the published wallet address is the real one?</h3>
+  <p>The address is published at four locations that we cross-verify on every release: this page, <a href="/terms#premium">/terms section 17.6</a>, <a href="/llms.txt">/llms.txt</a>, and the <a href="https://github.com/RipperMercs/terminalfeed" rel="external">public GitHub repository README</a>. If any of the four show a different address, do not send funds and email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> immediately. The intentional public redundancy is the trust mechanism.</p>
 
   <h2>Support</h2>
 
