@@ -430,6 +430,17 @@ client.messages.create(
     <p><strong>What you can't easily build yourself:</strong> the data is free elsewhere; the curation (which 13 things matter, how to compress them into a coherent narrative) is what an agent pays for.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/correlation-matrix</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Pre-computed 30-day cross-asset Pearson correlation matrix on daily simple returns. Up to 10 assets across 4 classes: crypto (BTC, ETH, SOL, AVAX, LINK via Coinbase candles), commodity (gold via PAXG-USD on Coinbase, WTI oil via FRED), rates (10Y and 2Y treasury yields via FRED), and fx (trade-weighted USD index via FRED).</p>
+    <p>Returns both a <span class="inline-code">pairs</span> array (sorted by absolute r descending, with relationship and direction labels) and an NxN <span class="inline-code">matrix</span> object for direct lookup like <span class="inline-code">m.matrix.BTC.ETH</span>.</p>
+    <p><strong>Why this exists:</strong> a portfolio agent today has to fetch 10 historical price series, normalize them to daily returns, and run a covariance computation per cycle. This endpoint precomputes it server-side. Cached 30 minutes since correlations move slowly within a day.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>

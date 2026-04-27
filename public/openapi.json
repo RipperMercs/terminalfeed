@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -1054,6 +1054,93 @@
             "additionalProperties": {
               "type": "string"
             }
+          }
+        }
+      },
+      "CorrelationMatrixPro": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "window": {
+            "type": "string",
+            "example": "30d"
+          },
+          "method": {
+            "type": "string"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string"
+                },
+                "asset_class": {
+                  "type": "string"
+                },
+                "observations": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "pairs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "a": {
+                  "type": "string"
+                },
+                "b": {
+                  "type": "string"
+                },
+                "pearson_r": {
+                  "type": "number",
+                  "minimum": -1,
+                  "maximum": 1
+                },
+                "n_observations": {
+                  "type": "integer"
+                },
+                "relationship": {
+                  "type": "string",
+                  "enum": [
+                    "negligible",
+                    "weak",
+                    "moderate",
+                    "strong"
+                  ]
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "positive",
+                    "negative",
+                    "none"
+                  ]
+                }
+              }
+            }
+          },
+          "matrix": {
+            "type": "object"
+          },
+          "sample_size": {
+            "type": "object"
+          },
+          "notes": {
+            "type": "object"
           }
         }
       }
@@ -2140,6 +2227,59 @@
             "lang": "JavaScript",
             "label": "JavaScript (paste into OpenAI)",
             "source": "import OpenAI from \"openai\";\nconst TOKEN = \"tf_live_<64-char-hex>\";\nconst ctx = await fetch(\"https://terminalfeed.io/api/pro/agent-context\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\n\nconst openai = new OpenAI();\nconst resp = await openai.chat.completions.create({\n  model: \"gpt-4o\",\n  messages: [\n    { role: \"system\", content: ctx.system_prompt },\n    { role: \"user\", content: \"What are the most notable signals in the current world state?\" },\n  ],\n});"
+          }
+        ]
+      }
+    },
+    "/api/pro/correlation-matrix": {
+      "get": {
+        "tags": [
+          "Premium: Composed"
+        ],
+        "summary": "Premium 30-day cross-asset correlation matrix (2 credits)",
+        "description": "Pre-computed Pearson correlation matrix on 30-day daily simple returns across up to 10 assets: BTC, ETH, SOL, AVAX, LINK (Coinbase candles, free), gold via PAXG-USD (Coinbase, free), and 10Y / 2Y treasury yields, trade-weighted USD index, WTI oil (FRED, requires FRED_API_KEY on the Worker). Returns both a pairs array (sorted by absolute r descending) and an NxN matrix object. Each pair tagged with relationship strength and direction. Saves the agent from fetching 10 historical price series and running covariance math. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correlation matrix.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrelationMatrixPro"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/correlation-matrix \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python",
+            "source": "import requests\nm = requests.get(\n    \"https://terminalfeed.io/api/pro/correlation-matrix\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n    timeout=15,\n).json()\nfor p in m[\"pairs\"][:5]:\n    print(f\"{p['a']} <-> {p['b']}: {p['pearson_r']:+.3f}\")\nbtc_eth = m[\"matrix\"][\"BTC\"][\"ETH\"]"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript",
+            "source": "const m = await fetch(\"https://terminalfeed.io/api/pro/correlation-matrix\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nconst btcEth = m.matrix.BTC.ETH;\nconsole.log(\"BTC-ETH:\", btcEth);"
           }
         ]
       }

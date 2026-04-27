@@ -173,6 +173,7 @@ function handleIndex() {
         { path: '/api/pro/sentiment', cost_credits: 2 },
         { path: '/api/pro/world-deltas', cost_credits: 2 },
         { path: '/api/pro/agent-context', cost_credits: 2 },
+        { path: '/api/pro/correlation-matrix', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -1666,6 +1667,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_correlation_matrix',
+    short_description: '30-day Pearson correlation matrix across BTC, ETH, SOL, SPY, QQQ, GLD (2 credits).',
+    description: 'Pre-computed cross-asset correlation matrix for AI trading and portfolio agents. Returns 30-day Pearson correlations on daily simple returns for 6 assets: BTC, ETH, SOL (Coinbase candles), and SPY, QQQ, GLD (Stooq.com CSVs). Output includes both a pairs array (sorted by absolute r descending) and an NxN matrix object for easy lookup. Each pair tagged with relationship strength (negligible / weak / moderate / strong) and direction (positive / negative). Saves the agent from fetching 6 historical price series and running the covariance math. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
+    url: 'https://terminalfeed.io/api/pro/correlation-matrix',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_agent_context',
     short_description: 'Curated "everything an LLM should know right now" with paste-ready system_prompt (2 credits).',
     description: 'The "always start here" premium call for autonomous agents. Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear and Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top Polymarket markets, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context. Saves the agent from making 13 separate calls and writing a formatter. Curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.',
@@ -2263,6 +2275,195 @@ function _vixLabel(v) {
   if (v < 40) return 'elevated';
   return 'high_volatility';
 }
+
+// ----- Correlation matrix: cross-asset 30d daily-return correlations -----
+//
+// Saves an agent from fetching 6 historical price series and running the
+// covariance math themselves. Uses Coinbase candles for crypto (free, no key)
+// and Stooq.com CSVs for ETFs (free, no key) so the upstream cost is zero.
+
+function _pearson(xs, ys) {
+  if (!xs || !ys) return null;
+  var n = Math.min(xs.length, ys.length);
+  if (n < 10) return null;
+  var sx = 0, sy = 0;
+  for (var i = 0; i < n; i++) { sx += xs[i]; sy += ys[i]; }
+  var mx = sx / n, my = sy / n;
+  var num = 0, dx = 0, dy = 0;
+  for (var j = 0; j < n; j++) {
+    var ax = xs[j] - mx, ay = ys[j] - my;
+    num += ax * ay;
+    dx += ax * ax;
+    dy += ay * ay;
+  }
+  if (dx === 0 || dy === 0) return null;
+  var r = num / Math.sqrt(dx * dy);
+  return parseFloat(r.toFixed(4));
+}
+
+function _toReturns(closes) {
+  if (!closes || closes.length < 2) return [];
+  var rs = [];
+  for (var i = 1; i < closes.length; i++) {
+    if (closes[i - 1] === 0) continue;
+    rs.push((closes[i] - closes[i - 1]) / closes[i - 1]);
+  }
+  return rs;
+}
+
+function _parseStooqCsv(text) {
+  // Stooq returns: Date,Open,High,Low,Close,Volume
+  if (!text || typeof text !== 'string') return [];
+  var lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var parts = lines[i].split(',');
+    if (parts.length < 5) continue;
+    var close = parseFloat(parts[4]);
+    if (!isFinite(close)) continue;
+    rows.push({ date: parts[0], close: close });
+  }
+  return rows;
+}
+
+async function _fetchCoinbaseDailyCloses(product, days) {
+  // Coinbase candles: granularity=86400 returns daily OHLCV, newest first
+  // Format: [time, low, high, open, close, volume]
+  try {
+    var endSec = Math.floor(Date.now() / 1000);
+    var startSec = endSec - days * 86400;
+    var startISO = new Date(startSec * 1000).toISOString();
+    var endISO = new Date(endSec * 1000).toISOString();
+    var resp = await fetchWithTimeout(
+      'https://api.exchange.coinbase.com/products/' + product +
+      '/candles?granularity=86400&start=' + startISO + '&end=' + endISO,
+      {}, 8000
+    );
+    if (!resp.ok) return [];
+    var data = await resp.json();
+    if (!Array.isArray(data)) return [];
+    // Sort ascending by time and return closes
+    data.sort(function(a, b) { return a[0] - b[0]; });
+    return data.map(function(k) { return parseFloat(k[4]); }).filter(function(v) { return isFinite(v) && v > 0; });
+  } catch (e) {
+    return [];
+  }
+}
+
+async function _fetchFredDailyValues(env, seriesId, days) {
+  if (!env || !env.FRED_API_KEY) return [];
+  try {
+    var resp = await fetchWithTimeout(
+      'https://api.stlouisfed.org/fred/series/observations?series_id=' + seriesId +
+      '&sort_order=desc&limit=' + days + '&api_key=' + env.FRED_API_KEY + '&file_type=json',
+      {}, 6000
+    );
+    if (!resp.ok) return [];
+    var data = await resp.json();
+    var obs = (data && data.observations) || [];
+    // Reverse to ascending and parse, dropping FRED's "." sentinel for missing data
+    var values = [];
+    for (var i = obs.length - 1; i >= 0; i--) {
+      var raw = obs[i].value;
+      if (raw === '.' || raw == null) continue;
+      var v = parseFloat(raw);
+      if (!isFinite(v)) continue;
+      values.push(v);
+    }
+    return values;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function fetchProCorrelationMatrix(env, url) {
+  var assets = [
+    { symbol: 'BTC',          asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('BTC-USD', 30); } },
+    { symbol: 'ETH',          asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('ETH-USD', 30); } },
+    { symbol: 'SOL',          asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('SOL-USD', 30); } },
+    { symbol: 'AVAX',         asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('AVAX-USD', 30); } },
+    { symbol: 'LINK',         asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('LINK-USD', 30); } },
+    { symbol: 'GOLD_PAXG',    asset_class: 'commodity',  fetcher: function() { return _fetchCoinbaseDailyCloses('PAXG-USD', 30); } },
+    { symbol: 'TREASURY_10Y', asset_class: 'rates',      fetcher: function() { return _fetchFredDailyValues(env, 'DGS10', 30); } },
+    { symbol: 'TREASURY_2Y',  asset_class: 'rates',      fetcher: function() { return _fetchFredDailyValues(env, 'DGS2', 30); } },
+    { symbol: 'USD_INDEX',    asset_class: 'fx',         fetcher: function() { return _fetchFredDailyValues(env, 'DTWEXBGS', 30); } },
+    { symbol: 'OIL_WTI',      asset_class: 'commodity',  fetcher: function() { return _fetchFredDailyValues(env, 'DCOILWTICO', 30); } },
+  ];
+
+  var fetched = await Promise.all(assets.map(function(a) {
+    return a.fetcher().then(function(closes) {
+      return { symbol: a.symbol, asset_class: a.asset_class, closes: closes, returns: _toReturns(closes) };
+    });
+  }));
+
+  var withData = fetched.filter(function(x) { return x.returns.length >= 10; });
+
+  // Build pairs list (upper triangle only)
+  var pairs = [];
+  for (var i = 0; i < withData.length; i++) {
+    for (var j = i + 1; j < withData.length; j++) {
+      var a = withData[i], b = withData[j];
+      // Truncate to common length from the end (most recent overlapping window)
+      var n = Math.min(a.returns.length, b.returns.length);
+      var ax = a.returns.slice(a.returns.length - n);
+      var bx = b.returns.slice(b.returns.length - n);
+      var r = _pearson(ax, bx);
+      if (r == null) continue;
+      pairs.push({
+        a: a.symbol,
+        b: b.symbol,
+        pearson_r: r,
+        n_observations: n,
+        relationship: Math.abs(r) >= 0.7 ? 'strong' : (Math.abs(r) >= 0.4 ? 'moderate' : (Math.abs(r) >= 0.2 ? 'weak' : 'negligible')),
+        direction: r > 0 ? 'positive' : (r < 0 ? 'negative' : 'none'),
+      });
+    }
+  }
+  pairs.sort(function(p1, p2) { return Math.abs(p2.pearson_r) - Math.abs(p1.pearson_r); });
+
+  // Build NxN matrix for easy lookup
+  var matrix = {};
+  withData.forEach(function(a) {
+    matrix[a.symbol] = {};
+    withData.forEach(function(b) {
+      if (a.symbol === b.symbol) {
+        matrix[a.symbol][b.symbol] = 1.0;
+      } else {
+        var pair = pairs.find(function(p) { return (p.a === a.symbol && p.b === b.symbol) || (p.a === b.symbol && p.b === a.symbol); });
+        matrix[a.symbol][b.symbol] = pair ? pair.pearson_r : null;
+      }
+    });
+  });
+
+  var dataAvailability = {};
+  fetched.forEach(function(x) { dataAvailability[x.symbol] = x.closes.length; });
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/correlation-matrix',
+    generated_at: new Date().toISOString(),
+    window: '30d',
+    method: 'Pearson correlation on daily simple returns',
+    assets: withData.map(function(x) { return { symbol: x.symbol, asset_class: x.asset_class, observations: x.returns.length }; }),
+    pairs: pairs,
+    matrix: matrix,
+    sample_size: {
+      assets_requested: assets.length,
+      assets_with_data: withData.length,
+      data_availability: dataAvailability,
+    },
+    notes: {
+      use_case: 'Use to size positions, build hedges, or detect regime shifts. A high BTC-SPY correlation, for example, signals "risk-on" coupling; a sharp drop in correlation often precedes a regime change.',
+      methodology: 'Daily simple returns r_t = (P_t - P_{t-1}) / P_{t-1}. Pearson r computed on overlapping observations only. Minimum 10 observations to report a pair.',
+      sources: 'Crypto (BTC, ETH, SOL) from Coinbase Exchange daily candles. Rates (10Y, 2Y treasury), USD trade-weighted index, gold (London PM fix), and WTI oil from FRED. No Finnhub quota burned.',
+      asset_universe: 'Ten assets across four classes: crypto (BTC, ETH, SOL, AVAX, LINK), commodities (gold via PAXG-USD, WTI oil), rates (10Y treasury yield, 2Y treasury yield), and fx (trade-weighted USD index). The PAXG-USD pair on Coinbase tracks gold spot via tokenized gold and is reliable without FRED. The four FRED-sourced macro series (treasuries, USD index, oil) populate when FRED_API_KEY is set on the Worker. Equity ETFs (SPY, QQQ) deliberately excluded in v1 because reliable free historical sources require API keys; macro correlations (crypto vs rates, crypto vs USD) are arguably more valuable to trading agents than crypto vs SPY anyway.',
+      caveat: 'Pearson assumes linear relationships and stationary distributions. For tail-risk analysis, supplement with rank correlation or copula-based methods. Correlations can flip sign in stress regimes.',
+      cache_ttl: '30 minutes. Daily-return correlations move slowly within a day.',
+    },
+  };
+}
+
 
 // ----- Agent context: curated "everything an LLM should know right now" -----
 //
@@ -3174,6 +3375,17 @@ async function handleProAgentContext(request, env, url) {
   });
 }
 
+async function handleProCorrelationMatrix(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/correlation-matrix', 2, async function(env2, url2) {
+    var KEY = 'pro:correlation-matrix';
+    var cached = getCached(KEY, 1800000);  // 30 min cache; correlations move slowly
+    if (cached) return cached;
+    var data = await fetchProCorrelationMatrix(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -3307,6 +3519,7 @@ export default {
       case 'pro/sentiment':   return await handleProSentiment(request, env, url);
       case 'pro/world-deltas': return await handleProWorldDeltas(request, env, url);
       case 'pro/agent-context': return await handleProAgentContext(request, env, url);
+      case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
