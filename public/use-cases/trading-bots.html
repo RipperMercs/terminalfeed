@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time API for AI Trading Bots: USDC, Bearer Auth, No KYC | TerminalFeed</title>
+  <meta name="description" content="Composed real-time market and macro data API for autonomous AI trading bots. Bearer-token auth, USDC on Base mainnet, $0.04 per call. No subscription, no KYC. One bearer token covers crypto, stocks, forex, FRED indicators, and on-chain Bitcoin network stats.">
+  <link rel="canonical" href="https://terminalfeed.io/use-cases/trading-bots">
+  <meta property="og:title" content="Real-Time API for AI Trading Bots | TerminalFeed">
+  <meta property="og:description" content="Pay-per-call composed market data for autonomous trading agents. USDC on Base. $0.04 per macro call.">
+  <meta property="og:url" content="https://terminalfeed.io/use-cases/trading-bots">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="ai-content" content="Real-time API for AI trading bots. USDC payment, bearer auth, pay-per-call composed market data. Aggregates crypto, stocks, forex, FRED macro, and Bitcoin network stats in one HTTP call.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Real-Time API for AI Trading Bots",
+    "description": "How autonomous AI trading bots use TerminalFeed's premium API: composed multi-source market and macro data, bearer-token auth, USDC micropayments on Base mainnet, no subscription.",
+    "author": { "@type": "Organization", "name": "TerminalFeed" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" }
+    },
+    "url": "https://terminalfeed.io/use-cases/trading-bots",
+    "datePublished": "2026-04-27",
+    "dateModified": "2026-04-27",
+    "keywords": "AI trading bot API, real-time data API, USDC API, bearer token API, pay-per-call API, autonomous trading agent, LLM trading bot, crypto data API, FRED macro API, agent-native payment"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Use Cases", "item": "https://terminalfeed.io/use-cases" },
+      { "@type": "ListItem", "position": 3, "name": "AI Trading Bots", "item": "https://terminalfeed.io/use-cases/trading-bots" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 880px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 22px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 36px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #C8C8C0; font-size: 13px; margin: 24px 0 8px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 24px; }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 16px; letter-spacing: 1px; }
+    .badge-green { background: #14532d; color: #4ADE80; }
+    .badge-blue { background: #1e3a5f; color: #60A5FA; }
+    .badge-purple { background: #2E1065; color: #A78BFA; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; color: #D4D2CB; }
+    code { font-family: inherit; font-size: 12px; }
+    .inline-code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 12px; }
+    th { text-align: left; color: #5DCAA5; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1A1A22; }
+    td { color: #8A8880; padding: 6px 12px; border-bottom: 1px solid #0D0D12; vertical-align: top; }
+    td:first-child { color: #60A5FA; font-weight: 600; }
+    .footer { margin-top: 56px; font-size: 10px; color: #3E3E3A; padding-top: 16px; border-top: 1px solid #1A1A22; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .callout { padding: 12px 16px; background: #0B0F12; border-left: 3px solid #5DCAA5; border-radius: 4px; margin: 12px 0 16px; font-size: 12px; color: #B5B3AB; }
+    .callout strong { color: #5DCAA5; }
+    .cta { display: inline-block; padding: 10px 20px; background: #14532d; color: #4ADE80; border-radius: 4px; margin: 16px 0; font-size: 12px; }
+    .cta:hover { background: #1a6938; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/developers">Developers</a><span class="bc-sep">&rsaquo;</span><span>AI Trading Bots</span>
+  </nav>
+
+  <h1>&gt;_ Real-Time API for AI Trading Bots</h1>
+  <p class="subtitle">Composed market and macro data, bearer-token auth, USDC micropayments. No subscription, no KYC, no human in the loop.</p>
+
+  <span class="badge badge-purple">USE CASE</span>
+  <span class="badge badge-green">USDC ON BASE</span>
+  <span class="badge badge-blue">PAY PER CALL</span>
+
+  <p>If you're building an autonomous trading bot, you have a payments problem before you have a data problem. Most paid market-data APIs (Messari, CoinAPI, Alpha Vantage paid, Polygon.io) require a human signup, KYC, and a $50-$500 monthly subscription before your bot can fetch a single quote. That's a UX bug for the agent economy. TerminalFeed's premium API tier is built around the opposite assumption: your bot has a wallet, not an email address.</p>
+
+  <h2>What an AI Trading Bot Actually Needs</h2>
+
+  <p>A working trading agent (whether it's an LLM-driven research-and-execute loop, a classic algo bot calling functions, or a multi-agent system orchestrated by something like LangGraph) typically needs all of the following on every decision cycle:</p>
+
+  <ul style="font-size:13px;color:#8A8880;margin:8px 0 16px 24px;">
+    <li>Live crypto prices and 24-hour change for the assets it trades</li>
+    <li>Order-book depth and recent trade volume context</li>
+    <li>Bitcoin network state (gas, mempool, fees) if it touches BTC L1</li>
+    <li>Ethereum gas oracle if it touches ETH-based DEXs</li>
+    <li>Macro context: Fed funds rate, treasury yields, USD index, VIX</li>
+    <li>US equity index reference (SPY, QQQ, DIA) for cross-asset signals</li>
+    <li>Sentiment markers: Fear &amp; Greed Index, top news</li>
+    <li>Optional: prediction-market odds on macro events (Polymarket)</li>
+  </ul>
+
+  <p>Without TerminalFeed, your bot makes 8-15 separate HTTP calls to 8-15 separate providers, each with its own auth, its own rate-limit pool, its own schema, and its own failure modes. With TerminalFeed, three calls cover the entire decision surface for $0.10 per cycle.</p>
+
+  <h2>Three Endpoints, One Bearer Token</h2>
+
+  <table>
+    <tr><th>Endpoint</th><th>Cost</th><th>Composes</th></tr>
+    <tr><td>/api/pro/briefing</td><td>$0.02</td><td>BTC + Fear&amp;Greed + earthquakes + HN + Polymarket prediction markets</td></tr>
+    <tr><td>/api/pro/macro</td><td>$0.04</td><td>Fed rate + CPI + unemployment + GDP + 10Y treasury + forex (EUR/JPY/GBP/CHF) + commodities (gold, oil, nat gas) + indices (SPY/DIA/QQQ/VIX)</td></tr>
+    <tr><td>/api/pro/crypto-deep</td><td>$0.04</td><td>top 50 coins (1h/24h/7d change) + Binance top 20 USDT pairs + mempool.space network stats + Etherscan gas oracle</td></tr>
+  </table>
+
+  <p>Each endpoint absorbs the upstream cost, key management, and rate limits. You bring one bearer token, get one schema, handle one set of failure modes. If an upstream is degraded, we serve stale cache rather than 5xx, so your bot never gets surprised by a `null` quote in the middle of a decision.</p>
+
+  <h2>Complete Trading Bot Loop in Python</h2>
+
+  <p>Below is a full reference loop. Drop into any agent runtime that exposes <span class="inline-code">requests</span> (which is most of them, including LangChain tool-calling layers, AutoGPT, and custom orchestrators). Replace the strategy function with your actual logic.</p>
+
+  <pre><code>import os, time, requests
+
+TF_TOKEN = os.environ["TF_TOKEN"]   # tf_live_&lt;64-char-hex&gt;
+TF_BASE  = "https://terminalfeed.io"
+HEADERS  = {"Authorization": f"Bearer {TF_TOKEN}"}
+
+def fetch_decision_context():
+    """One decision cycle. Costs 4 credits = $0.08 at $1 USDC = 50 credits."""
+    macro = requests.get(f"{TF_BASE}/api/pro/macro", headers=HEADERS, timeout=10).json()
+    crypto = requests.get(f"{TF_BASE}/api/pro/crypto-deep?coins=btc,eth", headers=HEADERS, timeout=10).json()
+    return {"macro": macro, "crypto": crypto}
+
+def strategy(ctx):
+    btc = ctx["crypto"]["coins_top50"][0]
+    fed_rate = ctx["macro"]["economic"]["fed_rate"]["value"]
+    vix = ctx["macro"]["markets"]["vix"]["price"]
+    # Your trading logic here. This is just an illustrative skeleton.
+    if btc["change_24h_percent"] &lt; -5 and vix &gt; 25:
+        return {"action": "buy", "size_usd": 100}
+    return {"action": "hold"}
+
+def loop():
+    while True:
+        ctx = fetch_decision_context()
+        decision = strategy(ctx)
+        print(decision, "credits left:", ctx)
+        time.sleep(300)  # 5 min cadence
+
+if __name__ == "__main__":
+    loop()</code></pre>
+
+  <p>At a 5-minute cadence the bot spends roughly $0.08 per cycle, $1.00 per hour, $24 per day, $720 per month. That's substantially cheaper than a single $500/month CoinAPI subscription, and you only pay when the bot is running. A bot that pauses overnight pays for nothing overnight.</p>
+
+  <h2>Why USDC Payment Beats Subscription</h2>
+
+  <p>Three reasons specifically for autonomous bots:</p>
+
+  <ul style="font-size:13px;color:#8A8880;margin:8px 0 16px 24px;">
+    <li><strong>No human in the loop.</strong> Your bot's wallet pays for the bot's API access. There is no Stripe form, no email verification, no KYC. The bot is autonomous end-to-end.</li>
+    <li><strong>Predictable per-decision cost.</strong> Subscription pricing forces you to estimate volume upfront. Pay-per-call lets your bot scale up and down naturally without re-negotiating a contract.</li>
+    <li><strong>Settlement on Base in seconds.</strong> If your bot needs to top up credits mid-session, it can do so in one transaction. No waiting for a credit card to clear or for a sales rep to upgrade your plan.</li>
+  </ul>
+
+  <h2>Cross-Site Bundle With TensorFeed</h2>
+
+  <p>The same bearer token works on <a href="https://tensorfeed.ai" rel="external">TensorFeed.ai</a>. So if your trading bot also wants AI model intelligence (which model is currently best for code? for routing? for sentiment analysis?) or AI-news context, those calls draw from the same credit pool. One purchase, two data sources, two domains. Same wallet, same credits, same atomic-charge guarantees.</p>
+
+  <h2>Mainnet Proven Today</h2>
+
+  <div class="callout">
+    <strong>Validated April 27, 2026.</strong> 1 USDC sent to <span class="inline-code">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</span>, 50 credits minted, bearer token issued, /api/pro/macro called successfully on first try. <a href="https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c" rel="external">Tx hash on BaseScan</a>. The same wallet and credit pool serve TensorFeed.ai. <a href="https://tensorfeed.ai/originals/validating-agent-payments-mainnet" rel="external">Original validation walkthrough</a>.
+  </div>
+
+  <h2>Get Started</h2>
+
+  <p>Buy 50 credits ($1 USDC) and you can run a trading bot for ~12 hours of 5-minute decision cycles. If your bot delivers ROI, top up. If it doesn't, you've spent a dollar.</p>
+
+  <p><a class="cta" href="/developers/agent-payments">Read the full agent-payments docs &rarr;</a></p>
+
+  <p>Other landing pages for builders: <a href="/developers">free API documentation</a>, <a href="/openapi.json">OpenAPI 3.1 contract</a>, <a href="/llms.txt">/llms.txt agent discovery file</a>, <a href="/agents.txt">/agents.txt capability manifest</a>.</p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Built by <a href="/team/ripper">Ripper</a></p>
+    <p><a href="/">Home</a> &middot; <a href="/developers">API Docs</a> &middot; <a href="/developers/agent-payments">Agent Payments</a> &middot; <a href="/llms.txt">/llms.txt</a> &middot; <a href="/terms">Terms</a> &middot; <a href="https://x.com/terminalfeed" rel="external">@terminalfeed</a></p>
+  </div>
+</body>
+</html>
