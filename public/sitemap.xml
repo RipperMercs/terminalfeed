@@ -49,6 +49,18 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://terminalfeed.io/api/usdc-payable</loc>
+    <lastmod>2026-04-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://terminalfeed.io/.well-known/ai-plugin.json</loc>
+    <lastmod>2026-04-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://terminalfeed.io/use-cases/trading-bots</loc>
     <lastmod>2026-04-27</lastmod>
     <changefreq>monthly</changefreq>
