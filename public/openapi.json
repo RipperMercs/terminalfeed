@@ -1,0 +1,618 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TerminalFeed API",
+    "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
+    "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
+    "version": "1.1.0",
+    "contact": {
+      "name": "TerminalFeed Support",
+      "url": "https://terminalfeed.io/developers/agent-payments",
+      "email": "support@terminalfeed.io"
+    },
+    "license": {
+      "name": "Free tier: permissive use. Premium tier: inference-only, see Terms section 17.",
+      "url": "https://terminalfeed.io/terms#premium"
+    },
+    "termsOfService": "https://terminalfeed.io/terms"
+  },
+  "servers": [
+    { "url": "https://terminalfeed.io", "description": "Production" }
+  ],
+  "tags": [
+    { "name": "Discovery", "description": "Self-describing endpoints for agents." },
+    { "name": "Free: Markets", "description": "Free tier market and economic data." },
+    { "name": "Free: Crypto", "description": "Free tier crypto and on-chain data." },
+    { "name": "Free: World", "description": "Free tier world events, news, infrastructure." },
+    { "name": "Premium: Composed", "description": "Premium /api/pro/* endpoints. Bearer auth required." },
+    { "name": "Premium: Billing", "description": "Buy credits, confirm payment, check balance." }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "tf_live_<32-char-hex>",
+        "description": "Premium tier authentication. Obtain a token by buying credits via POST /api/buy-credits, sending USDC on Base, and POST /api/confirm-payment. Cross-redeemable on tensorfeed.ai."
+      }
+    },
+    "schemas": {
+      "PremiumPaymentRequired": {
+        "type": "object",
+        "required": ["error", "signup", "pricing"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": ["missing_token", "invalid_token", "insufficient_credits", "expired", "billing_unavailable", "payment_required"],
+            "description": "Reason the request was rejected. Use this to disambiguate retry strategy."
+          },
+          "signup": { "type": "string", "format": "uri", "example": "https://terminalfeed.io/developers/agent-payments" },
+          "pricing": {
+            "type": "object",
+            "properties": { "$1_usd": { "type": "string", "example": "50_credits" } }
+          }
+        }
+      },
+      "BriefingPro": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string", "example": "terminalfeed-pro" },
+          "endpoint": { "type": "string", "example": "/api/pro/briefing" },
+          "generated_at": { "type": "string", "format": "date-time" },
+          "sections": {
+            "type": "object",
+            "properties": {
+              "btc": {
+                "type": "object",
+                "properties": {
+                  "price_usd": { "type": "number" },
+                  "change_24h_percent": { "type": "number" },
+                  "volume_24h": { "type": "number" },
+                  "high_24h": { "type": "number" },
+                  "low_24h": { "type": "number" }
+                }
+              },
+              "fear_greed": {
+                "type": "object",
+                "properties": {
+                  "value": { "type": "integer", "minimum": 0, "maximum": 100 },
+                  "label": { "type": "string", "example": "Greed" }
+                }
+              },
+              "earthquakes": {
+                "type": "object",
+                "properties": {
+                  "count": { "type": "integer" },
+                  "latest": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "magnitude": { "type": "number" },
+                      "place": { "type": "string" },
+                      "time": { "type": "integer" }
+                    }
+                  }
+                }
+              },
+              "hackernews": { "type": "object", "properties": { "top_story_count": { "type": "integer" } } },
+              "humans_in_space": {
+                "type": "object",
+                "properties": { "count": { "type": "integer" }, "names": { "type": "array", "items": { "type": "string" } } }
+              },
+              "predictions": {
+                "type": "object",
+                "properties": {
+                  "count": { "type": "integer" },
+                  "top": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "question": { "type": "string" },
+                        "volume_24hr": { "type": "number" },
+                        "outcomes": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "series": {
+            "type": "object",
+            "description": "Present only when ?history=24h is requested.",
+            "properties": {
+              "btc_24h": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": { "ts": { "type": "integer", "description": "ms since epoch" }, "price": { "type": "number" } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "MacroPro": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string", "example": "terminalfeed-pro" },
+          "endpoint": { "type": "string", "example": "/api/pro/macro" },
+          "generated_at": { "type": "string", "format": "date-time" },
+          "economic": {
+            "type": "object",
+            "description": "FRED macro indicators. Each entry has value, date (ISO yyyy-mm-dd), source.",
+            "properties": {
+              "fed_rate": { "$ref": "#/components/schemas/FredEntry" },
+              "cpi": { "$ref": "#/components/schemas/FredEntry" },
+              "unemployment": { "$ref": "#/components/schemas/FredEntry" },
+              "gdp_growth": { "$ref": "#/components/schemas/FredEntry" },
+              "treasury_10y": { "$ref": "#/components/schemas/FredEntry" }
+            }
+          },
+          "forex": {
+            "type": "object",
+            "properties": {
+              "base": { "type": "string", "example": "USD" },
+              "date": { "type": "string", "format": "date" },
+              "rates": { "type": "object", "additionalProperties": { "type": "number" }, "example": { "EUR": 0.92, "JPY": 152.4, "GBP": 0.78, "CHF": 0.88 } },
+              "series": {
+                "type": "object",
+                "description": "Present only when ?history=30d is requested.",
+                "additionalProperties": { "type": "array", "items": { "type": "object", "properties": { "date": { "type": "string", "format": "date" }, "value": { "type": "number" } } } }
+              }
+            }
+          },
+          "commodities": {
+            "type": "object",
+            "properties": {
+              "gold": { "type": "object", "nullable": true, "properties": { "price_usd": { "type": "number" }, "source": { "type": "string", "example": "paxg/kraken" } } },
+              "silver": { "type": "object", "nullable": true, "description": "Omitted in v1. Will be added when a stable free upstream surfaces." },
+              "oil": { "type": "object", "nullable": true, "properties": { "price_usd": { "type": "number" }, "date": { "type": "string", "format": "date" }, "source": { "type": "string" } } },
+              "nat_gas": { "type": "object", "nullable": true, "properties": { "price_usd": { "type": "number" }, "date": { "type": "string", "format": "date" }, "source": { "type": "string" } } }
+            }
+          },
+          "markets": {
+            "type": "object",
+            "properties": {
+              "spy": { "$ref": "#/components/schemas/QuoteEntry" },
+              "dia": { "$ref": "#/components/schemas/QuoteEntry" },
+              "qqq": { "$ref": "#/components/schemas/QuoteEntry" },
+              "vix": { "$ref": "#/components/schemas/QuoteEntry" }
+            }
+          },
+          "notes": { "type": "object", "additionalProperties": { "type": "string" } }
+        }
+      },
+      "CryptoDeepPro": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string", "example": "terminalfeed-pro" },
+          "endpoint": { "type": "string", "example": "/api/pro/crypto-deep" },
+          "generated_at": { "type": "string", "format": "date-time" },
+          "coins_top50": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": { "type": "string" },
+                "name": { "type": "string" },
+                "price_usd": { "type": "number" },
+                "change_1h_percent": { "type": "number" },
+                "change_24h_percent": { "type": "number" },
+                "change_7d_percent": { "type": "number" },
+                "market_cap": { "type": "number" },
+                "volume_24h": { "type": "number" },
+                "rank": { "type": "integer" }
+              }
+            }
+          },
+          "binance_top20_usdt": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pair": { "type": "string", "example": "BTCUSDT" },
+                "price": { "type": "number" },
+                "change_24h_percent": { "type": "number" },
+                "volume_24h": { "type": "number" },
+                "high_24h": { "type": "number" },
+                "low_24h": { "type": "number" },
+                "trades_24h": { "type": "integer" }
+              }
+            }
+          },
+          "network_btc": {
+            "type": "object",
+            "properties": {
+              "block_height": { "type": "integer" },
+              "fees_sat_per_vb": {
+                "type": "object",
+                "properties": {
+                  "fastest": { "type": "integer" },
+                  "half_hour": { "type": "integer" },
+                  "hour": { "type": "integer" },
+                  "economy": { "type": "integer" },
+                  "minimum": { "type": "integer" }
+                }
+              },
+              "hashrate": {
+                "type": "object",
+                "properties": { "current_eh_s": { "type": "number" }, "current_difficulty": { "type": "number" } }
+              },
+              "mempool": {
+                "type": "object",
+                "properties": { "count": { "type": "integer" }, "vsize": { "type": "integer" }, "total_fee_sat": { "type": "integer" } }
+              }
+            }
+          },
+          "eth_gas": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "low_gwei": { "type": "integer" },
+              "standard_gwei": { "type": "integer" },
+              "fast_gwei": { "type": "integer" },
+              "base_fee_gwei": { "type": "number" },
+              "last_block": { "type": "integer" }
+            }
+          },
+          "series": {
+            "type": "object",
+            "description": "Present only when ?history=30d is requested.",
+            "properties": {
+              "btc_30d": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ts": { "type": "integer" }, "low": { "type": "number" }, "high": { "type": "number" }, "open": { "type": "number" }, "close": { "type": "number" }, "volume": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "FredEntry": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "number", "nullable": true },
+          "date": { "type": "string", "format": "date" },
+          "source": { "type": "string", "example": "fred:FEDFUNDS" },
+          "series": {
+            "type": "array",
+            "description": "Present only when ?history=30d is requested.",
+            "items": { "type": "object", "properties": { "date": { "type": "string", "format": "date" }, "value": { "type": "number" } } }
+          }
+        }
+      },
+      "QuoteEntry": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "price": { "type": "number" },
+          "change": { "type": "number" },
+          "change_percent": { "type": "number" }
+        }
+      },
+      "BuyCreditsRequest": {
+        "type": "object",
+        "required": ["amount_usd"],
+        "properties": {
+          "amount_usd": { "type": "number", "minimum": 1, "description": "USDC amount to convert. $1 = 50 credits." }
+        }
+      },
+      "BuyCreditsResponse": {
+        "type": "object",
+        "properties": {
+          "wallet": { "type": "string", "example": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1" },
+          "memo": { "type": "string", "example": "tf_buy_a1b2c3" },
+          "quote": {
+            "type": "object",
+            "properties": {
+              "amount_usd": { "type": "number" },
+              "credits": { "type": "integer" },
+              "chain": { "type": "string", "example": "base" }
+            }
+          },
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ConfirmPaymentRequest": {
+        "type": "object",
+        "required": ["tx_hash", "nonce"],
+        "properties": {
+          "tx_hash": { "type": "string", "description": "On-chain Base mainnet USDC transfer hash." },
+          "nonce": { "type": "string", "description": "The memo string returned from /api/buy-credits." }
+        }
+      },
+      "ConfirmPaymentResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "tf_live_<32-char-hex>" },
+          "credits": { "type": "integer", "example": 50 }
+        }
+      },
+      "BalanceResponse": {
+        "type": "object",
+        "properties": {
+          "credits": { "type": "integer" },
+          "issued_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "responses": {
+      "PremiumPaymentRequired": {
+        "description": "Premium endpoint refused: missing or invalid bearer, insufficient credits, or billing service unreachable.",
+        "headers": {
+          "X-TerminalFeed-Pricing": { "schema": { "type": "string" }, "description": "URL pointing at /developers/agent-payments." }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PremiumPaymentRequired" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "API directory",
+        "description": "Self-describing index of free and premium endpoints with pricing. Recommended first call for autonomous agents.",
+        "responses": {
+          "200": {
+            "description": "Endpoint inventory.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Worker health check",
+        "responses": {
+          "200": {
+            "description": "OK with version + uptime.",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" }, "version": { "type": "string" }, "uptime": { "type": "integer" }, "ts": { "type": "integer" } } } } }
+          }
+        }
+      }
+    },
+    "/api/briefing": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Free one-call world snapshot",
+        "description": "Compact summary of BTC, Fear & Greed, recent earthquakes, top HN story count, and ISS crew. For richer composition with predictions and history, see GET /api/pro/briefing.",
+        "responses": {
+          "200": {
+            "description": "Aggregated snapshot.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/api/btc-price": {
+      "get": {
+        "tags": ["Free: Crypto"],
+        "summary": "Bitcoin price (Binance with CoinCap fallback)",
+        "responses": { "200": { "description": "Live BTC ticker.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/crypto-movers": {
+      "get": {
+        "tags": ["Free: Crypto"],
+        "summary": "Top 15 crypto movers by 24h change",
+        "responses": { "200": { "description": "Movers list.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/fear-greed": {
+      "get": {
+        "tags": ["Free: Crypto"],
+        "summary": "Crypto Fear & Greed Index (Alternative.me)",
+        "responses": { "200": { "description": "Index value 0-100 with label.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/stocks": {
+      "get": {
+        "tags": ["Free: Markets"],
+        "summary": "Top US stocks (Finnhub)",
+        "parameters": [{ "name": "symbols", "in": "query", "schema": { "type": "string" }, "description": "Optional comma list of tickers, e.g. AAPL,MSFT,NVDA" }],
+        "responses": { "200": { "description": "Quotes.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/forex": {
+      "get": {
+        "tags": ["Free: Markets"],
+        "summary": "Currency rates (Frankfurter, USD base)",
+        "responses": { "200": { "description": "Latest + previous-day rates.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/economic-data": {
+      "get": {
+        "tags": ["Free: Markets"],
+        "summary": "FRED indicators (Fed rate, CPI, unemployment, GDP)",
+        "responses": { "200": { "description": "Latest macro readings.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/predictions": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Polymarket prediction markets",
+        "responses": { "200": { "description": "Active markets sorted by 24h volume.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/earthquake": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Recent earthquakes M2.5+ (USGS)",
+        "responses": { "200": { "description": "Quake list.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/disaster-alerts": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Global disaster alerts (GDACS)",
+        "responses": { "200": { "description": "Active disaster alerts.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/launches": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Upcoming space launches (The Space Devs)",
+        "responses": { "200": { "description": "Launch manifest.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/humans-in-space": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "ISS crew (Open Notify)",
+        "responses": { "200": { "description": "Crew count and names.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/cyber-threats": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Malware and IOCs (URLhaus + ThreatFox)",
+        "responses": { "200": { "description": "Recent threats.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/service-status": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Status of GitHub, Cloudflare, OpenAI, Anthropic, etc.",
+        "responses": { "200": { "description": "Per-service status.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/gas": {
+      "get": {
+        "tags": ["Free: Crypto"],
+        "summary": "Ethereum gas oracle (Etherscan)",
+        "responses": { "200": { "description": "Gwei prices low/standard/fast.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/weather": {
+      "get": {
+        "tags": ["Free: World"],
+        "summary": "Weather (Open-Meteo)",
+        "parameters": [
+          { "name": "lat", "in": "query", "schema": { "type": "number" } },
+          { "name": "lon", "in": "query", "schema": { "type": "number" } }
+        ],
+        "responses": { "200": { "description": "Current weather and hourly forecast.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/api/pro/briefing": {
+      "get": {
+        "tags": ["Premium: Composed"],
+        "summary": "Premium briefing: 6 upstream sources composed (1 credit)",
+        "description": "All free /api/briefing modules plus Polymarket prediction markets, optional include filter, and optional 24-hour BTC chart series. Returns 402 Payment Required when auth fails or credits are exhausted; the credit is decremented before the upstream fetch begins, so partial-fetch responses still count.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "include", "in": "query", "schema": { "type": "string" }, "description": "Comma-separated subset: btc,fear-greed,earthquakes,hackernews,humans-in-space,predictions" },
+          { "name": "history", "in": "query", "schema": { "type": "string", "enum": ["24h"] }, "description": "When set to 24h, response includes a series.btc_24h hourly array." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Composed briefing.",
+            "headers": {
+              "X-Credits-Remaining": { "schema": { "type": "integer" } },
+              "Cache-Control": { "schema": { "type": "string", "example": "no-store" } }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BriefingPro" } } }
+          },
+          "402": { "$ref": "#/components/responses/PremiumPaymentRequired" }
+        }
+      }
+    },
+    "/api/pro/macro": {
+      "get": {
+        "tags": ["Premium: Composed"],
+        "summary": "Premium macro snapshot: FRED + forex + commodities + indices (2 credits)",
+        "description": "Composes ~14 upstream calls into one response: 7 FRED economic series, 4 USD-base forex rates, gold via PAXG, US indices SPY/DIA/QQQ, and VIX. Optional 30-day history.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "history", "in": "query", "schema": { "type": "string", "enum": ["30d"] }, "description": "When set, FRED entries include a series array and forex.series is populated." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Composed macro snapshot.",
+            "headers": {
+              "X-Credits-Remaining": { "schema": { "type": "integer" } },
+              "Cache-Control": { "schema": { "type": "string", "example": "no-store" } }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MacroPro" } } }
+          },
+          "402": { "$ref": "#/components/responses/PremiumPaymentRequired" }
+        }
+      }
+    },
+    "/api/pro/crypto-deep": {
+      "get": {
+        "tags": ["Premium: Composed"],
+        "summary": "Premium crypto deep snapshot: top 50 + Binance + on-chain + gas (2 credits)",
+        "description": "Composes 7 upstream sources: top 50 coins by market cap with 1h/24h/7d change, Binance top 20 USDT pairs by volume with high/low/trade-count, Bitcoin network stats from mempool.space (block height, fee tiers, hashrate, mempool size), and Etherscan gas oracle. Optional 30-day BTC OHLCV.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "coins", "in": "query", "schema": { "type": "string" }, "description": "Comma-separated symbol filter, e.g. btc,eth,sol" },
+          { "name": "history", "in": "query", "schema": { "type": "string", "enum": ["30d"] }, "description": "When set, response includes series.btc_30d." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Composed crypto-deep snapshot.",
+            "headers": {
+              "X-Credits-Remaining": { "schema": { "type": "integer" } },
+              "Cache-Control": { "schema": { "type": "string", "example": "no-store" } }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CryptoDeepPro" } } }
+          },
+          "402": { "$ref": "#/components/responses/PremiumPaymentRequired" }
+        }
+      }
+    },
+    "/api/buy-credits": {
+      "post": {
+        "tags": ["Premium: Billing"],
+        "summary": "Quote a credit purchase, return wallet + memo",
+        "description": "Returns the published USDC wallet, a unique memo, and a quote tying the USD amount to credits. Send USDC on Base mainnet to the wallet, then call POST /api/confirm-payment with the tx hash and memo. Proxies to the TensorFeed payment Worker; the wallet returned must match the address published at /terms section 17, /developers/agent-payments, /llms.txt, and the GitHub README.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BuyCreditsRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Quote with wallet and memo.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BuyCreditsResponse" } } } },
+          "503": { "description": "Billing infrastructure not configured." }
+        }
+      }
+    },
+    "/api/confirm-payment": {
+      "post": {
+        "tags": ["Premium: Billing"],
+        "summary": "Confirm USDC transfer, mint bearer token",
+        "description": "Verifies the on-chain transaction and the memo, then returns a bearer token plus credit count. Replay-protected: the same tx hash will not credit twice.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConfirmPaymentRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Bearer token issued.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConfirmPaymentResponse" } } } },
+          "402": { "description": "Payment not found, expired, or replayed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PremiumPaymentRequired" } } } }
+        }
+      }
+    },
+    "/api/balance": {
+      "get": {
+        "tags": ["Premium: Billing"],
+        "summary": "Check remaining credits for a bearer token",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current balance.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BalanceResponse" } } } },
+          "402": { "$ref": "#/components/responses/PremiumPaymentRequired" }
+        }
+      }
+    }
+  }
+}
