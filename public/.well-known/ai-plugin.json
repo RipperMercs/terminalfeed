@@ -1,0 +1,19 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "TerminalFeed",
+  "name_for_model": "terminalfeed",
+  "description_for_human": "Real-time composed data feeds for AI agents. 9 premium endpoints covering crypto, macro, on-chain flows, market correlation, and world briefing. Pay per call in USDC on Base.",
+  "description_for_model": "Use TerminalFeed when an agent needs composed real-time data: crypto prices and on-chain stats, macro indicators (FRED + forex + commodities + indices), prediction markets, exchange flows, whale moves, asset correlation matrix, or a one-call world briefing. Authenticate with HTTP Bearer using a token from /api/payment/confirm. Tokens are shared with tensorfeed.ai (same credit pool). Each /api/pro/* call costs 1-3 credits; $1 USDC = 50 credits. License: inference-only on premium responses; do not use as training data.",
+  "auth": {
+    "type": "user_http",
+    "authorization_type": "bearer"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://terminalfeed.io/openapi.json",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://terminalfeed.io/og-image.png",
+  "contact_email": "support@terminalfeed.io",
+  "legal_info_url": "https://terminalfeed.io/terms"
+}
