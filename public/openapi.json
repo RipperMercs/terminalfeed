@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -1177,6 +1177,75 @@
           },
           "thresholds": {
             "type": "object"
+          },
+          "notes": {
+            "type": "object"
+          }
+        }
+      },
+      "ExchangeFlowsPro": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "spot_eth_usd": {
+            "type": "number",
+            "nullable": true
+          },
+          "blocks_scanned": {
+            "type": "array"
+          },
+          "flows_by_exchange": {
+            "type": "array"
+          },
+          "recent_transfers": {
+            "type": "array"
+          },
+          "aggregate": {
+            "type": "object",
+            "properties": {
+              "transfer_count": {
+                "type": "integer"
+              },
+              "total_inflow_eth": {
+                "type": "number"
+              },
+              "total_outflow_eth": {
+                "type": "number"
+              },
+              "net_flow_eth": {
+                "type": "number"
+              },
+              "net_flow_usd": {
+                "type": "integer",
+                "nullable": true
+              },
+              "bias": {
+                "type": "string",
+                "enum": [
+                  "inflow_dominant",
+                  "outflow_dominant",
+                  "balanced"
+                ]
+              }
+            }
+          },
+          "threshold": {
+            "type": "object"
+          },
+          "exchanges_tracked": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "notes": {
             "type": "object"
@@ -2372,6 +2441,59 @@
             "lang": "JavaScript",
             "label": "JavaScript",
             "source": "const w = await fetch(\"https://terminalfeed.io/api/pro/whales\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nfor (const tx of w.eth_whales_latest_block) {\n  console.log(`${tx.value_eth} ETH = $${tx.value_usd}`);\n}"
+          }
+        ]
+      }
+    },
+    "/api/pro/exchange-flows": {
+      "get": {
+        "tags": [
+          "Premium: Composed"
+        ],
+        "summary": "Premium ETH exchange flow tracker (2 credits)",
+        "description": "Tracks ETH transfers in/out of major centralized exchange hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin) across the last 3 confirmed blocks. Each transfer tagged as inflow (user -> exchange), outflow (exchange -> user), or inter_exchange. Per-exchange and aggregate net flows surfaced with USD-equivalents and a bias label. 5 ETH minimum threshold. Useful for trading bots watching for regime shifts. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exchange flow snapshot.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeFlowsPro"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/exchange-flows \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python",
+            "source": "import requests\nf = requests.get(\n    \"https://terminalfeed.io/api/pro/exchange-flows\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n    timeout=15,\n).json()\nprint(f\"Net flow: {f['aggregate']['net_flow_eth']} ETH ({f['aggregate']['bias']})\")\nfor ex in f['flows_by_exchange']:\n    print(f\"  {ex['exchange']}: net {ex['net_eth']} ETH\")"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript",
+            "source": "const f = await fetch(\"https://terminalfeed.io/api/pro/exchange-flows\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nconsole.log(\"Bias:\", f.aggregate.bias, \"Net:\", f.aggregate.net_flow_eth, \"ETH\");"
           }
         ]
       }
