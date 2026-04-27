@@ -1,7 +1,17 @@
+# TerminalFeed robots policy
+# Goal: maximum visibility to AI agents and AI search crawlers, since the
+# bulk of premium-API discovery happens via /llms.txt and /openapi.json
+# being indexed and resurfaced by autonomous agents.
+
+# Default policy: allow site, disallow internal-only paths.
 User-agent: *
 Allow: /
-Disallow: /api/
 Disallow: /embed/
+
+# Disallow API endpoints by default to save crawler budget on data feeds.
+# AI crawlers (allowlisted below) get explicit permission to index /api/*
+# so the free tier and premium discovery surfaces are reachable.
+Disallow: /api/
 
 # AdSense crawler, needs explicit permission to evaluate pages for ad relevance
 User-agent: Mediapartners-Google
@@ -9,6 +19,73 @@ Allow: /
 
 # AdsBot, for landing-page quality scoring
 User-agent: AdsBot-Google
+Allow: /
+
+# OpenAI training crawler
+User-agent: GPTBot
+Allow: /
+
+# OpenAI runtime fetcher (ChatGPT browsing)
+User-agent: ChatGPT-User
+Allow: /
+
+# OpenAI search crawler (SearchGPT)
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic crawler (Claude training and web access)
+User-agent: ClaudeBot
+Allow: /
+
+# Anthropic runtime fetcher (Claude web tools)
+User-agent: Claude-Web
+Allow: /
+
+# Anthropic legacy crawler identifier
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity crawler
+User-agent: PerplexityBot
+Allow: /
+
+# Perplexity runtime fetcher
+User-agent: Perplexity-User
+Allow: /
+
+# Google AI / Bard / Gemini training opt-in
+User-agent: Google-Extended
+Allow: /
+
+# Apple AI training opt-in
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl, used by many open AI training pipelines
+User-agent: CCBot
+Allow: /
+
+# Meta AI external agent
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# DuckDuckGo AI assist
+User-agent: DuckAssistBot
+Allow: /
+
+# Mistral
+User-agent: MistralAI-User
+Allow: /
+
+# You.com / Diffbot used in agent stacks
+User-agent: YouBot
+Allow: /
+
+User-agent: Diffbot
 Allow: /
 
 Sitemap: https://terminalfeed.io/sitemap.xml
