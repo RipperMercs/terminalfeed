@@ -170,6 +170,7 @@ function handleIndex() {
         { path: '/api/pro/briefing', cost_credits: 1 },
         { path: '/api/pro/macro', cost_credits: 2 },
         { path: '/api/pro/crypto-deep', cost_credits: 2 },
+        { path: '/api/pro/sentiment', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -1663,6 +1664,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_sentiment',
+    short_description: 'Composite market sentiment: Fear & Greed + VIX + trending tickers (2 credits).',
+    description: 'Premium composite sentiment snapshot. Aggregates Crypto Fear and Greed Index (alternative.me), VIX volatility index (Finnhub), trending ticker mentions across Hacker News top 30 + Reddit r/CryptoCurrency / r/wallstreetbets / r/stocks hot posts with per-headline keyword-based sentiment scoring, and top Polymarket prediction-market signals. Output includes per-ticker mention_count_24h, sentiment_score (-1 to +1), sentiment_label, and sample headlines. Use to gauge market mood before a trading or research decision. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. The notes field documents that scoring is keyword-based (crude but signal-bearing), not LLM-derived; treat as one input to a broader analysis.',
+    url: 'https://terminalfeed.io/api/pro/sentiment',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_payment_buy_credits',
     short_description: 'Quote a USDC credit purchase.',
     description: 'POST endpoint that returns the published USDC wallet address (0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1 on Base mainnet), a unique memo, and a quote tying the dollar amount to credits at $1 USDC = 50 credits. Use as the first step when the agent needs to buy credits to access /api/pro/* endpoints.',
@@ -2149,6 +2161,272 @@ async function fetchProMacro(env, url) {
   return out;
 }
 
+// ----- Sentiment scoring helpers (used by /api/pro/sentiment) -----
+
+const SENTIMENT_TICKERS = [
+  // Crypto (top 12 by relevance for sentiment chatter)
+  { symbol: 'BTC', cls: 'crypto', patterns: [/\bBTC\b/i, /\bBitcoin\b/i] },
+  { symbol: 'ETH', cls: 'crypto', patterns: [/\bETH\b/i, /\bEthereum\b/i, /\bEther\b/i] },
+  { symbol: 'SOL', cls: 'crypto', patterns: [/\bSOL\b/i, /\bSolana\b/i] },
+  { symbol: 'BNB', cls: 'crypto', patterns: [/\bBNB\b/i] },
+  { symbol: 'XRP', cls: 'crypto', patterns: [/\bXRP\b/i, /\bRipple\b/i] },
+  { symbol: 'ADA', cls: 'crypto', patterns: [/\bADA\b/i, /\bCardano\b/i] },
+  { symbol: 'DOGE', cls: 'crypto', patterns: [/\bDOGE\b/i, /\bDogecoin\b/i] },
+  { symbol: 'DOT', cls: 'crypto', patterns: [/\bDOT\b/i, /\bPolkadot\b/i] },
+  { symbol: 'LINK', cls: 'crypto', patterns: [/\bLINK\b/i, /\bChainlink\b/i] },
+  { symbol: 'AVAX', cls: 'crypto', patterns: [/\bAVAX\b/i, /\bAvalanche\b/i] },
+  { symbol: 'MATIC', cls: 'crypto', patterns: [/\bMATIC\b/i, /\bPolygon\b/i, /\bPOL\b/i] },
+  { symbol: 'NEAR', cls: 'crypto', patterns: [/\bNEAR\b/i] },
+  // US equities and ETFs
+  { symbol: 'SPY', cls: 'equity', patterns: [/\bSPY\b/, /\bS&P\s?500\b/i] },
+  { symbol: 'QQQ', cls: 'equity', patterns: [/\bQQQ\b/, /\bNasdaq\b/i] },
+  { symbol: 'NVDA', cls: 'equity', patterns: [/\bNVDA\b/, /\bNvidia\b/i] },
+  { symbol: 'AAPL', cls: 'equity', patterns: [/\bAAPL\b/, /\bApple\b/i] },
+  { symbol: 'MSFT', cls: 'equity', patterns: [/\bMSFT\b/, /\bMicrosoft\b/i] },
+  { symbol: 'GOOGL', cls: 'equity', patterns: [/\bGOOGL?\b/, /\bAlphabet\b/i, /\bGoogle\b/i] },
+  { symbol: 'AMZN', cls: 'equity', patterns: [/\bAMZN\b/, /\bAmazon\b/i] },
+  { symbol: 'META', cls: 'equity', patterns: [/\bMETA\b/, /\bFacebook\b/i] },
+  { symbol: 'TSLA', cls: 'equity', patterns: [/\bTSLA\b/, /\bTesla\b/i] },
+  { symbol: 'AMD', cls: 'equity', patterns: [/\bAMD\b/] },
+  // Crypto-adjacent equities
+  { symbol: 'COIN', cls: 'crypto-equity', patterns: [/\bCOIN\b/, /\bCoinbase\b/i] },
+  { symbol: 'MSTR', cls: 'crypto-equity', patterns: [/\bMSTR\b/, /\bMicroStrategy\b/i, /\bStrategy\b/] },
+  { symbol: 'MARA', cls: 'crypto-equity', patterns: [/\bMARA\b/, /\bMarathon\b/i] },
+  { symbol: 'RIOT', cls: 'crypto-equity', patterns: [/\bRIOT\b/, /\bRiot\s+Platforms\b/i] },
+];
+
+const POSITIVE_WORD_RE = /\b(surge|surges|surged|rally|rallies|rallied|bullish|moon|mooning|breakout|rebound|rebounds|rebounded|soar|soars|soared|climb|climbs|climbed|gain|gains|gained|jump|jumps|jumped|rise|rises|risen|rose|spike|spikes|spiked|ATH|all[\s-]?time[\s-]?high|beat|beats|beats?\s+expectations|strong|outperform|upgrade|upgraded|approved|approval|adopt|adopts|inflows|buying|long|buy|buys|bought|pump|pumping|pumped)\b/gi;
+
+const NEGATIVE_WORD_RE = /\b(crash|crashes|crashed|dump|dumps|dumped|bear|bearish|rekt|rug|rug[\s-]?pull|sell|sells|sold|short|shorts|shorted|decline|declines|declined|drop|drops|dropped|tank|tanks|tanked|plunge|plunges|plunged|fall|falls|fell|sink|sinks|sank|slide|slides|slid|miss|misses|missed|weak|underperform|downgrade|downgraded|lawsuit|sued|fraud|scam|hack|hacked|exploit|exploited|outflows|panic|fear|fears|concern|concerns|warning|warns)\b/gi;
+
+function _scoreHeadline(text) {
+  if (!text) return { score: 0, pos: 0, neg: 0 };
+  var pos = (text.match(POSITIVE_WORD_RE) || []).length;
+  var neg = (text.match(NEGATIVE_WORD_RE) || []).length;
+  if (pos + neg === 0) return { score: 0, pos: 0, neg: 0 };
+  return { score: (pos - neg) / (pos + neg), pos: pos, neg: neg };
+}
+
+function _findTickers(text) {
+  if (!text) return [];
+  var hits = [];
+  for (var i = 0; i < SENTIMENT_TICKERS.length; i++) {
+    var t = SENTIMENT_TICKERS[i];
+    for (var j = 0; j < t.patterns.length; j++) {
+      if (t.patterns[j].test(text)) {
+        hits.push(t.symbol);
+        break;
+      }
+    }
+  }
+  return hits;
+}
+
+function _labelScore(s) {
+  if (s > 0.3) return 'positive';
+  if (s > 0.1) return 'moderately_positive';
+  if (s > -0.1) return 'neutral';
+  if (s > -0.3) return 'moderately_negative';
+  return 'negative';
+}
+
+function _vixLabel(v) {
+  if (v == null || isNaN(v)) return 'unknown';
+  if (v < 15) return 'low_volatility';
+  if (v < 25) return 'normal';
+  if (v < 40) return 'elevated';
+  return 'high_volatility';
+}
+
+async function fetchProSentiment(env, url) {
+  // Parallel-fetch every signal source; never fail the whole call on one source.
+  var sources = await Promise.allSettled([
+    fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
+    (env && env.FINNHUB_API_KEY)
+      ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
+      : Promise.resolve(null),
+    fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json', {}, 6000),
+    fetchWithTimeout('https://www.reddit.com/r/CryptoCurrency/hot.json?limit=30', { headers: { 'User-Agent': 'terminalfeed.io/1.0' } }, 6000),
+    fetchWithTimeout('https://www.reddit.com/r/wallstreetbets/hot.json?limit=30', { headers: { 'User-Agent': 'terminalfeed.io/1.0' } }, 6000),
+    fetchWithTimeout('https://www.reddit.com/r/stocks/hot.json?limit=25', { headers: { 'User-Agent': 'terminalfeed.io/1.0' } }, 6000),
+    fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false', {}, 6000),
+  ]);
+
+  // 1) Crypto Fear & Greed
+  var cryptoFG = null;
+  if (sources[0].status === 'fulfilled' && sources[0].value) {
+    try {
+      var fg = await sources[0].value.json();
+      if (fg && fg.data && fg.data[0]) {
+        cryptoFG = {
+          value: parseInt(fg.data[0].value) || 0,
+          label: fg.data[0].value_classification || '',
+          source: 'alternative.me',
+        };
+      }
+    } catch (e) {}
+  }
+
+  // 2) VIX (US equities fear gauge)
+  var vix = null;
+  if (sources[1].status === 'fulfilled' && sources[1].value) {
+    try {
+      var v = await sources[1].value.json();
+      if (v && v.c) {
+        vix = {
+          value: parseFloat(v.c),
+          change_percent: parseFloat(v.dp) || 0,
+          label: _vixLabel(parseFloat(v.c)),
+          source: 'finnhub:^VIX',
+        };
+      }
+    } catch (e) {}
+  }
+
+  // 3) Collect headlines from HN top 30 + Reddit hot posts.
+  var headlines = [];
+
+  if (sources[2].status === 'fulfilled' && sources[2].value) {
+    try {
+      var ids = await sources[2].value.json();
+      if (Array.isArray(ids)) {
+        var top30 = ids.slice(0, 30);
+        var items = await Promise.allSettled(
+          top30.map(function(id) {
+            return fetchWithTimeout('https://hacker-news.firebaseio.com/v0/item/' + id + '.json', {}, 4000)
+              .then(function(r) { return r.json(); });
+          })
+        );
+        items.forEach(function(it) {
+          if (it.status === 'fulfilled' && it.value && it.value.title) {
+            var t = _findTickers(it.value.title);
+            if (t.length > 0) {
+              headlines.push({
+                title: it.value.title,
+                url: 'https://news.ycombinator.com/item?id=' + it.value.id,
+                source: 'hn',
+                tickers: t,
+                score: _scoreHeadline(it.value.title),
+              });
+            }
+          }
+        });
+      }
+    } catch (e) {}
+  }
+
+  // Reddit hot posts across three subs
+  for (var ri = 3; ri <= 5; ri++) {
+    if (sources[ri].status === 'fulfilled' && sources[ri].value) {
+      try {
+        var rd = await sources[ri].value.json();
+        var children = (rd && rd.data && rd.data.children) || [];
+        children.forEach(function(c) {
+          var post = c && c.data;
+          if (!post || !post.title) return;
+          var title = post.title;
+          var t = _findTickers(title);
+          if (t.length > 0) {
+            headlines.push({
+              title: title,
+              url: post.permalink ? 'https://www.reddit.com' + post.permalink : null,
+              source: 'reddit:' + (post.subreddit || ''),
+              tickers: t,
+              score: _scoreHeadline(title),
+            });
+          }
+        });
+      } catch (e) {}
+    }
+  }
+
+  // 4) Aggregate per-ticker
+  var byTicker = {};
+  headlines.forEach(function(h) {
+    h.tickers.forEach(function(sym) {
+      if (!byTicker[sym]) byTicker[sym] = { items: [], sources: {} };
+      byTicker[sym].items.push(h);
+      var src = h.source.split(':')[0];
+      byTicker[sym].sources[src] = (byTicker[sym].sources[src] || 0) + 1;
+    });
+  });
+
+  var trending = SENTIMENT_TICKERS
+    .map(function(t) {
+      var bucket = byTicker[t.symbol];
+      if (!bucket || bucket.items.length === 0) return null;
+      var totalScore = bucket.items.reduce(function(s, h) { return s + h.score.score; }, 0);
+      var avg = totalScore / bucket.items.length;
+      var samples = bucket.items
+        .slice()
+        .sort(function(a, b) { return Math.abs(b.score.score) - Math.abs(a.score.score); })
+        .slice(0, 3)
+        .map(function(h) {
+          return {
+            title: h.title,
+            url: h.url,
+            source: h.source,
+            sentiment_signal: h.score.score > 0.1 ? '+' : (h.score.score < -0.1 ? '-' : 'neutral'),
+          };
+        });
+      return {
+        symbol: t.symbol,
+        asset_class: t.cls,
+        mention_count_24h: bucket.items.length,
+        sources: bucket.sources,
+        sentiment_score: parseFloat(avg.toFixed(3)),
+        sentiment_label: _labelScore(avg),
+        sample_headlines: samples,
+      };
+    })
+    .filter(Boolean)
+    .sort(function(a, b) { return b.mention_count_24h - a.mention_count_24h; })
+    .slice(0, 15);
+
+  // 5) Polymarket signals
+  var predictionMarkets = [];
+  if (sources[6].status === 'fulfilled' && sources[6].value) {
+    try {
+      var pm = await sources[6].value.json();
+      if (Array.isArray(pm)) {
+        predictionMarkets = pm.slice(0, 5).map(function(m) {
+          return {
+            question: m.question,
+            yes_probability: m.lastTradePrice != null ? parseFloat(m.lastTradePrice) : null,
+            volume_24h: parseFloat(m.volume24hr) || 0,
+            url: m.slug ? 'https://polymarket.com/event/' + m.slug : null,
+          };
+        });
+      }
+    } catch (e) {}
+  }
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/sentiment',
+    generated_at: new Date().toISOString(),
+    market_indices: {
+      crypto_fear_greed: cryptoFG,
+      stocks_vix: vix,
+    },
+    trending: trending,
+    prediction_markets_signals: predictionMarkets,
+    sample_size: {
+      headlines_scanned: headlines.length,
+      tickers_with_mentions: trending.length,
+    },
+    notes: {
+      scoring: 'Per-headline sentiment derived from regex pattern matching against curated positive/negative word lists. Range -1.0 to +1.0. Crude but signal-bearing; treat as one input to a broader analysis, not as a high-frequency trading edge.',
+      mention_sources: 'Hacker News top 30 + Reddit /r/CryptoCurrency, /r/wallstreetbets, /r/stocks (hot posts).',
+      freshness: '5 minute cache. Tickers refreshed each cache miss.',
+      fear_greed_source: 'alternative.me (crypto-wide).',
+      vix_source: 'Finnhub ^VIX (US equities fear gauge).',
+      labels: 'sentiment_label is a coarse bucket: negative <= -0.3 < moderately_negative <= -0.1 < neutral <= 0.1 < moderately_positive <= 0.3 < positive.',
+    },
+  };
+}
+
+
 async function fetchProCryptoDeep(env, url) {
   var coinsParam = url.searchParams.get('coins') || '';
   var coinFilter = coinsParam ? coinsParam.toLowerCase().split(',').map(function(s) { return s.trim(); }).filter(Boolean) : null;
@@ -2326,6 +2604,17 @@ async function handleProCryptoDeep(request, env, url) {
   });
 }
 
+async function handleProSentiment(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/sentiment', 2, async function(env2, url2) {
+    var KEY = 'pro:sentiment';
+    var cached = getCached(KEY, 300000);  // 5 minutes; sentiment changes slowly
+    if (cached) return cached;
+    var data = await fetchProSentiment(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -2456,6 +2745,7 @@ export default {
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
       case 'pro/macro':       return await handleProMacro(request, env, url);
       case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
+      case 'pro/sentiment':   return await handleProSentiment(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
