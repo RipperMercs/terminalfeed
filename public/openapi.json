@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -24,37 +24,25 @@
   ],
   "tags": [
     {
-      "name": "Discovery",
-      "description": "Self-describing endpoints for agents."
+      "name": "free",
+      "description": "Free real-time data endpoints. No auth required. Standard rate limits."
     },
     {
-      "name": "Free: Markets",
-      "description": "Free tier market and economic data."
+      "name": "pro",
+      "description": "Premium composed endpoints. Bearer auth required. Pay per call in USDC credits."
     },
     {
-      "name": "Free: Crypto",
-      "description": "Free tier crypto and on-chain data."
-    },
-    {
-      "name": "Free: World",
-      "description": "Free tier world events, news, infrastructure."
-    },
-    {
-      "name": "Premium: Composed",
-      "description": "Premium /api/pro/* endpoints. Bearer auth required."
-    },
-    {
-      "name": "Premium: Billing",
-      "description": "Buy credits, confirm payment, check balance."
+      "name": "payment",
+      "description": "Credit purchase, confirmation, and balance check. No auth except where indicated."
     }
   ],
   "components": {
     "securitySchemes": {
-      "BearerAuth": {
+      "agentBearer": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "tf_live_<64-char-hex>",
-        "description": "Premium tier authentication. Obtain a token by buying credits via POST /api/payment/buy-credits, sending USDC on Base, and POST /api/payment/confirm. Cross-redeemable on tensorfeed.ai."
+        "description": "Bearer token from /api/payment/confirm. Same token works on tensorfeed.ai (shared credit pool). See https://terminalfeed.io/developers/agent-payments."
       }
     },
     "schemas": {
@@ -153,8 +141,10 @@
                     "type": "integer"
                   },
                   "latest": {
-                    "type": "object",
-                    "nullable": true,
+                    "type": [
+                      "object",
+                      "null"
+                    ],
                     "properties": {
                       "magnitude": {
                         "type": "number"
@@ -323,8 +313,10 @@
             "type": "object",
             "properties": {
               "gold": {
-                "type": "object",
-                "nullable": true,
+                "type": [
+                  "object",
+                  "null"
+                ],
                 "properties": {
                   "price_usd": {
                     "type": "number"
@@ -336,13 +328,17 @@
                 }
               },
               "silver": {
-                "type": "object",
-                "nullable": true,
+                "type": [
+                  "object",
+                  "null"
+                ],
                 "description": "Omitted in v1. Will be added when a stable free upstream surfaces."
               },
               "oil": {
-                "type": "object",
-                "nullable": true,
+                "type": [
+                  "object",
+                  "null"
+                ],
                 "properties": {
                   "price_usd": {
                     "type": "number"
@@ -357,8 +353,10 @@
                 }
               },
               "nat_gas": {
-                "type": "object",
-                "nullable": true,
+                "type": [
+                  "object",
+                  "null"
+                ],
                 "properties": {
                   "price_usd": {
                     "type": "number"
@@ -533,8 +531,10 @@
             }
           },
           "eth_gas": {
-            "type": "object",
-            "nullable": true,
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
               "low_gwei": {
                 "type": "integer"
@@ -591,8 +591,10 @@
         "type": "object",
         "properties": {
           "value": {
-            "type": "number",
-            "nullable": true
+            "type": [
+              "number",
+              "null"
+            ]
           },
           "date": {
             "type": "string",
@@ -621,8 +623,10 @@
         }
       },
       "QuoteEntry": {
-        "type": "object",
-        "nullable": true,
+        "type": [
+          "object",
+          "null"
+        ],
         "properties": {
           "price": {
             "type": "number"
@@ -741,8 +745,10 @@
             "type": "object",
             "properties": {
               "crypto_fear_greed": {
-                "type": "object",
-                "nullable": true,
+                "type": [
+                  "object",
+                  "null"
+                ],
                 "properties": {
                   "value": {
                     "type": "integer",
@@ -759,8 +765,10 @@
                 }
               },
               "stocks_vix": {
-                "type": "object",
-                "nullable": true,
+                "type": [
+                  "object",
+                  "null"
+                ],
                 "properties": {
                   "value": {
                     "type": "number"
@@ -834,8 +842,10 @@
                         "type": "string"
                       },
                       "url": {
-                        "type": "string",
-                        "nullable": true
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       },
                       "source": {
                         "type": "string"
@@ -863,15 +873,19 @@
                   "type": "string"
                 },
                 "yes_probability": {
-                  "type": "number",
-                  "nullable": true
+                  "type": [
+                    "number",
+                    "null"
+                  ]
                 },
                 "volume_24h": {
                   "type": "number"
                 },
                 "url": {
-                  "type": "string",
-                  "nullable": true
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 }
               }
             }
@@ -992,20 +1006,28 @@
                 "type": "object",
                 "properties": {
                   "btc": {
-                    "type": "object",
-                    "nullable": true
+                    "type": [
+                      "object",
+                      "null"
+                    ]
                   },
                   "crypto_fear_greed": {
-                    "type": "object",
-                    "nullable": true
+                    "type": [
+                      "object",
+                      "null"
+                    ]
                   },
                   "vix": {
-                    "type": "object",
-                    "nullable": true
+                    "type": [
+                      "object",
+                      "null"
+                    ]
                   },
                   "fed_funds_rate": {
-                    "type": "object",
-                    "nullable": true
+                    "type": [
+                      "object",
+                      "null"
+                    ]
                   },
                   "forex_usd_base": {
                     "type": "object"
@@ -1197,8 +1219,10 @@
             "format": "date-time"
           },
           "spot_eth_usd": {
-            "type": "number",
-            "nullable": true
+            "type": [
+              "number",
+              "null"
+            ]
           },
           "blocks_scanned": {
             "type": "array"
@@ -1225,8 +1249,10 @@
                 "type": "number"
               },
               "net_flow_usd": {
-                "type": "integer",
-                "nullable": true
+                "type": [
+                  "integer",
+                  "null"
+                ]
               },
               "bias": {
                 "type": "string",
@@ -1275,31 +1301,10 @@
     }
   },
   "paths": {
-    "/api/": {
-      "get": {
-        "tags": [
-          "Discovery"
-        ],
-        "summary": "API directory",
-        "description": "Self-describing index of free and premium endpoints with pricing. Recommended first call for autonomous agents.",
-        "responses": {
-          "200": {
-            "description": "Endpoint inventory.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/health": {
       "get": {
         "tags": [
-          "Discovery"
+          "free"
         ],
         "summary": "Worker health check",
         "responses": {
@@ -1327,13 +1332,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/briefing": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Free one-call world snapshot",
         "description": "Compact summary of BTC, Fear & Greed, recent earthquakes, top HN story count, and ISS crew. For richer composition with predictions and history, see GET /api/pro/briefing.",
@@ -1348,13 +1354,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/btc-price": {
       "get": {
         "tags": [
-          "Free: Crypto"
+          "free"
         ],
         "summary": "Bitcoin price (Binance with CoinCap fallback)",
         "responses": {
@@ -1368,13 +1375,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/crypto-movers": {
       "get": {
         "tags": [
-          "Free: Crypto"
+          "free"
         ],
         "summary": "Top 15 crypto movers by 24h change",
         "responses": {
@@ -1388,13 +1396,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/fear-greed": {
       "get": {
         "tags": [
-          "Free: Crypto"
+          "free"
         ],
         "summary": "Crypto Fear & Greed Index (Alternative.me)",
         "responses": {
@@ -1408,13 +1417,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/stocks": {
       "get": {
         "tags": [
-          "Free: Markets"
+          "free"
         ],
         "summary": "Top US stocks (Finnhub)",
         "parameters": [
@@ -1438,13 +1448,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/forex": {
       "get": {
         "tags": [
-          "Free: Markets"
+          "free"
         ],
         "summary": "Currency rates (Frankfurter, USD base)",
         "responses": {
@@ -1458,13 +1469,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/economic-data": {
       "get": {
         "tags": [
-          "Free: Markets"
+          "free"
         ],
         "summary": "FRED indicators (Fed rate, CPI, unemployment, GDP)",
         "responses": {
@@ -1478,13 +1490,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/predictions": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Polymarket prediction markets",
         "responses": {
@@ -1498,13 +1511,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/earthquake": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Recent earthquakes M2.5+ (USGS)",
         "responses": {
@@ -1518,13 +1532,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/disaster-alerts": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Global disaster alerts (GDACS)",
         "responses": {
@@ -1538,13 +1553,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/launches": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Upcoming space launches (The Space Devs)",
         "responses": {
@@ -1558,13 +1574,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/humans-in-space": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "ISS crew (Open Notify)",
         "responses": {
@@ -1578,13 +1595,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/cyber-threats": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Malware and IOCs (URLhaus + ThreatFox)",
         "responses": {
@@ -1598,13 +1616,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/service-status": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Status of GitHub, Cloudflare, OpenAI, Anthropic, etc.",
         "responses": {
@@ -1618,13 +1637,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/gas": {
       "get": {
         "tags": [
-          "Free: Crypto"
+          "free"
         ],
         "summary": "Ethereum gas oracle (Etherscan)",
         "responses": {
@@ -1638,13 +1658,14 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/weather": {
       "get": {
         "tags": [
-          "Free: World"
+          "free"
         ],
         "summary": "Weather (Open-Meteo)",
         "parameters": [
@@ -1674,19 +1695,20 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/pro/briefing": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium briefing: 6 upstream sources composed (1 credit)",
         "description": "All free /api/briefing modules plus Polymarket prediction markets, optional include filter, and optional 24-hour BTC chart series. Returns 402 Payment Required when auth fails or credits are exhausted; the credit is decremented before the upstream fetch begins, so partial-fetch responses still count.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "parameters": [
@@ -1754,19 +1776,23 @@
             "label": "JavaScript (fetch)",
             "source": "const res = await fetch(\"https://terminalfeed.io/api/pro/briefing\", {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst data = await res.json();\nconsole.log(data);\nconsole.log(\"credits left:\", res.headers.get(\"X-Credits-Remaining\"));"
           }
-        ]
+        ],
+        "x-pricing-credits": 1,
+        "x-pricing-usd": 0.02,
+        "x-composes-sources": 6,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/macro": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium macro snapshot: FRED + forex + commodities + indices (2 credits)",
         "description": "Composes ~14 upstream calls into one response: 7 FRED economic series, 4 USD-base forex rates, gold via PAXG, US indices SPY/DIA/QQQ, and VIX. Optional 30-day history.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "parameters": [
@@ -1826,19 +1852,23 @@
             "label": "JavaScript (fetch)",
             "source": "const url = new URL(\"https://terminalfeed.io/api/pro/macro\");\nurl.searchParams.set(\"history\", \"30d\");\nconst res = await fetch(url, {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst macro = await res.json();\nconsole.log(\"Fed rate:\", macro.economic.fed_rate.value);"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 14,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/crypto-deep": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium crypto deep snapshot: top 50 + Binance + on-chain + gas (2 credits)",
         "description": "Composes 7 upstream sources: top 50 coins by market cap with 1h/24h/7d change, Binance top 20 USDT pairs by volume with high/low/trade-count, Bitcoin network stats from mempool.space (block height, fee tiers, hashrate, mempool size), and Etherscan gas oracle. Optional 30-day BTC OHLCV.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "parameters": [
@@ -1906,13 +1936,17 @@
             "label": "JavaScript (fetch)",
             "source": "const url = new URL(\"https://terminalfeed.io/api/pro/crypto-deep\");\nurl.searchParams.set(\"coins\", \"btc,eth,sol\");\nconst res = await fetch(url, { headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" } });\nconst d = await res.json();\nfor (const c of d.coins_top50) console.log(c.symbol, c.price_usd);"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 7,
+        "x-license": "inference-only"
       }
     },
     "/api/payment/info": {
       "get": {
         "tags": [
-          "Premium: Billing"
+          "payment"
         ],
         "summary": "Self-describing payment metadata",
         "description": "Returns the published USDC wallet address, pricing tiers, supported payment flows (credits-first and x402 fallback), and verification metadata. No auth required. Useful as the first call in an agent's onboarding sequence.",
@@ -1927,13 +1961,16 @@
               }
             }
           }
-        }
+        },
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0,
+        "security": []
       }
     },
     "/api/payment/buy-credits": {
       "post": {
         "tags": [
-          "Premium: Billing"
+          "payment"
         ],
         "summary": "Quote a credit purchase, return wallet + memo",
         "description": "Returns the published USDC wallet, a unique memo, and a quote tying the USD amount to credits. Send USDC on Base mainnet to the wallet, then call POST /api/payment/confirm with the tx hash and memo. Proxies to the TensorFeed payment Worker; the wallet returned must match the address published at /terms section 17, /developers/agent-payments, /llms.txt, and the GitHub README.",
@@ -1978,13 +2015,16 @@
             "label": "JavaScript (fetch)",
             "source": "const res = await fetch(\"https://terminalfeed.io/api/payment/buy-credits\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ amount_usd: 1.00 }),\n});\nconst quote = await res.json();\nconsole.log(\"Send\", quote.amount_usd, \"USDC to\", quote.wallet);"
           }
-        ]
+        ],
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0,
+        "security": []
       }
     },
     "/api/payment/confirm": {
       "post": {
         "tags": [
-          "Premium: Billing"
+          "payment"
         ],
         "summary": "Confirm USDC transfer, mint bearer token",
         "description": "Verifies the on-chain transaction and the memo, then returns a bearer token plus credit count. Replay-protected: the same tx hash will not credit twice.",
@@ -2036,18 +2076,21 @@
             "label": "JavaScript (fetch)",
             "source": "const res = await fetch(\"https://terminalfeed.io/api/payment/confirm\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ tx_hash: \"0xabc...\", nonce: \"tf-...\" }),\n});\nconst { token, credits } = await res.json();"
           }
-        ]
+        ],
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0,
+        "security": []
       }
     },
     "/api/payment/balance": {
       "get": {
         "tags": [
-          "Premium: Billing"
+          "payment"
         ],
         "summary": "Check remaining credits for a bearer token",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "responses": {
@@ -2081,13 +2124,15 @@
             "label": "JavaScript (fetch)",
             "source": "const res = await fetch(\"https://terminalfeed.io/api/payment/balance\", {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst balance = await res.json();\nconsole.log(\"Credits remaining:\", balance.credits);"
           }
-        ]
+        ],
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0
       }
     },
     "/api/llm-tools": {
       "get": {
         "tags": [
-          "Discovery"
+          "free"
         ],
         "summary": "Pre-baked function-calling tool definitions for OpenAI and Anthropic",
         "description": "Returns ready-to-paste tool definitions for every TerminalFeed endpoint in OpenAI function-calling format and Anthropic tool-use format. Free endpoint by design (no credits). Agent devs paste the openai or anthropic block directly into their LLM tool-use scaffold.",
@@ -2148,19 +2193,20 @@
             "label": "JavaScript (OpenAI SDK)",
             "source": "import OpenAI from \"openai\";\nconst tools = (await fetch(\"https://terminalfeed.io/api/llm-tools?format=openai\").then(r => r.json())).openai;\nconst openai = new OpenAI();\nconst resp = await openai.chat.completions.create({\n  model: \"gpt-4o\",\n  tools,\n  messages: [{ role: \"user\", content: \"Get the latest BTC price.\" }],\n});"
           }
-        ]
+        ],
+        "security": []
       }
     },
     "/api/pro/sentiment": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium composite market sentiment (2 credits)",
         "description": "Composite market sentiment for AI trading and research agents. Aggregates Crypto Fear and Greed Index, VIX volatility (when Finnhub key has access), trending ticker mentions across Hacker News top 30 + Reddit hot posts (r/CryptoCurrency, r/wallstreetbets, r/stocks) with per-headline keyword-based sentiment scoring, and Polymarket-implied probabilities for top markets. Output includes per-ticker mention_count_24h, sentiment_score (-1 to +1), sentiment_label, and sample headlines with URLs. Notes field documents the scoring methodology (keyword-based, crude but signal-bearing) so agents can calibrate trust appropriately. 2 credits ($0.04). Bearer auth required. Cached at 5min.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "responses": {
@@ -2207,19 +2253,23 @@
             "label": "JavaScript (fetch)",
             "source": "const res = await fetch(\"https://terminalfeed.io/api/pro/sentiment\", {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst data = await res.json();\nfor (const t of data.trending.slice(0, 5)) {\n  console.log(t.symbol, t.sentiment_label, t.mention_count_24h);\n}"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 7,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/world-deltas": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium time-sorted event stream (2 credits)",
         "description": "Aggregates time-stamped events from 4 upstream sources into one time-sorted feed: USGS earthquakes M4.0+, Hacker News current front-page items (within the since window), recently updated Polymarket markets >= $10K 24h volume, and space launches in [-1h, +12h] window. Accepts ?since=<ISO timestamp>, defaults to 1 hour ago and clamped to the 1-hour cache horizon. Each event has type, timestamp, severity, and structured data. Saves a monitor agent from polling 4 separate upstream feeds and time-merging client-side. 2 credits ($0.04). Bearer auth. 1-hour rolling cache; sub-second response when warm.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "parameters": [
@@ -2277,19 +2327,23 @@
             "label": "JavaScript (polling)",
             "source": "const url = new URL(\"https://terminalfeed.io/api/pro/world-deltas\");\nurl.searchParams.set(\"since\", new Date(Date.now() - 5*60_000).toISOString());\nconst res = await fetch(url, { headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" } });\nconst data = await res.json();\nfor (const ev of data.events) console.log(ev.type, ev.severity, ev.data);"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 4,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/agent-context": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Curated 'always start here' world-state with paste-ready system_prompt (2 credits)",
         "description": "The 'always start here' premium call for autonomous agents. Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear & Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by 24h volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context window. Saves the agent from making 13 separate calls and writing a formatter. The curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04). 5-min cache. Bearer auth required.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "responses": {
@@ -2336,19 +2390,23 @@
             "label": "JavaScript (paste into OpenAI)",
             "source": "import OpenAI from \"openai\";\nconst TOKEN = \"tf_live_<64-char-hex>\";\nconst ctx = await fetch(\"https://terminalfeed.io/api/pro/agent-context\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\n\nconst openai = new OpenAI();\nconst resp = await openai.chat.completions.create({\n  model: \"gpt-4o\",\n  messages: [\n    { role: \"system\", content: ctx.system_prompt },\n    { role: \"user\", content: \"What are the most notable signals in the current world state?\" },\n  ],\n});"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 13,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/correlation-matrix": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium 30-day cross-asset correlation matrix (2 credits)",
         "description": "Pre-computed Pearson correlation matrix on 30-day daily simple returns across up to 10 assets: BTC, ETH, SOL, AVAX, LINK (Coinbase candles, free), gold via PAXG-USD (Coinbase, free), and 10Y / 2Y treasury yields, trade-weighted USD index, WTI oil (FRED, requires FRED_API_KEY on the Worker). Returns both a pairs array (sorted by absolute r descending) and an NxN matrix object. Each pair tagged with relationship strength and direction. Saves the agent from fetching 10 historical price series and running covariance math. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "responses": {
@@ -2389,19 +2447,23 @@
             "label": "JavaScript",
             "source": "const m = await fetch(\"https://terminalfeed.io/api/pro/correlation-matrix\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nconst btcEth = m.matrix.BTC.ETH;\nconsole.log(\"BTC-ETH:\", btcEth);"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 10,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/whales": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium large on-chain transaction tracker (2 credits)",
         "description": "Tracks whale-sized BTC and ETH transactions in near real time. BTC: scans mempool.space recent mempool (last 10 unconfirmed) for outputs >=10 BTC. ETH: scans the last 3 confirmed blocks (~36s of history, ~1900 transactions) via publicnode.com JSON-RPC for transfers >=100 ETH. Each whale entry tagged with USD-equivalent at current BTC/ETH spot, tx hash, addresses (ETH only), and explorer URL. Useful for trading bots watching for institutional flow signals: large exchange in/outflows, treasury moves, OTC settlements. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "responses": {
@@ -2442,19 +2504,23 @@
             "label": "JavaScript",
             "source": "const w = await fetch(\"https://terminalfeed.io/api/pro/whales\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nfor (const tx of w.eth_whales_latest_block) {\n  console.log(`${tx.value_eth} ETH = $${tx.value_usd}`);\n}"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 4,
+        "x-license": "inference-only"
       }
     },
     "/api/pro/exchange-flows": {
       "get": {
         "tags": [
-          "Premium: Composed"
+          "pro"
         ],
         "summary": "Premium ETH exchange flow tracker (2 credits)",
         "description": "Tracks ETH transfers in/out of major centralized exchange hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin) across the last 3 confirmed blocks. Each transfer tagged as inflow (user -> exchange), outflow (exchange -> user), or inter_exchange. Per-exchange and aggregate net flows surfaced with USD-equivalents and a bias label. 5 ETH minimum threshold. Useful for trading bots watching for regime shifts. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.",
         "security": [
           {
-            "BearerAuth": []
+            "agentBearer": []
           }
         ],
         "responses": {
@@ -2495,7 +2561,33 @@
             "label": "JavaScript",
             "source": "const f = await fetch(\"https://terminalfeed.io/api/pro/exchange-flows\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nconsole.log(\"Bias:\", f.aggregate.bias, \"Net:\", f.aggregate.net_flow_eth, \"ETH\");"
           }
-        ]
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 3,
+        "x-license": "inference-only"
+      }
+    },
+    "/api": {
+      "get": {
+        "tags": [
+          "free"
+        ],
+        "summary": "API directory",
+        "description": "Self-describing index of free and premium endpoints with pricing. Recommended first call for autonomous agents.",
+        "responses": {
+          "200": {
+            "description": "Endpoint inventory.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": []
       }
     }
   },
@@ -2503,18 +2595,19 @@
     {
       "name": "Free Tier",
       "tags": [
-        "Discovery",
-        "Free: Markets",
-        "Free: Crypto",
-        "Free: World"
+        "free"
       ]
     },
     {
       "name": "Premium Tier",
       "tags": [
-        "Premium: Composed",
-        "Premium: Billing"
+        "pro",
+        "payment"
       ]
     }
-  ]
+  ],
+  "externalDocs": {
+    "description": "Premium API for AI agents \u2014 full developer guide, payment flow, and cross-site bundle with TensorFeed.",
+    "url": "https://terminalfeed.io/developers/agent-payments"
+  }
 }
