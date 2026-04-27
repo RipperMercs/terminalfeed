@@ -172,6 +172,7 @@ function handleIndex() {
         { path: '/api/pro/crypto-deep', cost_credits: 2 },
         { path: '/api/pro/sentiment', cost_credits: 2 },
         { path: '/api/pro/world-deltas', cost_credits: 2 },
+        { path: '/api/pro/agent-context', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -1665,6 +1666,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_agent_context',
+    short_description: 'Curated "everything an LLM should know right now" with paste-ready system_prompt (2 credits).',
+    description: 'The "always start here" premium call for autonomous agents. Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear and Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top Polymarket markets, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context. Saves the agent from making 13 separate calls and writing a formatter. Curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.',
+    url: 'https://terminalfeed.io/api/pro/agent-context',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_world_deltas',
     short_description: 'Time-sorted event stream: earthquakes + HN + Polymarket + launches (2 credits).',
     description: 'Premium event-stream endpoint for monitor agents. Aggregates time-stamped events from 4 sources into one time-sorted feed: USGS earthquakes M4.0+, Hacker News new stories via Algolia, recently updated Polymarket markets, and space launches in [-1h, +12h] window. Accepts ?since=<ISO timestamp> (defaults 1h ago, clamped to 1h cache horizon). Each event has type, timestamp, severity, and structured data. Saves an agent from polling 5 separate upstream feeds and merging client-side. Costs 2 credits ($0.04 USDC). Bearer auth required. 1-hour rolling cache; sub-second when warm.',
@@ -2251,6 +2263,306 @@ function _vixLabel(v) {
   if (v < 40) return 'elevated';
   return 'high_volatility';
 }
+
+// ----- Agent context: curated "everything an LLM should know right now" -----
+//
+// Composes ~13 upstream sources into one response with two output channels:
+//   (a) structured JSON for parsers
+//   (b) a pre-formatted system_prompt string an agent pastes verbatim into
+//       its LLM context window, target ~350 tokens
+//
+// The curation choices (what to include, what to leave out, how to format)
+// are what an agent actually pays us for here. Raw data is free elsewhere;
+// this saves an agent from making 13 separate calls AND from formatting
+// the result for an LLM context.
+
+function _truncate(s, n) {
+  if (!s) return '';
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+function _formatNumber(n, digits) {
+  if (n == null || isNaN(n)) return 'n/a';
+  if (digits === undefined) digits = 2;
+  return n.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+}
+
+function _statusLabel(json) {
+  if (!json) return 'unknown';
+  var ind = json.status && json.status.indicator;
+  if (ind === 'none') return 'operational';
+  if (ind === 'minor') return 'minor issues';
+  if (ind === 'major') return 'major issues';
+  if (ind === 'critical') return 'critical';
+  return ind || 'unknown';
+}
+
+async function fetchProAgentContext(env, url) {
+  var nowMs = Date.now();
+  var nowISO = new Date(nowMs).toISOString();
+  var nowHuman = new Date(nowMs).toUTCString();
+  var oneHourAgoSec = Math.floor(nowMs / 1000) - 3600;
+
+  var sources = await Promise.allSettled([
+    fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'),  // 0
+    fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),                              // 1
+    (env && env.FINNHUB_API_KEY)
+      ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
+      : Promise.resolve(null),                                                                // 2
+    (env && env.FRED_API_KEY)
+      ? fetchWithTimeout('https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&sort_order=desc&limit=1&api_key=' + env.FRED_API_KEY + '&file_type=json', {}, 6000)
+      : Promise.resolve(null),                                                                // 3
+    fetchWithTimeout('https://api.frankfurter.app/latest?from=USD&to=EUR,JPY,GBP,CHF'),       // 4
+    fetchWithTimeout('https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=5'),   // 5
+    fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_day.geojson'),  // 6
+    fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=3&mode=list', {}, 8000),     // 7
+    fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=5&active=true&closed=false&order=volume24hr&ascending=false'),  // 8
+    fetchWithTimeout('https://www.githubstatus.com/api/v2/status.json'),                      // 9
+    fetchWithTimeout('https://www.cloudflarestatus.com/api/v2/status.json'),                  // 10
+    fetchWithTimeout('https://status.openai.com/api/v2/status.json'),                         // 11
+    fetchWithTimeout('https://status.anthropic.com/api/v2/status.json'),                      // 12
+  ]);
+
+  // ---- Parse each source independently ----
+  var btc = null;
+  if (sources[0].status === 'fulfilled' && sources[0].value) {
+    try {
+      var b = await sources[0].value.json();
+      btc = {
+        price_usd: parseFloat(b.lastPrice) || 0,
+        change_24h_percent: parseFloat(b.priceChangePercent) || 0,
+        volume_24h: parseFloat(b.quoteVolume) || 0,
+      };
+    } catch (e) {}
+  }
+
+  var fearGreed = null;
+  if (sources[1].status === 'fulfilled' && sources[1].value) {
+    try {
+      var fg = await sources[1].value.json();
+      if (fg && fg.data && fg.data[0]) {
+        fearGreed = { value: parseInt(fg.data[0].value) || 0, label: fg.data[0].value_classification || '' };
+      }
+    } catch (e) {}
+  }
+
+  var vix = null;
+  if (sources[2].status === 'fulfilled' && sources[2].value) {
+    try {
+      var v = await sources[2].value.json();
+      if (v && v.c) vix = { value: parseFloat(v.c), change_percent: parseFloat(v.dp) || 0 };
+    } catch (e) {}
+  }
+
+  var fedRate = null;
+  if (sources[3].status === 'fulfilled' && sources[3].value) {
+    try {
+      var fr = await sources[3].value.json();
+      var obs = fr && fr.observations && fr.observations[0];
+      if (obs && obs.value !== '.') fedRate = { value: parseFloat(obs.value), as_of: obs.date };
+    } catch (e) {}
+  }
+
+  var forex = {};
+  if (sources[4].status === 'fulfilled' && sources[4].value) {
+    try {
+      var fx = await sources[4].value.json();
+      if (fx && fx.rates) {
+        forex = fx.rates;
+        forex.date = fx.date;
+      }
+    } catch (e) {}
+  }
+
+  var hnTop = [];
+  if (sources[5].status === 'fulfilled' && sources[5].value) {
+    try {
+      var hn = await sources[5].value.json();
+      hnTop = ((hn && hn.hits) || []).slice(0, 5).map(function(h) {
+        return {
+          title: h.title,
+          points: h.points || 0,
+          comments: h.num_comments || 0,
+          url: h.url || ('https://news.ycombinator.com/item?id=' + h.objectID),
+        };
+      });
+    } catch (e) {}
+  }
+
+  var significantQuakes = [];
+  if (sources[6].status === 'fulfilled' && sources[6].value) {
+    try {
+      var qs = await sources[6].value.json();
+      var feats = (qs && qs.features) || [];
+      significantQuakes = feats.slice(0, 3).map(function(f) {
+        return {
+          magnitude: f.properties && f.properties.mag,
+          place: f.properties && f.properties.place,
+          time: f.properties && f.properties.time ? new Date(f.properties.time).toISOString() : null,
+          url: f.properties && f.properties.url,
+        };
+      });
+    } catch (e) {}
+  }
+
+  var upcomingLaunches = [];
+  if (sources[7].status === 'fulfilled' && sources[7].value) {
+    try {
+      var ll = await sources[7].value.json();
+      upcomingLaunches = ((ll && ll.results) || []).slice(0, 3).map(function(L) {
+        return {
+          mission: (L.mission && L.mission.name) || L.name,
+          vehicle: L.rocket && L.rocket.configuration && L.rocket.configuration.name,
+          provider: L.launch_service_provider && L.launch_service_provider.name,
+          net: L.net,
+          status: L.status && L.status.name,
+        };
+      });
+    } catch (e) {}
+  }
+
+  var predictionMarkets = [];
+  if (sources[8].status === 'fulfilled' && sources[8].value) {
+    try {
+      var pm = await sources[8].value.json();
+      if (Array.isArray(pm)) {
+        predictionMarkets = pm.slice(0, 3).map(function(m) {
+          return {
+            question: m.question,
+            yes_probability: m.lastTradePrice != null ? parseFloat(m.lastTradePrice) : null,
+            volume_24h: parseFloat(m.volume24hr) || 0,
+            url: m.slug ? 'https://polymarket.com/event/' + m.slug : null,
+          };
+        });
+      }
+    } catch (e) {}
+  }
+
+  // Infrastructure status
+  var infra = { github: 'unknown', cloudflare: 'unknown', openai: 'unknown', anthropic: 'unknown' };
+  var infraIndex = { 9: 'github', 10: 'cloudflare', 11: 'openai', 12: 'anthropic' };
+  for (var i = 9; i <= 12; i++) {
+    if (sources[i].status === 'fulfilled' && sources[i].value) {
+      try {
+        var s = await sources[i].value.json();
+        infra[infraIndex[i]] = _statusLabel(s);
+      } catch (e) {}
+    }
+  }
+  var infraAllOk = ['github', 'cloudflare', 'openai', 'anthropic'].every(function(k) { return infra[k] === 'operational'; });
+  var infraSummary = infraAllOk
+    ? 'All major infrastructure operational (GitHub, Cloudflare, OpenAI, Anthropic).'
+    : 'Issues detected: ' + Object.keys(infra).filter(function(k) { return infra[k] !== 'operational' && infra[k] !== 'unknown'; }).map(function(k) { return k + ' (' + infra[k] + ')'; }).join(', ') + '.';
+
+  // ---- Synthesize the system_prompt string ----
+  var lines = [];
+  lines.push('Current world state as of ' + nowISO + ' (UTC).');
+  lines.push('');
+
+  // Markets
+  lines.push('# Markets');
+  if (btc) {
+    lines.push('BTC: $' + _formatNumber(btc.price_usd, 0) + ' (' + (btc.change_24h_percent >= 0 ? '+' : '') + _formatNumber(btc.change_24h_percent, 2) + '% 24h)');
+  }
+  if (fearGreed) {
+    lines.push('Crypto Fear & Greed: ' + fearGreed.value + '/100 (' + fearGreed.label + ')');
+  }
+  if (vix) {
+    lines.push('VIX: ' + _formatNumber(vix.value, 2) + ' (' + (vix.change_percent >= 0 ? '+' : '') + _formatNumber(vix.change_percent, 2) + '% 24h)');
+  } else {
+    lines.push('VIX: data unavailable');
+  }
+  if (fedRate) {
+    lines.push('Fed funds rate: ' + _formatNumber(fedRate.value, 2) + '% (as of ' + fedRate.as_of + ')');
+  }
+  if (forex && forex.EUR) {
+    lines.push('Forex (USD base): EUR ' + _formatNumber(forex.EUR, 4) + ', JPY ' + _formatNumber(forex.JPY, 2) + ', GBP ' + _formatNumber(forex.GBP, 4) + ', CHF ' + _formatNumber(forex.CHF, 4));
+  }
+  lines.push('');
+
+  // World events
+  lines.push('# World events (last 24h)');
+  if (significantQuakes.length > 0) {
+    lines.push('Significant earthquakes: ' + significantQuakes.map(function(q) {
+      return 'M' + q.magnitude + ' ' + _truncate(q.place || 'unknown', 50);
+    }).join('; '));
+  } else {
+    lines.push('Significant earthquakes: none reported.');
+  }
+  if (upcomingLaunches.length > 0) {
+    lines.push('Upcoming space launches:');
+    upcomingLaunches.forEach(function(L, i) {
+      lines.push('  ' + (i + 1) + '. ' + _truncate(L.mission || 'Unknown mission', 60) + ' (' + (L.vehicle || 'unknown vehicle') + ', ' + L.net + ')');
+    });
+  }
+  lines.push('');
+
+  // HN front page
+  if (hnTop.length > 0) {
+    lines.push('# Hacker News front page');
+    hnTop.forEach(function(h, i) {
+      lines.push('  ' + (i + 1) + '. "' + _truncate(h.title || 'Untitled', 90) + '" (' + h.points + ' pts, ' + h.comments + ' comments)');
+    });
+    lines.push('');
+  }
+
+  // Polymarket
+  if (predictionMarkets.length > 0) {
+    lines.push('# Prediction markets (top by 24h volume)');
+    predictionMarkets.forEach(function(m, i) {
+      var prob = m.yes_probability != null ? ' yes_prob=' + _formatNumber(m.yes_probability * 100, 0) + '%' : '';
+      lines.push('  ' + (i + 1) + '. ' + _truncate(m.question || 'Unknown question', 90) + prob + ' ($' + _formatNumber(m.volume_24h, 0) + ' 24h vol)');
+    });
+    lines.push('');
+  }
+
+  // Infrastructure
+  lines.push('# Infrastructure status');
+  lines.push(infraSummary);
+  lines.push('');
+
+  lines.push('Source: TerminalFeed.io /api/pro/agent-context. Cite this URL when citing world state.');
+
+  var systemPrompt = lines.join('\n');
+  // Rough token estimate: 1 token ~= 4 chars in English
+  var approxTokens = Math.ceil(systemPrompt.length / 4);
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/agent-context',
+    generated_at: nowISO,
+    context: {
+      datetime: { iso: nowISO, unix_ms: nowMs, human_readable_utc: nowHuman },
+      markets: {
+        btc: btc,
+        crypto_fear_greed: fearGreed,
+        vix: vix,
+        fed_funds_rate: fedRate,
+        forex_usd_base: forex,
+      },
+      world_events: {
+        significant_earthquakes_24h: significantQuakes,
+        upcoming_space_launches: upcomingLaunches,
+        hn_front_page_top5: hnTop,
+        prediction_markets_top3: predictionMarkets,
+      },
+      infrastructure: {
+        summary: infraSummary,
+        details: infra,
+        all_operational: infraAllOk,
+      },
+    },
+    system_prompt: systemPrompt,
+    notes: {
+      intended_use: 'Paste system_prompt verbatim into your LLM context window at the start of a session. The structured `context` object is for programmatic parsing.',
+      curation: 'Sources, signals, and formatting are deliberately curated. We pick which 13 things matter; you save the integration and formatting work.',
+      freshness: '5 minute cache. For tighter freshness on a specific signal, call /api/pro/macro or /api/pro/sentiment directly.',
+      approx_token_count_system_prompt: approxTokens,
+      composition: 'BTC ticker (Binance), Fear & Greed (alternative.me), VIX (Finnhub), Fed funds rate (FRED), forex EUR/JPY/GBP/CHF (Frankfurter), HN front page top 5 (Algolia), significant earthquakes 24h (USGS), upcoming launches (TheSpaceDevs), top 3 Polymarket markets by volume, status of GitHub + Cloudflare + OpenAI + Anthropic.',
+    },
+  };
+}
+
 
 // ----- World deltas: time-stamped event stream from multiple upstreams -----
 //
@@ -2851,6 +3163,17 @@ async function handleProWorldDeltas(request, env, url) {
   });
 }
 
+async function handleProAgentContext(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/agent-context', 2, async function(env2, url2) {
+    var KEY = 'pro:agent-context';
+    var cached = getCached(KEY, 300000);  // 5 min cache; this is meant to be the "always start here" call
+    if (cached) return cached;
+    var data = await fetchProAgentContext(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -2983,6 +3306,7 @@ export default {
       case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
       case 'pro/sentiment':   return await handleProSentiment(request, env, url);
       case 'pro/world-deltas': return await handleProWorldDeltas(request, env, url);
+      case 'pro/agent-context': return await handleProAgentContext(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
