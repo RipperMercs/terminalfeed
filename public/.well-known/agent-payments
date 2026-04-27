@@ -1,0 +1,52 @@
+{
+  "name": "TerminalFeed Premium API",
+  "description": "Pay-as-you-go premium API tier for autonomous AI agents. USDC micropayments on Base mainnet, bearer-token auth, cross-site bundle with TensorFeed.",
+  "operator": "TerminalFeed.io (Pizza Robot Studios LLC)",
+  "docs": "https://terminalfeed.io/developers/agent-payments",
+  "contract": "https://terminalfeed.io/openapi.json",
+  "agent_manifest": "https://terminalfeed.io/agents.txt",
+  "llms_txt": "https://terminalfeed.io/llms.txt",
+  "auth": {
+    "type": "bearer",
+    "token_format": "tf_live_<64-char-hex>",
+    "obtain_via": [
+      "POST https://terminalfeed.io/api/payment/buy-credits {amount_usd}",
+      "Send USDC on Base to the returned wallet address",
+      "POST https://terminalfeed.io/api/payment/confirm {tx_hash, nonce}"
+    ]
+  },
+  "payment": {
+    "chain": "base-mainnet",
+    "currency": "USDC",
+    "wallet": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+    "rate_credits_per_dollar": 50,
+    "model": "pay-per-call",
+    "subscription": false,
+    "expiry": null,
+    "refund_window_hours": 24,
+    "mainnet_proof_tx": "0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c"
+  },
+  "endpoints": [
+    { "path": "/api/pro/briefing", "method": "GET", "cost_credits": 1, "auth": "bearer" },
+    { "path": "/api/pro/macro", "method": "GET", "cost_credits": 2, "auth": "bearer" },
+    { "path": "/api/pro/crypto-deep", "method": "GET", "cost_credits": 2, "auth": "bearer" },
+    { "path": "/api/payment/info", "method": "GET", "cost_credits": 0, "auth": "none" },
+    { "path": "/api/payment/buy-credits", "method": "POST", "cost_credits": 0, "auth": "none" },
+    { "path": "/api/payment/confirm", "method": "POST", "cost_credits": 0, "auth": "none" },
+    { "path": "/api/payment/balance", "method": "GET", "cost_credits": 0, "auth": "bearer" }
+  ],
+  "license": {
+    "premium_responses": "inference-only; not licensed as training data",
+    "free_tier": "permissive",
+    "terms_url": "https://terminalfeed.io/terms#premium"
+  },
+  "cross_site_bundle": {
+    "partner": "https://tensorfeed.ai",
+    "shared_wallet": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+    "shared_credit_pool": true,
+    "note": "A bearer token minted on either site spends on either site."
+  },
+  "contact": "hello@terminalfeed.io",
+  "version": "1.1.0",
+  "last_updated": "2026-04-27"
+}
