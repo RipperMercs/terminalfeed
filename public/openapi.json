@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -958,6 +958,96 @@
           },
           "sample_size": {
             "type": "object"
+          },
+          "notes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AgentContextPro": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "example": "terminalfeed-pro"
+          },
+          "endpoint": {
+            "type": "string",
+            "example": "/api/pro/agent-context"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "context": {
+            "type": "object",
+            "properties": {
+              "datetime": {
+                "type": "object"
+              },
+              "markets": {
+                "type": "object",
+                "properties": {
+                  "btc": {
+                    "type": "object",
+                    "nullable": true
+                  },
+                  "crypto_fear_greed": {
+                    "type": "object",
+                    "nullable": true
+                  },
+                  "vix": {
+                    "type": "object",
+                    "nullable": true
+                  },
+                  "fed_funds_rate": {
+                    "type": "object",
+                    "nullable": true
+                  },
+                  "forex_usd_base": {
+                    "type": "object"
+                  }
+                }
+              },
+              "world_events": {
+                "type": "object",
+                "properties": {
+                  "significant_earthquakes_24h": {
+                    "type": "array"
+                  },
+                  "upcoming_space_launches": {
+                    "type": "array"
+                  },
+                  "hn_front_page_top5": {
+                    "type": "array"
+                  },
+                  "prediction_markets_top3": {
+                    "type": "array"
+                  }
+                }
+              },
+              "infrastructure": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string"
+                  },
+                  "details": {
+                    "type": "object"
+                  },
+                  "all_operational": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "system_prompt": {
+            "type": "string",
+            "description": "Pre-formatted multi-line string an agent pastes verbatim into LLM context. Target ~350 tokens."
           },
           "notes": {
             "type": "object",
@@ -1991,6 +2081,65 @@
             "lang": "JavaScript",
             "label": "JavaScript (polling)",
             "source": "const url = new URL(\"https://terminalfeed.io/api/pro/world-deltas\");\nurl.searchParams.set(\"since\", new Date(Date.now() - 5*60_000).toISOString());\nconst res = await fetch(url, { headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" } });\nconst data = await res.json();\nfor (const ev of data.events) console.log(ev.type, ev.severity, ev.data);"
+          }
+        ]
+      }
+    },
+    "/api/pro/agent-context": {
+      "get": {
+        "tags": [
+          "Premium: Composed"
+        ],
+        "summary": "Curated 'always start here' world-state with paste-ready system_prompt (2 credits)",
+        "description": "The 'always start here' premium call for autonomous agents. Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear & Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by 24h volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context window. Saves the agent from making 13 separate calls and writing a formatter. The curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04). 5-min cache. Bearer auth required.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Curated world-state with structured context and paste-ready system_prompt.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentContextPro"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/agent-context \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python (paste system_prompt into Claude)",
+            "source": "import requests, anthropic\nTOKEN = \"tf_live_<64-char-hex>\"\nctx = requests.get(\n    \"https://terminalfeed.io/api/pro/agent-context\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n    timeout=15,\n).json()\n\nclient = anthropic.Anthropic()\nresp = client.messages.create(\n    model=\"claude-opus-4-7\",\n    system=ctx[\"system_prompt\"],   # paste-ready, ~350 tokens of curated world state\n    messages=[{\"role\": \"user\", \"content\": \"Given the current macro context, what should I research?\"}],\n    max_tokens=1024,\n)\nprint(resp.content[0].text)"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript (paste into OpenAI)",
+            "source": "import OpenAI from \"openai\";\nconst TOKEN = \"tf_live_<64-char-hex>\";\nconst ctx = await fetch(\"https://terminalfeed.io/api/pro/agent-context\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\n\nconst openai = new OpenAI();\nconst resp = await openai.chat.completions.create({\n  model: \"gpt-4o\",\n  messages: [\n    { role: \"system\", content: ctx.system_prompt },\n    { role: \"user\", content: \"What are the most notable signals in the current world state?\" },\n  ],\n});"
           }
         ]
       }

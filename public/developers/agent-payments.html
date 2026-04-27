@@ -413,6 +413,23 @@
     <p><strong>Why this exists:</strong> a monitor agent today has to poll USGS, HN, Polymarket, and TheSpaceDevs separately and reconcile timestamps client-side. This endpoint does the merge server-side. 1-hour rolling cache means sub-second response when warm.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/agent-context</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p><strong>The "always start here" call.</strong> Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear and Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic).</p>
+    <p><strong>The killer feature:</strong> returns BOTH a structured JSON <span class="inline-code">context</span> object for parsers AND a pre-formatted <span class="inline-code">system_prompt</span> string (~350 tokens) the agent pastes verbatim into its LLM context window. Saves the agent from making 13 separate calls AND from writing the formatter.</p>
+    <pre><code>ctx = tf.get("/api/pro/agent-context")
+client.messages.create(
+    model="claude-opus-4-7",
+    system=ctx["system_prompt"],   # paste-ready
+    messages=[{"role": "user", "content": "..."}]
+)</code></pre>
+    <p><strong>What you can't easily build yourself:</strong> the data is free elsewhere; the curation (which 13 things matter, how to compress them into a coherent narrative) is what an agent pays for.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>

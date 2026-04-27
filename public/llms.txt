@@ -84,6 +84,7 @@ Premium endpoints (price per call at $1 USDC = 50 credits):
   /api/pro/crypto-deep  2        $0.04       top 50 + Binance top 20 + mempool.space + Etherscan gas
   /api/pro/sentiment    2        $0.04       Fear&Greed + VIX + trending tickers (HN + Reddit) + Polymarket signals
   /api/pro/world-deltas 2        $0.04       Time-sorted event stream: earthquakes + HN front-page + Polymarket + launches
+  /api/pro/agent-context 2       $0.04       Curated world-state snapshot for LLMs + paste-ready system_prompt (~350 tokens)
 
 Optional query params:
   /api/pro/briefing     ?include=btc,fear-greed,predictions   ?history=24h
@@ -91,6 +92,7 @@ Optional query params:
   /api/pro/crypto-deep  ?coins=btc,eth,sol                    ?history=30d
   /api/pro/sentiment    no params; returns top 15 trending tickers automatically
   /api/pro/world-deltas ?since=2026-04-27T22:00:00Z           defaults to 1h ago, clamped to 1h horizon
+  /api/pro/agent-context no params; returns structured context + system_prompt string
 
 Example invocations:
 
