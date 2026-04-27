@@ -52,10 +52,13 @@ let hitCounter = (function() {
 
 // --- Utilities ---
 
+const PRICING_DISCOVERY_URL = 'https://terminalfeed.io/developers/agent-payments';
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
 };
 
 function jsonResponse(data, status, cacheSeconds) {
@@ -66,6 +69,7 @@ function jsonResponse(data, status, cacheSeconds) {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
   };
   if (cacheSeconds > 0) {
     headers['Cache-Control'] = 'public, max-age=' + cacheSeconds + ', s-maxage=' + cacheSeconds;
@@ -143,16 +147,30 @@ async function postTweet(text, env) {
 function handleIndex() {
   return jsonResponse({
     name: 'TerminalFeed API',
-    version: '1.0',
+    version: '1.1',
     docs: 'https://terminalfeed.io/developers',
-    endpoints: [
+    free_endpoints: [
       '/api/briefing', '/api/btc-price', '/api/stocks', '/api/crypto-movers',
       '/api/fear-greed', '/api/earthquake', '/api/predictions', '/api/hackernews',
       '/api/service-status', '/api/cyber-threats', '/api/forex',
       '/api/humans-in-space', '/api/disaster-alerts', '/api/launches',
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
-      '/api/xkcd',
+      '/api/xkcd', '/api/gas', '/api/nasa-apod',
     ],
+    premium: {
+      docs: 'https://terminalfeed.io/developers/agent-payments',
+      payment_chain: 'Base mainnet (USDC)',
+      pricing: '$1 USDC = 50 credits',
+      buy_credits: 'POST /api/buy-credits',
+      confirm_payment: 'POST /api/confirm-payment',
+      balance: 'GET /api/balance (Bearer auth)',
+      endpoints: [
+        { path: '/api/pro/briefing', cost_credits: 1 },
+        { path: '/api/pro/macro', cost_credits: 2 },
+        { path: '/api/pro/crypto-deep', cost_credits: 2 },
+      ],
+      cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool.',
+    },
   });
 }
 
@@ -1494,6 +1512,630 @@ async function handleErrorReport(request) {
 }
 
 
+// =============================================================================
+// Premium API tier (USDC micropayments via TensorFeed shared credit pool)
+// =============================================================================
+//
+// Auth flow:
+//   1. Agent buys credits (POST /api/buy-credits, USDC on Base, POST /api/confirm-payment)
+//      All three proxy to the TensorFeed payment Worker, which is the system of record.
+//   2. Agent calls /api/pro/* with `Authorization: Bearer tf_live_<32-hex>`.
+//   3. TerminalFeed Worker calls TensorFeed `/internal/validate-and-charge` to
+//      atomically validate the token and decrement credits.
+//   4. On ok:true, fetch + return the composed payload with X-Credits-Remaining.
+//      On ok:false, return 402 Payment Required.
+//
+// Worker secrets required:
+//   TENSORFEED_AUTH_URL        e.g. https://tensorfeed.ai
+//   SHARED_INTERNAL_SECRET     must match the value on the tensorfeed-api Worker
+//
+// =============================================================================
+
+function premiumJsonResponse(data, creditsRemaining, status) {
+  status = status || 200;
+  var headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    // Premium responses vary by bearer token; never let CDNs or shared caches store them.
+    'Cache-Control': 'no-store',
+  };
+  if (creditsRemaining !== null && creditsRemaining !== undefined) {
+    headers['X-Credits-Remaining'] = String(creditsRemaining);
+  }
+  return new Response(JSON.stringify(data), { status: status, headers: headers });
+}
+
+function json402(reason, signupPath) {
+  return premiumJsonResponse(
+    {
+      error: reason || 'payment_required',
+      signup: 'https://terminalfeed.io' + (signupPath || '/developers/agent-payments'),
+      pricing: { '$1_usd': '50_credits' },
+    },
+    null,
+    402
+  );
+}
+
+function extractBearerToken(request) {
+  var auth = request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) return null;
+  var token = auth.slice(7).trim();
+  return token || null;
+}
+
+async function validateAndCharge(env, token, cost, endpoint) {
+  if (!env || !env.TENSORFEED_AUTH_URL || !env.SHARED_INTERNAL_SECRET) {
+    return { ok: false, reason: 'billing_unavailable' };
+  }
+  try {
+    var res = await fetchWithTimeout(
+      env.TENSORFEED_AUTH_URL + '/internal/validate-and-charge',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Auth': env.SHARED_INTERNAL_SECRET,
+        },
+        body: JSON.stringify({ token: token, cost: cost, endpoint: endpoint }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      // Network reachable but TensorFeed returned non-2xx; treat as billing unavailable.
+      return { ok: false, reason: 'billing_unavailable' };
+    }
+    var json = await res.json();
+    if (!json || typeof json.ok !== 'boolean') {
+      return { ok: false, reason: 'billing_unavailable' };
+    }
+    return json;
+  } catch (e) {
+    return { ok: false, reason: 'billing_unavailable' };
+  }
+}
+
+async function handlePremium(request, env, url, endpointPath, costCredits, fetchFn) {
+  var token = extractBearerToken(request);
+  if (!token) {
+    return json402('missing_token');
+  }
+
+  var validation = await validateAndCharge(env, token, costCredits, 'tf:' + endpointPath);
+  if (!validation.ok) {
+    return json402(validation.reason || 'invalid_token');
+  }
+
+  // Atomic-charge property: credits already decremented on the TensorFeed side.
+  // If the upstream fetch fails, the credit still counts (matches TensorFeed's model).
+  // Document this on /developers/agent-payments.
+  try {
+    var data = await fetchFn(env, url);
+    return premiumJsonResponse(data, validation.credits_remaining);
+  } catch (e) {
+    return premiumJsonResponse(
+      {
+        source: 'terminalfeed-pro',
+        endpoint: endpointPath,
+        generated_at: new Date().toISOString(),
+        warning: 'upstream_partial',
+        message: 'Aggregator caught an exception. Some sources may have returned data; retry shortly.',
+      },
+      validation.credits_remaining,
+      200
+    );
+  }
+}
+
+
+// --- Premium fetch composers ---
+
+async function fetchProBriefing(env, url) {
+  var includeParam = url.searchParams.get('include') || '';
+  var include = includeParam ? includeParam.split(',').map(function(s) { return s.trim(); }) : null;
+  var wantHistory = url.searchParams.get('history') === '24h';
+
+  function want(name) { return !include || include.indexOf(name) !== -1; }
+
+  var fetches = [];
+  if (want('btc')) fetches.push(['btc', fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT')]);
+  if (want('fear-greed')) fetches.push(['fear_greed', fetchWithTimeout('https://api.alternative.me/fng/?limit=1')]);
+  if (want('earthquakes')) fetches.push(['earthquakes', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson')]);
+  if (want('hackernews')) fetches.push(['hackernews', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json')]);
+  if (want('humans-in-space')) fetches.push(['humans_in_space', fetchWithTimeout('http://api.open-notify.org/astros.json')]);
+  if (want('predictions')) fetches.push(['predictions', fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false')]);
+
+  var settled = await Promise.allSettled(fetches.map(function(f) { return f[1]; }));
+
+  var sections = {};
+  for (var i = 0; i < settled.length; i++) {
+    var key = fetches[i][0];
+    var r = settled[i];
+    if (r.status !== 'fulfilled') continue;
+    try {
+      var d = await r.value.json();
+      if (key === 'btc') {
+        sections.btc = {
+          price_usd: parseFloat(d.lastPrice) || 0,
+          change_24h_percent: parseFloat(d.priceChangePercent) || 0,
+          volume_24h: parseFloat(d.quoteVolume) || 0,
+          high_24h: parseFloat(d.highPrice) || 0,
+          low_24h: parseFloat(d.lowPrice) || 0,
+        };
+      } else if (key === 'fear_greed' && d && d.data && d.data[0]) {
+        sections.fear_greed = {
+          value: parseInt(d.data[0].value) || 0,
+          label: d.data[0].value_classification || '',
+        };
+      } else if (key === 'earthquakes') {
+        var feats = (d && d.features) || [];
+        sections.earthquakes = {
+          count: feats.length,
+          latest: feats[0] && feats[0].properties ? {
+            magnitude: feats[0].properties.mag,
+            place: feats[0].properties.place,
+            time: feats[0].properties.time,
+          } : null,
+        };
+      } else if (key === 'hackernews') {
+        sections.hackernews = { top_story_count: Array.isArray(d) ? d.length : 0 };
+      } else if (key === 'humans_in_space') {
+        sections.humans_in_space = {
+          count: (d && d.number) || 0,
+          names: ((d && d.people) || []).map(function(p) { return p.name; }),
+        };
+      } else if (key === 'predictions') {
+        var arr = Array.isArray(d) ? d : [];
+        sections.predictions = {
+          count: arr.length,
+          top: arr.slice(0, 5).map(function(m) {
+            return {
+              question: m.question,
+              volume_24hr: parseFloat(m.volume24hr) || 0,
+              outcomes: m.outcomes,
+            };
+          }),
+        };
+      }
+    } catch (e) { /* per-source failure does not poison the response */ }
+  }
+
+  var out = {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/briefing',
+    generated_at: new Date().toISOString(),
+    sections: sections,
+  };
+
+  if (wantHistory) {
+    try {
+      var ch = await fetchWithTimeout('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600', {}, 6000);
+      var candles = await ch.json();
+      out.series = {
+        btc_24h: (Array.isArray(candles) ? candles : []).slice(0, 24).reverse().map(function(k) {
+          return { ts: k[0] * 1000, price: parseFloat(k[4]) || 0 };
+        }),
+      };
+    } catch (e) {
+      out.series = { btc_24h: [] };
+    }
+  }
+
+  return out;
+}
+
+async function fetchProMacro(env, url) {
+  var wantHistory = url.searchParams.get('history') === '30d';
+
+  // FRED series: macro indicators + commodities (oil/nat gas)
+  var fredSeries = {
+    fed_rate: 'FEDFUNDS',
+    cpi: 'CPIAUCSL',
+    unemployment: 'UNRATE',
+    gdp_growth: 'A191RL1Q225SBEA',
+    treasury_10y: 'DGS10',
+    oil_wti: 'DCOILWTICO',
+    nat_gas: 'DHHNGSP',
+  };
+
+  var fredKeys = Object.keys(fredSeries);
+  var fredFetches = fredKeys.map(function(key) {
+    if (!env || !env.FRED_API_KEY) {
+      return Promise.resolve([key, { value: null, date: '', source: 'fred', note: 'fred_key_missing' }]);
+    }
+    var id = fredSeries[key];
+    var limit = wantHistory ? 30 : 1;
+    var fredUrl = 'https://api.stlouisfed.org/fred/series/observations?series_id=' + id +
+      '&sort_order=desc&limit=' + limit + '&api_key=' + env.FRED_API_KEY + '&file_type=json';
+    return fetchWithTimeout(fredUrl, {}, 6000)
+      .then(function(res) { return res.json(); })
+      .then(function(d) {
+        var observations = (d && d.observations) || [];
+        var latest = observations[0];
+        var entry = {
+          value: latest && latest.value !== '.' ? parseFloat(latest.value) : null,
+          date: latest ? latest.date : '',
+          source: 'fred:' + id,
+        };
+        if (wantHistory) {
+          entry.series = observations
+            .map(function(o) { return { date: o.date, value: o.value === '.' ? null : parseFloat(o.value) }; })
+            .filter(function(o) { return o.value !== null && !isNaN(o.value); })
+            .reverse();
+        }
+        return [key, entry];
+      })
+      .catch(function() { return [key, { value: null, date: '', source: 'fred:' + id }]; });
+  });
+
+  // Forex via Frankfurter (free, no key)
+  var forexPairs = ['EUR', 'JPY', 'GBP', 'CHF'];
+  var forexLatest = fetchWithTimeout('https://api.frankfurter.app/latest?from=USD&to=' + forexPairs.join(','), {}, 6000)
+    .then(function(res) { return res.json(); })
+    .catch(function() { return null; });
+
+  // USD index proxy: Frankfurter does not publish DXY directly. Best proxy is via
+  // a basket calc: for v1 expose individual rates; agents can compose DXY locally.
+  // Document note in the response.
+
+  // Forex 30d series (best-effort)
+  var forexHistory = wantHistory
+    ? (function() {
+        var end = new Date();
+        var start = new Date(); start.setDate(start.getDate() - 30);
+        var endStr = end.toISOString().slice(0, 10);
+        var startStr = start.toISOString().slice(0, 10);
+        return fetchWithTimeout(
+          'https://api.frankfurter.app/' + startStr + '..' + endStr + '?from=USD&to=' + forexPairs.join(','),
+          {}, 8000
+        ).then(function(res) { return res.json(); }).catch(function() { return null; });
+      })()
+    : Promise.resolve(null);
+
+  // Gold via Kraken PAXGUSD (proxies XAU)
+  var goldFetch = fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=PAXGUSD', {}, 6000)
+    .then(function(res) { return res.json(); })
+    .catch(function() { return null; });
+
+  // Markets via Finnhub: SPY, DIA, QQQ, ^VIX
+  var stockSymbols = ['SPY', 'DIA', 'QQQ'];
+  var stockFetches = (env && env.FINNHUB_API_KEY) ? stockSymbols.map(function(sym) {
+    return fetchWithTimeout(
+      'https://finnhub.io/api/v1/quote?symbol=' + sym + '&token=' + env.FINNHUB_API_KEY,
+      {}, 6000
+    ).then(function(res) { return res.json(); })
+     .then(function(d) { return [sym, { price: d.c || 0, change: d.d || 0, change_percent: d.dp || 0 }]; })
+     .catch(function() { return [sym, null]; });
+  }) : [];
+  var vixFetch = (env && env.FINNHUB_API_KEY)
+    ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
+        .then(function(res) { return res.json(); })
+        .then(function(d) { return d && d.c ? { price: d.c, change: d.d || 0, change_percent: d.dp || 0 } : null; })
+        .catch(function() { return null; })
+    : Promise.resolve(null);
+
+  var all = await Promise.allSettled([
+    Promise.all(fredFetches),
+    forexLatest,
+    goldFetch,
+    Promise.all(stockFetches),
+    vixFetch,
+    forexHistory,
+  ]);
+
+  var econ = {};
+  if (all[0].status === 'fulfilled') {
+    all[0].value.forEach(function(entry) {
+      if (entry && entry[0]) econ[entry[0]] = entry[1];
+    });
+  }
+
+  var forex = { base: 'USD', date: '', rates: {}, prev_rates: {} };
+  if (all[1].status === 'fulfilled' && all[1].value && all[1].value.rates) {
+    forex.rates = all[1].value.rates;
+    forex.date = all[1].value.date || '';
+  }
+
+  var commodities = { gold: null, silver: null, oil: null, nat_gas: null };
+  if (all[2].status === 'fulfilled' && all[2].value && all[2].value.result) {
+    var paxgEntries = Object.values(all[2].value.result);
+    var paxg = paxgEntries[0];
+    if (paxg && paxg.c && paxg.c[0]) {
+      commodities.gold = { price_usd: parseFloat(paxg.c[0]) || 0, source: 'paxg/kraken' };
+    }
+  }
+  if (econ.oil_wti) {
+    commodities.oil = { price_usd: econ.oil_wti.value, date: econ.oil_wti.date, source: econ.oil_wti.source };
+    if (econ.oil_wti.series) commodities.oil.series = econ.oil_wti.series;
+  }
+  if (econ.nat_gas) {
+    commodities.nat_gas = { price_usd: econ.nat_gas.value, date: econ.nat_gas.date, source: econ.nat_gas.source };
+    if (econ.nat_gas.series) commodities.nat_gas.series = econ.nat_gas.series;
+  }
+  delete econ.oil_wti;
+  delete econ.nat_gas;
+
+  var markets = {};
+  if (all[3].status === 'fulfilled') {
+    all[3].value.forEach(function(entry) {
+      if (entry && entry[1]) markets[entry[0].toLowerCase()] = entry[1];
+    });
+  }
+  if (all[4].status === 'fulfilled' && all[4].value) markets.vix = all[4].value;
+
+  var out = {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/macro',
+    generated_at: new Date().toISOString(),
+    economic: econ,
+    forex: forex,
+    commodities: commodities,
+    markets: markets,
+    notes: {
+      usd_index: 'DXY not published by Frankfurter. Compose locally from EUR/JPY/GBP/CHF rates if needed.',
+      silver: 'Silver omitted in v1 (no free upstream source available without an additional key). Will add if a stable free source surfaces.',
+      cadence: 'FRED series cadence varies (daily/weekly/monthly). Use the date field on each entry for staleness.',
+    },
+  };
+
+  if (wantHistory && all[5].status === 'fulfilled' && all[5].value && all[5].value.rates) {
+    var fxRates = all[5].value.rates;
+    var fxSeries = {};
+    forexPairs.forEach(function(p) { fxSeries[p] = []; });
+    Object.keys(fxRates).sort().forEach(function(date) {
+      forexPairs.forEach(function(p) {
+        var v = fxRates[date] && fxRates[date][p];
+        if (typeof v === 'number') fxSeries[p].push({ date: date, value: v });
+      });
+    });
+    out.forex.series = fxSeries;
+  }
+
+  return out;
+}
+
+async function fetchProCryptoDeep(env, url) {
+  var coinsParam = url.searchParams.get('coins') || '';
+  var coinFilter = coinsParam ? coinsParam.toLowerCase().split(',').map(function(s) { return s.trim(); }).filter(Boolean) : null;
+  var wantHistory = url.searchParams.get('history') === '30d';
+
+  // CoinGecko top 50 via CoinLore upstream (same pattern as /api/coingecko/markets)
+  var topFetch = fetchWithTimeout('https://api.coinlore.net/api/tickers/?limit=50', {}, 6000)
+    .then(function(res) { return res.json(); })
+    .catch(function() { return null; });
+
+  // Binance live ticker for top 20 USDT pairs by 24h volume
+  var binanceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr', {}, 6000)
+    .then(function(res) { return res.json(); })
+    .catch(function() { return null; });
+
+  // mempool.space network stats
+  var mempoolFetches = Promise.allSettled([
+    fetchWithTimeout('https://mempool.space/api/blocks/tip/height', {}, 6000).then(function(r) { return r.text(); }),
+    fetchWithTimeout('https://mempool.space/api/v1/fees/recommended', {}, 6000).then(function(r) { return r.json(); }),
+    fetchWithTimeout('https://mempool.space/api/v1/mining/hashrate/3d', {}, 6000).then(function(r) { return r.json(); }),
+    fetchWithTimeout('https://mempool.space/api/mempool', {}, 6000).then(function(r) { return r.json(); }),
+  ]);
+
+  // Etherscan gas
+  var gasFetch = fetchWithTimeout(
+    'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=' + ((env && env.ETHERSCAN_API_KEY) || ''),
+    {}, 6000
+  ).then(function(r) { return r.json(); }).catch(function() { return null; });
+
+  // 30d BTC daily candles (Coinbase Exchange, no key)
+  var historyFetch = wantHistory
+    ? fetchWithTimeout('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=86400', {}, 6000)
+        .then(function(r) { return r.json(); }).catch(function() { return null; })
+    : Promise.resolve(null);
+
+  var all = await Promise.allSettled([topFetch, binanceFetch, mempoolFetches, gasFetch, historyFetch]);
+
+  var topCoins = [];
+  if (all[0].status === 'fulfilled' && all[0].value && Array.isArray(all[0].value.data)) {
+    topCoins = all[0].value.data.map(function(c) {
+      return {
+        symbol: (c.symbol || '').toUpperCase(),
+        name: c.name,
+        price_usd: parseFloat(c.price_usd) || 0,
+        change_24h_percent: parseFloat(c.percent_change_24h) || 0,
+        change_1h_percent: parseFloat(c.percent_change_1h) || 0,
+        change_7d_percent: parseFloat(c.percent_change_7d) || 0,
+        market_cap: parseFloat(c.market_cap_usd) || 0,
+        volume_24h: parseFloat(c.volume24) || 0,
+        rank: parseInt(c.rank) || 0,
+      };
+    });
+    if (coinFilter) {
+      topCoins = topCoins.filter(function(c) { return coinFilter.indexOf(c.symbol.toLowerCase()) !== -1; });
+    }
+  }
+
+  var binanceTickers = [];
+  if (all[1].status === 'fulfilled' && Array.isArray(all[1].value)) {
+    binanceTickers = all[1].value
+      .filter(function(t) { return t.symbol && t.symbol.endsWith('USDT'); })
+      .map(function(t) {
+        return {
+          pair: t.symbol,
+          price: parseFloat(t.lastPrice) || 0,
+          change_24h_percent: parseFloat(t.priceChangePercent) || 0,
+          volume_24h: parseFloat(t.quoteVolume) || 0,
+          high_24h: parseFloat(t.highPrice) || 0,
+          low_24h: parseFloat(t.lowPrice) || 0,
+          trades_24h: parseInt(t.count) || 0,
+        };
+      })
+      .sort(function(a, b) { return b.volume_24h - a.volume_24h; })
+      .slice(0, 20);
+  }
+
+  var network = {};
+  if (all[2].status === 'fulfilled') {
+    var mp = all[2].value;
+    if (mp[0] && mp[0].status === 'fulfilled') {
+      var ht = parseInt(mp[0].value);
+      if (!isNaN(ht)) network.block_height = ht;
+    }
+    if (mp[1] && mp[1].status === 'fulfilled' && mp[1].value) {
+      network.fees_sat_per_vb = {
+        fastest: mp[1].value.fastestFee,
+        half_hour: mp[1].value.halfHourFee,
+        hour: mp[1].value.hourFee,
+        economy: mp[1].value.economyFee,
+        minimum: mp[1].value.minimumFee,
+      };
+    }
+    if (mp[2] && mp[2].status === 'fulfilled' && mp[2].value) {
+      var hr = parseFloat(mp[2].value.currentHashrate || 0);
+      var diff = parseFloat(mp[2].value.currentDifficulty || 0);
+      network.hashrate = {
+        current_eh_s: hr ? hr / 1e18 : 0,
+        current_difficulty: diff,
+      };
+    }
+    if (mp[3] && mp[3].status === 'fulfilled' && mp[3].value) {
+      network.mempool = {
+        count: mp[3].value.count || 0,
+        vsize: mp[3].value.vsize || 0,
+        total_fee_sat: mp[3].value.total_fee || 0,
+      };
+    }
+  }
+
+  var gas = null;
+  if (all[3].status === 'fulfilled' && all[3].value && all[3].value.result) {
+    gas = {
+      low_gwei: parseInt(all[3].value.result.SafeGasPrice) || 0,
+      standard_gwei: parseInt(all[3].value.result.ProposeGasPrice) || 0,
+      fast_gwei: parseInt(all[3].value.result.FastGasPrice) || 0,
+      base_fee_gwei: parseFloat(all[3].value.result.suggestBaseFee) || 0,
+      last_block: parseInt(all[3].value.result.LastBlock) || 0,
+    };
+  }
+
+  var out = {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/crypto-deep',
+    generated_at: new Date().toISOString(),
+    coins_top50: topCoins,
+    binance_top20_usdt: binanceTickers,
+    network_btc: network,
+    eth_gas: gas,
+  };
+
+  if (wantHistory && all[4].status === 'fulfilled' && Array.isArray(all[4].value)) {
+    out.series = {
+      btc_30d: all[4].value.slice(0, 30).reverse().map(function(k) {
+        return { ts: k[0] * 1000, low: parseFloat(k[1]) || 0, high: parseFloat(k[2]) || 0, open: parseFloat(k[3]) || 0, close: parseFloat(k[4]) || 0, volume: parseFloat(k[5]) || 0 };
+      }),
+    };
+  }
+
+  return out;
+}
+
+
+// --- Premium handlers (caller-facing) ---
+
+async function handleProBriefing(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/briefing', 1, async function(env2, url2) {
+    var KEY = 'pro:briefing:' + (url2.searchParams.get('include') || '*') + ':' + (url2.searchParams.get('history') || '');
+    var cached = getCached(KEY, 60000);
+    if (cached) return cached;
+    var data = await fetchProBriefing(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
+async function handleProMacro(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/macro', 2, async function(env2, url2) {
+    var KEY = 'pro:macro:' + (url2.searchParams.get('history') || '');
+    var cached = getCached(KEY, 300000);
+    if (cached) return cached;
+    var data = await fetchProMacro(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
+async function handleProCryptoDeep(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/crypto-deep', 2, async function(env2, url2) {
+    var KEY = 'pro:crypto-deep:' + (url2.searchParams.get('coins') || '*') + ':' + (url2.searchParams.get('history') || '');
+    var cached = getCached(KEY, 60000);
+    if (cached) return cached;
+    var data = await fetchProCryptoDeep(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
+
+// --- Proxy endpoints (forward to TensorFeed payment Worker) ---
+//
+// Why proxy instead of redirect: agents reading /llms.txt should see all relevant
+// URLs on terminalfeed.io. Sending them off-domain mid-flow breaks the discoverability
+// contract.
+
+async function proxyToTensorFeed(request, env, targetPath) {
+  if (!env || !env.TENSORFEED_AUTH_URL) {
+    return jsonResponse({ error: 'billing_unavailable', message: 'Payment infrastructure not configured.' }, 503);
+  }
+  var targetUrl = env.TENSORFEED_AUTH_URL + targetPath;
+  var fwdHeaders = { 'X-Forwarded-By': 'terminalfeed' };
+  var auth = request.headers.get('Authorization');
+  if (auth) fwdHeaders.Authorization = auth;
+  if (request.method === 'POST' || request.method === 'PUT') {
+    fwdHeaders['Content-Type'] = request.headers.get('Content-Type') || 'application/json';
+  }
+  var body = null;
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    try { body = await request.text(); } catch (e) { body = null; }
+  }
+  try {
+    var res = await fetchWithTimeout(targetUrl, {
+      method: request.method,
+      headers: fwdHeaders,
+      body: body,
+    }, 10000);
+    var respBody = await res.text();
+    var contentType = res.headers.get('Content-Type') || 'application/json';
+    return new Response(respBody, {
+      status: res.status,
+      headers: {
+        'Content-Type': contentType,
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (e) {
+    return jsonResponse({ error: 'billing_proxy_failed', message: e.message || 'upstream timeout' }, 502);
+  }
+}
+
+async function handleBuyCredits(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  return proxyToTensorFeed(request, env, '/api/buy-credits');
+}
+
+async function handleConfirmPayment(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  return proxyToTensorFeed(request, env, '/api/confirm-payment');
+}
+
+async function handleBalance(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  return proxyToTensorFeed(request, env, '/api/balance');
+}
+
+
 // --- Main Export (ES Module format) ---
 // IMPORTANT: In Cloudflare dashboard, set Worker type to "ES Module" (not "Service Worker")
 
@@ -1551,6 +2193,15 @@ export default {
       case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
       case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
+
+      // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
+      case 'pro/briefing':    return await handleProBriefing(request, env, url);
+      case 'pro/macro':       return await handleProMacro(request, env, url);
+      case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
+      case 'buy-credits':     return await handleBuyCredits(request, env);
+      case 'confirm-payment': return await handleConfirmPayment(request, env);
+      case 'balance':         return await handleBalance(request, env);
+
       default:
         return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);
     }
