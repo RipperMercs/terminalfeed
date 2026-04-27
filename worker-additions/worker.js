@@ -1584,7 +1584,7 @@ async function validateAndCharge(env, token, cost, endpoint) {
   }
   try {
     var res = await fetchWithTimeout(
-      env.TENSORFEED_AUTH_URL + '/internal/validate-and-charge',
+      env.TENSORFEED_AUTH_URL + '/api/internal/validate-and-charge',
       {
         method: 'POST',
         headers: {
