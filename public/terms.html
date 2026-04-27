@@ -137,6 +137,26 @@
   <h3>16. Contact</h3>
   <p>If you have questions about these Terms of Service, please contact us at <a href="mailto:legal@terminalfeed.io">legal@terminalfeed.io</a>.</p>
 
+  <h3 id="premium">17. Premium API Tier</h3>
+  <p>The Premium API Tier ("Premium API") is an opt-in paid tier accessible at the <span style="font-family:inherit">/api/pro/*</span> endpoints. Premium API access is gated by a bearer token issued after a successful USDC payment on Base mainnet. The clauses in this section apply to Premium API usage in addition to the Terms above. Free tier endpoints retain their existing terms and license.</p>
+
+  <p><strong>17.1 Inference-only license.</strong> Premium API responses are licensed for inference and reasoning use by autonomous agents and applications. They are not licensed for use as training data, fine-tuning input, model distillation, or redistribution as a dataset. The free tier endpoints retain their existing permissive license and are not affected by this clause.</p>
+
+  <p><strong>17.2 Bearer token responsibility.</strong> Tokens issued under the Premium API Tier are bearer credentials. Possession of a token is the same as authorization to spend the credits associated with it. Theft, accidental disclosure, or leakage of a token is the responsibility of the holder. We recommend treating tokens as you would any API key: store securely, scope per-agent or per-environment, and rotate by purchasing a new pack and abandoning the prior token if compromise is suspected.</p>
+
+  <p><strong>17.3 No service level agreement.</strong> The Premium API Tier is provided on a best-effort basis. We do not guarantee uptime, response time, or availability of any specific upstream data source. Stale cached responses may be returned when an upstream is unreachable. No refund is owed for individual call failures, partial responses, or temporary degradation, except as expressly stated in the refund policy below.</p>
+
+  <p><strong>17.4 Replay protection and atomic charge.</strong> Server-side nonce tracking applies to credit purchases. A given on-chain transaction hash will not credit an account more than once. Per-call billing is atomic: credits are decremented before an upstream fetch begins. If the aggregator returns a partial response due to upstream failure, the credit still counts. The credit pays for the routing decision and aggregation work, not a guaranteed upstream success.</p>
+
+  <p><strong>17.5 Refund window.</strong> Credit purchases may be refunded within twenty-four (24) hours of payment confirmation by emailing <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the on-chain transaction hash. Refunds are issued in USDC on Base, less network fees, against the unused balance only. After 24 hours, credit purchases are non-refundable. Credits do not expire and remain spendable indefinitely.</p>
+
+  <p><strong>17.6 Wallet cross-verification.</strong> The published USDC payment wallet address is duplicated at four locations: this page (Section 17), the <a href="/developers/agent-payments">/developers/agent-payments</a> page, the <a href="/llms.txt">/llms.txt</a> file, and the public GitHub repository README. If any of these locations show a different address, do not send funds. Contact <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> immediately. The address is intentionally public; cross-verification is the trust mechanism.</p>
+  <p><strong>Published USDC wallet (Base mainnet):</strong> <code style="color:#4ADE80;background:#0D0D12;border:1px solid #1A1A22;padding:2px 6px;border-radius:3px;font-size:11px;word-break:break-all;">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</code></p>
+
+  <p><strong>17.7 Tax handling.</strong> Users and agents are solely responsible for any tax handling, reporting, or jurisdictional obligations associated with USDC purchases, including capital gains, sales tax, VAT, or other applicable taxes. We do not issue tax forms.</p>
+
+  <p><strong>17.8 Cross-site applicability.</strong> Credits and bearer tokens issued under this tier are jointly redeemable on terminalfeed.io and tensorfeed.ai. The TensorFeed payment Worker is the system of record for credit balances. A token purchased on either site spends on either site. The refund policy in Section 17.5 applies to the original purchase regardless of which site the credits are subsequently spent on.</p>
+
   <div class="footer">
     <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper</p>
     <p><a href="/">Home</a> &middot; <a href="/blog">Blog</a> &middot; <a href="/about">About</a> &middot; <a href="/team">Team</a> &middot; <a href="/features">Features</a> &middot; <a href="/live">Live</a> &middot; <a href="/changelog">Changelog</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
