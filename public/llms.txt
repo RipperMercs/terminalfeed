@@ -31,6 +31,33 @@ CoinGecko, Binance WebSocket, Finnhub, mempool.space, ESPN, USGS, GDACS, NASA DO
 Open-Meteo, Hacker News Firebase, RSS2JSON, GitHub API, StackExchange, Frankfurter,
 Open Library, Art Institute of Chicago, TheMealDB, Dog CEO, The Cat API, and more.
 
+## Premium API (USDC micropayments)
+
+Pay-as-you-go premium tier for autonomous agents that need composed multi-source
+payloads. Bearer-token auth. Credits are cross-redeemable on tensorfeed.ai (same
+wallet, same chain, shared credit pool).
+
+Base path: https://terminalfeed.io/api/pro/
+Buy credits: POST https://terminalfeed.io/api/buy-credits
+Confirm payment: POST https://terminalfeed.io/api/confirm-payment
+Check balance: GET https://terminalfeed.io/api/balance (Bearer auth required)
+
+Premium endpoints:
+- GET /api/pro/briefing (1 credit; ?include= filter, ?history=24h)
+- GET /api/pro/macro (2 credits; ?history=30d)
+- GET /api/pro/crypto-deep (2 credits; ?coins= filter, ?history=30d)
+
+Pricing: $1 USDC on Base mainnet = 50 credits. No subscription. No expiry.
+License: inference and reasoning only; not licensed as training data.
+Refund window: 24 hours from purchase, manual USDC return on email request.
+Atomic charge: credits decrement before upstream fetch; partial responses still count.
+Auth failures return HTTP 402 Payment Required with a `reason` field.
+
+Cross-site bundle: credits work on https://tensorfeed.ai too.
+Full docs: https://terminalfeed.io/developers/agent-payments
+Wallet (published, cross-verified at /terms, /developers/agent-payments,
+/llms.txt, GitHub README): 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
+
 ## Editorial Team
 
 Original articles credited to one of five author personas. Each persona has a permanent profile page listing every article they have bylined.
