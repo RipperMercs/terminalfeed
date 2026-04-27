@@ -3,6 +3,26 @@
 > TerminalFeed is a free real-time dashboard aggregating 35+ live data feeds.
 > This file helps AI agents understand what data is available.
 
+## For AI agents and frameworks
+
+Machine-readable manifests:
+- OpenAPI spec: https://terminalfeed.io/openapi.json
+- Plugin manifest (OpenAI plugin format): https://terminalfeed.io/.well-known/ai-plugin.json
+- Capability manifest: https://terminalfeed.io/agents.txt
+- Function-calling tool defs: https://terminalfeed.io/api/llm-tools?format=anthropic
+
+Canonical landing pages for agent-builders:
+- https://terminalfeed.io/api/for-agents (overview, why-not-DIY, quick start)
+- https://terminalfeed.io/developers/agent-payments (full developer guide)
+- https://terminalfeed.io/api/usdc-payable (X402 / USDC payment surface)
+
+Cross-site bundle: https://tensorfeed.ai/developers/agent-payments
+Same wallet, same credit pool. Tokens minted on either site spend on either site.
+
+License:
+- Free endpoints: permissive use
+- Premium endpoints (/api/pro/*): inference-only; not licensed as training data, fine-tuning input, model distillation, or dataset redistribution. See https://terminalfeed.io/terms#premium for full clauses.
+
 ## What TerminalFeed Provides
 
 Real-time data across these categories:
