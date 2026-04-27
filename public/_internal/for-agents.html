@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TerminalFeed for AI Agents: USDC-Payable Real-Time Data API</title>
+  <meta name="description" content="Nine composed real-time data endpoints for AI agents. Pay per call in USDC on Base. One bearer token works on terminalfeed.io and tensorfeed.ai. No subscription. No KYC.">
+  <link rel="canonical" href="https://terminalfeed.io/api/for-agents">
+  <meta property="og:title" content="TerminalFeed for AI Agents | Real-Time Data API">
+  <meta property="og:description" content="Nine composed real-time endpoints. Pay per call in USDC. Bearer auth. Cross-site bundle with TensorFeed.">
+  <meta property="og:url" content="https://terminalfeed.io/api/for-agents">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="ai-content" content="Canonical agent-builder landing page for TerminalFeed. Nine /api/pro/* endpoints, USDC payment on Base, HTTP Bearer auth, cross-site bundle with tensorfeed.ai. OpenAPI spec at /openapi.json. Plugin manifest at /.well-known/ai-plugin.json.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebAPI",
+    "name": "TerminalFeed Premium API",
+    "url": "https://terminalfeed.io/api/for-agents",
+    "documentation": "https://terminalfeed.io/developers/agent-payments",
+    "serviceType": "Real-time data API for AI agents",
+    "termsOfService": "https://terminalfeed.io/terms",
+    "audience": { "@type": "Audience", "audienceType": "AI agents and autonomous applications" },
+    "provider": { "@type": "Organization", "name": "TerminalFeed", "url": "https://terminalfeed.io" },
+    "offers": {
+      "@type": "Offer",
+      "priceSpecification": { "@type": "UnitPriceSpecification", "price": "0.02", "priceCurrency": "USD", "unitText": "credit", "description": "1 USDC = 50 credits. Premium calls cost 1 to 3 credits each." },
+      "acceptedPaymentMethod": { "@type": "PaymentMethod", "name": "USDC on Base mainnet" }
+    },
+    "potentialAction": {
+      "@type": "ConsumeAction",
+      "target": [
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/briefing", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/macro", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/crypto-deep", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/agent-context", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/sentiment", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/world-deltas", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/correlation-matrix", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/whales", "httpMethod": "GET", "contentType": "application/json" },
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/exchange-flows", "httpMethod": "GET", "contentType": "application/json" }
+      ]
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "API", "item": "https://terminalfeed.io/api" },
+      { "@type": "ListItem", "position": 3, "name": "For Agents", "item": "https://terminalfeed.io/api/for-agents" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "TerminalFeed Premium API",
+    "url": "https://terminalfeed.io/api/for-agents",
+    "provider": { "@type": "Organization", "name": "TerminalFeed", "url": "https://terminalfeed.io" },
+    "serviceType": "Composed real-time data API for autonomous AI agents",
+    "description": "Pay-per-call USDC-payable HTTP API with nine composed endpoints covering crypto, macro, on-chain flows, sentiment, prediction markets, and world events.",
+    "serviceOutput": [
+      { "@type": "Thing", "name": "Composed world briefing", "url": "https://terminalfeed.io/api/pro/briefing" },
+      { "@type": "Thing", "name": "Composed macro snapshot", "url": "https://terminalfeed.io/api/pro/macro" },
+      { "@type": "Thing", "name": "Deep crypto snapshot", "url": "https://terminalfeed.io/api/pro/crypto-deep" },
+      { "@type": "Thing", "name": "Curated agent context with paste-ready system prompt", "url": "https://terminalfeed.io/api/pro/agent-context" },
+      { "@type": "Thing", "name": "Composite market sentiment", "url": "https://terminalfeed.io/api/pro/sentiment" },
+      { "@type": "Thing", "name": "World-deltas event stream", "url": "https://terminalfeed.io/api/pro/world-deltas" },
+      { "@type": "Thing", "name": "Cross-asset correlation matrix", "url": "https://terminalfeed.io/api/pro/correlation-matrix" },
+      { "@type": "Thing", "name": "Whale on-chain transactions", "url": "https://terminalfeed.io/api/pro/whales" },
+      { "@type": "Thing", "name": "ETH exchange-flow tracker", "url": "https://terminalfeed.io/api/pro/exchange-flows" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 920px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 22px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 36px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #C8C8C0; font-size: 13px; margin: 24px 0 8px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 24px; }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 16px; letter-spacing: 1px; }
+    .badge-purple { background: #2E1065; color: #A78BFA; }
+    .badge-green { background: #14532d; color: #4ADE80; }
+    .badge-blue { background: #1e3a5f; color: #60A5FA; }
+    .inline-code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; color: #D4D2CB; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 12px; }
+    th { text-align: left; color: #5DCAA5; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1A1A22; }
+    td { color: #8A8880; padding: 8px 12px; border-bottom: 1px solid #0D0D12; vertical-align: top; }
+    td:first-child { color: #60A5FA; font-weight: 600; }
+    .footer { margin-top: 56px; font-size: 10px; color: #3E3E3A; padding-top: 16px; border-top: 1px solid #1A1A22; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .callout { padding: 12px 16px; background: #0B0F12; border-left: 3px solid #5DCAA5; border-radius: 4px; margin: 12px 0 16px; font-size: 12px; color: #B5B3AB; }
+    .callout strong { color: #5DCAA5; }
+    .cta { display: inline-block; padding: 10px 20px; background: #14532d; color: #4ADE80; border-radius: 4px; margin: 16px 0; font-size: 12px; }
+    .cta:hover { background: #1a6938; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/developers">Developers</a><span class="bc-sep">&rsaquo;</span><span>For Agents</span>
+  </nav>
+
+  <h1>&gt;_ TerminalFeed for AI Agents</h1>
+  <p class="subtitle">Nine composed real-time endpoints. Paid per call in USDC, settled in seconds on Base. One bearer token works here and on TensorFeed.</p>
+
+  <span class="badge badge-purple">CANONICAL FOR AGENTS</span>
+  <span class="badge badge-green">USDC ON BASE</span>
+  <span class="badge badge-blue">HTTP BEARER AUTH</span>
+
+  <p>If you are building an AI agent, an autonomous trading bot, a research tool, or any application that needs real-time multi-source data, this page is your shortcut. Nine endpoints behind <span class="inline-code">/api/pro/*</span> compose 4 to 14 upstream sources each into a single bearer-authenticated HTTP call. Pay per call in USDC on Base mainnet. No subscription. No KYC. No human in the loop.</p>
+
+  <h2>Why Not Build It Yourself?</h2>
+
+  <table>
+    <tr><th>If you DIY</th><th>What we absorb for you</th></tr>
+    <tr><td>Sign up for 5 to 15 separate API keys (Finnhub, FRED, Etherscan, Frankfurter, Binance, mempool.space, Polygon, etc.)</td><td>One bearer token. We hold the upstream keys. You authenticate once.</td></tr>
+    <tr><td>Pay paid-tier prices on the data sources that gate behind keys (Finnhub, Etherscan)</td><td>Absorbed in the per-call price. $0.02 to $0.06 per composed payload.</td></tr>
+    <tr><td>Manage 5 to 15 separate rate-limit pools and back off when any one trips</td><td>One rate limit, one set of failure modes. We handle backoff client-side to upstreams.</td></tr>
+    <tr><td>Get a 5xx mid-decision when an upstream is degraded</td><td>Stale-cache-on-failure means you always get a 200 with usable data. Never break an agent reasoning chain.</td></tr>
+    <tr><td>Manage Stripe / credit card / KYC for your bot's API access</td><td>USDC on Base. The bot pays. No human in the loop.</td></tr>
+    <tr><td>Reconcile schemas across 15 different upstream response shapes</td><td>One schema per endpoint. Documented in /openapi.json with type unions.</td></tr>
+  </table>
+
+  <h2>The 9 Premium Endpoints</h2>
+
+  <table>
+    <tr><th>Endpoint</th><th>Cost</th><th>Composes</th></tr>
+    <tr><td>/api/pro/briefing</td><td>1 cr / $0.02</td><td>BTC + Fear &amp; Greed + earthquakes + HN + Polymarket + ISS</td></tr>
+    <tr><td>/api/pro/macro</td><td>2 cr / $0.04</td><td>FRED (5 series) + forex (4 USD pairs) + commodities + indices + VIX</td></tr>
+    <tr><td>/api/pro/crypto-deep</td><td>2 cr / $0.04</td><td>top 50 coins + Binance top 20 + mempool.space + Etherscan gas</td></tr>
+    <tr><td>/api/pro/agent-context</td><td>2 cr / $0.04</td><td>13 sources + paste-ready ~350-token system_prompt for LLM context</td></tr>
+    <tr><td>/api/pro/sentiment</td><td>2 cr / $0.04</td><td>F&amp;G + VIX + trending tickers (HN/Reddit/news) + Polymarket signals</td></tr>
+    <tr><td>/api/pro/world-deltas</td><td>2 cr / $0.04</td><td>time-sorted event stream: quakes + HN + Polymarket + launches</td></tr>
+    <tr><td>/api/pro/correlation-matrix</td><td>2 cr / $0.04</td><td>30-day Pearson correlations across 10 assets</td></tr>
+    <tr><td>/api/pro/whales</td><td>2 cr / $0.04</td><td>BTC mempool &gt;=10 BTC + ETH last 3 blocks &gt;=100 ETH</td></tr>
+    <tr><td>/api/pro/exchange-flows</td><td>2 cr / $0.04</td><td>ETH net inflow/outflow against 7 CEX hot wallets</td></tr>
+  </table>
+
+  <p>Full schemas, request parameters, response shapes, and 402 reason codes documented in <a href="/openapi.json"><span class="inline-code">/openapi.json</span></a> (OpenAPI 3.1.0). Pre-baked OpenAI and Anthropic function-calling tool definitions at <a href="/api/llm-tools?format=anthropic"><span class="inline-code">/api/llm-tools</span></a> (free).</p>
+
+  <h2>Quick Start</h2>
+
+  <h3>curl</h3>
+  <pre><code># 1. Buy credits
+curl -X POST https://terminalfeed.io/api/payment/buy-credits \
+  -H "Content-Type: application/json" \
+  -d '{"amount_usd": 1.00}'
+
+# 2. Send USDC on Base mainnet to the returned wallet, with the returned memo
+# 3. Confirm the payment
+curl -X POST https://terminalfeed.io/api/payment/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"tx_hash": "0xabc...", "nonce": "tf-..."}'
+
+# 4. Call any premium endpoint
+curl https://terminalfeed.io/api/pro/macro \
+  -H "Authorization: Bearer tf_live_&lt;64-char-hex&gt;"</code></pre>
+
+  <h3>Python (requests)</h3>
+  <pre><code>import requests
+
+quote = requests.post(
+    "https://terminalfeed.io/api/payment/buy-credits",
+    json={"amount_usd": 1.00},
+).json()
+# Send USDC on Base to quote["wallet"] with memo quote["memo"]
+confirmed = requests.post(
+    "https://terminalfeed.io/api/payment/confirm",
+    json={"tx_hash": "0xabc...", "nonce": quote["memo"]},
+).json()
+TOKEN = confirmed["token"]
+
+macro = requests.get(
+    "https://terminalfeed.io/api/pro/macro",
+    headers={"Authorization": f"Bearer {TOKEN}"},
+).json()
+print(macro["economic"]["fed_rate"], macro["markets"]["vix"])</code></pre>
+
+  <h3>TypeScript (fetch)</h3>
+  <pre><code>const quote = await fetch("https://terminalfeed.io/api/payment/buy-credits", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ amount_usd: 1.00 }),
+}).then(r =&gt; r.json());
+
+// Send USDC on Base to quote.wallet with memo quote.memo
+const { token } = await fetch("https://terminalfeed.io/api/payment/confirm", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ tx_hash: "0xabc...", nonce: quote.memo }),
+}).then(r =&gt; r.json());
+
+const macro = await fetch("https://terminalfeed.io/api/pro/macro", {
+  headers: { Authorization: `Bearer ${token}` },
+}).then(r =&gt; r.json());</code></pre>
+
+  <h2>Cross-Site Bundle With TensorFeed</h2>
+
+  <p>Tokens minted on terminalfeed.io work on <a href="https://tensorfeed.ai" rel="external">tensorfeed.ai</a> and vice versa. Buy 50 credits once, spend them across both real-time data (TerminalFeed) and AI model intelligence (TensorFeed). Same wallet (<span class="inline-code">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</span>), same chain (Base mainnet), shared credit pool.</p>
+
+  <p>Mainnet validation: <a href="https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c" rel="external">tx hash 0x6aa3...614c</a> on Base, $1 USDC sent, 50 credits minted, /api/pro/macro called successfully on first try.</p>
+
+  <h2>Inference-Only License</h2>
+
+  <div class="callout">
+    <strong>Premium responses are licensed for inference and reasoning use only.</strong> They are not licensed for use as training data, fine-tuning input, model distillation, or redistribution as a dataset. Free tier endpoints retain their existing permissive license. See <a href="/terms#premium">Terms section 17</a> for the full clauses.
+  </div>
+
+  <h2>Discovery Surfaces</h2>
+
+  <ul style="list-style: none; padding-left: 0; font-size: 12px;">
+    <li>OpenAPI spec: <a href="/openapi.json"><span class="inline-code">https://terminalfeed.io/openapi.json</span></a></li>
+    <li>Plugin manifest: <a href="/.well-known/ai-plugin.json"><span class="inline-code">/.well-known/ai-plugin.json</span></a></li>
+    <li>LLM-readable description: <a href="/llms.txt"><span class="inline-code">/llms.txt</span></a></li>
+    <li>Agent capability manifest: <a href="/agents.txt"><span class="inline-code">/agents.txt</span></a></li>
+    <li>Function-calling tool definitions: <a href="/api/llm-tools?format=anthropic"><span class="inline-code">/api/llm-tools</span></a></li>
+    <li>Full developer guide: <a href="/developers/agent-payments"><span class="inline-code">/developers/agent-payments</span></a></li>
+  </ul>
+
+  <p><a class="cta" href="/developers/agent-payments">Read the full agent-payments docs &rarr;</a></p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Operated by Pizza Robot Studios LLC &middot; Built by <a href="/team/ripper">Ripper</a></p>
+    <p><a href="/">Home</a> &middot; <a href="/developers">API Docs</a> &middot; <a href="/developers/agent-payments">Agent Payments</a> &middot; <a href="/openapi.json">OpenAPI</a> &middot; <a href="/llms.txt">/llms.txt</a> &middot; <a href="/terms">Terms</a></p>
+  </div>
+</body>
+</html>
