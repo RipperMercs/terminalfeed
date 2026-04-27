@@ -54,11 +54,25 @@ let hitCounter = (function() {
 
 const PRICING_DISCOVERY_URL = 'https://terminalfeed.io/developers/agent-payments';
 
+// RFC 8288 Link header for agent-discovery surface walking. Comma-folded into
+// a single header value (compliant with RFC 8288 section 3). Recognized rels:
+//   service-desc (RFC 8631)   -> /openapi.json
+//   describedby               -> /llms.txt (human/LLM-readable description)
+//   alternate                 -> /api/for-agents (canonical agent landing)
+//   payment                   -> /developers/agent-payments (premium tier)
+const LINK_HEADER = [
+  '<https://terminalfeed.io/openapi.json>; rel="service-desc"; type="application/json"',
+  '<https://terminalfeed.io/llms.txt>; rel="describedby"; type="text/plain"',
+  '<https://terminalfeed.io/api/for-agents>; rel="alternate"; title="For Agents"',
+  '<https://terminalfeed.io/developers/agent-payments>; rel="payment"; title="Premium API"',
+].join(', ');
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+  'Link': LINK_HEADER,
 };
 
 function jsonResponse(data, status, cacheSeconds) {
@@ -70,6 +84,7 @@ function jsonResponse(data, status, cacheSeconds) {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    'Link': LINK_HEADER,
   };
   if (cacheSeconds > 0) {
     headers['Cache-Control'] = 'public, max-age=' + cacheSeconds + ', s-maxage=' + cacheSeconds;
@@ -1865,6 +1880,7 @@ function premiumJsonResponse(data, creditsRemaining, status) {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    'Link': LINK_HEADER,
     // Premium responses vary by bearer token; never let CDNs or shared caches store them.
     'Cache-Control': 'no-store',
   };
