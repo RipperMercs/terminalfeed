@@ -58,6 +58,11 @@
     .breadcrumbs a { color: #4E4D49; text-decoration: none; }
     .breadcrumbs a:hover { color: #5DCAA5; }
     .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .premium-banner { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; background: linear-gradient(135deg, #1B1130 0%, #0B0F12 100%); border: 1px solid #2E1065; border-radius: 6px; margin: 16px 0 24px; }
+    .premium-banner .pb-icon { font-size: 16px; color: #A78BFA; line-height: 1.2; }
+    .premium-banner .pb-text { flex: 1; font-size: 12px; color: #D4D2CB; line-height: 1.6; }
+    .premium-banner .pb-text strong { color: #A78BFA; }
+    .premium-banner a { color: #4ADE80; }
   </style>
 </head>
 <body>
@@ -70,6 +75,13 @@
   <span class="badge badge-green">FREE</span>
   <span class="badge badge-blue">CORS ENABLED</span>
   <span class="badge badge-amber">100K REQUESTS/DAY</span>
+
+  <div class="premium-banner">
+    <div class="pb-icon">&gt;_</div>
+    <div class="pb-text">
+      <strong>Need composed multi-source payloads?</strong> The premium tier (USDC on Base) ships <span class="inline-code">/api/pro/briefing</span>, <span class="inline-code">/api/pro/macro</span>, and <span class="inline-code">/api/pro/crypto-deep</span> with bearer-token auth. $1 USDC = 50 calls. Credits are cross-redeemable on tensorfeed.ai. <a href="/developers/agent-payments">Read the agent-payments docs →</a>
+    </div>
+  </div>
 
   <p>Base URL: <span class="inline-code">https://terminalfeed.io/api</span></p>
   <p>All responses are JSON. CORS is enabled, so call from any domain, any app, any AI agent. Please keep individual endpoint calls to 1 per 30 seconds. For a deep dive into the data sources behind these endpoints, read <a href="/blog/free-apis-2026">30+ Free APIs Every Developer Should Know in 2026</a>.</p>
@@ -472,11 +484,25 @@ curl "https://terminalfeed.io/api/weather?lat=34.0&amp;lon=-118.2"</code></pre>
   <span class="json-key">return</span> &lt;div&gt;BTC: ${price?.toLocaleString()}&lt;/div&gt;;
 };</code></pre>
 
+  <h2>Premium API (USDC, Bearer auth)</h2>
+
+  <p>Three composed-payload endpoints sit behind <span class="inline-code">Authorization: Bearer tf_live_&lt;32-char-hex&gt;</span>. Designed for agents that want one call instead of fifteen, with the upstream key management and rate-limit juggling absorbed.</p>
+
+  <table>
+    <tr><th>Endpoint</th><th>Cost</th><th>What it composes</th></tr>
+    <tr><td>/api/pro/briefing</td><td>1 credit</td><td>BTC + Fear &amp; Greed + earthquakes + HN + ISS + Polymarket. Optional <span class="inline-code">?include=</span> filter, <span class="inline-code">?history=24h</span>.</td></tr>
+    <tr><td>/api/pro/macro</td><td>2 credits</td><td>FRED (7 series) + forex (4 USD pairs) + commodities (gold, oil, nat gas) + indices (SPY, DIA, QQQ, VIX). <span class="inline-code">?history=30d</span>.</td></tr>
+    <tr><td>/api/pro/crypto-deep</td><td>2 credits</td><td>Top 50 coins + Binance top 20 + mempool.space network + Etherscan gas. <span class="inline-code">?coins=</span> filter, <span class="inline-code">?history=30d</span>.</td></tr>
+  </table>
+
+  <p>Pricing: $1 USDC on Base mainnet = 50 credits. No subscription, no monthly minimum, no expiry. Credits and bearer tokens are cross-redeemable on tensorfeed.ai (one purchase, both data sources). Full quick-start, wallet, license, and refund policy: <a href="/developers/agent-payments">→ /developers/agent-payments</a>.</p>
+
   <h2>For AI Agents</h2>
 
   <p>Discovery file: <span class="inline-code">https://terminalfeed.io/llms.txt</span></p>
-  <p>OpenAPI spec: <span class="inline-code">https://terminalfeed.io/openapi.json</span></p>
-  <p>Best endpoint for AI: <span class="inline-code">/api/briefing</span>:one call, complete world snapshot with a pre-formatted summary string.</p>
+  <p>OpenAPI spec: <span class="inline-code">https://terminalfeed.io/openapi.json</span> (covers free + premium with Bearer security scheme)</p>
+  <p>Premium docs: <span class="inline-code">https://terminalfeed.io/developers/agent-payments</span></p>
+  <p>Best free endpoint: <span class="inline-code">/api/briefing</span>:one call, world snapshot. For richer composition, use the premium <span class="inline-code">/api/pro/briefing</span> with optional history.</p>
 
   <h2>Rate Limits</h2>
 
