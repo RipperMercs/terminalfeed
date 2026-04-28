@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.11.0",
+    "version": "1.12.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -2826,6 +2826,63 @@
         },
         "x-pricing-credits": 0,
         "x-pricing-usd": 0.0
+      }
+    },
+    "/api/pro/defi-tvl": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Composed DeFi TVL snapshot via DefiLlama (2 credits)",
+        "description": "Top 50 DeFi protocols by total value locked, top 15 chains, by-category aggregates, and biggest gainers/losers over 24h and 7d. Each protocol entry includes 1h/24h/7d change %, category, chain, market cap, and FDV. Source: DefiLlama free public API. 30-min cache.",
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DeFi TVL snapshot.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/defi-tvl \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python",
+            "source": "import requests\nd = requests.get(\n    \"https://terminalfeed.io/api/pro/defi-tvl\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n).json()\nfor p in d['top_protocols'][:10]:\n    print(p['name'], p['tvl_usd'], p['change_1d_percent'])"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript",
+            "source": "const d = await fetch(\"https://terminalfeed.io/api/pro/defi-tvl\", {\n  headers: { Authorization: `Bearer ${TOKEN}` }\n}).then(r => r.json());\nconsole.log(\"Top category:\", d.by_category[0]);"
+          }
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 2,
+        "x-license": "inference-only"
       }
     }
   },

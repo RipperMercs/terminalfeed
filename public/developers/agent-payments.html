@@ -511,6 +511,17 @@ client.messages.create(
     <p><strong>Why this exists:</strong> sustained large net inflow to exchanges historically precedes selling pressure; sustained outflow precedes accumulation rallies. Trading agents pay close attention to this signal. ETH only in v1; BTC requires a labeled-address dataset.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/defi-tvl</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Composed DeFi total-value-locked snapshot for crypto research and trading agents. Top 50 protocols by TVL (each with 1h/24h/7d change, category, chain, market cap, FDV), top 15 chains by TVL, by-category aggregates, and biggest gainers and losers over both 24h and 7d windows.</p>
+    <p><strong>Source:</strong> DefiLlama free public API (defillama.com). We absorb the upstream call (~3MB payload) and cache aggressively for 30 minutes since TVL changes slowly.</p>
+    <p><strong>Why this exists:</strong> a crypto research agent monitoring DeFi concentration today has to fetch /protocols and /v2/chains separately, normalize categories, compute movers client-side. This endpoint composes all of that. Live test surfaced $441B aggregate TVL with Binance CEX at $154B and Sky Lending up 5.79% 24h.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>
