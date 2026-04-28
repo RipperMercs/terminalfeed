@@ -30,6 +30,7 @@ last_updated = 2026-04-27
 - buy premium credits with USDC on Base mainnet
 - spend credits across TerminalFeed and TensorFeed (cross-site bundle)
 - fetch pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint here (paste directly into your tool-use scaffold, no auth required)
+- connect via Model Context Protocol (MCP) at https://terminalfeed.io/api/mcp; all 21 tools are exposed as native MCP tools and the bearer token doubles as the MCP credential
 
 [free_tier]
 auth = none
@@ -101,6 +102,7 @@ openapi_json = https://terminalfeed.io/openapi.json
 well_known_openapi = https://terminalfeed.io/.well-known/openapi.json
 well_known_agent_payments = https://terminalfeed.io/.well-known/agent-payments
 llm_tools = "https://terminalfeed.io/api/llm-tools?format=anthropic   (or ?format=openai)"
+mcp_server = "https://terminalfeed.io/api/mcp   (JSON-RPC 2.0 / HTTP; protocolVersion 2024-11-05)"
 sitemap = https://terminalfeed.io/sitemap.xml
 robots_allows_ai = "GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot, Meta-ExternalAgent, cohere-ai, plus 9 more"
 response_header_advertising_premium = "X-TerminalFeed-Pricing"
