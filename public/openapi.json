@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -2588,6 +2588,88 @@
           }
         },
         "security": []
+      }
+    },
+    "/api/mcp": {
+      "get": {
+        "tags": [
+          "free"
+        ],
+        "summary": "MCP server discovery info",
+        "description": "Returns server name, MCP protocol version, supported methods, and a copy-paste claude_desktop_config.json snippet showing how to integrate the TerminalFeed MCP server with Claude Desktop using the mcp-remote stdio adapter.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "MCP server info.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "free"
+        ],
+        "summary": "MCP JSON-RPC 2.0 endpoint",
+        "description": "JSON-RPC 2.0 endpoint implementing the Model Context Protocol over HTTP. Exposes all 21 TerminalFeed tools (9 free + 9 premium + 3 payment) to any @modelcontextprotocol/sdk client. Methods: initialize, tools/list, tools/call, notifications/initialized. Premium tools require Authorization: Bearer tf_live_<64-char-hex> on the request; the bearer doubles as the MCP credential. Credits-remaining is surfaced via JSON-RPC result _meta.credits_remaining.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "jsonrpc": {
+                    "type": "string",
+                    "enum": [
+                      "2.0"
+                    ]
+                  },
+                  "id": {
+                    "type": [
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "initialize",
+                      "tools/list",
+                      "tools/call",
+                      "notifications/initialized"
+                    ]
+                  },
+                  "params": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0,
+        "x-mcp-protocol-version": "2024-11-05"
       }
     }
   },

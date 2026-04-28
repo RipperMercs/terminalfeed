@@ -10,6 +10,7 @@ Machine-readable manifests:
 - Plugin manifest (OpenAI plugin format): https://terminalfeed.io/.well-known/ai-plugin.json
 - Capability manifest: https://terminalfeed.io/agents.txt
 - Function-calling tool defs: https://terminalfeed.io/api/llm-tools?format=anthropic
+- MCP server (JSON-RPC over HTTP): https://terminalfeed.io/api/mcp (21 tools native; pass Authorization: Bearer tf_live_<64-char-hex> for premium)
 
 Canonical landing pages for agent-builders:
 - https://terminalfeed.io/api/for-agents (overview, why-not-DIY, quick start)

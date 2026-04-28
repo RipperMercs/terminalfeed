@@ -570,6 +570,32 @@ client.messages.create(
 
   <p>Credits and bearer tokens are jointly redeemable on terminalfeed.io and tensorfeed.ai. One USDC purchase, two data sources. The TensorFeed payment Worker is the system of record; TerminalFeed authenticates each premium call against it via an internal contract. Same wallet, same chain, shared credit pool. See the <a href="https://tensorfeed.ai/agent-payments" rel="external">TensorFeed agent payments page</a> for the parallel surface.</p>
 
+  <h2 id="mcp">MCP Server (Claude Desktop, Claude Code, any MCP client)</h2>
+
+  <p>TerminalFeed runs a Model Context Protocol server at <span class="inline-code">https://terminalfeed.io/api/mcp</span>. All 21 tools (9 free + 9 premium + 3 payment) are exposed natively. The bearer token doubles as the MCP credential.</p>
+
+  <p>Claude Desktop config (paste into <span class="inline-code">claude_desktop_config.json</span>):</p>
+  <pre><code>{
+  "mcpServers": {
+    "terminalfeed": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://terminalfeed.io/api/mcp",
+        "--header", "Authorization: Bearer tf_live_&lt;64-char-hex&gt;"
+      ]
+    }
+  }
+}</code></pre>
+
+  <p>HTTP-native MCP clients (or curl):</p>
+  <pre><code>curl -X POST https://terminalfeed.io/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer tf_live_&lt;64-char-hex&gt;" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"tf_premium_macro","arguments":{}}}'</code></pre>
+
+  <p>Each tool call returns the same JSON payload as the underlying REST endpoint, plus an MCP <span class="inline-code">_meta.credits_remaining</span> field so the agent can monitor budget. Premium tools charge through the same atomic-charge contract as the REST endpoints.</p>
+
   <h2>Function-Calling Tool Definitions (Free)</h2>
 
   <p>Building an agent with OpenAI function-calling, Anthropic tool-use, or any LLM tool-call layer? Skip writing the tool definitions yourself. <span class="inline-code">GET /api/llm-tools</span> returns ready-to-paste tool definitions for every TerminalFeed endpoint (free + premium) in either format.</p>
