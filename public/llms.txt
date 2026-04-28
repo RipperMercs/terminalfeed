@@ -118,6 +118,14 @@ Optional query params:
   /api/pro/world-deltas ?since=2026-04-27T22:00:00Z           defaults to 1h ago, clamped to 1h horizon
   /api/pro/agent-context no params; returns structured context + system_prompt string
 
+Webhooks (push instead of poll, 1 credit per fire, ~5min cadence):
+  POST   /api/pro/subscribe        body: { webhook_url, endpoint }   creates subscription, returns HMAC secret
+  GET    /api/pro/subscriptions                                       lists owner's subs
+  DELETE /api/pro/subscribe/<id>                                      cancels a sub
+  Delivery: POST application/json with X-TerminalFeed-Signature: sha256=<hmac>, X-TerminalFeed-Timestamp: <unix>
+  Verify: hmac_sha256(secret, timestamp + "." + raw_body) == signature
+  Per-token cap: 5 active subs. Auto-pause on insufficient_credits.
+
 Example invocations:
 
   curl -X POST https://terminalfeed.io/api/payment/buy-credits \

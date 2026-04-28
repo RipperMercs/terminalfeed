@@ -31,6 +31,7 @@ last_updated = 2026-04-27
 - spend credits across TerminalFeed and TensorFeed (cross-site bundle)
 - fetch pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint here (paste directly into your tool-use scaffold, no auth required)
 - connect via Model Context Protocol (MCP) at https://terminalfeed.io/api/mcp; all 21 tools are exposed as native MCP tools and the bearer token doubles as the MCP credential
+- subscribe to webhooks for push delivery instead of polling: POST /api/pro/subscribe with { webhook_url, endpoint }; cron fires every ~5min, HMAC-SHA256 signed, 1 credit per fire
 
 [free_tier]
 auth = none

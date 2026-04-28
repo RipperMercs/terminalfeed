@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.10.0",
+    "version": "1.11.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -2670,6 +2670,162 @@
         "x-pricing-credits": 0,
         "x-pricing-usd": 0.0,
         "x-mcp-protocol-version": "2024-11-05"
+      }
+    },
+    "/api/pro/subscribe": {
+      "post": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Create webhook subscription (push instead of poll)",
+        "description": "Register a webhook URL to receive push deliveries every ~5 minutes. Each fire calls the subscribed /api/pro/* endpoint, HMAC-SHA256-signs the payload using the secret returned at creation, and POSTs to your URL. Per-token cap: 5 active subs. Webhook URL must be https and not resolve to private/loopback/link-local. Each fire costs 1 credit ($0.02). Subs auto-pause on insufficient_credits.",
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "webhook_url",
+                  "endpoint"
+                ],
+                "properties": {
+                  "webhook_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "https public URL receiving deliveries"
+                  },
+                  "endpoint": {
+                    "type": "string",
+                    "enum": [
+                      "sentiment",
+                      "briefing",
+                      "exchange-flows",
+                      "agent-context",
+                      "world-deltas",
+                      "macro",
+                      "crypto-deep",
+                      "whales",
+                      "correlation-matrix"
+                    ],
+                    "description": "Premium endpoint slug to monitor"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription created. Save the secret; it is returned only once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed (invalid_endpoint, https_required, private_or_local_hostname, url_too_long)."
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          },
+          "429": {
+            "description": "subscription_limit_reached. Cancel an existing sub before creating another."
+          }
+        },
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0,
+        "x-fire-cost-credits": 1,
+        "x-fire-cost-usd": 0.02,
+        "x-fire-interval": "5 minutes",
+        "x-license": "inference-only"
+      }
+    },
+    "/api/pro/subscriptions": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "List owner's webhook subscriptions",
+        "description": "Returns all active and paused webhook subs owned by the bearer. Secrets are NOT returned (saved only at creation).",
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of subscription summaries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0
+      }
+    },
+    "/api/pro/subscribe/{id}": {
+      "delete": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Cancel a webhook subscription",
+        "description": "Deletes the subscription. Bearer must own the sub. Subsequent cron ticks will not fire.",
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^wh_[a-f0-9]{16}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          },
+          "403": {
+            "description": "Forbidden: bearer does not own this subscription."
+          },
+          "404": {
+            "description": "Not found."
+          }
+        },
+        "x-pricing-credits": 0,
+        "x-pricing-usd": 0.0
       }
     }
   },
