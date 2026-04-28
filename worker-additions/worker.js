@@ -1574,6 +1574,254 @@ async function handleErrorReport(request) {
 
 
 // =============================================================================
+// MCP server (Model Context Protocol over HTTP/JSON-RPC 2.0)
+// =============================================================================
+//
+// Exposes the 9 premium endpoints + payment endpoints as native MCP tools an
+// agent can call from Claude Desktop, Claude Code, or any client using
+// @modelcontextprotocol/sdk. The TerminalFeed bearer token doubles as the
+// MCP auth credential: clients that need to call /api/pro/* tools pass the
+// same `Authorization: Bearer tf_live_<64-char-hex>` header on the MCP
+// request, and the server forwards it to the underlying tool call.
+//
+// Stateless. No session state. Each JSON-RPC request is independent.
+// stdio-only MCP clients (Claude Desktop) can bridge via the mcp-remote
+// adapter package; HTTP-native clients hit /api/mcp directly.
+
+var MCP_PROTOCOL_VERSION = '2024-11-05';
+var MCP_SERVER_INFO = {
+  name: 'terminalfeed',
+  version: '1.0.0',
+};
+
+function _toolToMCP(def) {
+  return {
+    name: def.name,
+    description: def.description,
+    inputSchema: {
+      type: 'object',
+      properties: def.parameters || {},
+      required: [],
+    },
+  };
+}
+
+function _toolRequiresBearer(toolName) {
+  // Premium tools and balance require bearer
+  return toolName.indexOf('tf_premium_') === 0 || toolName === 'tf_payment_balance';
+}
+
+// Build a synthetic Request and URL the underlying handlers can consume.
+// Args from the MCP call become URL search params for GET tools, JSON body
+// for POST tools. Forwards the original Authorization header for premium tools.
+function _syntheticRequestForTool(toolName, args, originalRequest) {
+  args = args || {};
+  var path = '/api/btc-price';  // sane default; overridden below
+  var method = 'GET';
+  var body = null;
+
+  switch (toolName) {
+    case 'tf_briefing':            path = '/api/briefing'; break;
+    case 'tf_btc_price':           path = '/api/btc-price'; break;
+    case 'tf_fear_greed':          path = '/api/fear-greed'; break;
+    case 'tf_crypto_movers':       path = '/api/crypto-movers'; break;
+    case 'tf_predictions':         path = '/api/predictions'; break;
+    case 'tf_earthquakes':         path = '/api/earthquake'; break;
+    case 'tf_service_status':      path = '/api/service-status'; break;
+    case 'tf_economic_data':       path = '/api/economic-data'; break;
+    case 'tf_forex':               path = '/api/forex'; break;
+    case 'tf_premium_briefing':    path = '/api/pro/briefing'; break;
+    case 'tf_premium_macro':       path = '/api/pro/macro'; break;
+    case 'tf_premium_crypto_deep': path = '/api/pro/crypto-deep'; break;
+    case 'tf_premium_agent_context':      path = '/api/pro/agent-context'; break;
+    case 'tf_premium_sentiment':          path = '/api/pro/sentiment'; break;
+    case 'tf_premium_world_deltas':       path = '/api/pro/world-deltas'; break;
+    case 'tf_premium_correlation_matrix': path = '/api/pro/correlation-matrix'; break;
+    case 'tf_premium_whales':             path = '/api/pro/whales'; break;
+    case 'tf_premium_exchange_flows':     path = '/api/pro/exchange-flows'; break;
+    case 'tf_payment_buy_credits':        path = '/api/payment/buy-credits'; method = 'POST'; body = JSON.stringify(args); break;
+    case 'tf_payment_confirm':            path = '/api/payment/confirm';     method = 'POST'; body = JSON.stringify(args); break;
+    case 'tf_payment_balance':            path = '/api/payment/balance'; break;
+    default: return null;
+  }
+
+  var url = new URL('https://terminalfeed.io' + path);
+  // Apply args as query params for GET tools
+  if (method === 'GET') {
+    Object.keys(args).forEach(function(k) {
+      var v = args[k];
+      if (v !== undefined && v !== null && v !== '') {
+        url.searchParams.set(k, String(v));
+      }
+    });
+  }
+
+  var headers = {};
+  if (originalRequest) {
+    var auth = originalRequest.headers.get('Authorization');
+    if (auth) headers.Authorization = auth;
+  }
+  if (method === 'POST') headers['Content-Type'] = 'application/json';
+
+  var reqInit = { method: method, headers: headers };
+  if (body) reqInit.body = body;
+  var req = new Request(url.toString(), reqInit);
+  return { request: req, url: url };
+}
+
+// Direct handler dispatch for MCP tool calls, bypassing the Worker route loop
+// (Cloudflare strips Worker routing for same-zone subrequests, which would
+// return Pages 404 instead of Worker output).
+async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
+  var syn = _syntheticRequestForTool(toolName, args, originalRequest);
+  if (!syn) throw new Error('unknown_tool');
+  var req = syn.request;
+  var url = syn.url;
+  switch (toolName) {
+    case 'tf_briefing':            return await handleBriefing();
+    case 'tf_btc_price':           return await handleBtcPrice();
+    case 'tf_fear_greed':          return await handleFearGreed();
+    case 'tf_crypto_movers':       return await handleCryptoMovers();
+    case 'tf_predictions':         return await handlePredictions();
+    case 'tf_earthquakes':         return await handleEarthquake();
+    case 'tf_service_status':      return await handleServiceStatus();
+    case 'tf_economic_data':       return await handleEconomicData(env);
+    case 'tf_forex':               return await handleForex();
+    case 'tf_premium_briefing':    return await handleProBriefing(req, env, url);
+    case 'tf_premium_macro':       return await handleProMacro(req, env, url);
+    case 'tf_premium_crypto_deep': return await handleProCryptoDeep(req, env, url);
+    case 'tf_premium_agent_context':      return await handleProAgentContext(req, env, url);
+    case 'tf_premium_sentiment':          return await handleProSentiment(req, env, url);
+    case 'tf_premium_world_deltas':       return await handleProWorldDeltas(req, env, url);
+    case 'tf_premium_correlation_matrix': return await handleProCorrelationMatrix(req, env, url);
+    case 'tf_premium_whales':             return await handleProWhales(req, env, url);
+    case 'tf_premium_exchange_flows':     return await handleProExchangeFlows(req, env, url);
+    case 'tf_payment_buy_credits':        return await handleBuyCredits(req, env);
+    case 'tf_payment_confirm':            return await handleConfirmPayment(req, env);
+    case 'tf_payment_balance':            return await handleBalance(req, env);
+    default: throw new Error('unknown_tool');
+  }
+}
+
+function _mcpJsonRpcResponse(id, result) {
+  return new Response(JSON.stringify({ jsonrpc: '2.0', id: id, result: result }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+      'Link': LINK_HEADER,
+    },
+  });
+}
+
+function _mcpJsonRpcError(id, code, message) {
+  return new Response(JSON.stringify({ jsonrpc: '2.0', id: id, error: { code: code, message: message } }), {
+    status: 200,  // JSON-RPC errors still return 200
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    },
+  });
+}
+
+async function handleMcp(request, env) {
+  if (request.method === 'OPTIONS') return corsResponse();
+  if (request.method === 'GET') {
+    // GET on /api/mcp returns server discovery info (helpful for humans poking around)
+    return jsonResponse({
+      name: 'TerminalFeed MCP Server',
+      protocol_version: MCP_PROTOCOL_VERSION,
+      transport: 'http+jsonrpc',
+      methods: ['initialize', 'tools/list', 'tools/call', 'notifications/initialized'],
+      auth: 'Pass Authorization: Bearer tf_live_<64-char-hex> header for tools that require it.',
+      docs: 'https://terminalfeed.io/developers/agent-payments#mcp',
+      claude_desktop_config_example: {
+        mcpServers: {
+          terminalfeed: {
+            command: 'npx',
+            args: ['-y', 'mcp-remote', 'https://terminalfeed.io/api/mcp', '--header', 'Authorization: Bearer tf_live_<64-char-hex>'],
+          },
+        },
+      },
+    });
+  }
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST or GET only' }, 405);
+
+  var rpc;
+  try {
+    rpc = await request.json();
+  } catch (e) {
+    return _mcpJsonRpcError(null, -32700, 'Parse error');
+  }
+  if (!rpc || rpc.jsonrpc !== '2.0' || typeof rpc.method !== 'string') {
+    return _mcpJsonRpcError(rpc && rpc.id, -32600, 'Invalid Request');
+  }
+  var id = rpc.id;
+  var method = rpc.method;
+  var params = rpc.params || {};
+
+  if (method === 'initialize') {
+    return _mcpJsonRpcResponse(id, {
+      protocolVersion: MCP_PROTOCOL_VERSION,
+      capabilities: { tools: {} },
+      serverInfo: MCP_SERVER_INFO,
+      instructions: 'TerminalFeed exposes 9 premium real-time data endpoints (crypto, macro, on-chain, sentiment, etc.) plus 9 free endpoints. Premium tools require a bearer token (tf_live_<64-char-hex>). Buy credits with USDC on Base via tf_payment_buy_credits + tf_payment_confirm. Tokens are cross-redeemable on tensorfeed.ai.',
+    });
+  }
+
+  if (method === 'notifications/initialized' || method.indexOf('notifications/') === 0) {
+    // Notifications don't expect a response per JSON-RPC 2.0
+    return new Response(null, { status: 204 });
+  }
+
+  if (method === 'tools/list') {
+    var tools = LLM_TOOL_DEFINITIONS.map(_toolToMCP);
+    return _mcpJsonRpcResponse(id, { tools: tools });
+  }
+
+  if (method === 'tools/call') {
+    var toolName = params.name;
+    var args = params.arguments || {};
+    if (!toolName) return _mcpJsonRpcError(id, -32602, 'Invalid params: missing tool name');
+    var requiresBearer = _toolRequiresBearer(toolName);
+    var clientAuth = request.headers.get('Authorization');
+    if (requiresBearer && !clientAuth) {
+      return _mcpJsonRpcResponse(id, {
+        content: [
+          { type: 'text', text: 'This tool requires a bearer token. Pass Authorization: Bearer tf_live_<64-char-hex> on the MCP request. Buy credits at https://terminalfeed.io/developers/agent-payments.' },
+        ],
+        isError: true,
+      });
+    }
+    try {
+      var resp = await _dispatchToolDirectly(toolName, args, request, env);
+      var text = await resp.text();
+      var creditsRemaining = resp.headers.get('X-Credits-Remaining');
+      var meta = creditsRemaining ? { credits_remaining: parseInt(creditsRemaining, 10) } : undefined;
+      var result = {
+        content: [{ type: 'text', text: text }],
+        isError: !resp.ok,
+      };
+      if (meta) result._meta = meta;
+      return _mcpJsonRpcResponse(id, result);
+    } catch (e) {
+      if (e.message === 'unknown_tool') return _mcpJsonRpcError(id, -32601, 'Unknown tool: ' + toolName);
+      return _mcpJsonRpcResponse(id, {
+        content: [{ type: 'text', text: 'Tool call failed: ' + (e.message || 'upstream error') }],
+        isError: true,
+      });
+    }
+  }
+
+  return _mcpJsonRpcError(id, -32601, 'Method not found: ' + method);
+}
+
+
+// =============================================================================
 // LLM Tools — pre-baked function-calling tool definitions for agent devs
 // Returns OpenAI / Anthropic / both formats. Free endpoint by design: the
 // moat is widening adoption, not metering lookups.
@@ -4021,6 +4269,7 @@ export default {
       case 'error':          return await handleErrorReport(request);
       case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
       case 'llm-tools':      return handleLLMTools(url);
+      case 'mcp':            return await handleMcp(request, env);
 
       // Canonical agent-builder landing pages. Worker proxies static HTML
       // from /_internal/ since Pages can't serve files under /api/* directly.
