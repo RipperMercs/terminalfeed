@@ -2168,6 +2168,9 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_premium_correlation_matrix': path = '/api/pro/correlation-matrix'; break;
     case 'tf_premium_whales':             path = '/api/pro/whales'; break;
     case 'tf_premium_exchange_flows':     path = '/api/pro/exchange-flows'; break;
+    case 'tf_premium_defi_tvl':           path = '/api/pro/defi-tvl'; break;
+    case 'tf_premium_stablecoin_flows':   path = '/api/pro/stablecoin-flows'; break;
+    case 'tf_premium_github_velocity':    path = '/api/pro/github-velocity'; break;
     case 'tf_payment_buy_credits':        path = '/api/payment/buy-credits'; method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_confirm':            path = '/api/payment/confirm';     method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_balance':            path = '/api/payment/balance'; break;
@@ -2225,6 +2228,9 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_premium_correlation_matrix': return await handleProCorrelationMatrix(req, env, url);
     case 'tf_premium_whales':             return await handleProWhales(req, env, url);
     case 'tf_premium_exchange_flows':     return await handleProExchangeFlows(req, env, url);
+    case 'tf_premium_defi_tvl':           return await handleProDefiTvl(req, env, url);
+    case 'tf_premium_stablecoin_flows':   return await handleProStablecoinFlows(req, env, url);
+    case 'tf_premium_github_velocity':    return await handleProGithubVelocity(req, env, url);
     case 'tf_payment_buy_credits':        return await handleBuyCredits(req, env);
     case 'tf_payment_confirm':            return await handleConfirmPayment(req, env);
     case 'tf_payment_balance':            return await handleBalance(req, env);
