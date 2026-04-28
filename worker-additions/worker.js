@@ -2160,7 +2160,10 @@ async function handleSubscribeList(request, env) {
 // Reactivates a paused subscription. Sub auto-pauses when validate-and-charge
 // returns insufficient_credits during a cron tick; this endpoint flips active
 // back to true after the customer has topped up. Verifies ownership and that
-// the bearer still validates (credits, not expired).
+// the bearer still has sufficient balance for at least one fire cycle.
+//
+// Response shape per cc-spec-premium-tier-polish Section 4:
+//   { ok, subscription_id, active, next_run_at, balance_remaining, credits_per_cycle }
 async function handleSubscribeResume(request, env, subId) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
   if (!env || !env.WEBHOOK_SUBS) {
@@ -2169,6 +2172,8 @@ async function handleSubscribeResume(request, env, subId) {
   var token = extractBearerToken(request);
   if (!token) return json402('missing_token');
 
+  // cost:0 validates the token and returns balance without charging.
+  // Documented trick used by /api/pro/subscriptions and other read-only auth checks.
   var validation = await validateAndCharge(env, token, 0, 'tf:/api/pro/subscribe/resume');
   if (!validation.ok) return json402(validation.reason || 'invalid_token');
 
@@ -2183,32 +2188,53 @@ async function handleSubscribeResume(request, env, subId) {
     return jsonResponse({ error: 'forbidden' }, 403);
   }
 
+  // Compute next run time as the next */5 cron boundary (rounded up)
+  function _nextCronTickIso() {
+    var now = new Date();
+    var nextMin = Math.ceil(now.getUTCMinutes() / 5) * 5;
+    var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), nextMin, 0, 0));
+    if (next.getTime() <= now.getTime()) next = new Date(next.getTime() + 5 * 60000);
+    return next.toISOString();
+  }
+
+  // Idempotent: if already active, return current state with ok:true
   if (rec.active) {
     return premiumJsonResponse({
-      id: subId,
+      ok: true,
+      subscription_id: subId,
       active: true,
-      message: 'Subscription is already active. No-op.',
+      next_run_at: _nextCronTickIso(),
+      balance_remaining: validation.credits_remaining,
+      credits_per_cycle: WEBHOOK_FIRE_COST_CREDITS,
+      note: 'Already active; no-op.',
     }, validation.credits_remaining);
+  }
+
+  // If balance < one cycle, return 402 with topup link
+  if (typeof validation.credits_remaining === 'number' && validation.credits_remaining < WEBHOOK_FIRE_COST_CREDITS) {
+    return premiumJsonResponse({
+      ok: false,
+      error: 'insufficient_credits',
+      balance_remaining: validation.credits_remaining,
+      credits_per_cycle: WEBHOOK_FIRE_COST_CREDITS,
+      buy_url: 'https://terminalfeed.io/api/payment/buy-credits',
+    }, validation.credits_remaining, 402);
   }
 
   rec.active = true;
   rec.last_error = null;
   rec.paused_at = null;
   rec.resumed_at = new Date().toISOString();
-  // Refresh the stored bearer in case the customer rotated or topped up
-  // (the new validation succeeded, so the current bearer is good).
   rec.owner_token = token;
   await env.WEBHOOK_SUBS.put('sub:' + subId, JSON.stringify(rec));
 
   return premiumJsonResponse({
-    id: subId,
-    webhook_url: rec.webhook_url,
-    endpoint: rec.endpoint,
+    ok: true,
+    subscription_id: subId,
     active: true,
-    resumed_at: rec.resumed_at,
-    fire_count: rec.fire_count || 0,
-    fail_count: rec.fail_count || 0,
-    note: 'Subscription resumed. Next delivery will fire on the next */5 cron tick (within 5 minutes).',
+    next_run_at: _nextCronTickIso(),
+    balance_remaining: validation.credits_remaining,
+    credits_per_cycle: WEBHOOK_FIRE_COST_CREDITS,
   }, validation.credits_remaining);
 }
 
@@ -3003,11 +3029,18 @@ async function validateAndCharge(env, token, cost, endpoint) {
 
   // Single attempt. Returns either a final result (caller stops) or
   // { __retry: true } when the failure mode is transient and safe to retry.
-  // Safe-to-retry conditions: network errors / timeouts (we never sent
-  // bytes successfully), and 5xx responses from TensorFeed (which by
-  // contract means the credit was NOT decremented). Unsafe to retry:
-  // 4xx and JSON parse failures (the charge may have succeeded but the
-  // response was lost; retrying could double-charge).
+  //
+  // Safe-to-retry per cc-spec-premium-tier-polish Section 6:
+  //   - network errors / timeouts only (request never reached TensorFeed,
+  //     so retrying cannot double-charge)
+  //
+  // NOT safe to retry (return billing_unavailable immediately):
+  //   - any HTTP response from TensorFeed including 5xx (the request DID
+  //     reach TensorFeed; we cannot tell whether the credit was decremented
+  //     before the error response, so retrying risks double-charge)
+  //   - 4xx responses (auth wrong, bad body) - retrying produces same result
+  //   - JSON parse failures on a 2xx (response was lost but charge may
+  //     have succeeded)
   async function _validateAttempt() {
     try {
       var res = await fetchWithTimeout(
@@ -3022,7 +3055,8 @@ async function validateAndCharge(env, token, cost, endpoint) {
         },
         8000
       );
-      if (res.status >= 500) return { __retry: true };
+      // Any HTTP response (including 5xx) is a final result. We do not retry
+      // on 5xx because the charge may have happened before the error.
       if (!res.ok) return { ok: false, reason: 'billing_unavailable' };
       var json = await res.json();
       if (!json || typeof json.ok !== 'boolean') {
@@ -3030,6 +3064,7 @@ async function validateAndCharge(env, token, cost, endpoint) {
       }
       return json;
     } catch (e) {
+      // Network error / timeout / DNS failure: request never landed.
       return { __retry: true };
     }
   }
