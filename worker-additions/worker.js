@@ -1574,6 +1574,369 @@ async function handleErrorReport(request) {
 
 
 // =============================================================================
+// Webhooks: subscription registry + cron-driven delivery
+// =============================================================================
+//
+// Subscriptions live in the WEBHOOK_SUBS KV namespace under keys `sub:<id>`.
+// Each sub records the owner's bearer (so the cron can charge credits per
+// fire), the webhook URL, the target endpoint slug, and bookkeeping fields.
+//
+// Cron */5 * * * * iterates all active subs, calls validate-and-charge for
+// 1 credit per fire, fetches the target endpoint via direct handler dispatch
+// (same pattern as MCP), HMAC-SHA256-signs the payload, and POSTs to the
+// webhook URL with timeout. Failures: insufficient_credits pauses the sub;
+// transient delivery errors record into last_error and bump fail_count.
+
+var WEBHOOK_MAX_PER_TOKEN = 5;
+var WEBHOOK_FIRE_COST_CREDITS = 1;
+var WEBHOOK_DELIVERY_TIMEOUT_MS = 8000;
+var WEBHOOK_ALLOWED_ENDPOINTS = {
+  'briefing': 'tf_premium_briefing',
+  'macro': 'tf_premium_macro',
+  'crypto-deep': 'tf_premium_crypto_deep',
+  'agent-context': 'tf_premium_agent_context',
+  'sentiment': 'tf_premium_sentiment',
+  'world-deltas': 'tf_premium_world_deltas',
+  'correlation-matrix': 'tf_premium_correlation_matrix',
+  'whales': 'tf_premium_whales',
+  'exchange-flows': 'tf_premium_exchange_flows',
+};
+
+function _isPrivateOrLocalHostname(hostname) {
+  if (!hostname) return true;
+  var h = hostname.toLowerCase();
+  if (h === 'localhost' || h.endsWith('.localhost')) return true;
+  if (h === '0.0.0.0' || h === '::' || h === '::1' || h === '[::1]') return true;
+  // IPv4 dotted-quad checks
+  var parts = h.split('.');
+  if (parts.length === 4 && parts.every(function(p) { return /^\d+$/.test(p); })) {
+    var a = parseInt(parts[0], 10), b = parseInt(parts[1], 10);
+    if (a === 10) return true;                                   // 10.0.0.0/8
+    if (a === 127) return true;                                  // loopback
+    if (a === 169 && b === 254) return true;                     // link-local
+    if (a === 172 && b >= 16 && b <= 31) return true;            // 172.16.0.0/12
+    if (a === 192 && b === 168) return true;                     // 192.168.0.0/16
+    if (a === 100 && b >= 64 && b <= 127) return true;           // CGNAT 100.64.0.0/10
+    if (a === 0) return true;                                    // 0.0.0.0/8
+  }
+  // IPv6 link-local fe80::/10
+  if (h.startsWith('fe80:') || h.startsWith('[fe80:')) return true;
+  // Cloudflare-internal / metadata endpoints
+  if (h === 'metadata.google.internal' || h === '169.254.169.254') return true;
+  return false;
+}
+
+function _validateWebhookUrl(raw) {
+  if (typeof raw !== 'string' || !raw) return { ok: false, reason: 'missing_webhook_url' };
+  var u;
+  try { u = new URL(raw); } catch (e) { return { ok: false, reason: 'invalid_url' }; }
+  if (u.protocol !== 'https:') return { ok: false, reason: 'https_required' };
+  if (_isPrivateOrLocalHostname(u.hostname)) return { ok: false, reason: 'private_or_local_hostname' };
+  if (raw.length > 2000) return { ok: false, reason: 'url_too_long' };
+  return { ok: true, normalized: u.toString() };
+}
+
+async function _hmacSha256Hex(key, message) {
+  var enc = new TextEncoder();
+  var cryptoKey = await crypto.subtle.importKey(
+    'raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  var sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+  var bytes = new Uint8Array(sig);
+  var hex = '';
+  for (var i = 0; i < bytes.length; i++) {
+    var h = bytes[i].toString(16);
+    if (h.length < 2) h = '0' + h;
+    hex += h;
+  }
+  return hex;
+}
+
+async function _sha256Hex(message) {
+  var enc = new TextEncoder();
+  var hash = await crypto.subtle.digest('SHA-256', enc.encode(message));
+  var bytes = new Uint8Array(hash);
+  var hex = '';
+  for (var i = 0; i < bytes.length; i++) {
+    var h = bytes[i].toString(16);
+    if (h.length < 2) h = '0' + h;
+    hex += h;
+  }
+  return hex;
+}
+
+function _generateSubId() {
+  // wh_ + 16 random hex chars
+  var bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  var hex = '';
+  for (var i = 0; i < bytes.length; i++) {
+    var h = bytes[i].toString(16);
+    if (h.length < 2) h = '0' + h;
+    hex += h;
+  }
+  return 'wh_' + hex;
+}
+
+function _generateSubSecret() {
+  // whsec_ + 32 random hex chars
+  var bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  var hex = '';
+  for (var i = 0; i < bytes.length; i++) {
+    var h = bytes[i].toString(16);
+    if (h.length < 2) h = '0' + h;
+    hex += h;
+  }
+  return 'whsec_' + hex;
+}
+
+// POST /api/pro/subscribe
+async function handleSubscribeCreate(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({ error: 'webhooks_unavailable', message: 'KV binding not configured.' }, 503);
+  }
+  var token = extractBearerToken(request);
+  if (!token) return json402('missing_token');
+
+  // Verify the bearer is valid before storing it (charge 0 credits)
+  var validation = await validateAndCharge(env, token, 0, 'tf:/api/pro/subscribe');
+  if (!validation.ok) return json402(validation.reason || 'invalid_token');
+
+  var body;
+  try { body = await request.json(); } catch (e) {
+    return jsonResponse({ error: 'bad_json' }, 400);
+  }
+
+  var endpointSlug = (body && body.endpoint) || '';
+  if (!WEBHOOK_ALLOWED_ENDPOINTS[endpointSlug]) {
+    return jsonResponse({
+      error: 'invalid_endpoint',
+      message: 'endpoint must be one of: ' + Object.keys(WEBHOOK_ALLOWED_ENDPOINTS).join(', '),
+    }, 400);
+  }
+
+  var urlCheck = _validateWebhookUrl(body && body.webhook_url);
+  if (!urlCheck.ok) {
+    return jsonResponse({ error: urlCheck.reason, message: 'webhook_url must be a public https URL.' }, 400);
+  }
+
+  // Enforce per-token sub cap
+  var tokenHash = await _sha256Hex(token);
+  var existing = await env.WEBHOOK_SUBS.list({ prefix: 'sub:' });
+  var existingForOwner = 0;
+  for (var i = 0; i < (existing.keys || []).length; i++) {
+    var v = await env.WEBHOOK_SUBS.get(existing.keys[i].name, 'json');
+    if (v && v.owner_token_hash === tokenHash && v.active) existingForOwner += 1;
+    if (existingForOwner >= WEBHOOK_MAX_PER_TOKEN) {
+      return jsonResponse({
+        error: 'subscription_limit_reached',
+        max: WEBHOOK_MAX_PER_TOKEN,
+        message: 'Cancel an existing subscription via DELETE /api/pro/subscribe/<id> before creating another.',
+      }, 429);
+    }
+  }
+
+  var subId = _generateSubId();
+  var subSecret = _generateSubSecret();
+  var nowISO = new Date().toISOString();
+  var record = {
+    id: subId,
+    owner_token: token,                 // needed for per-fire validate-and-charge
+    owner_token_hash: tokenHash,        // listed in GET /api/pro/subscriptions
+    webhook_url: urlCheck.normalized,
+    endpoint: endpointSlug,
+    secret: subSecret,
+    active: true,
+    created_at: nowISO,
+    last_fired: null,
+    last_error: null,
+    fire_count: 0,
+    fail_count: 0,
+  };
+  await env.WEBHOOK_SUBS.put('sub:' + subId, JSON.stringify(record));
+
+  // Return the secret ONCE on creation; subsequent reads omit it.
+  return premiumJsonResponse({
+    id: subId,
+    webhook_url: record.webhook_url,
+    endpoint: record.endpoint,
+    secret: subSecret,
+    hmac_algorithm: 'sha256',
+    signature_header: 'X-TerminalFeed-Signature',
+    timestamp_header: 'X-TerminalFeed-Timestamp',
+    fire_cost_credits: WEBHOOK_FIRE_COST_CREDITS,
+    fire_interval: '~5 minutes (cron */5 * * * *)',
+    active: true,
+    created_at: nowISO,
+    note: 'Save the secret now. It will not be returned again. Use it to verify HMAC-SHA256 signatures on every delivery.',
+  }, validation.credits_remaining);
+}
+
+// GET /api/pro/subscriptions
+async function handleSubscribeList(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({ error: 'webhooks_unavailable' }, 503);
+  }
+  var token = extractBearerToken(request);
+  if (!token) return json402('missing_token');
+
+  var validation = await validateAndCharge(env, token, 0, 'tf:/api/pro/subscriptions');
+  if (!validation.ok) return json402(validation.reason || 'invalid_token');
+
+  var tokenHash = await _sha256Hex(token);
+  var keys = await env.WEBHOOK_SUBS.list({ prefix: 'sub:' });
+  var subs = [];
+  for (var i = 0; i < (keys.keys || []).length; i++) {
+    var v = await env.WEBHOOK_SUBS.get(keys.keys[i].name, 'json');
+    if (!v || v.owner_token_hash !== tokenHash) continue;
+    subs.push({
+      id: v.id,
+      webhook_url: v.webhook_url,
+      endpoint: v.endpoint,
+      active: v.active,
+      created_at: v.created_at,
+      last_fired: v.last_fired,
+      last_error: v.last_error,
+      fire_count: v.fire_count || 0,
+      fail_count: v.fail_count || 0,
+    });
+  }
+  return premiumJsonResponse({ subscriptions: subs, count: subs.length }, validation.credits_remaining);
+}
+
+// DELETE /api/pro/subscribe/<id>
+async function handleSubscribeDelete(request, env, subId) {
+  if (request.method !== 'DELETE') return jsonResponse({ error: 'DELETE only' }, 405);
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({ error: 'webhooks_unavailable' }, 503);
+  }
+  var token = extractBearerToken(request);
+  if (!token) return json402('missing_token');
+
+  var validation = await validateAndCharge(env, token, 0, 'tf:/api/pro/subscribe/delete');
+  if (!validation.ok) return json402(validation.reason || 'invalid_token');
+
+  if (!subId || !/^wh_[a-f0-9]{16}$/.test(subId)) {
+    return jsonResponse({ error: 'invalid_subscription_id' }, 400);
+  }
+  var rec = await env.WEBHOOK_SUBS.get('sub:' + subId, 'json');
+  if (!rec) return jsonResponse({ error: 'not_found' }, 404);
+  var tokenHash = await _sha256Hex(token);
+  if (rec.owner_token_hash !== tokenHash) {
+    return jsonResponse({ error: 'forbidden' }, 403);
+  }
+  await env.WEBHOOK_SUBS.delete('sub:' + subId);
+  return premiumJsonResponse({ deleted: true, id: subId }, validation.credits_remaining);
+}
+
+// Cron-fired webhook delivery
+async function deliverWebhooksTick(env) {
+  if (!env || !env.WEBHOOK_SUBS) return { delivered: 0, paused: 0, errors: 0, note: 'kv_unbound' };
+  var keys = await env.WEBHOOK_SUBS.list({ prefix: 'sub:' });
+  var delivered = 0;
+  var paused = 0;
+  var errors = 0;
+
+  for (var i = 0; i < (keys.keys || []).length; i++) {
+    var keyName = keys.keys[i].name;
+    var rec = await env.WEBHOOK_SUBS.get(keyName, 'json');
+    if (!rec || !rec.active) continue;
+
+    // Validate-and-charge for this fire
+    var validation = await validateAndCharge(env, rec.owner_token, WEBHOOK_FIRE_COST_CREDITS, 'tf:webhook:' + rec.endpoint);
+    if (!validation.ok) {
+      // Pause the sub on auth failure (insufficient_credits, expired, etc.)
+      rec.active = false;
+      rec.last_error = 'paused: ' + (validation.reason || 'unknown');
+      rec.paused_at = new Date().toISOString();
+      await env.WEBHOOK_SUBS.put(keyName, JSON.stringify(rec));
+      paused += 1;
+      continue;
+    }
+
+    // Fetch fresh endpoint data via direct dispatch
+    var toolName = WEBHOOK_ALLOWED_ENDPOINTS[rec.endpoint];
+    if (!toolName) continue;
+    // Build a synthetic auth-bearing request so the underlying handlers don't
+    // re-charge through validateAndCharge a second time. Since we already
+    // validated and the cache will likely serve the data, just call the
+    // composer functions directly to avoid double-charge.
+    var data;
+    try {
+      data = await _fetchEndpointDataForWebhook(env, rec.endpoint);
+    } catch (e) {
+      rec.fail_count = (rec.fail_count || 0) + 1;
+      rec.last_error = 'fetch_failed: ' + (e.message || 'unknown');
+      await env.WEBHOOK_SUBS.put(keyName, JSON.stringify(rec));
+      errors += 1;
+      continue;
+    }
+
+    var ts = Math.floor(Date.now() / 1000);
+    var payload = JSON.stringify({
+      subscription_id: rec.id,
+      endpoint: rec.endpoint,
+      delivered_at: new Date().toISOString(),
+      data: data,
+    });
+    var signature = await _hmacSha256Hex(rec.secret, ts + '.' + payload);
+
+    try {
+      var resp = await fetchWithTimeout(rec.webhook_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-TerminalFeed-Signature': 'sha256=' + signature,
+          'X-TerminalFeed-Timestamp': String(ts),
+          'X-TerminalFeed-Subscription': rec.id,
+          'User-Agent': 'terminalfeed-webhook/1.0',
+        },
+        body: payload,
+      }, WEBHOOK_DELIVERY_TIMEOUT_MS);
+      if (resp.ok) {
+        rec.last_fired = new Date().toISOString();
+        rec.fire_count = (rec.fire_count || 0) + 1;
+        rec.last_error = null;
+        delivered += 1;
+      } else {
+        rec.fail_count = (rec.fail_count || 0) + 1;
+        rec.last_error = 'http_' + resp.status;
+        errors += 1;
+      }
+    } catch (e) {
+      rec.fail_count = (rec.fail_count || 0) + 1;
+      rec.last_error = 'delivery_failed: ' + (e.message || 'timeout');
+      errors += 1;
+    }
+    await env.WEBHOOK_SUBS.put(keyName, JSON.stringify(rec));
+  }
+  return { delivered: delivered, paused: paused, errors: errors, scanned: (keys.keys || []).length };
+}
+
+// Direct composer dispatch for webhook payloads (no auth wrapper since we
+// already validated and charged the bearer; the composer functions themselves
+// don't require auth context, just env).
+async function _fetchEndpointDataForWebhook(env, endpointSlug) {
+  var fakeUrl = new URL('https://terminalfeed.io/api/pro/' + endpointSlug);
+  switch (endpointSlug) {
+    case 'briefing':            return await fetchProBriefing(env, fakeUrl);
+    case 'macro':               return await fetchProMacro(env, fakeUrl);
+    case 'crypto-deep':         return await fetchProCryptoDeep(env, fakeUrl);
+    case 'agent-context':       return await fetchProAgentContext(env, fakeUrl);
+    case 'sentiment':           return await fetchProSentiment(env, fakeUrl);
+    case 'world-deltas':        return await fetchProWorldDeltas(env, fakeUrl);
+    case 'correlation-matrix':  return await fetchProCorrelationMatrix(env, fakeUrl);
+    case 'whales':              return await fetchProWhales(env, fakeUrl);
+    case 'exchange-flows':      return await fetchProExchangeFlows(env, fakeUrl);
+    default: throw new Error('unknown_endpoint');
+  }
+}
+
+
+// =============================================================================
 // MCP server (Model Context Protocol over HTTP/JSON-RPC 2.0)
 // =============================================================================
 //
@@ -4227,6 +4590,12 @@ export default {
     // Strip /api/ prefix and trailing slashes
     var path = url.pathname.replace(/^\/api\/?/, '').replace(/\/$/, '');
 
+    // Path-prefix routes: webhook deletion takes a dynamic ID
+    if (path.startsWith('pro/subscribe/')) {
+      var subId = path.slice('pro/subscribe/'.length);
+      return await handleSubscribeDelete(request, env, subId);
+    }
+
     switch (path) {
       case '':               return handleIndex();
       case 'btc-price':      return await handleBtcPrice();
@@ -4286,6 +4655,10 @@ export default {
       case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
       case 'pro/whales': return await handleProWhales(request, env, url);
       case 'pro/exchange-flows': return await handleProExchangeFlows(request, env, url);
+
+      // Webhook subscriptions
+      case 'pro/subscribe':       return await handleSubscribeCreate(request, env);
+      case 'pro/subscriptions':   return await handleSubscribeList(request, env);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
@@ -4299,14 +4672,30 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil((async function() {
-      try {
-        var text = await buildBriefingTweet();
-        var result = await postTweet(text, env);
-        console.log('Daily briefing tweeted:', result.status);
-      } catch (err) {
-        console.error('Daily briefing cron failed:', err.message);
-      }
-    })());
+    var cron = event.cron;
+    if (cron === '0 14 * * *') {
+      // Daily 9 AM ET briefing tweet
+      ctx.waitUntil((async function() {
+        try {
+          var text = await buildBriefingTweet();
+          var result = await postTweet(text, env);
+          console.log('Daily briefing tweeted:', result.status);
+        } catch (err) {
+          console.error('Daily briefing cron failed:', err.message);
+        }
+      })());
+    } else if (cron === '*/5 * * * *') {
+      // Webhook delivery tick
+      ctx.waitUntil((async function() {
+        try {
+          var stats = await deliverWebhooksTick(env);
+          console.log('webhook tick:', JSON.stringify(stats));
+        } catch (err) {
+          console.error('webhook tick failed:', err.message);
+        }
+      })());
+    } else {
+      console.log('unhandled cron schedule:', cron);
+    }
   },
 };
