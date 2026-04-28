@@ -205,6 +205,95 @@ function setCache(key, data) {
   _cache[key] = { data: data, ts: Date.now() };
 }
 
+// =============================================================================
+// _meta freshness tracking — per-source upstream status on every premium response
+// =============================================================================
+//
+// Every /api/pro/* response includes a top-level _meta block with:
+//   generated_at: ISO timestamp
+//   endpoint:     /api/pro/<slug>
+//   tier:         "premium" | "evaluation"
+//   cached:       true | false (was the response served from in-memory cache?)
+//   cache_age_seconds: integer (0 if fresh)
+//   sources:      array of { name, status, fetched_at, latency_ms, ... }
+//
+// status values:
+//   live      — fetched fresh from primary source within timeout
+//   error     — primary source failed (timeout, non-2xx, parse error)
+//   fallback  — primary failed; served from documented fallback (e.g., FRED VIXCLS for ^VIX)
+//   null      — source intentionally unavailable (key/config missing)
+//
+// "name" convention: {Provider}.{specific_metric}. Once published, names are
+// part of the schema and bound by the schema-stability commitment in /terms.
+
+function _newTracker() {
+  return { sources: [], started_at: Date.now() };
+}
+
+// Wrap a fetch promise so we record its name + status + latency into the tracker.
+async function _trackedFetch(tracker, name, fetchPromise) {
+  var start = Date.now();
+  var fetched_at = new Date(start).toISOString();
+  try {
+    var res = await fetchPromise;
+    var status = res && res.ok ? 'live' : 'error';
+    var entry = { name: name, status: status, fetched_at: fetched_at, latency_ms: Date.now() - start };
+    if (status === 'error' && res) entry.reason = 'http_' + (res.status || '?');
+    tracker.sources.push(entry);
+    return res;
+  } catch (e) {
+    tracker.sources.push({
+      name: name,
+      status: 'error',
+      fetched_at: fetched_at,
+      latency_ms: Date.now() - start,
+      reason: (e && e.message) ? String(e.message).slice(0, 100) : 'fetch_failed',
+    });
+    return null;
+  }
+}
+
+// Record a source as intentionally null (e.g., FRED key not configured).
+function _trackNull(tracker, name, reason) {
+  tracker.sources.push({
+    name: name,
+    status: 'null',
+    fetched_at: new Date().toISOString(),
+    latency_ms: 0,
+    reason: reason || 'config_unavailable',
+  });
+}
+
+// Mark a previously-tracked source as fallback (its primary failed and we used
+// an alternative). Mutates the existing entry by name.
+function _markFallback(tracker, name, fallbackSource) {
+  for (var i = 0; i < tracker.sources.length; i++) {
+    if (tracker.sources[i].name === name) {
+      tracker.sources[i].status = 'fallback';
+      tracker.sources[i].fallback_source = fallbackSource;
+      return;
+    }
+  }
+  // If no prior entry, create one
+  tracker.sources.push({
+    name: name,
+    status: 'fallback',
+    fetched_at: new Date().toISOString(),
+    latency_ms: 0,
+    fallback_source: fallbackSource,
+  });
+}
+
+function _buildMeta(endpoint, tracker, opts) {
+  opts = opts || {};
+  return {
+    generated_at: new Date().toISOString(),
+    endpoint: endpoint,
+    tier: opts.tier || 'premium',
+    sources: tracker.sources,
+  };
+}
+
 // Per-endpoint health bookkeeping. Updated by cacheLookupOrFetch on every
 // upstream fetch success/failure. Resets on cold start. Surfaced via
 // /api/health/premium for customers / monitoring without admin auth.
@@ -3001,13 +3090,23 @@ async function fetchProBriefing(env, url) {
 
   function want(name) { return !include || include.indexOf(name) !== -1; }
 
+  // Track each upstream's name + start time in parallel arrays so we can
+  // build _meta.sources after Promise.allSettled returns. Source names are
+  // schema-stable per /terms section "Schema Stability".
   var fetches = [];
-  if (want('btc')) fetches.push(['btc', fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT')]);
-  if (want('fear-greed')) fetches.push(['fear_greed', fetchWithTimeout('https://api.alternative.me/fng/?limit=1')]);
-  if (want('earthquakes')) fetches.push(['earthquakes', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson')]);
-  if (want('hackernews')) fetches.push(['hackernews', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json')]);
-  if (want('humans-in-space')) fetches.push(['humans_in_space', fetchWithTimeout('http://api.open-notify.org/astros.json')]);
-  if (want('predictions')) fetches.push(['predictions', fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false')]);
+  var sourceMeta = [];
+  function add(condition, key, name, promise) {
+    if (!condition) return;
+    fetches.push([key, promise]);
+    sourceMeta.push({ name: name, start: Date.now() });
+  }
+
+  add(want('btc'), 'btc', 'Binance.BTCUSDT', fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'));
+  add(want('fear-greed'), 'fear_greed', 'AlternativeMe.fng', fetchWithTimeout('https://api.alternative.me/fng/?limit=1'));
+  add(want('earthquakes'), 'earthquakes', 'USGS.earthquakes_2_5_day', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'));
+  add(want('hackernews'), 'hackernews', 'HackerNews.topstories', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'));
+  add(want('humans-in-space'), 'humans_in_space', 'OpenNotify.astros', fetchWithTimeout('http://api.open-notify.org/astros.json'));
+  add(want('predictions'), 'predictions', 'Polymarket.gamma', fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false'));
 
   var settled = await Promise.allSettled(fetches.map(function(f) { return f[1]; }));
 
@@ -3072,6 +3171,8 @@ async function fetchProBriefing(env, url) {
   };
 
   if (wantHistory) {
+    var historyStart = Date.now();
+    sourceMeta.push({ name: 'CoinbaseExchange.BTCUSD_candles_3600', start: historyStart });
     try {
       var ch = await fetchWithTimeout('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600', {}, 6000);
       var candles = await ch.json();
@@ -3080,10 +3181,35 @@ async function fetchProBriefing(env, url) {
           return { ts: k[0] * 1000, price: parseFloat(k[4]) || 0 };
         }),
       };
+      settled.push({ status: 'fulfilled', value: ch });
     } catch (e) {
       out.series = { btc_24h: [] };
+      settled.push({ status: 'rejected', reason: e });
     }
   }
+
+  // Build _meta.sources from parallel arrays
+  out._meta = {
+    generated_at: new Date().toISOString(),
+    endpoint: '/api/pro/briefing',
+    tier: 'premium',
+    sources: settled.map(function(s, i) {
+      var entry = {
+        name: sourceMeta[i].name,
+        status: (s.status === 'fulfilled' && s.value && s.value.ok !== false) ? 'live' : 'error',
+        fetched_at: new Date(sourceMeta[i].start).toISOString(),
+        latency_ms: Date.now() - sourceMeta[i].start,
+      };
+      if (entry.status === 'error') {
+        if (s.status === 'rejected' && s.reason && s.reason.message) {
+          entry.reason = String(s.reason.message).slice(0, 100);
+        } else if (s.value) {
+          entry.reason = 'http_' + (s.value.status || '?');
+        }
+      }
+      return entry;
+    }),
+  };
 
   return out;
 }
