@@ -10,5 +10,9 @@ routes = [
 binding = "WEBHOOK_SUBS"
 id = "285e370fcf3c475fb63d7d45d5ee139c"
 
+[[analytics_engine_datasets]]
+binding = "AGENT_ANALYTICS"
+dataset = "agent_traffic"
+
 [triggers]
 crons = ["0 14 * * *", "*/5 * * * *"]
