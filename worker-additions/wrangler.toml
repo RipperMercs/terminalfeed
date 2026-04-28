@@ -6,5 +6,9 @@ routes = [
   { pattern = "terminalfeed.io/api/*", zone_name = "terminalfeed.io" }
 ]
 
+[[kv_namespaces]]
+binding = "WEBHOOK_SUBS"
+id = "285e370fcf3c475fb63d7d45d5ee139c"
+
 [triggers]
-crons = ["0 14 * * *"]
+crons = ["0 14 * * *", "*/5 * * * *"]
