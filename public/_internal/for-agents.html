@@ -214,6 +214,12 @@ const macro = await fetch("https://terminalfeed.io/api/pro/macro", {
 
   <p>Mainnet validation: <a href="https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c" rel="external">tx hash 0x6aa3...614c</a> on Base, $1 USDC sent, 50 credits minted, /api/pro/macro called successfully on first try.</p>
 
+  <h2>Schema Stability</h2>
+
+  <div class="callout">
+    <strong>90-day deprecation window on every breaking change.</strong> New fields may be added freely; existing documented fields will not be removed, renamed, or have their type changed without 90 days of advance notice via <a href="/changelog">/changelog</a> and a per-response <span class="inline-code">X-TerminalFeed-Deprecation</span> header. URL paths are stable. The <span class="inline-code">_meta.sources[].name</span> identifiers (like <span class="inline-code">Binance.BTCUSDT</span>, <span class="inline-code">FRED.UNRATE</span>, <span class="inline-code">Polymarket.gamma</span>) are part of the schema. Full clauses: <a href="/terms#schema-stability">Terms section 17A</a>.
+  </div>
+
   <h2>Inference-Only License</h2>
 
   <div class="callout">
