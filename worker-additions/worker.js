@@ -2761,31 +2761,52 @@ async function validateAndCharge(env, token, cost, endpoint) {
   if (!env || !env.TENSORFEED_AUTH_URL || !env.SHARED_INTERNAL_SECRET) {
     return { ok: false, reason: 'billing_unavailable' };
   }
-  try {
-    var res = await fetchWithTimeout(
-      env.TENSORFEED_AUTH_URL + '/api/internal/validate-and-charge',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Auth': env.SHARED_INTERNAL_SECRET,
+
+  // Single attempt. Returns either a final result (caller stops) or
+  // { __retry: true } when the failure mode is transient and safe to retry.
+  // Safe-to-retry conditions: network errors / timeouts (we never sent
+  // bytes successfully), and 5xx responses from TensorFeed (which by
+  // contract means the credit was NOT decremented). Unsafe to retry:
+  // 4xx and JSON parse failures (the charge may have succeeded but the
+  // response was lost; retrying could double-charge).
+  async function _validateAttempt() {
+    try {
+      var res = await fetchWithTimeout(
+        env.TENSORFEED_AUTH_URL + '/api/internal/validate-and-charge',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Auth': env.SHARED_INTERNAL_SECRET,
+          },
+          body: JSON.stringify({ token: token, cost: cost, endpoint: endpoint }),
         },
-        body: JSON.stringify({ token: token, cost: cost, endpoint: endpoint }),
-      },
-      8000
-    );
-    if (!res.ok) {
-      // Network reachable but TensorFeed returned non-2xx; treat as billing unavailable.
-      return { ok: false, reason: 'billing_unavailable' };
+        8000
+      );
+      if (res.status >= 500) return { __retry: true };
+      if (!res.ok) return { ok: false, reason: 'billing_unavailable' };
+      var json = await res.json();
+      if (!json || typeof json.ok !== 'boolean') {
+        return { ok: false, reason: 'billing_unavailable' };
+      }
+      return json;
+    } catch (e) {
+      return { __retry: true };
     }
-    var json = await res.json();
-    if (!json || typeof json.ok !== 'boolean') {
-      return { ok: false, reason: 'billing_unavailable' };
-    }
-    return json;
-  } catch (e) {
-    return { ok: false, reason: 'billing_unavailable' };
   }
+
+  var result = await _validateAttempt();
+  if (result && result.__retry) {
+    // Backoff 200ms before the single retry. Workers stay warm during this
+    // wait; total added latency on a flaky-then-recovered TensorFeed is
+    // ~200ms + the retry's own request time.
+    await new Promise(function(resolve) { setTimeout(resolve, 200); });
+    result = await _validateAttempt();
+    if (result && result.__retry) {
+      return { ok: false, reason: 'billing_unavailable' };
+    }
+  }
+  return result;
 }
 
 async function handlePremium(request, env, url, endpointPath, costCredits, fetchFn) {
