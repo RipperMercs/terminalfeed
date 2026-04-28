@@ -570,6 +570,58 @@ client.messages.create(
 
   <p>Credits and bearer tokens are jointly redeemable on terminalfeed.io and tensorfeed.ai. One USDC purchase, two data sources. The TensorFeed payment Worker is the system of record; TerminalFeed authenticates each premium call against it via an internal contract. Same wallet, same chain, shared credit pool. See the <a href="https://tensorfeed.ai/agent-payments" rel="external">TensorFeed agent payments page</a> for the parallel surface.</p>
 
+  <h2 id="webhooks">Webhooks (Push Instead of Poll)</h2>
+
+  <p>Register a webhook URL to receive push deliveries every ~5 minutes from any of the 9 premium endpoints. Each fire costs 1 credit ($0.02), HMAC-SHA256 signed, with auto-pause on insufficient_credits. Per-token cap: 5 active subscriptions.</p>
+
+  <h3>Create</h3>
+  <pre><code>curl -X POST https://terminalfeed.io/api/pro/subscribe \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer tf_live_&lt;64-char-hex&gt;" \
+  -d '{"endpoint":"world-deltas","webhook_url":"https://your-server.example/hook"}'
+
+# Response (save the secret; not returned again):
+{
+  "id": "wh_&lt;16-char-hex&gt;",
+  "secret": "whsec_&lt;32-char-hex&gt;",
+  "hmac_algorithm": "sha256",
+  "fire_cost_credits": 1,
+  "fire_interval": "~5 minutes (cron */5 * * * *)",
+  ...
+}</code></pre>
+
+  <h3>Delivery contract</h3>
+  <p>Every ~5 minutes you receive a POST application/json:</p>
+  <pre><code>POST /your/hook
+Content-Type: application/json
+X-TerminalFeed-Signature: sha256=&lt;hex&gt;
+X-TerminalFeed-Timestamp: 1714261771
+X-TerminalFeed-Subscription: wh_eb1db371f08ba2ed
+User-Agent: terminalfeed-webhook/1.0
+
+{
+  "subscription_id": "wh_eb1db371f08ba2ed",
+  "endpoint": "world-deltas",
+  "delivered_at": "2026-04-28T00:30:00.000Z",
+  "data": { ... full endpoint payload ... }
+}</code></pre>
+
+  <h3>Verify the signature</h3>
+  <pre><code>import hmac, hashlib
+
+def verify(secret, signature_header, timestamp_header, raw_body):
+    sig = signature_header.split("=", 1)[-1]
+    expected = hmac.new(
+        secret.encode(),
+        f"{timestamp_header}.{raw_body}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(sig, expected)</code></pre>
+
+  <p>Cancel anytime: <span class="inline-code">DELETE /api/pro/subscribe/&lt;id&gt;</span> with your bearer. List active: <span class="inline-code">GET /api/pro/subscriptions</span>.</p>
+
+  <p><strong>Why this exists:</strong> a monitor agent polling /api/pro/world-deltas every 5 minutes pays 2 credits per cycle ($0.04). A webhook subscription pays 1 credit per fire ($0.02), pushed instead of pulled, with no client-side polling loop. Half the cost, half the infrastructure.</p>
+
   <h2 id="mcp">MCP Server (Claude Desktop, Claude Code, any MCP client)</h2>
 
   <p>TerminalFeed runs a Model Context Protocol server at <span class="inline-code">https://terminalfeed.io/api/mcp</span>. All 21 tools (9 free + 9 premium + 3 payment) are exposed natively. The bearer token doubles as the MCP credential.</p>
