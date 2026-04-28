@@ -1336,7 +1336,7 @@ function App() {
           <span className="topTerminals">{terminalsOnline} online</span>
           <a href="/live" target="_blank" rel="noopener noreferrer" className="liveBriefingLink"><span className="liveDot" />LIVE BRIEFING</a>
           <span className="topNavDivider">|</span>
-          <a href="/tools" target="_blank" rel="noopener noreferrer" className="liveBriefingLink toolsLink">TOOLS</a>
+          <a href="/tools/" target="_blank" rel="noopener noreferrer" className="liveBriefingLink toolsLink">TOOLS</a>
           <span className="topNavDivider">|</span>
           <a href="/agent" target="_blank" rel="noopener noreferrer" className="liveBriefingLink agentLink">AGENTS</a>
           <span className="topNavDivider">|</span>
@@ -1558,7 +1558,7 @@ function App() {
           <a href="/features" className="footerLink">Features</a>
           <a href="/developers" className="footerLink">API</a>
           <a href="/changelog" className="footerLink">Changelog</a>
-          <a href="/tools" className="footerLink">Dev Tools</a>
+          <a href="/tools/" className="footerLink">Dev Tools</a>
           <a href="/agent" className="footerLink">Agents</a>
           <a href="/cleaner" className="footerLink">Disk Cleaner</a>
           <a href="/radio" className="footerLink">Radio</a>
