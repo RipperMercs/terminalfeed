@@ -3680,6 +3680,11 @@ async function fetchProExchangeFlows(env, url) {
     6000
   ).then(function(r) { return r.json(); }).catch(function() { return null; });
 
+  var _xfStart = Date.now();
+  var sourceMeta = [
+    { name: 'Binance.ETHUSDT_price', start: _xfStart },
+    { name: 'PublicNode.eth_blockNumber', start: _xfStart },
+  ];
   var firstResults = await Promise.allSettled([ethPriceFetch, blockNumFetch]);
 
   var ethPriceUsd = 0;
@@ -3694,6 +3699,9 @@ async function fetchProExchangeFlows(env, url) {
 
   var blocksScanned = [];
   var transfers = [];
+  var _ethBlocksStart = Date.now();
+  var _ethBlocksLatency = 0;
+  var _ethBlocksReason = null;
   if (latestNum) {
     var blockNums = [latestNum, latestNum - 1, latestNum - 2];
     var blockFetches = blockNums.map(function(n) {
@@ -3708,6 +3716,7 @@ async function fetchProExchangeFlows(env, url) {
       ).then(function(r) { return r.json(); }).catch(function() { return null; });
     });
     var blockResults = await Promise.allSettled(blockFetches);
+    _ethBlocksLatency = Date.now() - _ethBlocksStart;
     blockResults.forEach(function(br) {
       if (br.status !== 'fulfilled' || !br.value || !br.value.result) return;
       var blk = br.value.result;
@@ -3753,7 +3762,17 @@ async function fetchProExchangeFlows(env, url) {
         });
       });
     });
+    if (blocksScanned.length === 0) _ethBlocksReason = 'no_blocks_returned';
+  } else {
+    _ethBlocksReason = 'no_latest_block_number';
   }
+  var ethBlocksSourceMeta = {
+    name: 'PublicNode.eth_getBlockByNumber_x3',
+    status: blocksScanned.length > 0 ? 'live' : 'error',
+    fetched_at: new Date(_ethBlocksStart).toISOString(),
+    latency_ms: _ethBlocksLatency,
+  };
+  if (_ethBlocksReason) ethBlocksSourceMeta.reason = _ethBlocksReason;
 
   // Aggregate per exchange
   var byExchange = {};
@@ -3826,6 +3845,7 @@ async function fetchProExchangeFlows(env, url) {
       use_case: 'Trading bots watching for regime shifts. Sustained large net inflow can precede price drops; sustained large net outflow can precede price rallies. Pair with /api/pro/whales for context.',
       cache_ttl: '5 minutes.',
     },
+    _meta: _premiumMeta('/api/pro/exchange-flows', _buildSourcesMeta(firstResults, sourceMeta).concat([ethBlocksSourceMeta])),
   };
 }
 
@@ -4277,6 +4297,13 @@ async function fetchProWhales(env, url) {
     6000
   ).then(function(r) { return r.json(); }).catch(function() { return null; });
 
+  var _whalesStart = Date.now();
+  var sourceMeta = [
+    { name: 'Binance.BTCUSDT_price', start: _whalesStart },
+    { name: 'Binance.ETHUSDT_price', start: _whalesStart },
+    { name: 'Mempool.recent_unconfirmed', start: _whalesStart },
+    { name: 'PublicNode.eth_blockNumber', start: _whalesStart },
+  ];
   var firstResults = await Promise.allSettled([btcPriceFetch, ethPriceFetch, btcMempoolFetch, ethLatestNumberFetch]);
 
   var btcPriceUsd = 0;
@@ -4294,6 +4321,9 @@ async function fetchProWhales(env, url) {
     try { latestNum = parseInt(firstResults[3].value.result, 16); } catch (e) {}
   }
   var ethBlocks = [];
+  var _ethBlocksStart = Date.now();
+  var _ethBlocksLatency = 0;
+  var _ethBlocksReason = null;
   if (latestNum) {
     var blockNums = [latestNum, latestNum - 1, latestNum - 2];
     var blockFetches = blockNums.map(function(n) {
@@ -4308,12 +4338,23 @@ async function fetchProWhales(env, url) {
       ).then(function(r) { return r.json(); }).catch(function() { return null; });
     });
     var blockResults = await Promise.allSettled(blockFetches);
+    _ethBlocksLatency = Date.now() - _ethBlocksStart;
     blockResults.forEach(function(br) {
       if (br.status === 'fulfilled' && br.value && br.value.result) {
         ethBlocks.push(br.value.result);
       }
     });
+    if (ethBlocks.length === 0) _ethBlocksReason = 'no_blocks_returned';
+  } else {
+    _ethBlocksReason = 'no_latest_block_number';
   }
+  var ethBlocksSourceMeta = {
+    name: 'PublicNode.eth_getBlockByNumber_x3',
+    status: ethBlocks.length > 0 ? 'live' : 'error',
+    fetched_at: new Date(_ethBlocksStart).toISOString(),
+    latency_ms: _ethBlocksLatency,
+  };
+  if (_ethBlocksReason) ethBlocksSourceMeta.reason = _ethBlocksReason;
   var results = firstResults;  // alias for the BTC processing below
 
   // Process BTC mempool whales
@@ -4405,6 +4446,7 @@ async function fetchProWhales(env, url) {
       caveat: 'BTC mempool transactions can be replaced (RBF) or dropped before confirmation. ETH txs in the latest block could still be reorged within 1-2 blocks. Treat as signal, not certainty.',
       cache_ttl: '5 minutes. Whale transactions are not high-frequency events; tighter polling does not surface more signal.',
     },
+    _meta: _premiumMeta('/api/pro/whales', _buildSourcesMeta(firstResults, sourceMeta).concat([ethBlocksSourceMeta])),
   };
 }
 
@@ -4512,23 +4554,36 @@ async function _fetchFredDailyValues(env, seriesId, days) {
 
 async function fetchProCorrelationMatrix(env, url) {
   var assets = [
-    { symbol: 'BTC',          asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('BTC-USD', 30); } },
-    { symbol: 'ETH',          asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('ETH-USD', 30); } },
-    { symbol: 'SOL',          asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('SOL-USD', 30); } },
-    { symbol: 'AVAX',         asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('AVAX-USD', 30); } },
-    { symbol: 'LINK',         asset_class: 'crypto',     fetcher: function() { return _fetchCoinbaseDailyCloses('LINK-USD', 30); } },
-    { symbol: 'GOLD_PAXG',    asset_class: 'commodity',  fetcher: function() { return _fetchCoinbaseDailyCloses('PAXG-USD', 30); } },
-    { symbol: 'TREASURY_10Y', asset_class: 'rates',      fetcher: function() { return _fetchFredDailyValues(env, 'DGS10', 30); } },
-    { symbol: 'TREASURY_2Y',  asset_class: 'rates',      fetcher: function() { return _fetchFredDailyValues(env, 'DGS2', 30); } },
-    { symbol: 'USD_INDEX',    asset_class: 'fx',         fetcher: function() { return _fetchFredDailyValues(env, 'DTWEXBGS', 30); } },
-    { symbol: 'OIL_WTI',      asset_class: 'commodity',  fetcher: function() { return _fetchFredDailyValues(env, 'DCOILWTICO', 30); } },
+    { symbol: 'BTC',          asset_class: 'crypto',     source_name: 'Coinbase.BTC_USD_candles_30d',  fetcher: function() { return _fetchCoinbaseDailyCloses('BTC-USD', 30); } },
+    { symbol: 'ETH',          asset_class: 'crypto',     source_name: 'Coinbase.ETH_USD_candles_30d',  fetcher: function() { return _fetchCoinbaseDailyCloses('ETH-USD', 30); } },
+    { symbol: 'SOL',          asset_class: 'crypto',     source_name: 'Coinbase.SOL_USD_candles_30d',  fetcher: function() { return _fetchCoinbaseDailyCloses('SOL-USD', 30); } },
+    { symbol: 'AVAX',         asset_class: 'crypto',     source_name: 'Coinbase.AVAX_USD_candles_30d', fetcher: function() { return _fetchCoinbaseDailyCloses('AVAX-USD', 30); } },
+    { symbol: 'LINK',         asset_class: 'crypto',     source_name: 'Coinbase.LINK_USD_candles_30d', fetcher: function() { return _fetchCoinbaseDailyCloses('LINK-USD', 30); } },
+    { symbol: 'GOLD_PAXG',    asset_class: 'commodity',  source_name: 'Coinbase.PAXG_USD_candles_30d', fetcher: function() { return _fetchCoinbaseDailyCloses('PAXG-USD', 30); } },
+    { symbol: 'TREASURY_10Y', asset_class: 'rates',      source_name: 'FRED.DGS10_30d',                fetcher: function() { return _fetchFredDailyValues(env, 'DGS10', 30); } },
+    { symbol: 'TREASURY_2Y',  asset_class: 'rates',      source_name: 'FRED.DGS2_30d',                 fetcher: function() { return _fetchFredDailyValues(env, 'DGS2', 30); } },
+    { symbol: 'USD_INDEX',    asset_class: 'fx',         source_name: 'FRED.DTWEXBGS_30d',             fetcher: function() { return _fetchFredDailyValues(env, 'DTWEXBGS', 30); } },
+    { symbol: 'OIL_WTI',      asset_class: 'commodity',  source_name: 'FRED.DCOILWTICO_30d',           fetcher: function() { return _fetchFredDailyValues(env, 'DCOILWTICO', 30); } },
   ];
 
+  var _corrStart = Date.now();
   var fetched = await Promise.all(assets.map(function(a) {
     return a.fetcher().then(function(closes) {
       return { symbol: a.symbol, asset_class: a.asset_class, closes: closes, returns: _toReturns(closes) };
     });
   }));
+  var _corrEnd = Date.now();
+  var sourcesMeta = fetched.map(function(x, i) {
+    var ok = x.closes && x.closes.length > 0;
+    var entry = {
+      name: assets[i].source_name,
+      status: ok ? 'live' : 'error',
+      fetched_at: new Date(_corrStart).toISOString(),
+      latency_ms: Math.max(0, _corrEnd - _corrStart),
+    };
+    if (!ok) entry.reason = 'no_data';
+    return entry;
+  });
 
   var withData = fetched.filter(function(x) { return x.returns.length >= 10; });
 
@@ -4594,6 +4649,7 @@ async function fetchProCorrelationMatrix(env, url) {
       caveat: 'Pearson assumes linear relationships and stationary distributions. For tail-risk analysis, supplement with rank correlation or copula-based methods. Correlations can flip sign in stress regimes.',
       cache_ttl: '30 minutes. Daily-return correlations move slowly within a day.',
     },
+    _meta: _premiumMeta('/api/pro/correlation-matrix', sourcesMeta),
   };
 }
 
