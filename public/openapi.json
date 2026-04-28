@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.12.0",
+    "version": "1.13.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -2882,6 +2882,63 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 2,
+        "x-license": "inference-only"
+      }
+    },
+    "/api/pro/stablecoin-flows": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "Stablecoin net flows snapshot via DefiLlama (2 credits)",
+        "description": "Top 20 stablecoins by circulating supply with 24h/7d/30d net change in USD and percent. Aggregate net flow across all 180+ tracked stablecoins, biggest growers and shrinkers, bias label (growing/shrinking/balanced). Source: DefiLlama stablecoins API. 1-hour cache.",
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stablecoin flows snapshot.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/stablecoin-flows \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python",
+            "source": "import requests\nd = requests.get(\n    \"https://terminalfeed.io/api/pro/stablecoin-flows\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n).json()\nprint(\"Net 24h:\", d['aggregate']['net_change_24h_usd'], d['aggregate']['bias_24h'])"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript",
+            "source": "const d = await fetch(\"https://terminalfeed.io/api/pro/stablecoin-flows\", {\n  headers: { Authorization: `Bearer ${TOKEN}` }\n}).then(r => r.json());\nconsole.log(\"USDT:\", d.stablecoins[0]);"
+          }
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 1,
         "x-license": "inference-only"
       }
     }

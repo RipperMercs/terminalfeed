@@ -522,6 +522,17 @@ client.messages.create(
     <p><strong>Why this exists:</strong> a crypto research agent monitoring DeFi concentration today has to fetch /protocols and /v2/chains separately, normalize categories, compute movers client-side. This endpoint composes all of that. Live test surfaced $441B aggregate TVL with Binance CEX at $154B and Sky Lending up 5.79% 24h.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/stablecoin-flows</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Net stablecoin circulation changes for crypto traders. Top 20 stablecoins by circulating supply, each with 24h / 7d / 30d net change in USD and percent, top chains breakdown, peg type, and current price. Aggregate includes total circulating, net inflow/outflow over 24h and 7d, growing-vs-shrinking count, and a bias label (<span class="inline-code">growing</span> / <span class="inline-code">shrinking</span> / <span class="inline-code">balanced</span>).</p>
+    <p><strong>Source:</strong> DefiLlama stablecoins API (stablecoins.llama.fi). Free public API; no key required.</p>
+    <p><strong>Why this exists:</strong> sustained stablecoin minting historically precedes crypto buying pressure (more dollars on-chain = more potential bids). Sustained burning precedes selling. Trading agents pair this with /api/pro/exchange-flows for the on-chain settlement side. Live test surfaced $319.71B aggregate float across 183 tracked stablecoins with +$320M net 24h growth, USDT at $189.68B and USDC at $77.69B.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>

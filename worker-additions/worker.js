@@ -355,6 +355,7 @@ function handleIndex() {
         { path: '/api/pro/whales', cost_credits: 2 },
         { path: '/api/pro/exchange-flows', cost_credits: 2 },
         { path: '/api/pro/defi-tvl', cost_credits: 2 },
+        { path: '/api/pro/stablecoin-flows', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -2491,6 +2492,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_stablecoin_flows',
+    short_description: 'Net circulation changes for top stablecoins (USDT, USDC, DAI, etc.) over 24h/7d/30d (2 credits).',
+    description: 'Composed stablecoin flow snapshot for crypto traders. Returns top 20 stablecoins by circulating supply, each with 24h/7d/30d net change in USD and percent, top chains breakdown, peg type, and current price. Aggregate includes total circulating, net inflow/outflow over 24h and 7d, growing-vs-shrinking count, and a bias label (growing / shrinking / balanced). Source: DefiLlama stablecoins API. Trading agents use stablecoin growth as a leading indicator for crypto buying power. Costs 2 credits ($0.04 USDC). 1-hour cache. Bearer auth required.',
+    url: 'https://terminalfeed.io/api/pro/stablecoin-flows',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_defi_tvl',
     short_description: 'Top 50 DeFi protocols by TVL with movers and category breakdown (2 credits).',
     description: 'Composed DeFi total-value-locked snapshot for crypto research and trading agents. Returns top 50 protocols by TVL (each with 1h/24h/7d change, category, chain, market cap, FDV), top 15 chains by TVL, by-category aggregate, and biggest gainers/losers over 24h and 7d windows. Source: DefiLlama free public API. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
@@ -3347,6 +3359,141 @@ async function fetchProExchangeFlows(env, url) {
       direction_meaning: 'inflow = funds moving TO an exchange (often precedes selling). outflow = funds moving FROM an exchange to a user wallet (often HODL withdrawal). inter_exchange = both ends are exchanges (rebalance / arbitrage).',
       use_case: 'Trading bots watching for regime shifts. Sustained large net inflow can precede price drops; sustained large net outflow can precede price rallies. Pair with /api/pro/whales for context.',
       cache_ttl: '5 minutes.',
+    },
+  };
+}
+
+
+// ----- Stablecoin flows: net circulation changes via DefiLlama stablecoins API -----
+//
+// Source: stablecoins.llama.fi. Each stablecoin has circulating, circulatingPrevDay,
+// circulatingPrevWeek (in USD-pegged terms). We compute net flows over 24h and 7d
+// per coin and aggregate. Crypto traders use stablecoin growth/contraction as a
+// leading indicator for buying power coming into / leaving the crypto ecosystem.
+
+async function fetchProStablecoinFlows(env, url) {
+  var res = await fetchWithTimeout('https://stablecoins.llama.fi/stablecoins?includePrices=true', {}, 10000)
+    .catch(function() { return null; });
+  if (!res || !res.ok) {
+    return {
+      source: 'terminalfeed-pro',
+      endpoint: '/api/pro/stablecoin-flows',
+      generated_at: new Date().toISOString(),
+      error: 'upstream_unavailable',
+      stablecoins: [],
+      aggregate: null,
+      notes: { source_attribution: 'DefiLlama stablecoins API', cache_ttl: '1 hour' },
+    };
+  }
+
+  var raw = await res.json();
+  var assets = (raw && raw.peggedAssets) || [];
+
+  function _val(obj) {
+    if (!obj) return 0;
+    if (typeof obj === 'number') return obj;
+    return obj.peggedUSD || obj.peggedEUR || obj.peggedSGD || 0;
+  }
+
+  var stablecoins = assets
+    .map(function(a) {
+      var current = _val(a.circulating);
+      var prevDay = _val(a.circulatingPrevDay);
+      var prevWeek = _val(a.circulatingPrevWeek);
+      var prevMonth = _val(a.circulatingPrevMonth);
+      var change1dUsd = current - prevDay;
+      var change7dUsd = current - prevWeek;
+      var change30dUsd = current - prevMonth;
+      var change1dPct = prevDay > 0 ? (change1dUsd / prevDay) * 100 : null;
+      var change7dPct = prevWeek > 0 ? (change7dUsd / prevWeek) * 100 : null;
+      var change30dPct = prevMonth > 0 ? (change30dUsd / prevMonth) * 100 : null;
+
+      var chainsObj = a.chainCirculating || {};
+      var topChains = Object.keys(chainsObj)
+        .map(function(c) {
+          var cur = _val(chainsObj[c] && chainsObj[c].current);
+          return { chain: c, circulating_usd: Math.round(cur) };
+        })
+        .filter(function(c) { return c.circulating_usd > 0; })
+        .sort(function(a2, b2) { return b2.circulating_usd - a2.circulating_usd; })
+        .slice(0, 5);
+
+      return {
+        symbol: a.symbol,
+        name: a.name,
+        peg_type: a.pegType || null,
+        peg_mechanism: a.pegMechanism || null,
+        price_usd: typeof a.price === 'number' ? a.price : null,
+        circulating_usd: Math.round(current),
+        change_1d_usd: Math.round(change1dUsd),
+        change_1d_percent: change1dPct != null ? parseFloat(change1dPct.toFixed(4)) : null,
+        change_7d_usd: Math.round(change7dUsd),
+        change_7d_percent: change7dPct != null ? parseFloat(change7dPct.toFixed(4)) : null,
+        change_30d_usd: Math.round(change30dUsd),
+        change_30d_percent: change30dPct != null ? parseFloat(change30dPct.toFixed(4)) : null,
+        chains_count: Array.isArray(a.chains) ? a.chains.length : 0,
+        top_chains: topChains,
+        url: a.gecko_id ? 'https://defillama.com/stablecoin/' + a.gecko_id : null,
+      };
+    })
+    .filter(function(s) { return s.circulating_usd > 1000000; })  // drop dust (under $1M circulating)
+    .sort(function(a, b) { return b.circulating_usd - a.circulating_usd; });
+
+  var top20 = stablecoins.slice(0, 20);
+
+  var totalCirculating = stablecoins.reduce(function(s, c) { return s + c.circulating_usd; }, 0);
+  var totalChange1d = stablecoins.reduce(function(s, c) { return s + c.change_1d_usd; }, 0);
+  var totalChange7d = stablecoins.reduce(function(s, c) { return s + c.change_7d_usd; }, 0);
+  var growingCount = stablecoins.filter(function(c) { return c.change_1d_usd > 0; }).length;
+  var shrinkingCount = stablecoins.filter(function(c) { return c.change_1d_usd < 0; }).length;
+
+  function _movers(field, direction, limit) {
+    return stablecoins
+      .filter(function(c) { return typeof c[field] === 'number' && c.circulating_usd > 100000000; })  // require >$100M to filter noise
+      .sort(function(a, b) { return direction === 'up' ? (b[field] - a[field]) : (a[field] - b[field]); })
+      .slice(0, limit || 5)
+      .map(function(c) {
+        var movKey = field;
+        var pctKey = field.replace('_usd', '_percent');
+        return {
+          symbol: c.symbol,
+          name: c.name,
+          circulating_usd: c.circulating_usd,
+          change_usd: c[movKey],
+          change_percent: c[pctKey],
+        };
+      });
+  }
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/stablecoin-flows',
+    generated_at: new Date().toISOString(),
+    stablecoins: top20,
+    aggregate: {
+      tracked_count: stablecoins.length,
+      total_circulating_usd: Math.round(totalCirculating),
+      net_change_24h_usd: Math.round(totalChange1d),
+      net_change_24h_percent: totalCirculating > 0 ? parseFloat(((totalChange1d / (totalCirculating - totalChange1d)) * 100).toFixed(4)) : null,
+      net_change_7d_usd: Math.round(totalChange7d),
+      net_change_7d_percent: totalCirculating > 0 ? parseFloat(((totalChange7d / (totalCirculating - totalChange7d)) * 100).toFixed(4)) : null,
+      growing_count_24h: growingCount,
+      shrinking_count_24h: shrinkingCount,
+      bias_24h: (function() {
+        if (Math.abs(totalChange1d) < 100000000) return 'balanced';
+        return totalChange1d > 0 ? 'growing' : 'shrinking';
+      })(),
+    },
+    biggest_growers_24h: _movers('change_1d_usd', 'up', 5),
+    biggest_shrinkers_24h: _movers('change_1d_usd', 'down', 5),
+    biggest_growers_7d: _movers('change_7d_usd', 'up', 5),
+    biggest_shrinkers_7d: _movers('change_7d_usd', 'down', 5),
+    notes: {
+      source_attribution: 'DefiLlama stablecoins API (stablecoins.llama.fi). Free public API; no key required.',
+      cache_ttl: '1 hour. DefiLlama updates stablecoin metrics daily.',
+      use_case: 'Crypto traders use net stablecoin growth as a leading indicator. Sustained net inflows of stablecoins to exchanges historically precede crypto buying. Pair with /api/pro/exchange-flows for the on-chain side.',
+      caveat: 'Numbers are reported circulating supply, not on-chain liquid supply. Some stablecoins (FDUSD, BUSD legacy) have wind-down dynamics that show up as large negative 7d changes; not all are bearish signals.',
+      filter_threshold: 'Stablecoins under $1M circulating are filtered out as noise. Movers require >$100M circulating to surface.',
     },
   };
 }
@@ -4812,6 +4959,17 @@ async function handleProDefiTvl(request, env, url) {
   });
 }
 
+async function handleProStablecoinFlows(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/stablecoin-flows', 2, async function(env2, url2) {
+    var KEY = 'pro:stablecoin-flows';
+    var cached = getCached(KEY, 3600000);  // 1 hour
+    if (cached) return cached;
+    var data = await fetchProStablecoinFlows(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -4972,6 +5130,7 @@ export default {
       case 'pro/whales': return await handleProWhales(request, env, url);
       case 'pro/exchange-flows': return await handleProExchangeFlows(request, env, url);
       case 'pro/defi-tvl':       return await handleProDefiTvl(request, env, url);
+      case 'pro/stablecoin-flows': return await handleProStablecoinFlows(request, env, url);
 
       // Webhook subscriptions
       case 'pro/subscribe':       return await handleSubscribeCreate(request, env);
