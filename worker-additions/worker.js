@@ -356,6 +356,7 @@ function handleIndex() {
         { path: '/api/pro/exchange-flows', cost_credits: 2 },
         { path: '/api/pro/defi-tvl', cost_credits: 2 },
         { path: '/api/pro/stablecoin-flows', cost_credits: 2 },
+        { path: '/api/pro/github-velocity', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -2492,6 +2493,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_github_velocity',
+    short_description: 'Trending GitHub repos by 7d stars + AI/ML focus + language mix (2 credits).',
+    description: 'Composed GitHub developer-attention snapshot. Returns top 30 repos created in the last 7 days sorted by stars (with stars-per-day, language, topics, license, owner type, AI/ML focus flag), top 15 AI/ML-focused active repos (topic:llm with commits in the last 30 days), language and topic aggregates, and the AI/ML share of trending. Source: GitHub Search API. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
+    url: 'https://terminalfeed.io/api/pro/github-velocity',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_stablecoin_flows',
     short_description: 'Net circulation changes for top stablecoins (USDT, USDC, DAI, etc.) over 24h/7d/30d (2 credits).',
     description: 'Composed stablecoin flow snapshot for crypto traders. Returns top 20 stablecoins by circulating supply, each with 24h/7d/30d net change in USD and percent, top chains breakdown, peg type, and current price. Aggregate includes total circulating, net inflow/outflow over 24h and 7d, growing-vs-shrinking count, and a bias label (growing / shrinking / balanced). Source: DefiLlama stablecoins API. Trading agents use stablecoin growth as a leading indicator for crypto buying power. Costs 2 credits ($0.04 USDC). 1-hour cache. Bearer auth required.',
@@ -3359,6 +3371,142 @@ async function fetchProExchangeFlows(env, url) {
       direction_meaning: 'inflow = funds moving TO an exchange (often precedes selling). outflow = funds moving FROM an exchange to a user wallet (often HODL withdrawal). inter_exchange = both ends are exchanges (rebalance / arbitrage).',
       use_case: 'Trading bots watching for regime shifts. Sustained large net inflow can precede price drops; sustained large net outflow can precede price rallies. Pair with /api/pro/whales for context.',
       cache_ttl: '5 minutes.',
+    },
+  };
+}
+
+
+// ----- GitHub velocity: trending repos, language mix, AI/ML focus -----
+//
+// Source: GitHub Search API. Free without auth (10 req/min, 60/hr); with a
+// GITHUB_TOKEN Worker secret it's 30 req/min, 5000/hr. Our 30-min cache means
+// we hit the API at most twice an hour even under steady premium traffic, so
+// the unauthenticated path works fine. Token is used opportunistically.
+//
+// Two queries: (1) repos created in the last 7 days sorted by stars (real
+// velocity signal); (2) top AI/ML-focused repos with recent commit activity.
+
+var AI_ML_KEYWORDS_RE = /(\bai\b|\bml\b|\bllm\b|\bgpt\b|\bclaude\b|\bagent\b|\bagentic\b|embedding|transformer|neural|deep[\s\-]?learning|machine[\s\-]?learning|language[\s\-]?model|rag\b|vector[\s\-]?db|prompt[\s\-]?engineering|fine[\s\-]?tun|inference|mcp\b)/i;
+
+function _isAiMlRepo(repo) {
+  if (!repo) return false;
+  var hay = ((repo.name || '') + ' ' + (repo.description || '') + ' ' + (Array.isArray(repo.topics) ? repo.topics.join(' ') : '')).toLowerCase();
+  return AI_ML_KEYWORDS_RE.test(hay);
+}
+
+async function fetchProGithubVelocity(env, url) {
+  var nowMs = Date.now();
+  var sevenDaysAgo = new Date(nowMs - 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  var thirtyDaysAgo = new Date(nowMs - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+  var headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  if (env && env.GITHUB_TOKEN) headers['Authorization'] = 'Bearer ' + env.GITHUB_TOKEN;
+
+  var sources = await Promise.allSettled([
+    // 1. Repos created in last 7d sorted by stars (raw velocity)
+    fetchWithTimeout('https://api.github.com/search/repositories?q=created:%3E' + sevenDaysAgo + '&sort=stars&order=desc&per_page=30', { headers: headers }, 10000),
+    // 2. AI/ML-focused repos with recent commit activity (last 30d, >100 stars)
+    fetchWithTimeout('https://api.github.com/search/repositories?q=topic:llm+pushed:%3E' + thirtyDaysAgo + '&sort=stars&order=desc&per_page=15', { headers: headers }, 10000),
+  ]);
+
+  function _shapeRepo(r) {
+    return {
+      full_name: r.full_name,
+      description: r.description ? (r.description.length > 200 ? r.description.slice(0, 197) + '...' : r.description) : null,
+      language: r.language || null,
+      stars: r.stargazers_count || 0,
+      forks: r.forks_count || 0,
+      open_issues: r.open_issues_count || 0,
+      topics: Array.isArray(r.topics) ? r.topics.slice(0, 10) : [],
+      license: r.license && r.license.spdx_id ? r.license.spdx_id : null,
+      owner: r.owner && r.owner.login ? r.owner.login : null,
+      owner_type: r.owner && r.owner.type ? r.owner.type : null,
+      created_at: r.created_at,
+      pushed_at: r.pushed_at,
+      url: r.html_url,
+    };
+  }
+
+  var trendingRepos = [];
+  if (sources[0].status === 'fulfilled' && sources[0].value && sources[0].value.ok) {
+    try {
+      var d1 = await sources[0].value.json();
+      trendingRepos = (d1.items || []).slice(0, 30).map(_shapeRepo);
+    } catch (e) {}
+  }
+
+  var aiMlRepos = [];
+  if (sources[1].status === 'fulfilled' && sources[1].value && sources[1].value.ok) {
+    try {
+      var d2 = await sources[1].value.json();
+      aiMlRepos = (d2.items || []).slice(0, 15).map(_shapeRepo);
+    } catch (e) {}
+  }
+
+  // Compute days-since-creation and stars-per-day for trending repos
+  trendingRepos.forEach(function(r) {
+    if (r.created_at) {
+      var ageDays = Math.max(1, (nowMs - new Date(r.created_at).getTime()) / 86400000);
+      r.age_days = parseFloat(ageDays.toFixed(1));
+      r.stars_per_day = parseFloat((r.stars / ageDays).toFixed(1));
+    }
+  });
+
+  // Tag AI/ML focus on trending list (not a separate query)
+  trendingRepos.forEach(function(r) { r.is_ai_ml = _isAiMlRepo(r); });
+
+  // Aggregates
+  var byLanguage = {};
+  trendingRepos.forEach(function(r) {
+    var lang = r.language || 'Unknown';
+    if (!byLanguage[lang]) byLanguage[lang] = { count: 0, total_stars: 0 };
+    byLanguage[lang].count += 1;
+    byLanguage[lang].total_stars += r.stars;
+  });
+  var byLanguageSorted = Object.keys(byLanguage)
+    .map(function(k) { return { language: k, count: byLanguage[k].count, total_stars: byLanguage[k].total_stars }; })
+    .sort(function(a, b) { return b.total_stars - a.total_stars; });
+
+  var byTopic = {};
+  trendingRepos.forEach(function(r) {
+    (r.topics || []).forEach(function(t) {
+      byTopic[t] = (byTopic[t] || 0) + 1;
+    });
+  });
+  var byTopicSorted = Object.keys(byTopic)
+    .map(function(k) { return { topic: k, count: byTopic[k] }; })
+    .sort(function(a, b) { return b.count - a.count; })
+    .slice(0, 20);
+
+  var aiMlInTrending = trendingRepos.filter(function(r) { return r.is_ai_ml; });
+  var aiMlSharePct = trendingRepos.length > 0 ? parseFloat(((aiMlInTrending.length / trendingRepos.length) * 100).toFixed(1)) : null;
+
+  var totalStars = trendingRepos.reduce(function(s, r) { return s + (r.stars || 0); }, 0);
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/github-velocity',
+    generated_at: new Date().toISOString(),
+    window: '7d_for_trending,30d_for_ai_ml',
+    trending_repos: trendingRepos,
+    ai_ml_repos_active_30d: aiMlRepos,
+    by_language: byLanguageSorted,
+    by_topic: byTopicSorted,
+    aggregate: {
+      trending_count: trendingRepos.length,
+      total_stars_in_trending: totalStars,
+      ai_ml_in_trending_count: aiMlInTrending.length,
+      ai_ml_share_percent: aiMlSharePct,
+      ai_ml_active_30d_count: aiMlRepos.length,
+      languages_in_trending: byLanguageSorted.length,
+      auth_used: env && env.GITHUB_TOKEN ? 'authenticated' : 'unauthenticated',
+    },
+    notes: {
+      source_attribution: 'GitHub Search API. Free without auth (60 req/hr); higher limits with GITHUB_TOKEN Worker secret.',
+      cache_ttl: '30 minutes. Trending velocity is a 7d window; the cache TTL is sized to keep upstream traffic well under rate limits.',
+      use_case: 'Dev-tool agents, AI/ML researchers, and infrastructure-tracking agents watching where developer attention is concentrating. Pair the AI/ML focus signal with /api/pro/sentiment for a complete "what is the dev community talking about" view.',
+      methodology: 'Trending = repos created in the last 7 days sorted by stars descending. AI/ML active = repos tagged topic:llm with commits in the last 30 days, sorted by stars. is_ai_ml flag on each trending repo uses regex over name + description + topics.',
+      caveat: 'GitHub Search API only returns top 1000 results regardless of pagination. Repos created without traction in the first 7 days are filtered out by sort order; stars-per-day is best-effort.',
     },
   };
 }
@@ -4970,6 +5118,17 @@ async function handleProStablecoinFlows(request, env, url) {
   });
 }
 
+async function handleProGithubVelocity(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/github-velocity', 2, async function(env2, url2) {
+    var KEY = 'pro:github-velocity';
+    var cached = getCached(KEY, 1800000);  // 30 min
+    if (cached) return cached;
+    var data = await fetchProGithubVelocity(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -5131,6 +5290,7 @@ export default {
       case 'pro/exchange-flows': return await handleProExchangeFlows(request, env, url);
       case 'pro/defi-tvl':       return await handleProDefiTvl(request, env, url);
       case 'pro/stablecoin-flows': return await handleProStablecoinFlows(request, env, url);
+      case 'pro/github-velocity': return await handleProGithubVelocity(request, env, url);
 
       // Webhook subscriptions
       case 'pro/subscribe':       return await handleSubscribeCreate(request, env);

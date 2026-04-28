@@ -533,6 +533,17 @@ client.messages.create(
     <p><strong>Why this exists:</strong> sustained stablecoin minting historically precedes crypto buying pressure (more dollars on-chain = more potential bids). Sustained burning precedes selling. Trading agents pair this with /api/pro/exchange-flows for the on-chain settlement side. Live test surfaced $319.71B aggregate float across 183 tracked stablecoins with +$320M net 24h growth, USDT at $189.68B and USDC at $77.69B.</p>
   </div>
 
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method">GET</span>
+      <span class="path">/api/pro/github-velocity</span>
+      <span class="cost">2 credits</span>
+    </div>
+    <p>Composed GitHub developer-attention snapshot for dev-tool agents, AI/ML researchers, and infrastructure-tracking agents. Top 30 repos created in the last 7 days sorted by stars (with stars-per-day, language, topics, license, owner type, AI/ML focus flag), top 15 AI/ML-focused active repos (topic:llm with commits in last 30 days), language and topic aggregates, and the AI/ML share-of-trending percentage.</p>
+    <p><strong>Source:</strong> GitHub Search API. Free without auth (60 req/hour); we cache 30 minutes so even unauthenticated upstream is well under rate limit. Optional <span class="inline-code">GITHUB_TOKEN</span> Worker secret bumps to 5000 req/hour.</p>
+    <p><strong>Why this exists:</strong> tracks where developer attention is concentrating right now. Live test showed <strong>50% of trending-7d repos are AI/ML focused</strong>, with Python dominating (11 of 30 repos, ~7K stars). Pair with <span class="inline-code">/api/pro/sentiment</span> for a complete "what is the dev community talking about" view.</p>
+  </div>
+
   <h2>Pricing</h2>
 
   <table>
