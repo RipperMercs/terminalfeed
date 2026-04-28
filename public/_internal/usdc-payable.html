@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>USDC-Payable API: Pay Per Call on Base Mainnet | TerminalFeed</title>
-  <meta name="description" content="HTTP API that accepts USDC on Base mainnet for premium real-time data calls. Designed for autonomous agents with wallets. $1 USDC = 50 calls. No subscription. Refundable in 24 hours.">
+  <meta name="description" content="HTTP API that accepts USDC on Base mainnet for premium real-time data calls. Designed for autonomous agents with wallets. $1 USDC = 50 calls. No subscription. Credits never expire.">
   <link rel="canonical" href="https://terminalfeed.io/api/usdc-payable">
   <meta property="og:title" content="USDC-Payable API | TerminalFeed">
   <meta property="og:description" content="HTTP 402 Payment Required, settled in seconds on Base. Agent-native API access.">
@@ -60,7 +60,7 @@
       {
         "@type": "Question",
         "name": "Are credits refundable?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes within 24 hours of purchase. Email support@terminalfeed.io with the on-chain transaction hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours credits are non-refundable but never expire, so they remain spendable indefinitely." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. All credit purchases are final and non-refundable. Credits never expire, however, so they remain spendable indefinitely on terminalfeed.io and tensorfeed.ai. Buy in small amounts ($1 = 50 credits) until you have a feel for your call volume." }
       },
       {
         "@type": "Question",
@@ -125,7 +125,7 @@
     <tr><td>50 credits stretched evenly</td><td>~25 to 50 calls depending on which endpoints you mix</td></tr>
     <tr><td>Subscription</td><td>None. Pay only for what you call.</td></tr>
     <tr><td>Expiry</td><td>None. Credits never expire.</td></tr>
-    <tr><td>Refund window</td><td>24 hours from purchase via support@terminalfeed.io</td></tr>
+    <tr><td>Refunds</td><td>None. All credit purchases are final. Buy small ($1 = 50 credits) until you know your volume; unused credits never expire.</td></tr>
   </table>
 
   <h2>Mainnet-Proven Today</h2>
@@ -183,7 +183,7 @@ curl https://terminalfeed.io/api/pro/macro \
   <p>Yes. The agent or its operator needs a wallet that holds USDC on Base mainnet. We accept any standard ERC-20 USDC transfer to our published wallet (<span class="inline-code">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</span>). No KYC. No account creation. The wallet IS the account.</p>
 
   <h3>Are credits refundable?</h3>
-  <p>Yes within 24 hours of purchase. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the on-chain transaction hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours credits are non-refundable but never expire, so they remain spendable indefinitely.</p>
+  <p>No. All credit purchases are final and non-refundable. The upside: credits never expire, so they remain spendable indefinitely on terminalfeed.io and tensorfeed.ai (shared credit pool). Buy in small amounts ($1 = 50 credits) until you know your call volume, then top up as needed.</p>
 
   <h3>Do tokens work on TensorFeed too?</h3>
   <p>Yes. Bearer tokens minted by <span class="inline-code">/api/payment/confirm</span> on terminalfeed.io are jointly redeemable on <a href="https://tensorfeed.ai" rel="external">tensorfeed.ai</a>. Same wallet, same chain, shared credit pool. One purchase, two data sources: real-time markets and infrastructure (TerminalFeed) plus AI news and model intelligence (TensorFeed).</p>

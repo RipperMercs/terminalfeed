@@ -285,7 +285,7 @@
         "name": "Can I get a refund if I bought too many credits?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes within 24 hours of purchase. Email support@terminalfeed.io with the on-chain transaction hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours credits are non-refundable but never expire."
+          "text": "No. All credit purchases are final and non-refundable. Credits never expire, however, so they remain spendable indefinitely on terminalfeed.io and tensorfeed.ai. We recommend buying in small amounts ($1 = 50 credits) until you know your call volume."
         }
       },
       {
@@ -597,7 +597,7 @@ client.messages.create(
 
   <h2>Refund Policy</h2>
 
-  <p>24-hour window from credit purchase. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with your tx hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours, credits are non-refundable but never expire, so they remain spendable.</p>
+  <p>All credit purchases are final and non-refundable. Credits never expire, however, so they remain spendable indefinitely on terminalfeed.io and tensorfeed.ai. We recommend buying in small amounts ($1 = 50 credits) until you have a feel for your call volume, then topping up as needed.</p>
 
   <h2>Cross-Site Bundle</h2>
 
@@ -740,7 +740,7 @@ print("balance:", tf.balance())</code></pre>
   <p>Bearer tokens are first-class credentials. If yours leaks, treat it as lost: buy a new pack to mint a new token, then stop using the old one. The compromised token will continue to spend its remaining balance until depleted. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the affected token if you suspect theft and want it deactivated faster.</p>
 
   <h3>Can I get a refund if I bought too many credits?</h3>
-  <p>Yes within 24 hours of purchase. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the on-chain transaction hash and we refund the unused balance in USDC on Base, less network fees. After 24 hours credits are non-refundable, but they never expire and remain spendable indefinitely.</p>
+  <p>No. All credit purchases are final and non-refundable. The upside: credits never expire, so they remain spendable indefinitely on terminalfeed.io and tensorfeed.ai (shared credit pool). Buy in small amounts ($1 = 50 credits) until you know your call volume, then top up as needed.</p>
 
   <h3>Is there a free tier for testing the integration?</h3>
   <p>The full <a href="/developers">free TerminalFeed API</a> requires no auth and is the right place to verify your HTTP plumbing before spending USDC. The free <span class="inline-code">/api/briefing</span> endpoint is structurally similar (composed payload) to the premium <span class="inline-code">/api/pro/briefing</span>, so you can dry-run your parsing logic against it. Premium adds Polymarket prediction markets, the optional include filter, and the optional 24-hour history series.</p>
@@ -750,7 +750,7 @@ print("balance:", tf.balance())</code></pre>
 
   <h2>Support</h2>
 
-  <p>General questions: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a>. Billing, refunds, or token issues: <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a>. Status of upstream sources is on the free <a href="/api/service-status">/api/service-status</a> endpoint.</p>
+  <p>General questions: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a>. Billing or token issues: <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a>. Status of upstream sources is on the free <a href="/api/service-status">/api/service-status</a> endpoint.</p>
 
   <div class="footer">
     <p>&copy; 2026 TerminalFeed.io &middot; Built by <a href="/team/ripper">Ripper</a></p>

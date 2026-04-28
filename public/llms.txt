@@ -153,7 +153,7 @@ Failure modes (HTTP 402 Payment Required, body field `error`):
 
 Pricing: $1 USDC on Base mainnet = 50 credits. No subscription. No expiry. No KYC.
 License: inference and reasoning only; not licensed as training data, fine-tuning input, model distillation, or dataset redistribution.
-Refund window: 24 hours from purchase, manual USDC return on email request.
+Refunds: none. All credit purchases are final and non-refundable. Credits never expire, however, and remain spendable indefinitely across terminalfeed.io and tensorfeed.ai. Recommendation: buy small ($1 = 50 credits) until call volume is calibrated, then top up.
 Atomic charge: credits decrement before upstream fetch; partial responses still count.
 SLA: best-effort, stale-cache-on-failure means always-200 with usable data.
 
