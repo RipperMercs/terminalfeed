@@ -4,7 +4,7 @@
     "title": "TerminalFeed API",
     "summary": "Real-time aggregated data for AI agents. Free tier plus USDC-paid premium tier with cross-site credits on TensorFeed.",
     "description": "TerminalFeed serves a free public API with no auth (markets, crypto, news, weather, space, infrastructure status) and a premium tier of composed multi-source endpoints gated by bearer-token auth. Premium credits are bought with USDC on Base mainnet and are jointly redeemable on tensorfeed.ai. Free endpoints have no SLA but return stale cache on upstream failure rather than 5xx. Premium endpoints are billed atomically: credits decrement before the upstream fetch begins, so partial-success responses still count.",
-    "version": "1.13.0",
+    "version": "1.14.0",
     "contact": {
       "name": "TerminalFeed Support",
       "url": "https://terminalfeed.io/developers/agent-payments",
@@ -2939,6 +2939,63 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 1,
+        "x-license": "inference-only"
+      }
+    },
+    "/api/pro/github-velocity": {
+      "get": {
+        "tags": [
+          "pro"
+        ],
+        "summary": "GitHub trending repos + AI/ML focus + language mix (2 credits)",
+        "description": "Top 30 repos created in the last 7 days sorted by stars, top 15 AI/ML-focused active repos (topic:llm + commits in last 30d), language and topic aggregates, AI/ML share of trending. Source: GitHub Search API. 30-min cache. Optional GITHUB_TOKEN Worker secret for higher upstream rate limit.",
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GitHub velocity snapshot.",
+            "headers": {
+              "X-Credits-Remaining": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PremiumPaymentRequired"
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "label": "curl",
+            "source": "curl https://terminalfeed.io/api/pro/github-velocity \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
+          },
+          {
+            "lang": "Python",
+            "label": "Python",
+            "source": "import requests\nd = requests.get(\n    \"https://terminalfeed.io/api/pro/github-velocity\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n).json()\nprint(\"AI/ML share %:\", d['aggregate']['ai_ml_share_percent'])"
+          },
+          {
+            "lang": "JavaScript",
+            "label": "JavaScript",
+            "source": "const d = await fetch(\"https://terminalfeed.io/api/pro/github-velocity\", {\n  headers: { Authorization: `Bearer ${TOKEN}` }\n}).then(r => r.json());\nfor (const r of d.trending_repos.slice(0, 5)) console.log(r.full_name, r.stars);"
+          }
+        ],
+        "x-pricing-credits": 2,
+        "x-pricing-usd": 0.04,
+        "x-composes-sources": 2,
         "x-license": "inference-only"
       }
     }
