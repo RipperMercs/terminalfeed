@@ -563,6 +563,7 @@ function handleIndex() {
       buy_credits: 'POST /api/payment/buy-credits',
       confirm_payment: 'POST /api/payment/confirm',
       balance: 'GET /api/payment/balance (Bearer auth)',
+      history: 'GET /api/payment/history (Bearer auth)',
       endpoints: [
         { path: '/api/pro/briefing', cost_credits: 1 },
         { path: '/api/pro/macro', cost_credits: 2 },
@@ -2437,8 +2438,10 @@ function _toolToMCP(def) {
 }
 
 function _toolRequiresBearer(toolName) {
-  // Premium tools and balance require bearer
-  return toolName.indexOf('tf_premium_') === 0 || toolName === 'tf_payment_balance';
+  // Premium tools, balance, and history require bearer
+  return toolName.indexOf('tf_premium_') === 0
+    || toolName === 'tf_payment_balance'
+    || toolName === 'tf_payment_history';
 }
 
 // Build a synthetic Request and URL the underlying handlers can consume.
@@ -2475,6 +2478,7 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_payment_buy_credits':        path = '/api/payment/buy-credits'; method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_confirm':            path = '/api/payment/confirm';     method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_balance':            path = '/api/payment/balance'; break;
+    case 'tf_payment_history':            path = '/api/payment/history'; break;
     default: return null;
   }
 
@@ -2535,6 +2539,7 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_payment_buy_credits':        return await handleBuyCredits(req, env);
     case 'tf_payment_confirm':            return await handleConfirmPayment(req, env);
     case 'tf_payment_balance':            return await handleBalance(req, env);
+    case 'tf_payment_history':            return await handlePaymentHistory(req, env);
     default: throw new Error('unknown_tool');
   }
 }
@@ -2930,6 +2935,16 @@ const LLM_TOOL_DEFINITIONS = [
     short_description: 'Check remaining credits for a bearer token.',
     description: 'GET endpoint that returns remaining credits for the bearer token in the Authorization header. Requires Authorization: Bearer tf_live_<64-char-hex>. Costs 0 credits. Use to monitor agent budget.',
     url: 'https://terminalfeed.io/api/payment/balance',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_payment_history',
+    short_description: 'List confirmed USDC purchases for a bearer token.',
+    description: 'GET endpoint that returns confirmed USDC purchases (tx_hash, amount_usd, credits_added, block_number, confirmed_at) plus current balance and totals for the bearer token. Requires Authorization: Bearer tf_live_<64-char-hex>. Costs 0 credits. Tokens minted before the ledger existed return current_balance with purchases: [].',
+    url: 'https://terminalfeed.io/api/payment/history',
     method: 'GET',
     auth: 'bearer',
     tier: 'free',
@@ -5793,6 +5808,12 @@ async function handleBalance(request, env) {
   return proxyToTensorFeed(request, env, '/api/payment/balance');
 }
 
+async function handlePaymentHistory(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  _recordPaymentEvent('history');
+  return proxyToTensorFeed(request, env, '/api/payment/history');
+}
+
 
 // --- Main Export (ES Module format) ---
 // IMPORTANT: In Cloudflare dashboard, set Worker type to "ES Module" (not "Service Worker")
@@ -5907,6 +5928,7 @@ export default {
       case 'payment/buy-credits': return await handleBuyCredits(request, env);
       case 'payment/confirm':    return await handleConfirmPayment(request, env);
       case 'payment/balance':    return await handleBalance(request, env);
+      case 'payment/history':    return await handlePaymentHistory(request, env);
 
       default:
         return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);
