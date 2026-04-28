@@ -69,6 +69,7 @@ atomic_charge = "credits decrement before upstream fetch; partial-fetch response
 "/api/pro/sentiment" = "2, $0.04, Fear & Greed + VIX + trending ticker mentions across HN/Reddit with sentiment scores + Polymarket signals"
 "/api/pro/world-deltas" = "2, $0.04, time-sorted event stream of recent earthquakes, HN front-page items, Polymarket market updates, and space launches; ?since= for poll-friendly diff semantics"
 "/api/pro/agent-context" = "2, $0.04, curated world-state from 13 sources + paste-ready system_prompt (~350 tokens) for LLM context. The 'always start here' call."
+"/api/pro/defi-tvl" = "2, $0.04, top 50 DeFi protocols by TVL via DefiLlama with category aggregates and biggest 24h/7d movers"
 "/api/pro/correlation-matrix" = "2, $0.04, 30-day Pearson correlations across crypto (BTC, ETH, SOL, AVAX, LINK), gold, treasury yields, USD index, oil"
 "/api/pro/whales" = "2, $0.04, near-real-time large on-chain transactions: BTC mempool >=10 BTC + last 3 ETH blocks >=100 ETH, with USD-equivalents"
 "/api/pro/exchange-flows" = "2, $0.04, ETH inflow/outflow tracking against major CEX hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin); per-exchange + aggregate net flow with bias label"

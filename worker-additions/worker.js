@@ -354,6 +354,7 @@ function handleIndex() {
         { path: '/api/pro/correlation-matrix', cost_credits: 2 },
         { path: '/api/pro/whales', cost_credits: 2 },
         { path: '/api/pro/exchange-flows', cost_credits: 2 },
+        { path: '/api/pro/defi-tvl', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -2490,6 +2491,17 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'tf_premium_defi_tvl',
+    short_description: 'Top 50 DeFi protocols by TVL with movers and category breakdown (2 credits).',
+    description: 'Composed DeFi total-value-locked snapshot for crypto research and trading agents. Returns top 50 protocols by TVL (each with 1h/24h/7d change, category, chain, market cap, FDV), top 15 chains by TVL, by-category aggregate, and biggest gainers/losers over 24h and 7d windows. Source: DefiLlama free public API. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
+    url: 'https://terminalfeed.io/api/pro/defi-tvl',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_premium_exchange_flows',
     short_description: 'ETH net inflow/outflow to major CEX hot wallets, last 3 blocks (2 credits).',
     description: 'Tracks ETH transfers in/out of major centralized exchange hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin) in the last 3 blocks. Each transfer tagged as inflow (user -> exchange, often precedes selling), outflow (exchange -> user, often HODL withdrawal), or inter_exchange. Aggregated per-exchange and globally with net_eth, net_usd, and bias label (inflow_dominant / outflow_dominant / balanced). Threshold 5 ETH minimum (~$11K at $2300/ETH) to filter retail noise. Useful for trading bots detecting regime shifts: sustained large net inflow signals selling pressure ahead, sustained outflow signals accumulation. Pair with tf_premium_whales for context. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required. v1 covers ETH only; BTC requires a labeled-address dataset.',
@@ -3335,6 +3347,121 @@ async function fetchProExchangeFlows(env, url) {
       direction_meaning: 'inflow = funds moving TO an exchange (often precedes selling). outflow = funds moving FROM an exchange to a user wallet (often HODL withdrawal). inter_exchange = both ends are exchanges (rebalance / arbitrage).',
       use_case: 'Trading bots watching for regime shifts. Sustained large net inflow can precede price drops; sustained large net outflow can precede price rallies. Pair with /api/pro/whales for context.',
       cache_ttl: '5 minutes.',
+    },
+  };
+}
+
+
+// ----- DeFi TVL: top protocols and chains via DefiLlama -----
+//
+// DefiLlama publishes a free public API at api.llama.fi. /protocols returns
+// every tracked protocol with TVL and change percentages. /v2/chains returns
+// chain-level rollups. We absorb the upstream fetch (it's a ~3MB payload),
+// filter to top 50, and surface category + biggest-movers aggregates.
+
+async function fetchProDefiTvl(env, url) {
+  var sources = await Promise.allSettled([
+    fetchWithTimeout('https://api.llama.fi/protocols', {}, 12000),
+    fetchWithTimeout('https://api.llama.fi/v2/chains', {}, 8000),
+  ]);
+
+  var protocols = [];
+  if (sources[0].status === 'fulfilled' && sources[0].value) {
+    try {
+      var allProtocols = await sources[0].value.json();
+      if (Array.isArray(allProtocols)) {
+        protocols = allProtocols
+          .filter(function(p) { return p && typeof p.tvl === 'number' && p.tvl > 0; })
+          .sort(function(a, b) { return b.tvl - a.tvl; })
+          .slice(0, 50)
+          .map(function(p) {
+            return {
+              name: p.name,
+              symbol: p.symbol || null,
+              category: p.category || null,
+              chain: p.chain || null,
+              chains: Array.isArray(p.chains) ? p.chains.slice(0, 10) : null,
+              tvl_usd: p.tvl,
+              change_1h_percent: typeof p.change_1h === 'number' ? p.change_1h : null,
+              change_1d_percent: typeof p.change_1d === 'number' ? p.change_1d : null,
+              change_7d_percent: typeof p.change_7d === 'number' ? p.change_7d : null,
+              market_cap_usd: typeof p.mcap === 'number' ? p.mcap : null,
+              fully_diluted_valuation_usd: typeof p.fdv === 'number' ? p.fdv : null,
+              url: p.slug ? 'https://defillama.com/protocol/' + p.slug : (p.url || null),
+            };
+          });
+      }
+    } catch (e) {}
+  }
+
+  var chains = [];
+  if (sources[1].status === 'fulfilled' && sources[1].value) {
+    try {
+      var allChains = await sources[1].value.json();
+      if (Array.isArray(allChains)) {
+        chains = allChains
+          .filter(function(c) { return c && typeof c.tvl === 'number'; })
+          .sort(function(a, b) { return (b.tvl || 0) - (a.tvl || 0); })
+          .slice(0, 15)
+          .map(function(c) {
+            return {
+              name: c.name,
+              chain_id: c.chainId != null ? c.chainId : null,
+              token_symbol: c.tokenSymbol || null,
+              tvl_usd: c.tvl || 0,
+              gecko_id: c.gecko_id || null,
+            };
+          });
+      }
+    } catch (e) {}
+  }
+
+  var totalTvl = protocols.reduce(function(s, p) { return s + (p.tvl_usd || 0); }, 0);
+
+  var byCategory = {};
+  protocols.forEach(function(p) {
+    var cat = p.category || 'Uncategorized';
+    if (!byCategory[cat]) byCategory[cat] = { count: 0, tvl_usd: 0 };
+    byCategory[cat].count += 1;
+    byCategory[cat].tvl_usd += p.tvl_usd || 0;
+  });
+  // Round category TVLs and sort by tvl_usd descending
+  var byCategorySorted = Object.keys(byCategory).map(function(k) {
+    return { category: k, count: byCategory[k].count, tvl_usd: Math.round(byCategory[k].tvl_usd) };
+  }).sort(function(a, b) { return b.tvl_usd - a.tvl_usd; });
+
+  function _movers(field, direction) {
+    return protocols
+      .filter(function(p) { return typeof p[field] === 'number'; })
+      .sort(function(a, b) { return direction === 'up' ? (b[field] - a[field]) : (a[field] - b[field]); })
+      .slice(0, 5)
+      .map(function(p) {
+        return { name: p.name, category: p.category, change_percent: p[field], tvl_usd: p.tvl_usd };
+      });
+  }
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/defi-tvl',
+    generated_at: new Date().toISOString(),
+    top_protocols: protocols,
+    top_chains: chains,
+    by_category: byCategorySorted,
+    biggest_gainers_24h: _movers('change_1d_percent', 'up'),
+    biggest_losers_24h: _movers('change_1d_percent', 'down'),
+    biggest_gainers_7d: _movers('change_7d_percent', 'up'),
+    biggest_losers_7d: _movers('change_7d_percent', 'down'),
+    aggregate: {
+      top_50_total_tvl_usd: Math.round(totalTvl),
+      protocol_count: protocols.length,
+      chain_count: chains.length,
+      category_count: byCategorySorted.length,
+    },
+    notes: {
+      source_attribution: 'DefiLlama (defillama.com). Free public API; no key required. We absorb the upstream call.',
+      cache_ttl: '30 minutes. TVL changes slowly.',
+      use_case: 'Crypto research and trading agents. Identify protocol-level concentration, biggest movers, and chain-level dominance shifts in one call.',
+      caveat: 'TVL excludes native staking on most chains. DefiLlama categorizes protocols subjectively; some may appear in unexpected categories. Numbers are best-effort and can revise as DefiLlama backfills.',
     },
   };
 }
@@ -4674,6 +4801,17 @@ async function handleProExchangeFlows(request, env, url) {
   });
 }
 
+async function handleProDefiTvl(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/defi-tvl', 2, async function(env2, url2) {
+    var KEY = 'pro:defi-tvl';
+    var cached = getCached(KEY, 1800000);  // 30 min
+    if (cached) return cached;
+    var data = await fetchProDefiTvl(env2, url2);
+    setCache(KEY, data);
+    return data;
+  });
+}
+
 
 // --- Proxy endpoints (forward to TensorFeed payment Worker) ---
 //
@@ -4833,6 +4971,7 @@ export default {
       case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
       case 'pro/whales': return await handleProWhales(request, env, url);
       case 'pro/exchange-flows': return await handleProExchangeFlows(request, env, url);
+      case 'pro/defi-tvl':       return await handleProDefiTvl(request, env, url);
 
       // Webhook subscriptions
       case 'pro/subscribe':       return await handleSubscribeCreate(request, env);
