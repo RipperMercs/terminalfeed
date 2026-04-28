@@ -118,6 +118,17 @@ function _recordPaymentEvent(kind) {
   _bumpKey(_traffic.payment_events, kind);
 }
 
+// OFAC comprehensively-sanctioned country list (ISO 3166-1 alpha-2). Buyers
+// from these jurisdictions are refused at the buy-credits quote step. This is
+// the geo-IP layer of compliance; wallet-level Chainalysis screening happens
+// on the TensorFeed payment Worker at confirm time. See /terms#premium 17.9.
+var OFAC_BLOCKED_COUNTRIES = ['CU', 'IR', 'KP', 'SY'];
+
+function _isOFACBlockedCountry(countryCode) {
+  if (!countryCode || typeof countryCode !== 'string') return false;
+  return OFAC_BLOCKED_COUNTRIES.indexOf(countryCode.toUpperCase()) !== -1;
+}
+
 function _recordWebhookTick(stats) {
   _traffic.webhook_stats.last_tick_at = new Date().toISOString();
   _traffic.webhook_stats.last_delivered = stats.delivered || 0;
@@ -5741,6 +5752,23 @@ async function handlePaymentInfo(request, env) {
 
 async function handleBuyCredits(request, env) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+
+  // OFAC geo-block: refuse to quote credit purchases from comprehensively
+  // sanctioned jurisdictions. Wallet-level OFAC screening (Chainalysis) runs
+  // on the TensorFeed payment Worker at /api/payment/confirm time. This gate
+  // is belt-and-suspenders so sanctioned jurisdictions cannot even start the
+  // buy flow. See /terms#premium Section 17.9.
+  var country = request.cf && request.cf.country;
+  if (_isOFACBlockedCountry(country)) {
+    _recordPaymentEvent('blocked_geo');
+    return jsonResponse({
+      error: 'jurisdiction_blocked',
+      message: 'TerminalFeed cannot accept Premium API credit purchases from this jurisdiction due to applicable sanctions law.',
+      country: country,
+      reference: 'https://terminalfeed.io/terms#premium',
+    }, 403);
+  }
+
   _recordPaymentEvent('buy_credits');
   return proxyToTensorFeed(request, env, '/api/payment/buy-credits');
 }

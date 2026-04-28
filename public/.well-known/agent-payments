@@ -23,7 +23,7 @@
     "model": "pay-per-call",
     "subscription": false,
     "expiry": null,
-    "refund_window_hours": 24,
+    "refunds": "none. all credit purchases are final and non-refundable. credits never expire and remain spendable indefinitely across terminalfeed.io and tensorfeed.ai.",
     "mainnet_proof_tx": "0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c"
   },
   "endpoints": [
@@ -47,6 +47,6 @@
     "note": "A bearer token minted on either site spends on either site."
   },
   "contact": "hello@terminalfeed.io",
-  "version": "1.1.0",
-  "last_updated": "2026-04-27"
+  "version": "1.2.0",
+  "last_updated": "2026-04-28"
 }
