@@ -294,6 +294,42 @@ function _buildMeta(endpoint, tracker, opts) {
   };
 }
 
+// Build _meta.sources[] from a Promise.allSettled result + parallel sourceMeta array.
+// sourceMeta[i] = { name, start } recorded before fetch i was issued.
+// Each output entry: { name, status, fetched_at, latency_ms, reason? }
+function _buildSourcesMeta(settled, sourceMeta) {
+  return settled.map(function(s, i) {
+    var meta = sourceMeta[i] || { name: 'unknown', start: Date.now() };
+    var status = (s.status === 'fulfilled' && s.value && (s.value.ok === undefined || s.value.ok)) ? 'live' : 'error';
+    var entry = {
+      name: meta.name,
+      status: status,
+      fetched_at: new Date(meta.start).toISOString(),
+      latency_ms: Math.max(0, Date.now() - meta.start),
+    };
+    if (status === 'error') {
+      if (s.status === 'rejected' && s.reason && s.reason.message) {
+        entry.reason = String(s.reason.message).slice(0, 100);
+      } else if (s.status === 'fulfilled' && s.value && s.value.status) {
+        entry.reason = 'http_' + s.value.status;
+      } else {
+        entry.reason = 'unknown';
+      }
+    }
+    return entry;
+  });
+}
+
+// Build a top-level _meta object for premium responses.
+function _premiumMeta(endpoint, sources) {
+  return {
+    generated_at: new Date().toISOString(),
+    endpoint: endpoint,
+    tier: 'premium',
+    sources: sources,
+  };
+}
+
 // Per-endpoint health bookkeeping. Updated by cacheLookupOrFetch on every
 // upstream fetch success/failure. Resets on cold start. Surfaced via
 // /api/health/premium for customers / monitoring without admin auth.
@@ -3415,6 +3451,16 @@ async function fetchProMacro(env, url) {
       }).catch(function() { return null; })
     : Promise.resolve(null);
 
+  var _macroStart = Date.now();
+  var sourceMeta = [
+    { name: 'FRED.daily_series_bundle', start: _macroStart },
+    { name: 'Frankfurter.forex_latest', start: _macroStart },
+    { name: 'Kraken.PAXG_USD', start: _macroStart },
+    { name: 'Finnhub.us_indices_bundle', start: _macroStart },
+    { name: 'Finnhub.VIX', start: _macroStart },
+    { name: 'Frankfurter.forex_history', start: _macroStart },
+    { name: 'FRED.VIXCLS_fallback', start: _macroStart },
+  ];
   var all = await Promise.allSettled([
     Promise.all(fredFetches),
     forexLatest,
@@ -3498,6 +3544,7 @@ async function fetchProMacro(env, url) {
     out.forex.series = fxSeries;
   }
 
+  out._meta = _premiumMeta('/api/pro/macro', _buildSourcesMeta(all, sourceMeta));
   return out;
 }
 
@@ -4590,6 +4637,22 @@ async function fetchProAgentContext(env, url) {
   var nowHuman = new Date(nowMs).toUTCString();
   var oneHourAgoSec = Math.floor(nowMs / 1000) - 3600;
 
+  var _ctxStart = Date.now();
+  var sourceMeta = [
+    { name: 'Binance.BTCUSDT', start: _ctxStart },
+    { name: 'AlternativeMe.fng', start: _ctxStart },
+    { name: 'Finnhub.VIX', start: _ctxStart },
+    { name: 'FRED.FEDFUNDS', start: _ctxStart },
+    { name: 'Frankfurter.forex_usd_base', start: _ctxStart },
+    { name: 'HackerNews.front_page', start: _ctxStart },
+    { name: 'USGS.earthquakes_significant_day', start: _ctxStart },
+    { name: 'TheSpaceDevs.launch_upcoming', start: _ctxStart },
+    { name: 'Polymarket.gamma', start: _ctxStart },
+    { name: 'GitHubStatus.summary', start: _ctxStart },
+    { name: 'CloudflareStatus.summary', start: _ctxStart },
+    { name: 'OpenAIStatus.summary', start: _ctxStart },
+    { name: 'AnthropicStatus.summary', start: _ctxStart },
+  ];
   var sources = await Promise.allSettled([
     fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'),  // 0
     fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),                              // 1
@@ -4856,6 +4919,7 @@ async function fetchProAgentContext(env, url) {
       approx_token_count_system_prompt: approxTokens,
       composition: 'BTC ticker (Binance), Fear & Greed (alternative.me), VIX (Finnhub), Fed funds rate (FRED), forex EUR/JPY/GBP/CHF (Frankfurter), HN front page top 5 (Algolia), significant earthquakes 24h (USGS), upcoming launches (TheSpaceDevs), top 3 Polymarket markets by volume, status of GitHub + Cloudflare + OpenAI + Anthropic.',
     },
+    _meta: _premiumMeta('/api/pro/agent-context', _buildSourcesMeta(sources, sourceMeta)),
   };
 }
 
