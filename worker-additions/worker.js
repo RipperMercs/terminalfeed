@@ -3083,9 +3083,78 @@ async function validateAndCharge(env, token, cost, endpoint) {
   return result;
 }
 
+// Section 2 of cc-spec-premium-tier-polish: sandbox evaluation tier.
+// 10 free calls per IP per 24h, opt-in via ?evaluation=1 with no bearer.
+// Bypasses validate-and-charge entirely (no TensorFeed traffic on sandbox).
+var SANDBOX_QUOTA_PER_IP_PER_DAY = 10;
+var SANDBOX_KEY_TTL_SECONDS = 90000;  // 25h to absorb UTC-day-rollover
+
+async function _handleSandboxCall(request, env, url, endpointPath, fetchFn) {
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({
+      error: 'evaluation_unavailable',
+      message: 'Sandbox tier requires KV binding which is not currently configured.',
+    }, 503);
+  }
+  var ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'unknown';
+  var dateUtc = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD UTC
+  var quotaKey = 'eval:' + ip + ':' + dateUtc;
+
+  var raw = await env.WEBHOOK_SUBS.get(quotaKey);
+  var count = raw ? parseInt(raw, 10) : 0;
+  if (isNaN(count) || count < 0) count = 0;
+
+  if (count >= SANDBOX_QUOTA_PER_IP_PER_DAY) {
+    return jsonResponse({
+      error: 'evaluation_quota_exhausted',
+      message: 'Free evaluation is ' + SANDBOX_QUOTA_PER_IP_PER_DAY + ' calls per IP per 24 hours. Buy credits to continue.',
+      buy_url: 'https://terminalfeed.io/api/payment/buy-credits',
+      docs_url: 'https://terminalfeed.io/developers/agent-payments',
+      window_resets_at_utc_date: dateUtc + 'T23:59:59Z',
+    }, 429);
+  }
+
+  // Increment quota BEFORE the fetch so a slow upstream doesn't allow a
+  // race past the cap. KV writes are eventually consistent globally; if a
+  // burst of requests hits different edge regions, they may briefly exceed
+  // 10 by ~1-2. Acceptable for a free-evaluation tier.
+  await env.WEBHOOK_SUBS.put(quotaKey, String(count + 1), { expirationTtl: SANDBOX_KEY_TTL_SECONDS });
+
+  try {
+    var data = await fetchFn(env, url);
+    // Override / inject _meta.tier = "evaluation" with remaining quota.
+    var existingMeta = data && data._meta ? data._meta : null;
+    var newMeta = Object.assign({}, existingMeta || {
+      generated_at: new Date().toISOString(),
+      endpoint: endpointPath,
+      sources: [],
+    }, {
+      tier: 'evaluation',
+      evaluation_remaining: SANDBOX_QUOTA_PER_IP_PER_DAY - (count + 1),
+    });
+    var resp = Object.assign({}, data, { _meta: newMeta });
+    return premiumJsonResponse(resp, null);
+  } catch (e) {
+    return premiumJsonResponse({
+      source: 'terminalfeed-pro',
+      endpoint: endpointPath,
+      generated_at: new Date().toISOString(),
+      warning: 'sandbox_upstream_partial',
+      message: 'Aggregator caught an exception during evaluation call. Retry shortly.',
+      _meta: {
+        tier: 'evaluation',
+        evaluation_remaining: SANDBOX_QUOTA_PER_IP_PER_DAY - (count + 1),
+      },
+    }, null);
+  }
+}
+
 async function handlePremium(request, env, url, endpointPath, costCredits, fetchFn) {
   var token = extractBearerToken(request);
   if (!token) {
+    // Sandbox path: opt-in via ?evaluation=1
+    var isEval = url.searchParams.get('evaluation') === '1';
+    if (isEval) return await _handleSandboxCall(request, env, url, endpointPath, fetchFn);
     return json402('missing_token');
   }
 
@@ -5483,7 +5552,58 @@ async function handleBuyCredits(request, env) {
 async function handleConfirmPayment(request, env) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
   _recordPaymentEvent('confirm');
-  return proxyToTensorFeed(request, env, '/api/payment/confirm');
+
+  // Section 5 of cc-spec-premium-tier-polish: industry-standard idempotency
+  // keys. Client passes Idempotency-Key header. We cache the response in KV
+  // for 24h keyed by sha256(bearer_or_anonymous + ":" + key). Same key
+  // replayed = cached response with X-Idempotency-Replay: true, no
+  // re-processing on TensorFeed.
+  var idempotencyKey = request.headers.get('Idempotency-Key');
+  var cacheKey = null;
+
+  if (idempotencyKey && env && env.WEBHOOK_SUBS) {
+    var bearer = request.headers.get('Authorization') || 'anonymous';
+    var hashInput = bearer + ':' + idempotencyKey;
+    cacheKey = 'idem:' + (await _sha256Hex(hashInput));
+    var cached = await env.WEBHOOK_SUBS.get(cacheKey, 'json');
+    if (cached) {
+      var replayHeaders = Object.assign({}, cached.headers || {}, {
+        'X-Idempotency-Replay': 'true',
+        'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+        'Access-Control-Allow-Origin': '*',
+      });
+      return new Response(cached.body || '', { status: cached.status || 200, headers: replayHeaders });
+    }
+  }
+
+  // Forward to TensorFeed
+  var resp = await proxyToTensorFeed(request, env, '/api/payment/confirm');
+
+  // Cache the response (any status) per Stripe-style "first response wins"
+  // semantics. KV write failure must not break the proxy response.
+  if (cacheKey) {
+    try {
+      var clonedResp = resp.clone();
+      var bodyText = await clonedResp.text();
+      var capturedHeaders = {};
+      clonedResp.headers.forEach(function(v, k) {
+        var lk = k.toLowerCase();
+        // Skip hop-by-hop and content-length (recomputed on replay)
+        if (lk === 'content-length' || lk === 'transfer-encoding') return;
+        capturedHeaders[k] = v;
+      });
+      await env.WEBHOOK_SUBS.put(cacheKey, JSON.stringify({
+        status: resp.status,
+        headers: capturedHeaders,
+        body: bodyText,
+        stored_at: new Date().toISOString(),
+      }), { expirationTtl: 86400 });
+    } catch (e) {
+      // Idempotency cache miss on retry is acceptable.
+    }
+  }
+
+  return resp;
 }
 
 async function handleBalance(request, env) {
