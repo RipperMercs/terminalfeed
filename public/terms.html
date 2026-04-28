@@ -161,6 +161,21 @@
 
   <p><strong>17.8 Cross-site applicability.</strong> Credits and bearer tokens issued under this tier are jointly redeemable on terminalfeed.io and tensorfeed.ai. The TensorFeed payment Worker is the system of record for credit balances. A token purchased on either site spends on either site. The refund policy in Section 17.5 applies to the original purchase regardless of which site the credits are subsequently spent on.</p>
 
+  <h3 id="schema-stability">17A. Schema Stability</h3>
+  <p>TerminalFeed commits to not breaking premium API response schemas without ninety (90) days of public deprecation notice. This commitment applies to every <span style="font-family:monospace;">/api/pro/*</span> endpoint and to the supporting <span style="font-family:monospace;">/api/payment/*</span>, <span style="font-family:monospace;">/api/llm-tools</span>, <span style="font-family:monospace;">/api/mcp</span>, and webhook delivery contracts.</p>
+
+  <p><strong>17A.1 Additive changes are unrestricted.</strong> New fields may be added to any response at any time. Clients must tolerate unknown fields gracefully; ignoring fields they do not recognize is acceptable.</p>
+
+  <p><strong>17A.2 Existing fields are stable.</strong> Documented fields will not be removed, renamed, or have their type changed without ninety (90) days of advance notice via the public changelog at <a href="/changelog">/changelog</a> and a per-response <code style="font-family:monospace;font-size:11px;">X-TerminalFeed-Deprecation</code> header on the affected endpoint during the deprecation window.</p>
+
+  <p><strong>17A.3 The _meta block is governed by this commitment.</strong> The top-level <code style="font-family:monospace;font-size:11px;">_meta</code> object on every <span style="font-family:monospace;">/api/pro/*</span> response, including its <code style="font-family:monospace;font-size:11px;">sources[].name</code> identifier convention, is part of the documented schema. Source names follow the <code style="font-family:monospace;font-size:11px;">{Provider}.{specific_metric}</code> convention and will not be renamed without the ninety-day notice.</p>
+
+  <p><strong>17A.4 Sandbox responses match authenticated responses.</strong> Sandbox evaluation responses share the identical schema as authenticated responses, except for the <code style="font-family:monospace;font-size:11px;">_meta.tier</code> and <code style="font-family:monospace;font-size:11px;">_meta.evaluation_remaining</code> fields, which only appear in evaluation mode.</p>
+
+  <p><strong>17A.5 URL paths are stable.</strong> Existing premium endpoint paths will not be removed without the same ninety-day notice. New endpoints may be added at any time.</p>
+
+  <p><strong>17A.6 Deprecation header convention.</strong> When a field or endpoint enters its deprecation window, every response on the affected endpoint includes a header of the form <code style="font-family:monospace;font-size:11px;">X-TerminalFeed-Deprecation: field=foo,bar; sunset=2026-08-01; replacement=baz</code>. Until the sunset date the field continues to be served. After sunset it may be removed.</p>
+
   <div class="footer">
     <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper</p>
     <p><a href="/">Home</a> &middot; <a href="/blog">Blog</a> &middot; <a href="/about">About</a> &middot; <a href="/team">Team</a> &middot; <a href="/features">Features</a> &middot; <a href="/live">Live</a> &middot; <a href="/changelog">Changelog</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
