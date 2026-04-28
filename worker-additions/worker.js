@@ -204,6 +204,28 @@ function setCache(key, data) {
   _cache[key] = { data: data, ts: Date.now() };
 }
 
+// Cache-aware lookup that tags responses with freshness signals so an agent
+// can tell how stale the data is. Tags:
+//   _cached: true | false (was this served from a warm cache?)
+//   _cache_age_seconds: integer (0 if fresh, >=1 if from cache)
+// Caller passes the cache key, ttl, and an async fetch closure.
+async function cacheLookupOrFetch(key, ttlMs, fetchFn) {
+  var entry = _cache[key];
+  if (entry && Date.now() - entry.ts < ttlMs) {
+    var ageSec = Math.floor((Date.now() - entry.ts) / 1000);
+    return Object.assign({}, entry.data, {
+      _cached: true,
+      _cache_age_seconds: ageSec,
+    });
+  }
+  var data = await fetchFn();
+  setCache(key, data);
+  return Object.assign({}, data, {
+    _cached: false,
+    _cache_age_seconds: 0,
+  });
+}
+
 // Simple hit counter (resets on cold start, seeded from date for consistency)
 let hitCounter = (function() {
   const d = new Date();
@@ -1971,6 +1993,62 @@ async function handleSubscribeList(request, env) {
     });
   }
   return premiumJsonResponse({ subscriptions: subs, count: subs.length }, validation.credits_remaining);
+}
+
+// POST /api/pro/subscribe/<id>/resume
+// Reactivates a paused subscription. Sub auto-pauses when validate-and-charge
+// returns insufficient_credits during a cron tick; this endpoint flips active
+// back to true after the customer has topped up. Verifies ownership and that
+// the bearer still validates (credits, not expired).
+async function handleSubscribeResume(request, env, subId) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({ error: 'webhooks_unavailable' }, 503);
+  }
+  var token = extractBearerToken(request);
+  if (!token) return json402('missing_token');
+
+  var validation = await validateAndCharge(env, token, 0, 'tf:/api/pro/subscribe/resume');
+  if (!validation.ok) return json402(validation.reason || 'invalid_token');
+
+  if (!subId || !/^wh_[a-f0-9]{16}$/.test(subId)) {
+    return jsonResponse({ error: 'invalid_subscription_id' }, 400);
+  }
+  var rec = await env.WEBHOOK_SUBS.get('sub:' + subId, 'json');
+  if (!rec) return jsonResponse({ error: 'not_found' }, 404);
+
+  var tokenHash = await _sha256Hex(token);
+  if (rec.owner_token_hash !== tokenHash) {
+    return jsonResponse({ error: 'forbidden' }, 403);
+  }
+
+  if (rec.active) {
+    return premiumJsonResponse({
+      id: subId,
+      active: true,
+      message: 'Subscription is already active. No-op.',
+    }, validation.credits_remaining);
+  }
+
+  rec.active = true;
+  rec.last_error = null;
+  rec.paused_at = null;
+  rec.resumed_at = new Date().toISOString();
+  // Refresh the stored bearer in case the customer rotated or topped up
+  // (the new validation succeeded, so the current bearer is good).
+  rec.owner_token = token;
+  await env.WEBHOOK_SUBS.put('sub:' + subId, JSON.stringify(rec));
+
+  return premiumJsonResponse({
+    id: subId,
+    webhook_url: rec.webhook_url,
+    endpoint: rec.endpoint,
+    active: true,
+    resumed_at: rec.resumed_at,
+    fire_count: rec.fire_count || 0,
+    fail_count: rec.fail_count || 0,
+    note: 'Subscription resumed. Next delivery will fire on the next */5 cron tick (within 5 minutes).',
+  }, validation.credits_remaining);
 }
 
 // DELETE /api/pro/subscribe/<id>
@@ -5029,44 +5107,28 @@ async function fetchProCryptoDeep(env, url) {
 async function handleProBriefing(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/briefing', 1, async function(env2, url2) {
     var KEY = 'pro:briefing:' + (url2.searchParams.get('include') || '*') + ':' + (url2.searchParams.get('history') || '');
-    var cached = getCached(KEY, 60000);
-    if (cached) return cached;
-    var data = await fetchProBriefing(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 60000, function() { return fetchProBriefing(env2, url2); });
   });
 }
 
 async function handleProMacro(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/macro', 2, async function(env2, url2) {
     var KEY = 'pro:macro:' + (url2.searchParams.get('history') || '');
-    var cached = getCached(KEY, 300000);
-    if (cached) return cached;
-    var data = await fetchProMacro(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProMacro(env2, url2); });
   });
 }
 
 async function handleProCryptoDeep(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/crypto-deep', 2, async function(env2, url2) {
     var KEY = 'pro:crypto-deep:' + (url2.searchParams.get('coins') || '*') + ':' + (url2.searchParams.get('history') || '');
-    var cached = getCached(KEY, 60000);
-    if (cached) return cached;
-    var data = await fetchProCryptoDeep(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 60000, function() { return fetchProCryptoDeep(env2, url2); });
   });
 }
 
 async function handleProSentiment(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/sentiment', 2, async function(env2, url2) {
     var KEY = 'pro:sentiment';
-    var cached = getCached(KEY, 300000);  // 5 minutes; sentiment changes slowly
-    if (cached) return cached;
-    var data = await fetchProSentiment(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProSentiment(env2, url2); });
   });
 }
 
@@ -5082,77 +5144,49 @@ async function handleProWorldDeltas(request, env, url) {
 async function handleProAgentContext(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/agent-context', 2, async function(env2, url2) {
     var KEY = 'pro:agent-context';
-    var cached = getCached(KEY, 300000);  // 5 min cache; this is meant to be the "always start here" call
-    if (cached) return cached;
-    var data = await fetchProAgentContext(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProAgentContext(env2, url2); });
   });
 }
 
 async function handleProCorrelationMatrix(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/correlation-matrix', 2, async function(env2, url2) {
     var KEY = 'pro:correlation-matrix';
-    var cached = getCached(KEY, 1800000);  // 30 min cache; correlations move slowly
-    if (cached) return cached;
-    var data = await fetchProCorrelationMatrix(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 1800000, function() { return fetchProCorrelationMatrix(env2, url2); });
   });
 }
 
 async function handleProWhales(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/whales', 2, async function(env2, url2) {
     var KEY = 'pro:whales';
-    var cached = getCached(KEY, 300000);  // 5 min cache
-    if (cached) return cached;
-    var data = await fetchProWhales(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProWhales(env2, url2); });
   });
 }
 
 async function handleProExchangeFlows(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/exchange-flows', 2, async function(env2, url2) {
     var KEY = 'pro:exchange-flows';
-    var cached = getCached(KEY, 300000);  // 5 min cache
-    if (cached) return cached;
-    var data = await fetchProExchangeFlows(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProExchangeFlows(env2, url2); });
   });
 }
 
 async function handleProDefiTvl(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/defi-tvl', 2, async function(env2, url2) {
     var KEY = 'pro:defi-tvl';
-    var cached = getCached(KEY, 1800000);  // 30 min
-    if (cached) return cached;
-    var data = await fetchProDefiTvl(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 1800000, function() { return fetchProDefiTvl(env2, url2); });
   });
 }
 
 async function handleProStablecoinFlows(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/stablecoin-flows', 2, async function(env2, url2) {
     var KEY = 'pro:stablecoin-flows';
-    var cached = getCached(KEY, 3600000);  // 1 hour
-    if (cached) return cached;
-    var data = await fetchProStablecoinFlows(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 3600000, function() { return fetchProStablecoinFlows(env2, url2); });
   });
 }
 
 async function handleProGithubVelocity(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/github-velocity', 2, async function(env2, url2) {
     var KEY = 'pro:github-velocity';
-    var cached = getCached(KEY, 1800000);  // 30 min
-    if (cached) return cached;
-    var data = await fetchProGithubVelocity(env2, url2);
-    setCache(KEY, data);
-    return data;
+    return await cacheLookupOrFetch(KEY, 1800000, function() { return fetchProGithubVelocity(env2, url2); });
   });
 }
 
@@ -5250,10 +5284,17 @@ export default {
       _recordTrafficHit(env, path, hasBearer, ua);
     }
 
-    // Path-prefix routes: webhook deletion takes a dynamic ID
+    // Path-prefix routes: webhook subscription per-id actions
     if (path.startsWith('pro/subscribe/')) {
-      var subId = path.slice('pro/subscribe/'.length);
-      return await handleSubscribeDelete(request, env, subId);
+      var rest = path.slice('pro/subscribe/'.length);
+      var slashIdx = rest.indexOf('/');
+      if (slashIdx >= 0) {
+        var subId = rest.slice(0, slashIdx);
+        var action = rest.slice(slashIdx + 1);
+        if (action === 'resume') return await handleSubscribeResume(request, env, subId);
+        return jsonResponse({ error: 'unknown_action', action: action }, 404);
+      }
+      return await handleSubscribeDelete(request, env, rest);
     }
 
     switch (path) {
