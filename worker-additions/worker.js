@@ -4943,6 +4943,13 @@ async function fetchProWorldDeltasOneHour() {
   // USGS fdsnws supports ISO times but expects unzoned format
   var usgsStart = sinceISO.replace(/\.\d{3}Z$/, '');
 
+  var _wdStart = Date.now();
+  var sourceMeta = [
+    { name: 'USGS.earthquakes_M4_plus_1h', start: _wdStart },
+    { name: 'HackerNews.algolia_front_page', start: _wdStart },
+    { name: 'Polymarket.gamma_recently_updated', start: _wdStart },
+    { name: 'TheSpaceDevs.launch_recent', start: _wdStart },
+  ];
   var sources = await Promise.allSettled([
     // 1) Earthquakes M4.0+ in the last hour (USGS fdsnws)
     fetchWithTimeout(
@@ -5080,7 +5087,7 @@ async function fetchProWorldDeltasOneHour() {
   }
 
   events.sort(function(a, b) { return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(); });
-  return events;
+  return { events: events, sources: _buildSourcesMeta(sources, sourceMeta) };
 }
 
 async function fetchProWorldDeltas(env, url) {
@@ -5103,8 +5110,11 @@ async function fetchProWorldDeltas(env, url) {
     setCache(BUCKET_KEY, bucket);
   }
 
+  var bucketEvents = (bucket && bucket.events) || [];
+  var bucketSources = (bucket && bucket.sources) || [];
+
   var sinceMsLocal = sinceMs;
-  var filtered = bucket.filter(function(e) {
+  var filtered = bucketEvents.filter(function(e) {
     return new Date(e.timestamp).getTime() > sinceMsLocal;
   });
 
@@ -5122,7 +5132,7 @@ async function fetchProWorldDeltas(env, url) {
     events: filtered,
     counts: counts,
     sample_size: {
-      events_in_rolling_hour: bucket.length,
+      events_in_rolling_hour: bucketEvents.length,
       events_after_since_filter: filtered.length,
     },
     notes: {
@@ -5133,12 +5143,23 @@ async function fetchProWorldDeltas(env, url) {
       poll_recommendation: 'For monitor agents, poll every 60-300 seconds with ?since= set to your last poll time. The endpoint sub-second responds when the rolling cache is warm.',
       saves_polling: 'Replaces five separate upstream calls + client-side time merging.',
     },
+    _meta: _premiumMeta('/api/pro/world-deltas', bucketSources),
   };
 }
 
 
 async function fetchProSentiment(env, url) {
   // Parallel-fetch every signal source; never fail the whole call on one source.
+  var _sentStart = Date.now();
+  var sourceMeta = [
+    { name: 'AlternativeMe.fng', start: _sentStart },
+    { name: 'Finnhub.VIX', start: _sentStart },
+    { name: 'HackerNews.topstories', start: _sentStart },
+    { name: 'Reddit.r_CryptoCurrency_hot', start: _sentStart },
+    { name: 'Reddit.r_wallstreetbets_hot', start: _sentStart },
+    { name: 'Reddit.r_stocks_hot', start: _sentStart },
+    { name: 'Polymarket.gamma_top_volume', start: _sentStart },
+  ];
   var sources = await Promise.allSettled([
     fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
     (env && env.FINNHUB_API_KEY)
@@ -5322,6 +5343,7 @@ async function fetchProSentiment(env, url) {
       vix_source: 'Finnhub ^VIX (US equities fear gauge).',
       labels: 'sentiment_label is a coarse bucket: negative <= -0.3 < moderately_negative <= -0.1 < neutral <= 0.1 < moderately_positive <= 0.3 < positive.',
     },
+    _meta: _premiumMeta('/api/pro/sentiment', _buildSourcesMeta(sources, sourceMeta)),
   };
 }
 
@@ -5361,6 +5383,14 @@ async function fetchProCryptoDeep(env, url) {
         .then(function(r) { return r.json(); }).catch(function() { return null; })
     : Promise.resolve(null);
 
+  var _cdStart = Date.now();
+  var sourceMeta = [
+    { name: 'CoinLore.tickers_top50', start: _cdStart },
+    { name: 'Binance.ticker_24hr_all', start: _cdStart },
+    { name: 'Mempool.network_bundle', start: _cdStart },
+    { name: 'Etherscan.gas_oracle', start: _cdStart },
+    { name: 'Coinbase.BTC_USD_candles_30d', start: _cdStart },
+  ];
   var all = await Promise.allSettled([topFetch, binanceFetch, mempoolFetches, gasFetch, historyFetch]);
 
   var topCoins = [];
@@ -5464,6 +5494,7 @@ async function fetchProCryptoDeep(env, url) {
     };
   }
 
+  out._meta = _premiumMeta('/api/pro/crypto-deep', _buildSourcesMeta(all, sourceMeta));
   return out;
 }
 
