@@ -31,7 +31,7 @@ const workerStartTime = Date.now();
 // Cloudflare SQL API at scale.
 
 var _traffic = {
-  cold_start_at: new Date().toISOString(),
+  cold_start_at: null,  // lazy-initialized on first request (Date in module scope returns epoch on Cloudflare)
   total_requests: 0,
   by_endpoint: {},
   by_user_agent_family: {},
@@ -87,6 +87,7 @@ function _bumpKey(obj, key) {
 }
 
 function _recordTrafficHit(env, path, hasBearer, ua) {
+  if (!_traffic.cold_start_at) _traffic.cold_start_at = new Date().toISOString();
   _traffic.total_requests += 1;
   _bumpKey(_traffic.by_endpoint, '/api/' + path);
   var uaFam = _uaFamily(ua);
@@ -204,6 +205,35 @@ function setCache(key, data) {
   _cache[key] = { data: data, ts: Date.now() };
 }
 
+// Per-endpoint health bookkeeping. Updated by cacheLookupOrFetch on every
+// upstream fetch success/failure. Resets on cold start. Surfaced via
+// /api/health/premium for customers / monitoring without admin auth.
+var _endpointHealth = {};
+
+function _keyToEndpoint(key) {
+  // Cache keys are "pro:macro:30d" or "pro:agent-context" etc. Normalize.
+  var parts = key.split(':');
+  if (parts[0] === 'pro') return '/api/pro/' + parts[1];
+  return '/api/' + parts.join('/');
+}
+
+function _recordEndpointSuccess(key) {
+  var ep = _keyToEndpoint(key);
+  var h = _endpointHealth[ep] || {};
+  h.last_success_at = new Date().toISOString();
+  h.recent_error_count = 0;
+  _endpointHealth[ep] = h;
+}
+
+function _recordEndpointError(key, msg) {
+  var ep = _keyToEndpoint(key);
+  var h = _endpointHealth[ep] || {};
+  h.last_error_at = new Date().toISOString();
+  h.last_error = String(msg || 'unknown').slice(0, 200);
+  h.recent_error_count = (h.recent_error_count || 0) + 1;
+  _endpointHealth[ep] = h;
+}
+
 // Cache-aware lookup that tags responses with freshness signals so an agent
 // can tell how stale the data is. Tags:
 //   _cached: true | false (was this served from a warm cache?)
@@ -218,11 +248,53 @@ async function cacheLookupOrFetch(key, ttlMs, fetchFn) {
       _cache_age_seconds: ageSec,
     });
   }
-  var data = await fetchFn();
-  setCache(key, data);
-  return Object.assign({}, data, {
-    _cached: false,
-    _cache_age_seconds: 0,
+  try {
+    var data = await fetchFn();
+    setCache(key, data);
+    _recordEndpointSuccess(key);
+    return Object.assign({}, data, {
+      _cached: false,
+      _cache_age_seconds: 0,
+    });
+  } catch (e) {
+    _recordEndpointError(key, e && e.message);
+    throw e;
+  }
+}
+
+async function handleHealthPremium(env) {
+  var endpoints = Object.keys(_endpointHealth).sort();
+  var report = {};
+  var degradedCount = 0;
+  endpoints.forEach(function(ep) {
+    var h = _endpointHealth[ep];
+    var lastSuccessTs = h.last_success_at ? new Date(h.last_success_at).getTime() : 0;
+    var lastErrorTs = h.last_error_at ? new Date(h.last_error_at).getTime() : 0;
+    // operational if last success is more recent than last error,
+    // OR there has never been an error
+    var operational = !h.last_error_at || lastSuccessTs >= lastErrorTs;
+    if (!operational) degradedCount += 1;
+    report[ep] = {
+      operational: operational,
+      last_success_at: h.last_success_at || null,
+      last_error_at: h.last_error_at || null,
+      last_error: h.last_error || null,
+      recent_error_count: h.recent_error_count || 0,
+    };
+  });
+  return jsonResponse({
+    status: degradedCount === 0 ? 'all_operational' : 'degraded',
+    checked_at: new Date().toISOString(),
+    cold_start_at: _traffic.cold_start_at,
+    endpoints_tracked: endpoints.length,
+    endpoints_degraded: degradedCount,
+    endpoints: report,
+    notes: {
+      reset_on: 'Cold start of the Worker resets these counters. Continuous traffic keeps the data live.',
+      tracking_method: 'In-memory updates inside cacheLookupOrFetch on every upstream fetch success/failure (cache hits do not update last_success_at since no upstream contact was made).',
+      auth: 'No auth required. This is a public health surface for customer trust.',
+      operational_definition: 'last_success_at >= last_error_at, or never errored.',
+    },
   });
 }
 
@@ -5338,6 +5410,7 @@ export default {
       case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
       case 'health':         return jsonResponse({ status: 'ok', version: '2.1.0', uptime: Date.now() - workerStartTime, ts: Date.now() });
+      case 'health/premium': return await handleHealthPremium(env);
       case 'llm-tools':      return handleLLMTools(url);
       case 'mcp':            return await handleMcp(request, env);
 
