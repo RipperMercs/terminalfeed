@@ -21,6 +21,169 @@
 
 const workerStartTime = Date.now();
 
+// =============================================================================
+// Agent traffic tracking (Tier 1: in-memory counters; Tier 2: Analytics Engine)
+// =============================================================================
+// In-memory _traffic object accumulates since cold start. Cloudflare Workers
+// stay warm during continuous traffic, so the window is roughly "since the
+// last quiet period." For long-horizon analytics the same events get written
+// to env.AGENT_ANALYTICS via writeDataPoint and are queryable via the
+// Cloudflare SQL API at scale.
+
+var _traffic = {
+  cold_start_at: new Date().toISOString(),
+  total_requests: 0,
+  by_endpoint: {},
+  by_user_agent_family: {},
+  by_auth: { with_bearer: 0, no_bearer: 0 },
+  mcp_methods: {},
+  mcp_tools_called: {},
+  payment_events: {},
+  webhook_stats: { last_tick_at: null, last_delivered: 0, last_paused: 0, last_errors: 0, last_scanned: 0, total_delivered: 0, total_paused: 0, total_errors: 0, ticks: 0 },
+};
+
+function _uaFamily(ua) {
+  if (!ua) return 'no_ua';
+  var u = ua.toLowerCase();
+  // AI crawlers / agents
+  if (u.indexOf('gptbot') !== -1) return 'gptbot';
+  if (u.indexOf('chatgpt-user') !== -1) return 'chatgpt-user';
+  if (u.indexOf('oai-searchbot') !== -1) return 'oai-searchbot';
+  if (u.indexOf('claudebot') !== -1) return 'claudebot';
+  if (u.indexOf('claude-web') !== -1) return 'claude-web';
+  if (u.indexOf('anthropic-ai') !== -1) return 'anthropic-ai';
+  if (u.indexOf('perplexitybot') !== -1) return 'perplexitybot';
+  if (u.indexOf('perplexity-user') !== -1) return 'perplexity-user';
+  if (u.indexOf('google-extended') !== -1) return 'google-extended';
+  if (u.indexOf('applebot-extended') !== -1) return 'applebot-extended';
+  if (u.indexOf('ccbot') !== -1) return 'ccbot';
+  if (u.indexOf('meta-externalagent') !== -1) return 'meta-externalagent';
+  if (u.indexOf('cohere') !== -1) return 'cohere-ai';
+  if (u.indexOf('mistralai') !== -1) return 'mistralai-user';
+  if (u.indexOf('youbot') !== -1) return 'youbot';
+  if (u.indexOf('diffbot') !== -1) return 'diffbot';
+  if (u.indexOf('duckassistbot') !== -1) return 'duckassistbot';
+  // Programmatic clients
+  if (u.indexOf('python-requests') !== -1) return 'python-requests';
+  if (u.indexOf('python/') !== -1 || u.indexOf('python-urllib') !== -1) return 'python-other';
+  if (u.indexOf('axios/') !== -1) return 'axios';
+  if (u.indexOf('curl/') !== -1) return 'curl';
+  if (u.indexOf('node-fetch') !== -1 || u.indexOf('undici') !== -1) return 'node-fetch';
+  if (u.indexOf('go-http-client') !== -1) return 'go-http';
+  if (u.indexOf('postmanruntime') !== -1) return 'postman';
+  // Discoverable AI / framework UA patterns
+  if (u.indexOf('mcp-remote') !== -1) return 'mcp-remote';
+  if (u.indexOf('langchain') !== -1) return 'langchain';
+  if (u.indexOf('llamaindex') !== -1) return 'llamaindex';
+  if (u.indexOf('autogen') !== -1) return 'autogen';
+  // Browsers (probably human)
+  if (u.indexOf('mozilla') !== -1 || u.indexOf('safari') !== -1 || u.indexOf('firefox') !== -1 || u.indexOf('chrome') !== -1) return 'browser';
+  return 'other';
+}
+
+function _bumpKey(obj, key) {
+  if (!key) return;
+  obj[key] = (obj[key] || 0) + 1;
+}
+
+function _recordTrafficHit(env, path, hasBearer, ua) {
+  _traffic.total_requests += 1;
+  _bumpKey(_traffic.by_endpoint, '/api/' + path);
+  var uaFam = _uaFamily(ua);
+  _bumpKey(_traffic.by_user_agent_family, uaFam);
+  if (hasBearer) _traffic.by_auth.with_bearer += 1;
+  else _traffic.by_auth.no_bearer += 1;
+  // Tier 2: write to Analytics Engine if bound
+  if (env && env.AGENT_ANALYTICS) {
+    try {
+      env.AGENT_ANALYTICS.writeDataPoint({
+        blobs: ['/api/' + path, uaFam, hasBearer ? 'bearer' : 'no_bearer'],
+        doubles: [1],
+        indexes: ['/api/' + path],
+      });
+    } catch (e) {}
+  }
+}
+
+function _recordMcpMethod(method) {
+  _bumpKey(_traffic.mcp_methods, method);
+}
+
+function _recordMcpToolCall(toolName) {
+  _bumpKey(_traffic.mcp_tools_called, toolName);
+}
+
+function _recordPaymentEvent(kind) {
+  _bumpKey(_traffic.payment_events, kind);
+}
+
+function _recordWebhookTick(stats) {
+  _traffic.webhook_stats.last_tick_at = new Date().toISOString();
+  _traffic.webhook_stats.last_delivered = stats.delivered || 0;
+  _traffic.webhook_stats.last_paused = stats.paused || 0;
+  _traffic.webhook_stats.last_errors = stats.errors || 0;
+  _traffic.webhook_stats.last_scanned = stats.scanned || 0;
+  _traffic.webhook_stats.total_delivered += stats.delivered || 0;
+  _traffic.webhook_stats.total_paused += stats.paused || 0;
+  _traffic.webhook_stats.total_errors += stats.errors || 0;
+  _traffic.webhook_stats.ticks += 1;
+}
+
+async function handleAdminAgentTraffic(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  var auth = request.headers.get('Authorization') || '';
+  if (!env || !env.ADMIN_SECRET || auth !== 'Bearer ' + env.ADMIN_SECRET) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+  // Active subscription count from KV
+  var activeSubCount = 0;
+  var pausedSubCount = 0;
+  if (env.WEBHOOK_SUBS) {
+    try {
+      var keys = await env.WEBHOOK_SUBS.list({ prefix: 'sub:' });
+      for (var i = 0; i < (keys.keys || []).length; i++) {
+        var v = await env.WEBHOOK_SUBS.get(keys.keys[i].name, 'json');
+        if (!v) continue;
+        if (v.active) activeSubCount += 1;
+        else pausedSubCount += 1;
+      }
+    } catch (e) {}
+  }
+  // Sort and slice top-N collections for compactness
+  function top(obj, n) {
+    var entries = Object.keys(obj).map(function(k) { return [k, obj[k]]; });
+    entries.sort(function(a, b) { return b[1] - a[1]; });
+    var out = {};
+    entries.slice(0, n || 20).forEach(function(e) { out[e[0]] = e[1]; });
+    return out;
+  }
+  return jsonResponse({
+    cold_start_at: _traffic.cold_start_at,
+    snapshot_at: new Date().toISOString(),
+    uptime_seconds: Math.floor((Date.now() - workerStartTime) / 1000),
+    total_requests_since_cold_start: _traffic.total_requests,
+    by_endpoint: top(_traffic.by_endpoint, 30),
+    by_user_agent_family: top(_traffic.by_user_agent_family, 25),
+    by_auth: _traffic.by_auth,
+    mcp_methods: top(_traffic.mcp_methods, 10),
+    mcp_tools_called: top(_traffic.mcp_tools_called, 25),
+    payment_events: top(_traffic.payment_events, 10),
+    webhook: {
+      stats_in_memory: _traffic.webhook_stats,
+      active_subscriptions: activeSubCount,
+      paused_subscriptions: pausedSubCount,
+    },
+    bindings: {
+      kv_webhook_subs: env.WEBHOOK_SUBS ? 'bound' : 'unbound',
+      analytics_engine: env.AGENT_ANALYTICS ? 'bound (writeDataPoint active)' : 'unbound',
+    },
+    notes: {
+      reset_behavior: 'Counters reset on Worker cold start. Cloudflare Workers stay warm under continuous traffic; cold start usually after several minutes idle. For long-horizon analysis, query the AGENT_ANALYTICS dataset via Cloudflare SQL API.',
+      analytics_query: 'SELECT blob1 as path, blob2 as ua_family, sum(double1) as hits FROM agent_traffic WHERE timestamp > now() - INTERVAL \'1\' DAY GROUP BY 1, 2 ORDER BY 3 DESC',
+    },
+  });
+}
+
 // --- In-Memory Cache ---
 
 const _cache = {};
@@ -2128,6 +2291,7 @@ async function handleMcp(request, env) {
   var params = rpc.params || {};
 
   if (method === 'initialize') {
+    _recordMcpMethod('initialize');
     return _mcpJsonRpcResponse(id, {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: { tools: {} },
@@ -2142,12 +2306,15 @@ async function handleMcp(request, env) {
   }
 
   if (method === 'tools/list') {
+    _recordMcpMethod('tools/list');
     var tools = LLM_TOOL_DEFINITIONS.map(_toolToMCP);
     return _mcpJsonRpcResponse(id, { tools: tools });
   }
 
   if (method === 'tools/call') {
+    _recordMcpMethod('tools/call');
     var toolName = params.name;
+    if (toolName) _recordMcpToolCall(toolName);
     var args = params.arguments || {};
     if (!toolName) return _mcpJsonRpcError(id, -32602, 'Invalid params: missing tool name');
     var requiresBearer = _toolRequiresBearer(toolName);
@@ -4560,16 +4727,19 @@ async function handlePaymentInfo(request, env) {
 
 async function handleBuyCredits(request, env) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  _recordPaymentEvent('buy_credits');
   return proxyToTensorFeed(request, env, '/api/payment/buy-credits');
 }
 
 async function handleConfirmPayment(request, env) {
   if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  _recordPaymentEvent('confirm');
   return proxyToTensorFeed(request, env, '/api/payment/confirm');
 }
 
 async function handleBalance(request, env) {
   if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  _recordPaymentEvent('balance');
   return proxyToTensorFeed(request, env, '/api/payment/balance');
 }
 
@@ -4589,6 +4759,14 @@ export default {
 
     // Strip /api/ prefix and trailing slashes
     var path = url.pathname.replace(/^\/api\/?/, '').replace(/\/$/, '');
+
+    // Tier 1 + Tier 2 traffic tracking. Skip the admin endpoint itself to
+    // avoid self-inflation when checking the dashboard.
+    if (path !== 'admin/agent-traffic') {
+      var ua = request.headers.get('User-Agent') || '';
+      var hasBearer = !!extractBearerToken(request);
+      _recordTrafficHit(env, path, hasBearer, ua);
+    }
 
     // Path-prefix routes: webhook deletion takes a dynamic ID
     if (path.startsWith('pro/subscribe/')) {
@@ -4659,6 +4837,9 @@ export default {
       // Webhook subscriptions
       case 'pro/subscribe':       return await handleSubscribeCreate(request, env);
       case 'pro/subscriptions':   return await handleSubscribeList(request, env);
+
+      // Admin
+      case 'admin/agent-traffic': return await handleAdminAgentTraffic(request, env);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
@@ -4689,6 +4870,7 @@ export default {
       ctx.waitUntil((async function() {
         try {
           var stats = await deliverWebhooksTick(env);
+          _recordWebhookTick(stats);
           console.log('webhook tick:', JSON.stringify(stats));
         } catch (err) {
           console.error('webhook tick failed:', err.message);
