@@ -3876,6 +3876,11 @@ async function fetchProGithubVelocity(env, url) {
   var headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
   if (env && env.GITHUB_TOKEN) headers['Authorization'] = 'Bearer ' + env.GITHUB_TOKEN;
 
+  var _ghStart = Date.now();
+  var sourceMeta = [
+    { name: 'GitHub.search_repos_created_7d', start: _ghStart },
+    { name: 'GitHub.search_repos_topic_llm_30d', start: _ghStart },
+  ];
   var sources = await Promise.allSettled([
     // 1. Repos created in last 7d sorted by stars (raw velocity)
     fetchWithTimeout('https://api.github.com/search/repositories?q=created:%3E' + sevenDaysAgo + '&sort=stars&order=desc&per_page=30', { headers: headers }, 10000),
@@ -3982,6 +3987,7 @@ async function fetchProGithubVelocity(env, url) {
       methodology: 'Trending = repos created in the last 7 days sorted by stars descending. AI/ML active = repos tagged topic:llm with commits in the last 30 days, sorted by stars. is_ai_ml flag on each trending repo uses regex over name + description + topics.',
       caveat: 'GitHub Search API only returns top 1000 results regardless of pagination. Repos created without traction in the first 7 days are filtered out by sort order; stars-per-day is best-effort.',
     },
+    _meta: _premiumMeta('/api/pro/github-velocity', _buildSourcesMeta(sources, sourceMeta)),
   };
 }
 
@@ -3994,9 +4000,14 @@ async function fetchProGithubVelocity(env, url) {
 // leading indicator for buying power coming into / leaving the crypto ecosystem.
 
 async function fetchProStablecoinFlows(env, url) {
+  var _scStart = Date.now();
   var res = await fetchWithTimeout('https://stablecoins.llama.fi/stablecoins?includePrices=true', {}, 10000)
-    .catch(function() { return null; });
-  if (!res || !res.ok) {
+    .catch(function(err) { return { __error: err }; });
+  var _scLatency = Date.now() - _scStart;
+  if (!res || res.__error || !res.ok) {
+    var failReason = (res && res.__error && res.__error.message)
+      ? String(res.__error.message).slice(0, 100)
+      : (res && res.status ? 'http_' + res.status : 'unknown');
     return {
       source: 'terminalfeed-pro',
       endpoint: '/api/pro/stablecoin-flows',
@@ -4005,6 +4016,13 @@ async function fetchProStablecoinFlows(env, url) {
       stablecoins: [],
       aggregate: null,
       notes: { source_attribution: 'DefiLlama stablecoins API', cache_ttl: '1 hour' },
+      _meta: _premiumMeta('/api/pro/stablecoin-flows', [{
+        name: 'DefiLlama.stablecoins',
+        status: 'error',
+        fetched_at: new Date(_scStart).toISOString(),
+        latency_ms: _scLatency,
+        reason: failReason,
+      }]),
     };
   }
 
@@ -4117,6 +4135,12 @@ async function fetchProStablecoinFlows(env, url) {
       caveat: 'Numbers are reported circulating supply, not on-chain liquid supply. Some stablecoins (FDUSD, BUSD legacy) have wind-down dynamics that show up as large negative 7d changes; not all are bearish signals.',
       filter_threshold: 'Stablecoins under $1M circulating are filtered out as noise. Movers require >$100M circulating to surface.',
     },
+    _meta: _premiumMeta('/api/pro/stablecoin-flows', [{
+      name: 'DefiLlama.stablecoins',
+      status: 'live',
+      fetched_at: new Date(_scStart).toISOString(),
+      latency_ms: _scLatency,
+    }]),
   };
 }
 
@@ -4129,6 +4153,11 @@ async function fetchProStablecoinFlows(env, url) {
 // filter to top 50, and surface category + biggest-movers aggregates.
 
 async function fetchProDefiTvl(env, url) {
+  var _tvlStart = Date.now();
+  var sourceMeta = [
+    { name: 'DefiLlama.protocols', start: _tvlStart },
+    { name: 'DefiLlama.chains', start: _tvlStart },
+  ];
   var sources = await Promise.allSettled([
     fetchWithTimeout('https://api.llama.fi/protocols', {}, 12000),
     fetchWithTimeout('https://api.llama.fi/v2/chains', {}, 8000),
@@ -4232,6 +4261,7 @@ async function fetchProDefiTvl(env, url) {
       use_case: 'Crypto research and trading agents. Identify protocol-level concentration, biggest movers, and chain-level dominance shifts in one call.',
       caveat: 'TVL excludes native staking on most chains. DefiLlama categorizes protocols subjectively; some may appear in unexpected categories. Numbers are best-effort and can revise as DefiLlama backfills.',
     },
+    _meta: _premiumMeta('/api/pro/defi-tvl', _buildSourcesMeta(sources, sourceMeta)),
   };
 }
 
