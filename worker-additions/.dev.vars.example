@@ -1,0 +1,41 @@
+# Example env vars for the terminalfeed-api Worker.
+# Copy to .dev.vars (which is gitignored) and fill in real values for local dev.
+# In production, set these via `npx wrangler secret put <NAME>`.
+#
+# Format: KEY=value per line, no quotes, no spaces around =.
+
+# === Admin auth ==============================================================
+# Bearer token gating /api/tweet, /api/auto-briefing, and /api/admin/*
+# Generate any random 32+ char string. Treat as production-grade secret.
+ADMIN_SECRET=replace-with-32-plus-random-chars
+
+# === Premium tier billing (cross-site with TensorFeed) =======================
+# Premium /api/pro/* endpoints validate bearer tokens against TensorFeed.
+# Both vars must be set for premium tier to work; missing either returns
+# billing_unavailable to callers (free endpoints unaffected).
+TENSORFEED_AUTH_URL=https://tensorfeed.ai
+SHARED_INTERNAL_SECRET=must-match-the-value-on-tensorfeed-api-worker
+
+# === Stock + economic data ===================================================
+# Finnhub (free tier, sign up at finnhub.io)
+FINNHUB_API_KEY=replace-with-finnhub-key
+
+# FRED (free, instant signup at fred.stlouisfed.org/docs/api/api_key.html)
+FRED_API_KEY=replace-with-fred-key
+
+# === Ethereum on-chain =======================================================
+# Etherscan (free tier, etherscan.io/myapikey)
+# Optional: code falls back to '' which works for unauthenticated rate-limited calls.
+ETHERSCAN_API_KEY=replace-with-etherscan-key
+
+# === NASA FIRMS (wildfires endpoint, when shipped) ===========================
+# Free, instant signup at firms.modaps.eosdis.nasa.gov/api/map_key/
+NASA_FIRMS_MAP_KEY=replace-with-firms-map-key
+
+# === X / Twitter bot =========================================================
+# All four required for /api/tweet and the daily briefing cron.
+# Get from developer.x.com after creating an app with read+write permissions.
+X_API_KEY=replace-with-x-consumer-key
+X_API_SECRET=replace-with-x-consumer-secret
+X_ACCESS_TOKEN=replace-with-x-access-token
+X_ACCESS_TOKEN_SECRET=replace-with-x-access-token-secret
