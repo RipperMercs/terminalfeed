@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What's Happening Right Now: Real-Time World Briefing | TerminalFeed</title>
-  <meta name="description" content="Real-time world briefing updated every 5 minutes. Bitcoin price, stock market, earthquakes, prediction markets, space, and breaking news: all in one place.">
+  <meta name="description" content="Real-time world briefing updated every 5 minutes. Bitcoin, ETH gas, Solana TPS, top stocks, forex, macro indicators, earthquakes, prediction markets, Hacker News, HuggingFace trending, service status, and more.">
 
   <!-- OG Tags for sharing -->
   <meta property="og:title" content="What's Happening Right Now: Real-Time World Briefing | TerminalFeed">
-  <meta property="og:description" content="Real-time world briefing. BTC price, markets, earthquakes, predictions, and more. Updated every 5 minutes.">
+  <meta property="og:description" content="Real-time world briefing. Crypto, stocks, forex, macro, quakes, predictions, HN, AI models, status. Updated every 5 minutes.">
   <meta property="og:url" content="https://terminalfeed.io/live">
   <meta property="og:image" content="https://terminalfeed.io/og-image.png">
   <meta property="og:type" content="website">
@@ -27,14 +27,14 @@
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "TerminalFeed Live: Real-Time World Briefing",
-    "description": "Real-time world briefing updated every 5 minutes with Bitcoin price, stock market, earthquakes, prediction markets, and breaking news.",
+    "description": "Real-time world briefing updated every 5 minutes with Bitcoin, ETH gas, Solana TPS, top stocks, forex, macro indicators, earthquakes, prediction markets, Hacker News, HuggingFace trending, and service status.",
     "url": "https://terminalfeed.io/live",
     "isPartOf": {
       "@type": "WebApplication",
       "name": "TerminalFeed",
       "url": "https://terminalfeed.io"
     },
-    "dateModified": "2026-03-20T00:00:00Z"
+    "dateModified": "2026-04-29T00:00:00Z"
   }
   </script>
   <script type="application/ld+json">
@@ -63,7 +63,7 @@
     }
 
     .container {
-      max-width: 700px;
+      max-width: 820px;
       width: 100%;
     }
 
@@ -140,10 +140,48 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
       margin-top: 12px;
     }
+    .stats-grid.two { grid-template-columns: 1fr 1fr; }
+
+    .row-list {
+      margin-top: 8px;
+    }
+    .row-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 7px 0;
+      border-bottom: 1px solid #1A1A1E;
+      font-size: 12px;
+      gap: 12px;
+    }
+    .row-item:last-child { border-bottom: none; }
+    .row-key { color: #D4D2CB; flex: 1; }
+    .row-key a { color: inherit; text-decoration: none; }
+    .row-key a:hover { color: #5DCAA5; }
+    .row-val { white-space: nowrap; font-weight: 600; }
+    .row-meta { font-size: 10px; color: #4E4D49; margin-left: 8px; font-weight: 400; }
+
+    .forex-grid, .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .forex-cell, .macro-cell {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .forex-pair { font-size: 10px; color: #4E4D49; margin-bottom: 2px; letter-spacing: 1px; }
+    .forex-rate { font-size: 14px; color: #F0EDE6; font-weight: 600; }
+    .macro-label { font-size: 10px; color: #4E4D49; margin-bottom: 2px; letter-spacing: 1px; text-transform: uppercase; }
+    .macro-val { font-size: 16px; color: #F0EDE6; font-weight: 600; }
+    .macro-date { font-size: 9px; color: #3A3A44; margin-top: 2px; }
 
     .stat-box {
       background: #111114;
@@ -295,11 +333,15 @@
     .breadcrumbs a:hover { color: #5DCAA5; }
     .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
 
-    @media (max-width: 600px) {
+    @media (max-width: 700px) {
       body { padding: 24px 16px; }
-      .stats-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .forex-grid, .macro-grid { grid-template-columns: 1fr 1fr; }
       .stat-value { font-size: 18px; }
       .section-content { font-size: 13px; }
+    }
+    @media (max-width: 420px) {
+      .stats-grid, .forex-grid, .macro-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -339,154 +381,358 @@
   </div>
 
   <script>
-    // ?format=json → redirect to the raw API endpoint
+    // ?format=json -> redirect to the briefing API endpoint
     if (new URLSearchParams(window.location.search).get('format') === 'json') {
       window.location.replace('/api/briefing');
     }
 
-    async function fetchBriefing() {
-      try {
-        var res = await fetch('/api/briefing');
-        var data = await res.json();
-        renderBriefing(data);
-      } catch (error) {
-        document.getElementById('content').innerHTML = '<div class="error-msg">Unable to load briefing. <a href="/" style="color: #5DCAA5;">Visit the dashboard</a></div>';
-      }
+    var ENDPOINTS = {
+      btc:        '/api/btc-price',
+      fearGreed:  '/api/fear-greed',
+      stocks:     '/api/stocks',
+      forex:      '/api/forex',
+      econ:       '/api/economic-data',
+      gas:        '/api/gas',
+      sol:        '/api/solana-network',
+      earthquake: '/api/earthquake',
+      humans:     '/api/humans-in-space',
+      hn:         '/api/hackernews',
+      hf:         '/api/hf-trending',
+      preds:      '/api/predictions',
+      steam:      '/api/steam',
+      status:     '/api/service-status'
+    };
+
+    function safeFetch(url) {
+      return fetch(url, { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
     }
 
-    function renderBriefing(data) {
-      var now = new Date();
-      document.getElementById('timestamp').textContent =
-        'Last updated: ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) +
-        ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    async function fetchAll() {
+      var keys = Object.keys(ENDPOINTS);
+      var results = await Promise.allSettled(keys.map(function (k) { return safeFetch(ENDPOINTS[k]); }));
+      var out = {};
+      keys.forEach(function (k, i) {
+        out[k] = results[i].status === 'fulfilled' ? results[i].value : null;
+      });
+      return out;
+    }
 
-      var sections = data.sections || {};
-      var html = '<hr class="divider">';
+    function fmtNum(n, digits) {
+      if (n === null || n === undefined || isNaN(n)) return '-';
+      digits = digits == null ? 0 : digits;
+      return Number(n).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
 
-      // MARKETS
-      var crypto = sections.crypto;
-      var fg = sections.fear_greed;
-      if (crypto || fg) {
-        html += '<div class="section">';
-        html += '<div class="section-label">MARKETS</div>';
-        html += '<div class="stats-grid">';
-        if (crypto && crypto.price_usd) {
-          var changeClass = crypto.change_24h_percent >= 0 ? 'green' : 'red';
-          var changeSign = crypto.change_24h_percent >= 0 ? '+' : '';
-          html += '<div class="stat-box">';
-          html += '<div class="stat-value">$' + Number(crypto.price_usd).toLocaleString() + '</div>';
-          html += '<div class="stat-label">Bitcoin <span class="' + changeClass + '">' + changeSign + Number(crypto.change_24h_percent).toFixed(1) + '% (24h)</span></div>';
-          html += '</div>';
-        }
-        if (fg && fg.value) {
-          var fgColor = fg.value < 25 ? 'red' : fg.value < 50 ? 'amber' : fg.value < 75 ? 'teal' : 'green';
-          html += '<div class="stat-box">';
-          html += '<div class="stat-value ' + fgColor + '">' + fg.value + '</div>';
-          html += '<div class="stat-label">Fear & Greed: ' + (fg.label || '') + '</div>';
-          html += '</div>';
-        }
-        html += '</div></div>';
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return '';
+      var t = new Date(iso).getTime();
+      if (isNaN(t)) return '';
+      var diff = Math.max(0, Date.now() - t);
+      var s = Math.floor(diff / 1000);
+      if (s < 60) return s + 's ago';
+      var m = Math.floor(s / 60);
+      if (m < 60) return m + 'm ago';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    }
+
+    function renderHeadline(d) {
+      // Top stat cards: BTC, F&G, ETH gas, Solana TPS
+      var btc      = d.btc && d.btc.data       ? d.btc.data       : null;
+      var fg       = d.fearGreed && d.fearGreed.data ? d.fearGreed.data : null;
+      var gas      = d.gas        || null;
+      var sol      = d.sol        || null;
+
+      var html = '<div class="section"><div class="section-label">AT A GLANCE</div><div class="stats-grid">';
+
+      if (btc && btc.price_usd != null) {
+        var ch = btc.change_24h_percent;
+        var chClass = (ch ?? 0) >= 0 ? 'green' : 'red';
+        var chSign  = (ch ?? 0) >= 0 ? '+' : '';
+        html += '<div class="stat-box">'
+              + '<div class="stat-value">$' + fmtNum(btc.price_usd, 0) + '</div>'
+              + '<div class="stat-label">BTC <span class="' + chClass + '">' + chSign + fmtNum(ch, 1) + '% 24h</span></div>'
+              + '</div>';
       }
 
-      // PREDICTIONS
-      var preds = sections.predictions;
-      if (preds && preds.length > 0) {
-        html += '<hr class="divider">';
-        html += '<div class="section">';
-        html += '<div class="section-label">PREDICTION MARKETS</div>';
-        html += '<div class="predictions-list">';
-        var predSlice = preds.slice(0, 5);
-        for (var i = 0; i < predSlice.length; i++) {
-          var p = predSlice[i];
-          html += '<div class="prediction-item">';
-          html += '<span class="prediction-question">' + (p.question || '') + '</span>';
-          html += '<span class="prediction-odds">' + (p.yes_percent || p.yes_probability_percent || '?') + '% Yes</span>';
-          html += '</div>';
-        }
-        html += '</div></div>';
+      if (fg && fg.value != null) {
+        var v = Number(fg.value);
+        var fgColor = v < 25 ? 'red' : v < 50 ? 'amber' : v < 75 ? 'teal' : 'green';
+        html += '<div class="stat-box">'
+              + '<div class="stat-value ' + fgColor + '">' + v + '</div>'
+              + '<div class="stat-label">Fear &amp; Greed · ' + escapeHtml(fg.label || '') + '</div>'
+              + '</div>';
       }
 
-      // EARTHQUAKES
-      var quakes = sections.earthquakes;
-      if (quakes && quakes.earthquakes && quakes.earthquakes.length > 0) {
-        html += '<hr class="divider">';
-        html += '<div class="section">';
-        html += '<div class="section-label">SEISMIC ACTIVITY</div>';
-        html += '<div class="section-content">' + quakes.count + ' earthquakes detected in the last 24 hours.</div>';
-        var quakeSlice = quakes.earthquakes.slice(0, 4);
-        for (var j = 0; j < quakeSlice.length; j++) {
-          var q = quakeSlice[j];
-          var magColor = q.magnitude >= 5 ? 'red' : q.magnitude >= 4 ? 'amber' : 'teal';
-          html += '<div class="quake-item">';
-          html += '<span class="quake-mag ' + magColor + '">M' + q.magnitude + '</span>';
-          html += '<span style="color: #8A8880;">' + (q.location || '') + '</span>';
-          html += '</div>';
+      if (gas && gas.standard != null) {
+        var fastColor = gas.fast > 60 ? 'red' : gas.fast > 30 ? 'amber' : 'green';
+        html += '<div class="stat-box">'
+              + '<div class="stat-value">' + (gas.standard ?? '-') + ' <span style="font-size:13px;color:#8A8880;">gwei</span></div>'
+              + '<div class="stat-label">ETH gas · <span class="' + fastColor + '">fast ' + (gas.fast ?? '-') + '</span></div>'
+              + '</div>';
+      }
+
+      if (sol && sol.tps != null) {
+        html += '<div class="stat-box">'
+              + '<div class="stat-value">' + fmtNum(sol.tps, 0) + '</div>'
+              + '<div class="stat-label">Solana TPS · slot ' + fmtNum(sol.slot, 0) + '</div>'
+              + '</div>';
+      }
+
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderStocks(stocks) {
+      if (!stocks || !Array.isArray(stocks.data) || stocks.data.length === 0) return '';
+      // Sort by absolute % change, top 6
+      var sorted = stocks.data.slice().sort(function (a, b) {
+        return Math.abs(b.change_percent ?? 0) - Math.abs(a.change_percent ?? 0);
+      }).slice(0, 6);
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">STOCKS · BIGGEST MOVERS</div><div class="row-list">';
+      sorted.forEach(function (s) {
+        var pct = s.change_percent ?? 0;
+        var cls = pct >= 0 ? 'green' : 'red';
+        var sign = pct >= 0 ? '+' : '';
+        html += '<div class="row-item">'
+              + '<span class="row-key"><strong style="color:#F0EDE6">' + escapeHtml(s.symbol || '') + '</strong>'
+              + '<span class="row-meta">$' + fmtNum(s.price, 2) + '</span></span>'
+              + '<span class="row-val ' + cls + '">' + sign + fmtNum(pct, 2) + '%</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderForex(forex) {
+      if (!forex || !forex.data || !forex.data.rates) return '';
+      var rates = forex.data.rates;
+      var prev  = forex.data.prevRates || {};
+      var picks = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'MXN'];
+      var cells = picks.filter(function (k) { return rates[k] != null; }).slice(0, 8);
+      if (cells.length === 0) return '';
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">FOREX · USD BASE</div><div class="forex-grid">';
+      cells.forEach(function (k) {
+        var v = rates[k];
+        var p = prev[k];
+        var delta = (p != null && v != null) ? ((v - p) / p) * 100 : null;
+        var deltaCls = delta == null ? '' : (delta >= 0 ? 'green' : 'red');
+        var deltaSign = delta == null ? '' : (delta >= 0 ? '+' : '');
+        html += '<div class="forex-cell">'
+              + '<div class="forex-pair">USD/' + k + '</div>'
+              + '<div class="forex-rate">' + fmtNum(v, k === 'JPY' ? 2 : 4) + '</div>';
+        if (delta != null) {
+          html += '<div class="macro-date ' + deltaCls + '">' + deltaSign + fmtNum(delta, 2) + '%</div>';
         }
         html += '</div>';
-      }
+      });
+      html += '</div></div>';
+      return html;
+    }
 
-      // TECH / NEWS
-      var news = sections.news;
-      if (news && news.length > 0) {
-        html += '<hr class="divider">';
-        html += '<div class="section">';
-        html += '<div class="section-label">TECH & NEWS</div>';
-        for (var k = 0; k < Math.min(news.length, 5); k++) {
-          var n = news[k];
-          html += '<div style="padding: 6px 0; border-bottom: 1px solid #1A1A1E; font-size: 12px;">';
-          if (n.url) {
-            html += '<a href="' + n.url + '" target="_blank" rel="noopener" style="color: #D4D2CB; text-decoration: none;">' + (n.title || '') + '</a>';
-          } else {
-            html += '<span>' + (n.title || '') + '</span>';
-          }
-          if (n.score) {
-            html += ' <span style="color: #4E4D49; font-size: 10px;">' + n.score + ' pts</span>';
-          }
-          html += '</div>';
-        }
-        html += '</div>';
-      }
+    function renderMacro(econ) {
+      if (!econ || !econ.data) return '';
+      var d = econ.data;
+      var cells = [];
+      if (d.fed_rate)     cells.push({ label: 'Fed Rate',     val: fmtNum(d.fed_rate.value,     2) + '%', date: d.fed_rate.date });
+      if (d.cpi)          cells.push({ label: 'CPI Index',    val: fmtNum(d.cpi.value,          1),       date: d.cpi.date });
+      if (d.unemployment) cells.push({ label: 'Unemployment', val: fmtNum(d.unemployment.value, 1) + '%', date: d.unemployment.date });
+      if (d.gdp_growth)   cells.push({ label: 'GDP Growth',   val: fmtNum(d.gdp_growth.value,   1) + '%', date: d.gdp_growth.date });
+      if (cells.length === 0) return '';
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">US MACRO INDICATORS</div><div class="macro-grid">';
+      cells.forEach(function (c) {
+        html += '<div class="macro-cell">'
+              + '<div class="macro-label">' + escapeHtml(c.label) + '</div>'
+              + '<div class="macro-val">' + escapeHtml(c.val) + '</div>'
+              + '<div class="macro-date">' + escapeHtml(c.date || '') + '</div>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
 
-      // SERVICES
-      var services = sections.services;
-      if (services && services.length > 0) {
-        html += '<hr class="divider">';
-        html += '<div class="section">';
-        html += '<div class="section-label">SERVICE STATUS</div>';
-        html += '<div class="services-grid">';
-        for (var m = 0; m < services.length; m++) {
-          var s = services[m];
-          var isOp = s.status === 'operational';
-          html += '<span class="service-badge ' + (isOp ? 'service-operational' : 'service-issue') + '">';
-          html += (isOp ? '●' : '⚠') + ' ' + (s.name || '');
-          html += '</span>';
-        }
-        html += '</div></div>';
-      }
+    function renderQuakes(quake) {
+      if (!quake || !Array.isArray(quake.data) || quake.data.length === 0) return '';
+      var slice = quake.data.slice(0, 6);
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">SEISMIC ACTIVITY · USGS</div>'
+               + '<div class="section-content" style="font-size:12px;color:#8A8880;">'
+               + (quake.count != null ? quake.count + ' earthquakes detected (M2.5+ recent).' : '')
+               + '</div>';
+      slice.forEach(function (q) {
+        var m = q.magnitude ?? 0;
+        var mc = m >= 5 ? 'red' : m >= 4 ? 'amber' : 'teal';
+        html += '<div class="quake-item">'
+              + '<span class="quake-mag ' + mc + '">M' + fmtNum(m, 1) + '</span>'
+              + '<span style="color:#D4D2CB;">' + escapeHtml(q.place || q.location || '') + '</span>'
+              + '<span class="row-meta">' + timeAgo(q.time) + '</span>'
+              + '</div>';
+      });
+      html += '</div>';
+      return html;
+    }
 
-      // SUMMARY at top
-      if (data.summary) {
-        html = '<div class="section"><div class="section-content" style="font-size: 15px; line-height: 1.8;">' + data.summary + '</div></div>' + html;
-      }
+    function renderHumans(humans) {
+      if (!humans || !humans.data || !Array.isArray(humans.data.people)) return '';
+      var p = humans.data.people;
+      if (p.length === 0) return '';
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">HUMANS IN SPACE</div>'
+               + '<div class="section-content" style="font-size:13px;">'
+               + p.length + ' people currently in orbit.</div>'
+               + '<div class="row-list">';
+      p.slice(0, 14).forEach(function (person) {
+        html += '<div class="row-item">'
+              + '<span class="row-key">' + escapeHtml(person.name || '') + '</span>'
+              + '<span class="row-meta">' + escapeHtml(person.craft || '') + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
 
+    function renderHN(hn) {
+      var arr = hn && Array.isArray(hn.data) ? hn.data : null;
+      if (!arr || arr.length === 0) return '';
+      var slice = arr.slice(0, 6);
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">THE WIRE · HACKER NEWS</div><div class="row-list">';
+      slice.forEach(function (n) {
+        var url = n.url || ('https://news.ycombinator.com/item?id=' + (n.id || ''));
+        html += '<div class="row-item">'
+              + '<span class="row-key"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(n.title || '') + '</a></span>'
+              + '<span class="row-meta">' + (n.score != null ? fmtNum(n.score, 0) + ' pts' : '') + (n.descendants != null ? ' · ' + fmtNum(n.descendants, 0) + ' comments' : '') + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderHF(hf) {
+      var arr = hf && Array.isArray(hf.data) ? hf.data : null;
+      if (!arr || arr.length === 0) return '';
+      var slice = arr.slice(0, 6);
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">TRENDING ON HUGGINGFACE</div><div class="row-list">';
+      slice.forEach(function (m) {
+        var url = m.url || 'https://huggingface.co/' + (m.id || '');
+        var meta = (m.likes != null ? '♥ ' + fmtNum(m.likes, 0) : '')
+                 + (m.downloads != null ? ' · ↓ ' + fmtNum(m.downloads, 0) : '')
+                 + (m.pipeline ? ' · ' + escapeHtml(m.pipeline) : '');
+        html += '<div class="row-item">'
+              + '<span class="row-key"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">'
+              + escapeHtml((m.author || '') + '/' + (m.name || m.id || '')) + '</a></span>'
+              + '<span class="row-meta">' + meta + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderPredictions(preds) {
+      var arr = preds && Array.isArray(preds.data) ? preds.data : null;
+      if (!arr || arr.length === 0) return '';
+      var slice = arr.slice().sort(function (a, b) { return (b.volume_usd ?? 0) - (a.volume_usd ?? 0); }).slice(0, 6);
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">PREDICTION MARKETS · POLYMARKET</div><div class="predictions-list">';
+      slice.forEach(function (p) {
+        var pct = p.yes_percent ?? p.yes_probability_percent ?? null;
+        var vol = p.volume_usd != null ? '$' + fmtNum(p.volume_usd, 0) : '';
+        var pctTxt = pct != null ? pct + '% Yes' : '?';
+        html += '<div class="prediction-item">'
+              + '<span class="prediction-question">' + escapeHtml(p.question || '') + (vol ? ' <span class="row-meta">vol ' + vol + '</span>' : '') + '</span>'
+              + '<span class="prediction-odds">' + escapeHtml(pctTxt) + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderSteam(steam) {
+      var arr = steam && Array.isArray(steam.data) ? steam.data : null;
+      if (!arr || arr.length === 0) return '';
+      var slice = arr.slice(0, 6);
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">STEAM · TOP CONCURRENT PLAYERS</div><div class="row-list">';
+      slice.forEach(function (g) {
+        html += '<div class="row-item">'
+              + '<span class="row-key">' + escapeHtml(g.name || '') + '</span>'
+              + '<span class="row-val">' + fmtNum(g.players_now, 0) + '</span>'
+              + '</div>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderStatus(status) {
+      var arr = status && Array.isArray(status.data) ? status.data : null;
+      if (!arr || arr.length === 0) return '';
+      var html = '<hr class="divider"><div class="section">'
+               + '<div class="section-label">SERVICE STATUS</div><div class="services-grid">';
+      arr.forEach(function (s) {
+        var ind = (s.indicator || s.status || '').toString().toLowerCase();
+        var isOp = ind === 'none' || ind === 'operational' || ind === '';
+        html += '<span class="service-badge ' + (isOp ? 'service-operational' : 'service-issue') + '" title="' + escapeHtml(s.description || '') + '">'
+              + (isOp ? '●' : '⚠') + ' ' + escapeHtml(s.name || '')
+              + '</span>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderAll(d) {
+      var html = '';
+      try { html += renderHeadline(d);          } catch (e) {}
+      try { html += renderStocks(d.stocks);     } catch (e) {}
+      try { html += renderMacro(d.econ);        } catch (e) {}
+      try { html += renderForex(d.forex);       } catch (e) {}
+      try { html += renderPredictions(d.preds); } catch (e) {}
+      try { html += renderHN(d.hn);             } catch (e) {}
+      try { html += renderHF(d.hf);             } catch (e) {}
+      try { html += renderQuakes(d.earthquake); } catch (e) {}
+      try { html += renderHumans(d.humans);     } catch (e) {}
+      try { html += renderSteam(d.steam);       } catch (e) {}
+      try { html += renderStatus(d.status);     } catch (e) {}
+      if (!html) {
+        html = '<div class="error-msg">No data loaded right now. <a href="/" style="color:#5DCAA5;">Visit the dashboard</a></div>';
+      }
       document.getElementById('content').innerHTML = html;
     }
 
-    // Fetch on load
-    fetchBriefing();
-
-    // Refresh every 5 minutes
-    setInterval(fetchBriefing, 300000);
-
-    // Update the "last updated" timestamp every minute
-    setInterval(function() {
+    function setTimestamp() {
       var ts = document.getElementById('timestamp');
-      if (ts && !ts.textContent.includes('Loading')) {
-        var now = new Date();
-        ts.textContent = 'Last updated: ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) +
-          ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+      if (!ts) return;
+      var now = new Date();
+      ts.textContent = 'Last updated: ' + now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    + ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    }
+
+    async function refresh() {
+      try {
+        var data = await fetchAll();
+        renderAll(data);
+        setTimestamp();
+      } catch (e) {
+        document.getElementById('content').innerHTML = '<div class="error-msg">Unable to load briefing. <a href="/" style="color:#5DCAA5;">Visit the dashboard</a></div>';
       }
-    }, 60000);
+    }
+
+    refresh();
+    setInterval(refresh, 300000); // every 5 minutes
+    setInterval(setTimestamp, 60000);
   </script>
 </body>
 </html>
