@@ -47,6 +47,8 @@
   <div class="entry">
     <div class="date">April 29, 2026</div>
     <ul class="items">
+      <li>Rebuilt <a href="/live">/live</a> as a real briefing page. Now fetches 14 free endpoints in parallel (BTC, Fear &amp; Greed, ETH gas, Solana TPS, top stocks, forex, US macro indicators, earthquakes, humans in space, Hacker News, HuggingFace trending, Polymarket predictions, Steam top games, service status) instead of relying on the slim <span style="color:#5DCAA5">/api/briefing</span> shape. Each section renders independently and degrades gracefully.</li>
+      <li>Resolved Google Search Console Merchant listings warnings on the agent-payments and buy.html product schemas: brand type, shippingDetails, and hasMerchantReturnPolicy.</li>
       <li>Published <a href="/developers/openai-tools">/developers/openai-tools</a>: drop-in OpenAI / Anthropic / Gemini function-calling definitions, a universal handler in Python and JavaScript, and an end-to-end Chat Completions example. The live tool catalog at <a href="/api/llm-tools">/api/llm-tools</a> stays the source of truth for all 27 tools.</li>
       <li>Added <a href="/developers/openai-tools">/developers/openai-tools</a> to <a href="/sitemap.xml">sitemap.xml</a> and <a href="/llms.txt">llms.txt</a> for agent discovery.</li>
     </ul>
