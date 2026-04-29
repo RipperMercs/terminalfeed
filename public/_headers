@@ -14,16 +14,15 @@
 
 # Embeddable widgets are explicitly designed to be iframed by other sites.
 # Cover both the existing /embed/* directory (BTC price, fear-greed, etc.)
-# and the future /widgets/* surface. ALLOWALL strips browser frame protection;
-# Content-Security-Policy: frame-ancestors * is the modern equivalent.
+# and the future /widgets/* surface.
+#
+# Cloudflare Pages _headers is additive across matching rules — there is no
+# "exclude" syntax — so the /* SAMEORIGIN above will still appear on embed
+# paths. We rely on the CSP frame-ancestors directive which, per W3C spec,
+# obsoletes and overrides X-Frame-Options when both are present. End result:
+# browsers honor frame-ancestors * and let the embed render in any iframe.
 /embed/*
-  X-Frame-Options: ALLOWALL
   Content-Security-Policy: frame-ancestors *
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
 
 /widgets/*
-  X-Frame-Options: ALLOWALL
   Content-Security-Policy: frame-ancestors *
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
