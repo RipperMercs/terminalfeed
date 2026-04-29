@@ -28,13 +28,28 @@
   "@type": "Product",
   "name": "TerminalFeed Cleaner Premium",
   "description": "Unlock duplicate file deletion, disk treemap visualization, unlimited scans, and ad-free experience for TerminalFeed Cleaner.",
-  "brand": { "@type": "Organization", "name": "Pizza Robot Studios LLC" },
+  "brand": { "@type": "Brand", "name": "Pizza Robot Studios LLC" },
   "offers": {
     "@type": "Offer",
     "price": "4.99",
     "priceCurrency": "USD",
     "availability": "https://schema.org/InStock",
-    "url": "https://buy.terminalfeed.io"
+    "url": "https://buy.terminalfeed.io",
+    "shippingDetails": {
+      "@type": "OfferShippingDetails",
+      "shippingRate": { "@type": "MonetaryAmount", "value": "0.00", "currency": "USD" },
+      "shippingDestination": { "@type": "DefinedRegion", "geoTargetName": "Worldwide" },
+      "deliveryTime": {
+        "@type": "ShippingDeliveryTime",
+        "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" },
+        "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
+      }
+    },
+    "hasMerchantReturnPolicy": {
+      "@type": "MerchantReturnPolicy",
+      "applicableCountry": "US",
+      "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+    }
   }
 }
 </script>
