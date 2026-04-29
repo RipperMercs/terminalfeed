@@ -13,7 +13,15 @@
   Cross-Origin-Resource-Policy: cross-origin
 
 # Embeddable widgets are explicitly designed to be iframed by other sites.
-# Strip X-Frame-Options on /widgets/* only and use frame-ancestors *.
+# Cover both the existing /embed/* directory (BTC price, fear-greed, etc.)
+# and the future /widgets/* surface. ALLOWALL strips browser frame protection;
+# Content-Security-Policy: frame-ancestors * is the modern equivalent.
+/embed/*
+  X-Frame-Options: ALLOWALL
+  Content-Security-Policy: frame-ancestors *
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
 /widgets/*
   X-Frame-Options: ALLOWALL
   Content-Security-Policy: frame-ancestors *
