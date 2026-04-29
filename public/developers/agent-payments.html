@@ -50,7 +50,7 @@
         "name": "TerminalFeed Premium Briefing API",
         "description": "Composed world-state snapshot for AI agents. Aggregates BTC ticker, Fear and Greed Index, recent earthquakes, top Hacker News story count, ISS crew, and live Polymarket prediction markets. One bearer-authenticated HTTP call.",
         "category": "AI Agent Data API",
-        "brand": { "@type": "Organization", "name": "TerminalFeed" },
+        "brand": { "@type": "Brand", "name": "TerminalFeed" },
         "url": "https://terminalfeed.io/api/pro/briefing",
         "image": "https://terminalfeed.io/og-image.png",
         "offers": {
@@ -70,6 +70,21 @@
           "acceptedPaymentMethod": {
             "@type": "PaymentMethod",
             "name": "USDC on Base mainnet"
+          },
+          "shippingDetails": {
+            "@type": "OfferShippingDetails",
+            "shippingRate": { "@type": "MonetaryAmount", "value": "0.00", "currency": "USD" },
+            "shippingDestination": { "@type": "DefinedRegion", "geoTargetName": "Worldwide" },
+            "deliveryTime": {
+              "@type": "ShippingDeliveryTime",
+              "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" },
+              "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
+            }
+          },
+          "hasMerchantReturnPolicy": {
+            "@type": "MerchantReturnPolicy",
+            "applicableCountry": "US",
+            "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
           }
         }
       },
@@ -78,7 +93,7 @@
         "name": "TerminalFeed Premium Macro API",
         "description": "Composed macroeconomic snapshot for AI agents. Aggregates FRED economic series (Fed funds rate, CPI, unemployment, GDP, 10-year treasury), USD-base forex (EUR, JPY, GBP, CHF), commodities (gold via PAXG, WTI oil, natural gas), and US market context (SPY, DIA, QQQ, VIX). Optional 30-day historical series.",
         "category": "AI Agent Data API",
-        "brand": { "@type": "Organization", "name": "TerminalFeed" },
+        "brand": { "@type": "Brand", "name": "TerminalFeed" },
         "url": "https://terminalfeed.io/api/pro/macro",
         "image": "https://terminalfeed.io/og-image.png",
         "offers": {
@@ -98,6 +113,21 @@
           "acceptedPaymentMethod": {
             "@type": "PaymentMethod",
             "name": "USDC on Base mainnet"
+          },
+          "shippingDetails": {
+            "@type": "OfferShippingDetails",
+            "shippingRate": { "@type": "MonetaryAmount", "value": "0.00", "currency": "USD" },
+            "shippingDestination": { "@type": "DefinedRegion", "geoTargetName": "Worldwide" },
+            "deliveryTime": {
+              "@type": "ShippingDeliveryTime",
+              "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" },
+              "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
+            }
+          },
+          "hasMerchantReturnPolicy": {
+            "@type": "MerchantReturnPolicy",
+            "applicableCountry": "US",
+            "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
           }
         }
       },
@@ -106,7 +136,7 @@
         "name": "TerminalFeed Premium Crypto Deep API",
         "description": "Composed crypto snapshot for AI agents. Aggregates top 50 coins by market cap with 1h/24h/7d change, Binance live ticker for top 20 USDT pairs, Bitcoin network statistics from mempool.space (block height, fees, hashrate, mempool size), and Ethereum gas oracle from Etherscan. Optional 30-day BTC OHLCV.",
         "category": "AI Agent Data API",
-        "brand": { "@type": "Organization", "name": "TerminalFeed" },
+        "brand": { "@type": "Brand", "name": "TerminalFeed" },
         "url": "https://terminalfeed.io/api/pro/crypto-deep",
         "image": "https://terminalfeed.io/og-image.png",
         "offers": {
@@ -126,6 +156,21 @@
           "acceptedPaymentMethod": {
             "@type": "PaymentMethod",
             "name": "USDC on Base mainnet"
+          },
+          "shippingDetails": {
+            "@type": "OfferShippingDetails",
+            "shippingRate": { "@type": "MonetaryAmount", "value": "0.00", "currency": "USD" },
+            "shippingDestination": { "@type": "DefinedRegion", "geoTargetName": "Worldwide" },
+            "deliveryTime": {
+              "@type": "ShippingDeliveryTime",
+              "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" },
+              "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
+            }
+          },
+          "hasMerchantReturnPolicy": {
+            "@type": "MerchantReturnPolicy",
+            "applicableCountry": "US",
+            "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
           }
         }
       }
