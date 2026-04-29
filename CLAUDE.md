@@ -1,6 +1,6 @@
-# CLAUDE.md — TerminalFeed.io
+# CLAUDE.md, TerminalFeed.io
 
-Last updated: April 20, 2026
+Last updated: April 29, 2026
 
 ## Project Overview
 
@@ -36,6 +36,16 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 - Stale cache returned on failure, never return 500 to client
 - Free tier: 100,000 requests/day (currently using <1% of quota)
 - X bot functions embedded in same Worker (tweet, auto-briefing endpoints + scheduled cron)
+- **Premium /api/pro/\* tier** with credit-based billing, Bearer token auth, MCP tools, subscriptions, and webhook watches all live in the same Worker (see "Premium Tier" section below)
+
+### CANONICAL WORKER FILE (read before editing)
+
+There are two worker source trees in this repo. Only one deploys.
+
+- **CANONICAL (production):** `worker-additions/worker.js`, deployed via `worker-additions/wrangler.toml`. ~6500 lines. Contains all free `/api/*` routes, all 12 `/api/pro/*` premium routes, payment endpoints, MCP tools, KV binding (`WEBHOOK_SUBS`), Analytics Engine binding, dual cron (`0 14 * * *` daily briefing + `*/5 * * * *` source sync). This is what runs on terminalfeed.io.
+- **ORPHAN (do NOT edit, do NOT deploy):** `worker-additions/terminalfeed-api/src/worker.js` with `worker-additions/terminalfeed-api/wrangler.jsonc`. Older/smaller (~300 lines), only has free endpoints, no KV, no premium tier. Both wrangler configs declare the same worker name (`terminalfeed-api`) and the same route (`terminalfeed.io/api/*`), so deploying the orphan would clobber production. Treat as deprecated. Plan: remove in next cleanup.
+
+Always edit `worker-additions/worker.js` for any API route work. Deploy from `worker-additions/` with `npx wrangler deploy`.
 
 ### API Endpoints Live
 ```
@@ -66,6 +76,47 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 /api/auto-briefing — Generate and post automated briefing tweet (Bearer ADMIN_SECRET)
 ```
 
+### Premium Tier: /api/pro/\* (live, paid, Bearer auth)
+
+All `/api/pro/*` endpoints require `Authorization: Bearer tf_live_<64-char-hex>` and consume credits from the caller's balance. Tokens minted on TerminalFeed are also valid on TensorFeed and vice versa (cross-site credit pool). Each response includes a top-level `_meta` block describing source latencies and a `_meta.endpoint` echo.
+
+```
+/api/pro/briefing            — Composed BTC + Fear & Greed + earthquakes + HN + ISS + predictions  (1 cr)
+/api/pro/macro               — FRED + Finnhub + Frankfurter rollup, history param supported       (2 cr)
+/api/pro/crypto-deep         — Per-coin deep dive across CoinGecko + on-chain network stats        (2 cr)
+/api/pro/agent-context       — Curated paste-ready system_prompt of current world state            (2 cr)
+/api/pro/sentiment           — Crypto F&G + trending symbols with regex sentiment scoring          (2 cr)
+/api/pro/world-deltas        — Polling endpoint, events newer than ?since=ISO timestamp            (2 cr)
+/api/pro/correlation-matrix  — Computed correlations across 10 historical series                   (2 cr)
+/api/pro/whales              — Large BTC/ETH/Solana transactions with attribution                  (2 cr)
+/api/pro/exchange-flows      — 19-wallet labeled list of exchange-controlled addresses + flows     (2 cr)
+/api/pro/defi-tvl            — Top-50 DeFi protocols + chain rollups (DefiLlama, normalized)       (2 cr)
+/api/pro/stablecoin-flows    — Top-20 stablecoins with 1d/7d/30d deltas + aggregate bias           (2 cr)
+/api/pro/github-velocity     — GitHub trending repos with computed velocity score                  (2 cr)
+```
+
+Auth + billing endpoints (live):
+```
+/api/pro/subscribe              — POST to start a webhook subscription (price/status/digest)
+/api/pro/subscribe/<id>         — DELETE to cancel
+/api/pro/subscribe/<id>/resume  — POST to reactivate
+/api/pro/subscriptions          — GET list owned by the caller token
+/api/payment/buy-credits        — POST to mint credits
+/api/payment/confirm            — POST to confirm payment
+/api/payment/balance            — GET caller balance
+/api/payment/history            — GET caller transaction history
+```
+
+Credit pricing: 1 credit = $0.02. Validation + charge runs through `validateAndCharge(env, token, costCredits, 'tf:/api/pro/<slug>')`. Premium handlers wrap their logic in `handlePremium(request, env, url, '/api/pro/<slug>', costCredits, fetcher)` which handles auth, credit decrement, cache lookup, error mapping, and `_meta` envelope assembly. New premium endpoints MUST follow this pattern, never hand-roll auth/billing.
+
+MCP tools: each pro endpoint is also exposed as an MCP tool (`tf_premium_<slug>`) via the agent-payments MCP server in the same Worker. Adding a new pro endpoint requires registering an MCP tool case in the same switch (search for `tf_premium_briefing` for the pattern).
+
+### Quality bar (April 29, 2026 audit)
+
+- Strong moats (keep as-is): macro, agent-context, exchange-flows (the labeled-wallet list IS the moat), correlation-matrix, whales.
+- Real value-add despite upstream being free (keep at 2 cr): defi-tvl, stablecoin-flows. Both run ~150 lines of normalization, dust filtering, multi-window deltas, and aggregate bias on top of DefiLlama. Not thin passthroughs.
+- Watch list (revisit pricing or upgrade scoring): sentiment (regex-only scoring is honest but easy to clone, consider LLM-tag upgrade or drop to 1 cr); github-velocity (verify the velocity score actually differentiates from the free GitHub events feed).
+
 ### Worker Environment Variables
 - FINNHUB_API_KEY, stock quotes
 - FRED_API_KEY, economic data from fred.stlouisfed.org
@@ -76,8 +127,13 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 - X_ACCESS_TOKEN_SECRET, X/Twitter API access token secret
 - ADMIN_SECRET, protects /api/tweet and /api/auto-briefing endpoints
 
-### Cron Triggers
+### Cron Triggers (canonical worker)
 - `0 14 * * *`, Daily at 9 AM ET (2 PM UTC), runs auto-briefing tweet via scheduled() handler in Worker
+- `*/5 * * * *`, Every 5 minutes, source sync / cache warm for premium endpoints
+
+### Worker KV / Analytics bindings
+- `WEBHOOK_SUBS` (KV), stores active premium webhook subscriptions for `/api/pro/subscribe`
+- `AGENT_ANALYTICS` (Analytics Engine, dataset `agent_traffic`), per-request agent traffic logging
 
 ---
 
@@ -488,6 +544,7 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 ### Infrastructure Protection Rules (learned from April 15, 2026 Pages deletion)
 - **NEVER add @cloudflare/vite-plugin to this project.** It converts Pages projects into Workers projects and will destroy the deployment.
 - **NEVER add wrangler.jsonc or wrangler.toml to the project root.** The only wrangler config allowed is inside `worker-additions/` for the API Worker. A root-level wrangler config with `"name": "terminalfeed"` will hijack the domain from the Pages project.
+- **NEVER edit `worker-additions/terminalfeed-api/src/worker.js`** or its `wrangler.jsonc`. That subfolder is an orphan with the same worker name and route as the canonical `worker-additions/worker.js`. Deploying it would clobber production. The canonical Worker source is `worker-additions/worker.js` deployed via `worker-additions/wrangler.toml`.
 - **NEVER add `wrangler deploy` or `wrangler dev` as npm scripts.** Those are Workers commands, not Pages commands. Pages deploys via git push to Cloudflare Pages, not via wrangler.
 - **NEVER let Cowork or any non-CC tool directly edit vite.config.ts, package.json, or any Cloudflare config file.** These are critical infrastructure files. Other tools write specs, CC executes.
 - **Before any deploy, verify the Pages project exists:** `npx wrangler pages project list` must show "terminalfeed". If it doesn't, STOP and investigate.
