@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAI Tools / Function Calling: Free Copy-Paste Definitions | TerminalFeed</title>
+  <meta name="description" content="Drop-in OpenAI function calling definitions for the TerminalFeed API. Real-time crypto, stocks, predictions, earthquakes, and more as ready-to-use tool schemas. Also works with Anthropic, Gemini, and any function-calling LLM.">
+  <link rel="canonical" href="https://terminalfeed.io/developers/openai-tools">
+  <meta property="og:title" content="OpenAI Tools / Function Calling: Free Copy-Paste Definitions | TerminalFeed">
+  <meta property="og:description" content="Drop-in OpenAI tool definitions for TerminalFeed's real-time data API. 27 pre-baked schemas. Works with OpenAI, Anthropic, Gemini.">
+  <meta property="og:url" content="https://terminalfeed.io/developers/openai-tools">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="ai-content" content="Pre-baked OpenAI function-calling tool definitions for TerminalFeed's real-time data API. Includes a universal HTTP handler that works for every tool. Free tier requires no auth.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "OpenAI Tools / Function Calling: TerminalFeed Copy-Paste Definitions",
+    "description": "Pre-baked OpenAI-format tool definitions for the TerminalFeed real-time data API. 27 tools across crypto, stocks, predictions, earthquakes, news, weather, and more. Free tier requires no auth.",
+    "author": { "@type": "Organization", "name": "TerminalFeed" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" }
+    },
+    "url": "https://terminalfeed.io/developers/openai-tools",
+    "datePublished": "2026-04-29",
+    "dateModified": "2026-04-29"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "API Docs", "item": "https://terminalfeed.io/developers" },
+      { "@type": "ListItem", "position": 3, "name": "OpenAI Tools", "item": "https://terminalfeed.io/developers/openai-tools" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 880px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 22px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 40px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #C8C8C0; font-size: 13px; margin: 24px 0 8px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 24px; }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 16px; letter-spacing: 1px; }
+    .badge-green { background: #14532d; color: #4ADE80; }
+    .badge-blue { background: #1e3a5f; color: #60A5FA; }
+    .badge-amber { background: #422006; color: #FBBF24; }
+    .badge-purple { background: #2E1065; color: #A78BFA; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; color: #D4D2CB; position: relative; }
+    pre.with-copy { padding-top: 36px; }
+    code { font-family: inherit; font-size: 12px; }
+    .inline-code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    .copy-btn { position: absolute; top: 8px; right: 8px; background: #14141A; color: #8A8880; border: 1px solid #1A1A22; border-radius: 4px; padding: 3px 10px; font-family: inherit; font-size: 10px; cursor: pointer; letter-spacing: 1px; }
+    .copy-btn:hover { background: #1A1A22; color: #C8C8C0; border-color: #2A2A30; }
+    .copy-btn.copied { color: #4ADE80; border-color: #14532d; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 12px; }
+    th { text-align: left; color: #5DCAA5; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1A1A22; }
+    td { color: #8A8880; padding: 6px 12px; border-bottom: 1px solid #0D0D12; vertical-align: top; }
+    td:first-child { color: #60A5FA; font-weight: 600; }
+    .footer { margin-top: 56px; font-size: 10px; color: #3E3E3A; padding-top: 16px; border-top: 1px solid #1A1A22; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .callout { padding: 12px 16px; background: #0B0F12; border-left: 3px solid #5DCAA5; border-radius: 4px; margin: 12px 0 16px; font-size: 12px; color: #B5B3AB; }
+    .callout strong { color: #5DCAA5; }
+    .tab-row { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 1px solid #1A1A22; }
+    .tab-btn { background: transparent; color: #8A8880; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; padding: 6px 14px; font-family: inherit; font-size: 11px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; }
+    .tab-btn:hover { color: #C8C8C0; }
+    .tab-btn.active { color: #4ADE80; background: #0D0D12; border-color: #1A1A22; border-bottom-color: #0D0D12; margin-bottom: -1px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    @media (max-width: 600px) {
+      body { padding: 24px 14px; }
+      h1 { font-size: 19px; }
+      pre { font-size: 11px; padding: 12px; }
+      pre.with-copy { padding-top: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/developers">API Docs</a><span class="bc-sep">&rsaquo;</span><span>OpenAI Tools</span>
+  </nav>
+
+  <h1>&gt;_ OpenAI Tools / Function Calling</h1>
+  <p class="subtitle">Drop-in tool definitions for the TerminalFeed API. Paste, wire up the handler, ship.</p>
+
+  <span class="badge badge-green">FREE</span>
+  <span class="badge badge-blue">27 TOOLS</span>
+  <span class="badge badge-amber">OPENAI / ANTHROPIC / GEMINI</span>
+  <span class="badge badge-purple">NO SIGNUP</span>
+
+  <p>This page gives you ready-to-use function-calling definitions for every TerminalFeed endpoint. Free-tier tools (24 of 27) require no auth. The three premium tools (<span class="inline-code">tf_pro_briefing</span>, <span class="inline-code">tf_pro_macro</span>, <span class="inline-code">tf_pro_crypto_deep</span>) accept a bearer token funded with USDC on Base. See <a href="/developers/agent-payments">/developers/agent-payments</a> for the auth flow.</p>
+
+  <div class="callout">
+    <strong>The catalog is live.</strong> The authoritative source is <a href="https://terminalfeed.io/api/llm-tools">/api/llm-tools</a>, which returns the full set in OpenAI format, Anthropic format, and a raw schema-agnostic listing. Fetch it once on agent boot and you stay current as new tools land. The snippets below are pre-rendered subsets of the same catalog.
+  </div>
+
+  <h2>Quick Start</h2>
+
+  <p>Three lines: paste the tools array into your model call, paste the universal handler, route tool calls back to the model. The handler is one function for all 27 tools because every TerminalFeed tool maps to a simple HTTP GET or POST.</p>
+
+  <h3>1. Pull the live tool catalog</h3>
+  <pre class="with-copy"><button class="copy-btn" data-copy="quickstart-fetch">COPY</button><code id="quickstart-fetch"># Python
+import requests
+catalog = requests.get("https://terminalfeed.io/api/llm-tools").json()
+openai_tools     = catalog["openai"]      # OpenAI Chat Completions / Responses API
+anthropic_tools  = catalog["anthropic"]   # Anthropic Messages API
+raw_catalog      = catalog["raw"]         # schema-agnostic, includes urls + auth + tier</code></pre>
+
+  <pre class="with-copy"><button class="copy-btn" data-copy="quickstart-fetch-js">COPY</button><code id="quickstart-fetch-js">// JavaScript / Node
+const catalog = await fetch("https://terminalfeed.io/api/llm-tools").then(r =&gt; r.json());
+const openaiTools    = catalog.openai;
+const anthropicTools = catalog.anthropic;
+const rawCatalog     = catalog.raw;</code></pre>
+
+  <p>If you'd rather pin a static copy of the schemas instead of fetching at runtime, the snippets below are stable and safe to paste verbatim. They cover the most common tools. New tools added to TerminalFeed will appear in <span class="inline-code">/api/llm-tools</span> automatically.</p>
+
+  <h2>Tool Definitions (OpenAI Format)</h2>
+
+  <p>Pre-rendered OpenAI Chat Completions / Responses API tool definitions. Every TerminalFeed tool name is prefixed with <span class="inline-code">tf_</span> so it never collides with tools from other vendors in the same agent.</p>
+
+  <pre class="with-copy"><button class="copy-btn" data-copy="tools-openai">COPY</button><code id="tools-openai">[
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_briefing",
+      "description": "One-call world-state snapshot from TerminalFeed. Composed from BTC ticker, Crypto Fear &amp; Greed Index, recent earthquakes (USGS), top Hacker News story count, and ISS crew. Cache TTL 60s. No auth. Use when the agent needs a quick global pulse before deciding what to investigate.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_btc_price",
+      "description": "Live Bitcoin price in USD with 24h change, high, low, and volume. Source: Binance with CoinCap fallback. Cache TTL 15s. No auth. Use for crypto trading decisions or when the agent needs a fresh BTC quote.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_fear_greed",
+      "description": "Crypto Fear &amp; Greed Index value (0-100) with classification label. Source: Alternative.me. Cache TTL 5min. No auth. Use as a sentiment signal for crypto trading decisions.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_crypto_movers",
+      "description": "Top 15 cryptocurrencies sorted by 24h price change. Includes price, market cap, and percentage move. Cache TTL 30s. No auth. Use to surface notable crypto market moves.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_predictions",
+      "description": "Active Polymarket prediction markets sorted by 24h volume. Each market includes question, outcomes, and volume. Cache TTL 60s. No auth. Use for market-implied probabilities on world events (elections, sports, macro).",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_earthquakes",
+      "description": "Recent earthquakes magnitude 2.5+ from USGS. Returns count and most recent quake details. Cache TTL 2min. No auth. Use for disaster monitoring or when the agent needs current seismic activity.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_service_status",
+      "description": "Operational status of GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian, Anthropic. Cache TTL 60s. No auth. Use to know if a dependency is up or to explain a recent outage.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_economic_data",
+      "description": "Latest FRED economic indicators: Fed funds rate, CPI, unemployment rate, GDP growth. Cache TTL 1h. No auth. For deeper macro use tf_pro_macro (premium).",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_forex",
+      "description": "Foreign exchange rates with USD as base for 16 major currencies. Source: Frankfurter (ECB-based). Cache TTL 5min. No auth.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_weather",
+      "description": "Current weather for any coordinates. Returns temperature (Fahrenheit), weather code, wind speed (mph), and humidity. Source: Open-Meteo. Cache TTL 10min per location. No auth.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "lat": { "type": "number", "description": "Latitude in decimal degrees, e.g. 34.05 for Los Angeles." },
+          "lon": { "type": "number", "description": "Longitude in decimal degrees, e.g. -118.24 for Los Angeles." }
+        },
+        "required": ["lat", "lon"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_pro_briefing",
+      "description": "PREMIUM. Composed world-state briefing: BTC + Fear &amp; Greed + earthquakes + Hacker News + ISS + Polymarket. Optional ?include= filter and ?history=24h. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_&lt;64-char-hex&gt;.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "include": { "type": "string", "description": "Comma-separated section filter, e.g. \"crypto,news\". Optional." },
+          "history": { "type": "string", "description": "Set to \"24h\" to include 24-hour historical context. Optional." }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_pro_macro",
+      "description": "PREMIUM. Composed macro snapshot: FRED (7 series) + forex (4 USD pairs) + commodities (gold, oil, nat gas) + indices (SPY, DIA, QQQ, VIX). Optional ?history=30d. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_&lt;64-char-hex&gt;.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "history": { "type": "string", "description": "Set to \"30d\" to include 30-day historical series. Optional." }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "tf_pro_crypto_deep",
+      "description": "PREMIUM. Deep crypto snapshot: top 50 coins + Binance top 20 + mempool.space network + Etherscan gas. Optional ?coins= filter and ?history=30d. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_&lt;64-char-hex&gt;.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "coins": { "type": "string", "description": "Comma-separated symbols to filter, e.g. \"BTC,ETH,SOL\". Optional." },
+          "history": { "type": "string", "description": "Set to \"30d\" to include 30-day historical series. Optional." }
+        }
+      }
+    }
+  }
+]</code></pre>
+
+  <p>The full 27-tool catalog (including <span class="inline-code">tf_stocks</span>, <span class="inline-code">tf_hackernews</span>, <span class="inline-code">tf_github_trending</span>, <span class="inline-code">tf_steam</span>, <span class="inline-code">tf_disaster_alerts</span>, <span class="inline-code">tf_cyber_threats</span>, <span class="inline-code">tf_humans_in_space</span>, <span class="inline-code">tf_launches</span>, <span class="inline-code">tf_internet_pulse</span>, <span class="inline-code">tf_ai_stats</span>, plus all premium and payment tools) lives at <a href="https://terminalfeed.io/api/llm-tools">/api/llm-tools</a>. Fetching at runtime is recommended.</p>
+
+  <h2>Universal Handler</h2>
+
+  <p>One function dispatches every tool call. The handler maps the model's <span class="inline-code">tool_name</span> to a TerminalFeed URL, attaches the bearer token only on premium tools, and returns the JSON body as a string the model can read.</p>
+
+  <div class="tab-row" role="tablist">
+    <button class="tab-btn active" data-tab="handler-py" role="tab">Python</button>
+    <button class="tab-btn" data-tab="handler-js" role="tab">JavaScript</button>
+  </div>
+
+  <div class="tab-panel active" id="handler-py">
+    <pre class="with-copy"><button class="copy-btn" data-copy="handler-py-code">COPY</button><code id="handler-py-code">import os, json, requests
+
+BASE = "https://terminalfeed.io"
+
+# Maps tool name -&gt; (HTTP method, path, requires bearer)
+TF_TOOL_MAP = {
+    "tf_briefing":            ("GET",  "/api/briefing",         False),
+    "tf_btc_price":           ("GET",  "/api/btc-price",        False),
+    "tf_stocks":              ("GET",  "/api/stocks",           False),
+    "tf_crypto_movers":       ("GET",  "/api/crypto-movers",    False),
+    "tf_fear_greed":          ("GET",  "/api/fear-greed",       False),
+    "tf_forex":               ("GET",  "/api/forex",            False),
+    "tf_earthquakes":         ("GET",  "/api/earthquake",       False),
+    "tf_disaster_alerts":     ("GET",  "/api/disaster-alerts",  False),
+    "tf_hackernews":          ("GET",  "/api/hackernews",       False),
+    "tf_predictions":         ("GET",  "/api/predictions",      False),
+    "tf_service_status":      ("GET",  "/api/service-status",   False),
+    "tf_weather":             ("GET",  "/api/weather",          False),
+    "tf_launches":            ("GET",  "/api/launches",         False),
+    "tf_humans_in_space":     ("GET",  "/api/humans-in-space",  False),
+    "tf_github_trending":     ("GET",  "/api/github-trending",  False),
+    "tf_cyber_threats":       ("GET",  "/api/cyber-threats",    False),
+    "tf_economic_data":       ("GET",  "/api/economic-data",    False),
+    "tf_steam":               ("GET",  "/api/steam",            False),
+    "tf_internet_pulse":      ("GET",  "/api/internet-pulse",   False),
+    "tf_ai_stats":            ("GET",  "/api/ai-stats",         False),
+    "tf_pro_briefing":        ("GET",  "/api/pro/briefing",     True),
+    "tf_pro_macro":           ("GET",  "/api/pro/macro",        True),
+    "tf_pro_crypto_deep":     ("GET",  "/api/pro/crypto-deep",  True),
+    "tf_pro_sentiment":       ("GET",  "/api/pro/sentiment",    True),
+    "tf_payment_buy_credits": ("POST", "/api/payment/buy-credits", False),
+    "tf_payment_confirm":     ("POST", "/api/payment/confirm",  False),
+    "tf_payment_balance":     ("GET",  "/api/payment/balance",  True),
+    "tf_payment_history":     ("GET",  "/api/payment/history",  True),
+}
+
+def call_tf_tool(name: str, args: dict | None = None, bearer: str | None = None) -&gt; str:
+    """Invoke any TerminalFeed tool by name. Returns a JSON string for the model."""
+    args = args or {}
+    if name not in TF_TOOL_MAP:
+        return json.dumps({"error": f"unknown tool: {name}"})
+    method, path, needs_bearer = TF_TOOL_MAP[name]
+    headers = {}
+    if needs_bearer:
+        token = bearer or os.environ.get("TF_BEARER_TOKEN")
+        if not token:
+            return json.dumps({"error": "missing bearer token for premium tool"})
+        headers["Authorization"] = f"Bearer {token}"
+    url = BASE + path
+    try:
+        if method == "GET":
+            r = requests.get(url, params=args, headers=headers, timeout=10)
+        else:
+            r = requests.post(url, json=args, headers=headers, timeout=10)
+        return r.text
+    except Exception as e:
+        return json.dumps({"error": str(e)})</code></pre>
+  </div>
+
+  <div class="tab-panel" id="handler-js">
+    <pre class="with-copy"><button class="copy-btn" data-copy="handler-js-code">COPY</button><code id="handler-js-code">const BASE = "https://terminalfeed.io";
+
+// Maps tool name -&gt; { method, path, needsBearer }
+const TF_TOOL_MAP = {
+  tf_briefing:            { method: "GET",  path: "/api/briefing",        needsBearer: false },
+  tf_btc_price:           { method: "GET",  path: "/api/btc-price",       needsBearer: false },
+  tf_stocks:              { method: "GET",  path: "/api/stocks",          needsBearer: false },
+  tf_crypto_movers:       { method: "GET",  path: "/api/crypto-movers",   needsBearer: false },
+  tf_fear_greed:          { method: "GET",  path: "/api/fear-greed",      needsBearer: false },
+  tf_forex:               { method: "GET",  path: "/api/forex",           needsBearer: false },
+  tf_earthquakes:         { method: "GET",  path: "/api/earthquake",      needsBearer: false },
+  tf_disaster_alerts:     { method: "GET",  path: "/api/disaster-alerts", needsBearer: false },
+  tf_hackernews:          { method: "GET",  path: "/api/hackernews",      needsBearer: false },
+  tf_predictions:         { method: "GET",  path: "/api/predictions",     needsBearer: false },
+  tf_service_status:      { method: "GET",  path: "/api/service-status",  needsBearer: false },
+  tf_weather:             { method: "GET",  path: "/api/weather",         needsBearer: false },
+  tf_launches:            { method: "GET",  path: "/api/launches",        needsBearer: false },
+  tf_humans_in_space:     { method: "GET",  path: "/api/humans-in-space", needsBearer: false },
+  tf_github_trending:     { method: "GET",  path: "/api/github-trending", needsBearer: false },
+  tf_cyber_threats:       { method: "GET",  path: "/api/cyber-threats",   needsBearer: false },
+  tf_economic_data:       { method: "GET",  path: "/api/economic-data",   needsBearer: false },
+  tf_steam:               { method: "GET",  path: "/api/steam",           needsBearer: false },
+  tf_internet_pulse:      { method: "GET",  path: "/api/internet-pulse",  needsBearer: false },
+  tf_ai_stats:            { method: "GET",  path: "/api/ai-stats",        needsBearer: false },
+  tf_pro_briefing:        { method: "GET",  path: "/api/pro/briefing",    needsBearer: true  },
+  tf_pro_macro:           { method: "GET",  path: "/api/pro/macro",       needsBearer: true  },
+  tf_pro_crypto_deep:     { method: "GET",  path: "/api/pro/crypto-deep", needsBearer: true  },
+  tf_pro_sentiment:       { method: "GET",  path: "/api/pro/sentiment",   needsBearer: true  },
+  tf_payment_buy_credits: { method: "POST", path: "/api/payment/buy-credits", needsBearer: false },
+  tf_payment_confirm:     { method: "POST", path: "/api/payment/confirm", needsBearer: false },
+  tf_payment_balance:     { method: "GET",  path: "/api/payment/balance", needsBearer: true  },
+  tf_payment_history:     { method: "GET",  path: "/api/payment/history", needsBearer: true  },
+};
+
+export async function callTfTool(name, args = {}, bearer = null) {
+  const spec = TF_TOOL_MAP[name];
+  if (!spec) return JSON.stringify({ error: `unknown tool: ${name}` });
+
+  const headers = { "Content-Type": "application/json" };
+  if (spec.needsBearer) {
+    const token = bearer || process.env.TF_BEARER_TOKEN;
+    if (!token) return JSON.stringify({ error: "missing bearer token for premium tool" });
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  let url = BASE + spec.path;
+  let init = { method: spec.method, headers };
+  if (spec.method === "GET") {
+    const qs = new URLSearchParams(args).toString();
+    if (qs) url += `?${qs}`;
+  } else {
+    init.body = JSON.stringify(args);
+  }
+
+  try {
+    const r = await fetch(url, init);
+    return await r.text();
+  } catch (e) {
+    return JSON.stringify({ error: String(e) });
+  }
+}</code></pre>
+  </div>
+
+  <h2>End-to-End Example: OpenAI Chat Completions</h2>
+
+  <p>A complete agent loop using the OpenAI Python SDK. The model picks a TerminalFeed tool, the handler runs it, the result is fed back, and the model writes the final answer.</p>
+
+  <pre class="with-copy"><button class="copy-btn" data-copy="example-openai">COPY</button><code id="example-openai">import json, requests
+from openai import OpenAI
+
+client = OpenAI()  # reads OPENAI_API_KEY from env
+
+# 1. Pull the live tool catalog from TerminalFeed
+tools = requests.get("https://terminalfeed.io/api/llm-tools").json()["openai"]
+
+# 2. Ask the model a question that needs live data
+messages = [
+    {"role": "system", "content": "You are a market analyst. Use TerminalFeed tools to get live data before answering."},
+    {"role": "user",   "content": "What's the current Bitcoin price and crypto market sentiment?"},
+]
+
+resp = client.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    tools=tools,
+    tool_choice="auto",
+)
+
+# 3. Run any tool calls the model requested (using the handler from above)
+msg = resp.choices[0].message
+messages.append(msg)
+
+if msg.tool_calls:
+    for tc in msg.tool_calls:
+        result = call_tf_tool(tc.function.name, json.loads(tc.function.arguments or "{}"))
+        messages.append({
+            "role": "tool",
+            "tool_call_id": tc.id,
+            "content": result,
+        })
+
+    # 4. Let the model write the final answer with the tool results in context
+    final = client.chat.completions.create(model="gpt-4o", messages=messages, tools=tools)
+    print(final.choices[0].message.content)
+else:
+    print(msg.content)</code></pre>
+
+  <h2>Anthropic Format</h2>
+
+  <p>The same catalog is also rendered for the Anthropic Messages API. Pull <span class="inline-code">catalog.anthropic</span> from <span class="inline-code">/api/llm-tools</span> instead, then pass it as the <span class="inline-code">tools</span> argument to <span class="inline-code">client.messages.create()</span>. The universal handler above works without changes; route on <span class="inline-code">content_block.name</span> instead of <span class="inline-code">tool_calls[i].function.name</span>.</p>
+
+  <pre class="with-copy"><button class="copy-btn" data-copy="example-anthropic">COPY</button><code id="example-anthropic">import json, requests
+from anthropic import Anthropic
+
+client = Anthropic()  # reads ANTHROPIC_API_KEY from env
+
+tools = requests.get("https://terminalfeed.io/api/llm-tools").json()["anthropic"]
+
+resp = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=1024,
+    tools=tools,
+    messages=[{"role": "user", "content": "What's the current Bitcoin price?"}],
+)
+
+# Walk the response for any tool_use blocks, run them, and feed back tool_result blocks.
+for block in resp.content:
+    if block.type == "tool_use":
+        result = call_tf_tool(block.name, block.input)
+        # Continue the conversation with a tool_result block...</code></pre>
+
+  <h2>Gemini and Other Function-Calling LLMs</h2>
+
+  <p>The OpenAI tool format is a near-superset of Google Gemini's <span class="inline-code">function_declarations</span> shape. To convert: drop the outer <span class="inline-code">{ "type": "function", "function": {...} }</span> wrapper and use the inner object directly. The <span class="inline-code">name</span>, <span class="inline-code">description</span>, and <span class="inline-code">parameters</span> fields are identical. Mistral, Cohere, and DeepSeek-R1 all accept the OpenAI format unchanged.</p>
+
+  <h2>Tool Reference</h2>
+
+  <table>
+    <tr><th>Tool name</th><th>Endpoint</th><th>Auth</th><th>Cost</th></tr>
+    <tr><td>tf_briefing</td><td>/api/briefing</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_btc_price</td><td>/api/btc-price</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_stocks</td><td>/api/stocks</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_crypto_movers</td><td>/api/crypto-movers</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_fear_greed</td><td>/api/fear-greed</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_forex</td><td>/api/forex</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_earthquakes</td><td>/api/earthquake</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_disaster_alerts</td><td>/api/disaster-alerts</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_hackernews</td><td>/api/hackernews</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_predictions</td><td>/api/predictions</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_service_status</td><td>/api/service-status</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_weather</td><td>/api/weather?lat=&amp;lon=</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_launches</td><td>/api/launches</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_humans_in_space</td><td>/api/humans-in-space</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_github_trending</td><td>/api/github-trending</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_cyber_threats</td><td>/api/cyber-threats</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_economic_data</td><td>/api/economic-data</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_steam</td><td>/api/steam</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_internet_pulse</td><td>/api/internet-pulse</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_ai_stats</td><td>/api/ai-stats</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_pro_briefing</td><td>/api/pro/briefing</td><td>bearer</td><td>1 credit ($0.02)</td></tr>
+    <tr><td>tf_pro_macro</td><td>/api/pro/macro</td><td>bearer</td><td>2 credits ($0.04)</td></tr>
+    <tr><td>tf_pro_crypto_deep</td><td>/api/pro/crypto-deep</td><td>bearer</td><td>2 credits ($0.04)</td></tr>
+    <tr><td>tf_pro_sentiment</td><td>/api/pro/sentiment</td><td>bearer</td><td>2 credits ($0.04)</td></tr>
+    <tr><td>tf_payment_buy_credits</td><td>/api/payment/buy-credits</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_payment_confirm</td><td>/api/payment/confirm</td><td>none</td><td>free</td></tr>
+    <tr><td>tf_payment_balance</td><td>/api/payment/balance</td><td>bearer</td><td>free</td></tr>
+    <tr><td>tf_payment_history</td><td>/api/payment/history</td><td>bearer</td><td>free</td></tr>
+  </table>
+
+  <h2>Notes</h2>
+
+  <p>Tool descriptions tell the LLM <em>when</em> to pick a tool. The TerminalFeed catalog tunes them for that purpose: each description names the data source, cache TTL, and a concrete reason an agent should reach for it. If you tighten or rewrite the descriptions, your model's tool-selection accuracy can drop. Re-test before shipping a custom version.</p>
+
+  <p>Premium tools share one bearer token across <span class="inline-code">tf_pro_*</span> calls. The token is funded with USDC on Base mainnet via <span class="inline-code">tf_payment_buy_credits</span> and <span class="inline-code">tf_payment_confirm</span>. The same token is redeemable on <a href="https://tensorfeed.ai">tensorfeed.ai</a>. Keep the token in an env var, not in source.</p>
+
+  <p>Rate limits: 100,000 free-tier requests per day across all endpoints, 1 request per 30 seconds per endpoint recommended (responses are server-cached, so faster polling returns the same data). Premium tools are gated by your credit balance, not a rate limit.</p>
+
+  <h2>See Also</h2>
+
+  <p>
+    <a href="/developers">/developers</a> &middot; main API docs<br>
+    <a href="/developers/agent-payments">/developers/agent-payments</a> &middot; USDC payment flow for premium tools<br>
+    <a href="/api/llm-tools">/api/llm-tools</a> &middot; live tool catalog (OpenAI + Anthropic + raw)<br>
+    <a href="/openapi.json">/openapi.json</a> &middot; OpenAPI 3 spec for every endpoint<br>
+    <a href="/llms.txt">/llms.txt</a> &middot; AI-discovery file<br>
+    <a href="/api/mcp">/api/mcp</a> &middot; Model Context Protocol endpoint (Claude Desktop, Cursor, Windsurf)
+  </p>
+
+  <h2>Contact</h2>
+
+  <p>Questions, integration help, or framework requests: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a></p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper</p>
+    <p><a href="/">Home</a> &middot; <a href="/blog">Blog</a> &middot; <a href="/about">About</a> &middot; <a href="/team">Team</a> &middot; <a href="/features">Features</a> &middot; <a href="/live">Live</a> &middot; <a href="/developers">API Docs</a> &middot; <a href="/changelog">Changelog</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tab = btn.getAttribute('data-tab');
+        var row = btn.closest('.tab-row');
+        row.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var parent = row.parentNode;
+        parent.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+        var panel = document.getElementById(tab);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    // Copy buttons
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetId = btn.getAttribute('data-copy');
+        var target = document.getElementById(targetId);
+        if (!target) return;
+        var text = target.innerText;
+        var done = function () {
+          var prev = btn.textContent;
+          btn.textContent = 'COPIED';
+          btn.classList.add('copied');
+          setTimeout(function () {
+            btn.textContent = prev;
+            btn.classList.remove('copied');
+          }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () {});
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
