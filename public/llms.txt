@@ -15,6 +15,8 @@ Machine-readable manifests:
 Canonical landing pages for agent-builders:
 - https://terminalfeed.io/api/for-agents (overview, why-not-DIY, quick start)
 - https://terminalfeed.io/developers/agent-payments (full developer guide)
+- https://terminalfeed.io/developers/openai-tools (drop-in OpenAI/Anthropic/Gemini tool definitions, universal handler, end-to-end example)
+- https://terminalfeed.io/api/llm-tools (live tool catalog: openai, anthropic, raw)
 - https://terminalfeed.io/api/usdc-payable (X402 / USDC payment surface)
 
 Cross-site bundle: https://tensorfeed.ai/developers/agent-payments
