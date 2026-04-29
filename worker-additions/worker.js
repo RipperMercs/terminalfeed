@@ -564,6 +564,7 @@ function handleIndex() {
       '/api/humans-in-space', '/api/disaster-alerts', '/api/launches',
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
+      '/api/hf-trending', '/api/solana-network',
       '/api/llm-tools',
     ],
     premium: {
@@ -1039,6 +1040,45 @@ async function handleGhTrending(url, env) {
     var result = { data: items };
     setCache(KEY, result);
     return jsonResponse(result, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: [] });
+  }
+}
+
+// GET /api/hf-trending
+// Trending HuggingFace models, sorted by likes in last 7 days. No API key required.
+async function handleHfTrending() {
+  var KEY = 'hf-trending';
+  var cached = getCached(KEY, 600000);
+  if (cached) return jsonResponse(cached, 200, 600);
+  try {
+    var res = await fetchWithTimeout(
+      'https://huggingface.co/api/models?sort=likes7d&direction=-1&limit=15&full=false&config=false',
+      { headers: { 'User-Agent': 'TerminalFeed/1.0 (+https://terminalfeed.io)' } }
+    );
+    if (!res.ok) throw new Error('hf ' + res.status);
+    var data = await res.json();
+    var items = (Array.isArray(data) ? data : []).slice(0, 15).map(function(m) {
+      var id = m.id || m.modelId || '';
+      var slash = id.indexOf('/');
+      var author = slash > 0 ? id.slice(0, slash) : (m.author || '');
+      var name = slash > 0 ? id.slice(slash + 1) : id;
+      return {
+        id: id,
+        author: author,
+        name: name,
+        likes: m.likes || 0,
+        downloads: m.downloads || 0,
+        pipeline: m.pipeline_tag || '',
+        url: id ? ('https://huggingface.co/' + id) : 'https://huggingface.co',
+        updated: m.lastModified || '',
+      };
+    });
+    var result = { data: items };
+    setCache(KEY, result);
+    return jsonResponse(result, 200, 600);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
@@ -1879,6 +1919,74 @@ async function handleGas(env) {
   return jsonResponse({ low: 8, standard: 12, fast: 18, baseFee: 7, lastBlock: 0, ts: Date.now() });
 }
 
+// GET /api/solana-network
+// Live Solana network health: TPS from getRecentPerformanceSamples (most recent 60s sample),
+// current slot, and average ms-per-slot. Public mainnet RPC, no auth.
+async function handleSolanaNetwork() {
+  var KEY = 'solana_network';
+  var cached = getCached(KEY, 30000);
+  if (cached) return jsonResponse(cached, 200, 30);
+  try {
+    // publicnode.com is server-friendly. mainnet-beta.solana.com blocks Cloudflare Worker IPs.
+    var rpc = 'https://solana-rpc.publicnode.com';
+    var batch = [
+      { jsonrpc: '2.0', id: 1, method: 'getRecentPerformanceSamples', params: [3] },
+      { jsonrpc: '2.0', id: 2, method: 'getSlot' },
+      { jsonrpc: '2.0', id: 3, method: 'getEpochInfo' },
+    ];
+    var res = await fetchWithTimeout(rpc, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(batch),
+    }, 8000);
+    if (!res.ok) throw new Error('solana ' + res.status);
+    var arr = await res.json();
+    if (!Array.isArray(arr)) throw new Error('solana shape');
+
+    var perfMsg  = arr.find(function(x) { return x && x.id === 1; });
+    var slotMsg  = arr.find(function(x) { return x && x.id === 2; });
+    var epochMsg = arr.find(function(x) { return x && x.id === 3; });
+
+    var samples = (perfMsg && Array.isArray(perfMsg.result)) ? perfMsg.result : [];
+    var latest = samples[0] || {};
+    var period = latest.samplePeriodSecs || 60;
+    var tps = period > 0 ? Math.round((latest.numTransactions || 0) / period) : 0;
+
+    // 3-sample average (last ~3 minutes) for smoothing
+    var totalTx = 0;
+    var totalSec = 0;
+    samples.slice(0, 3).forEach(function(s) {
+      totalTx += s.numTransactions || 0;
+      totalSec += s.samplePeriodSecs || 0;
+    });
+    var tpsAvg = totalSec > 0 ? Math.round(totalTx / totalSec) : tps;
+
+    // Average slot time over the latest sample (numSlots / samplePeriodSecs).
+    var slotsInSample = latest.numSlots || 0;
+    var slotMs = slotsInSample > 0 ? Math.round((period * 1000) / slotsInSample) : 0;
+
+    var data = {
+      tps: tps,
+      tpsAvg: tpsAvg,
+      slot: (slotMsg && slotMsg.result) || 0,
+      slotMs: slotMs,
+      epoch: (epochMsg && epochMsg.result && epochMsg.result.epoch) || 0,
+      epochProgress: (function() {
+        var r = epochMsg && epochMsg.result;
+        if (!r || !r.slotsInEpoch) return 0;
+        return +(((r.slotIndex || 0) / r.slotsInEpoch) * 100).toFixed(1);
+      })(),
+      ts: Date.now(),
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 30);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ tps: 0, tpsAvg: 0, slot: 0, slotMs: 0, epoch: 0, epochProgress: 0, ts: Date.now() });
+  }
+}
+
 
 // --- NASA APOD ---
 async function handleNasaApod() {
@@ -2474,6 +2582,8 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_service_status':      path = '/api/service-status'; break;
     case 'tf_economic_data':       path = '/api/economic-data'; break;
     case 'tf_forex':               path = '/api/forex'; break;
+    case 'tf_hf_trending':         path = '/api/hf-trending'; break;
+    case 'tf_solana_network':      path = '/api/solana-network'; break;
     case 'tf_premium_briefing':    path = '/api/pro/briefing'; break;
     case 'tf_premium_macro':       path = '/api/pro/macro'; break;
     case 'tf_premium_crypto_deep': path = '/api/pro/crypto-deep'; break;
@@ -2535,6 +2645,8 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_service_status':      return await handleServiceStatus();
     case 'tf_economic_data':       return await handleEconomicData(env);
     case 'tf_forex':               return await handleForex();
+    case 'tf_hf_trending':         return await handleHfTrending();
+    case 'tf_solana_network':      return await handleSolanaNetwork();
     case 'tf_premium_briefing':    return await handleProBriefing(req, env, url);
     case 'tf_premium_macro':       return await handleProMacro(req, env, url);
     case 'tf_premium_crypto_deep': return await handleProCryptoDeep(req, env, url);
@@ -2769,6 +2881,26 @@ const LLM_TOOL_DEFINITIONS = [
     short_description: 'USD-base currency exchange rates.',
     description: 'Fetches current foreign exchange rates with USD as base for 16 major currencies (EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, MXN, BRL, KRW, SGD, HKD, SEK, NOK, NZD). Source: Frankfurter (ECB-based). Cache TTL 5min. Use for currency conversion or FX-aware decisions.',
     url: 'https://terminalfeed.io/api/forex',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_hf_trending',
+    short_description: 'Trending HuggingFace models (top 15 by 7-day likes).',
+    description: 'Fetches the top 15 trending HuggingFace models sorted by likes in the last 7 days. Each item includes id (author/name), likes, downloads, pipeline tag, and url. Source: huggingface.co/api/models. Cache TTL 10min. Use when the agent needs to surface what the open-source AI community is paying attention to right now.',
+    url: 'https://terminalfeed.io/api/hf-trending',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_solana_network',
+    short_description: 'Live Solana network health (TPS, slot, epoch).',
+    description: 'Fetches live Solana mainnet network metrics: current transactions-per-second (most recent 60s sample), 3-sample average TPS, current slot, average slot time in ms, and epoch progress percentage. Source: solana-rpc.publicnode.com (getRecentPerformanceSamples + getSlot + getEpochInfo). Cache TTL 30s. Use when the agent needs to assess Solana network throughput or congestion.',
+    url: 'https://terminalfeed.io/api/solana-network',
     method: 'GET',
     auth: 'none',
     tier: 'free',
@@ -5898,6 +6030,8 @@ export default {
       case 'sports-summary':    return await handleSportsSummary(url);
       case 'gh-trending':    return await handleGhTrending(url, env);
       case 'gh-events':      return await handleGhEvents(env);
+      case 'hf-trending':    return await handleHfTrending();
+      case 'solana-network': return await handleSolanaNetwork();
       case 'hn-topstories':  return await handleHnTopStories(url);
       case 'hn-show':        return await handleHnShow(url);
       case 'hn-ask':         return await handleHnAsk(url);

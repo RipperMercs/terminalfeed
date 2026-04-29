@@ -14,12 +14,14 @@ export const ALL_PANELS = [
   // Row 3: BTC deep dive
   { id: 'btc-network', label: 'BTC Network', defaultSpan: 1 },
   { id: 'gas', label: 'ETH Gas', defaultSpan: 1 },
+  { id: 'solana-network', label: 'Solana Network', defaultSpan: 1 },
   { id: 'market-hours', label: 'Market Hours', defaultSpan: 1 },
   // Row 4: Information
   { id: 'news', label: 'Tech / AI Feed', defaultSpan: 1 },
   { id: 'tech-news', label: 'Tech News', defaultSpan: 1 },
   { id: 'reddit', label: 'Reddit', defaultSpan: 1 },
   { id: 'github', label: 'GitHub Trending', defaultSpan: 1 },
+  { id: 'huggingface', label: 'HuggingFace Trending', defaultSpan: 1 },
   // Row 5: Dev/nerd
   { id: 'status-wall', label: 'Status Wall', defaultSpan: 1 },
   { id: 'live-now', label: 'Live Now', defaultSpan: 1 },
@@ -74,7 +76,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '40'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '42'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -107,7 +109,7 @@ export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
   everything: { label: 'Everything', hidden: [] },
   trader: {
     label: 'Trader',
-    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'status-wall'],
+    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'huggingface', 'status-wall'],
   },
   // developer: swaps in the unified status-wall and hides the 3 granular status tiles
   developer: {
@@ -116,7 +118,7 @@ export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
   },
   crypto: {
     label: 'Crypto',
-    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'weather', 'seismic', 'launches', 'status-wall'],
+    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'huggingface', 'weather', 'seismic', 'launches', 'status-wall'],
   },
 };
 

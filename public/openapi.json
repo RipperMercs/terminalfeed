@@ -1662,6 +1662,48 @@
         "security": []
       }
     },
+    "/api/hf-trending": {
+      "get": {
+        "tags": [
+          "free"
+        ],
+        "summary": "HuggingFace trending models (top 15 by 7-day likes)",
+        "responses": {
+          "200": {
+            "description": "Array of trending models with id, author, name, likes, downloads, pipeline, url, updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/solana-network": {
+      "get": {
+        "tags": [
+          "free"
+        ],
+        "summary": "Solana network health (live TPS, slot, slot time, epoch)",
+        "responses": {
+          "200": {
+            "description": "Live Solana network metrics: tps (most recent 60s sample), tpsAvg (3-sample average), slot, slotMs, epoch, epochProgress.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/weather": {
       "get": {
         "tags": [

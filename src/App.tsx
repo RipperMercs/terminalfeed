@@ -76,6 +76,8 @@ import { useCloudStatus } from './hooks/useCloudStatus';
 import { OriginalsPanel } from './components/OriginalsPanel';
 import { LoadingOrHide } from './components/LoadingOrHide';
 import { useGasTracker } from './hooks/useGasTracker';
+import { useHuggingFace } from './hooks/useHuggingFace';
+import { useSolanaNetwork } from './hooks/useSolanaNetwork';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -172,6 +174,8 @@ function App() {
   const cloudStatus = useCloudStatus();
   const tcgMarket = useTCGMarket();
   const { gas: gasData, trend: gasTrend } = useGasTracker();
+  const hfModels = useHuggingFace();
+  const solanaNet = useSolanaNetwork();
 
   // Safety nets: if these panels never get data within their window, hide
   // them rather than wedge the viewer on a placeholder. Resets if data
@@ -408,6 +412,36 @@ function App() {
       </>);
     })(),
     'gas': <GasPanel gas={gasData} trend={gasTrend} layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
+    'solana-network': (<>
+      <PanelHead panelId="solana-network" isStale={panelHealth.isStale('solana-network')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Solana Network</span><span className="panelTag" style={{ color: 'var(--green)', background: 'rgba(74,222,128,0.1)' }}>TPS</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30s</span>
+      </PanelHead>
+      {!solanaNet ? <LoadingOrHide label="loading network..." /> : (<>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 28, fontWeight: 600, color: 'var(--green)', letterSpacing: -1 }}>{(solanaNet.tps ?? 0).toLocaleString()}</span>
+          <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>tx / sec</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10 }}>
+          <div className="listRow">
+            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>3-MIN AVG</span>
+            <span style={{ color: 'var(--text)', fontWeight: 600 }}>{(solanaNet.tpsAvg ?? 0).toLocaleString()} tps</span>
+          </div>
+          <div className="listRow">
+            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>SLOT TIME</span>
+            <span style={{ color: 'var(--text)', fontWeight: 600 }}>{solanaNet.slotMs ? `${solanaNet.slotMs} ms` : 'n/a'}</span>
+          </div>
+          <div className="listRow">
+            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>SLOT</span>
+            <span style={{ color: 'var(--text)', fontFamily: 'var(--font-mono, monospace)' }}>{(solanaNet.slot ?? 0).toLocaleString()}</span>
+          </div>
+          <div className="listRow">
+            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>EPOCH</span>
+            <span style={{ color: 'var(--text)' }}>{solanaNet.epoch ?? 0} <span style={{ color: 'var(--text-dim)' }}>({(solanaNet.epochProgress ?? 0).toFixed(1)}%)</span></span>
+          </div>
+        </div>
+      </>)}
+    </>),
     'btc-network': (<>
       <PanelHead panelId="btc-network" isStale={panelHealth.isStale('btc-network')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">BTC Network</span><span className="panelTag">MEMPOOL</span></div>
@@ -516,6 +550,13 @@ function App() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {trendingRepos.length === 0 && <StateChip kind="waiting" label="GITHUB" block />}
         {trendingRepos.map((repo) => (<a key={repo.fullName} href={repo.url} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="ghStars">{formatStars(repo.stars)}</span><div style={{ flex: 1, minWidth: 0 }}><div className="ghRepoName">{repo.fullName}</div><div className="ghRepoDesc">{repo.description}</div></div>{repo.language && <span className="ghLang">{repo.language}</span>}</a>))}
+      </div>
+    </>),
+    'huggingface': (<>
+      <PanelHead panelId="huggingface" isStale={panelHealth.isStale('huggingface')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">HuggingFace</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>TRENDING</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {hfModels.length === 0 && <StateChip kind="waiting" label="HF" block />}
+        {hfModels.map((m) => (<a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer" className="newsRow"><span className="ghStars">{formatStars(m.likes ?? 0)}</span><div style={{ flex: 1, minWidth: 0 }}><div className="ghRepoName">{m.id}</div><div className="ghRepoDesc">{(m.downloads ?? 0).toLocaleString()} downloads</div></div>{m.pipeline && <span className="ghLang">{m.pipeline}</span>}</a>))}
       </div>
     </>),
     'market-hours': (() => {
