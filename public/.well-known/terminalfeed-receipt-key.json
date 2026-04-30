@@ -1,0 +1,13 @@
+{
+  "key_ops": [
+    "verify"
+  ],
+  "ext": true,
+  "alg": "EdDSA",
+  "crv": "Ed25519",
+  "x": "Imczn-l_asa2KY8lx4cwrdnn-mnZEYKB6niMPrgRHyY",
+  "kty": "OKP",
+  "kid": "512774f98d56bb02",
+  "use": "sig",
+  "verify_doc": "https://terminalfeed.io/agent-fair-trade#receipts"
+}

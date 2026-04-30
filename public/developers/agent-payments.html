@@ -415,6 +415,18 @@
     <strong>Proven on mainnet.</strong> April 27, 2026: 1 USDC sent to the published wallet on Base, credits minted, bearer token issued, and a premium endpoint called successfully on the first try. Tx hash <span class="inline-code">0x13bc9e2378edae44685a63bdedd3ba802372e2e656961610b8c169ca60431c0e</span>. Walkthrough: <a href="https://tensorfeed.ai/originals/validating-agent-payments-mainnet" rel="external">We Validated Agent Payments End-to-End on Base Mainnet</a>. The same wallet and the same credit pool serve TerminalFeed.
   </div>
 
+  <h2>Access on the network (Agent Fair-Trade)</h2>
+  <p>TerminalFeed is the second adopter of the <a href="/agent-fair-trade">Agent Fair-Trade Agreement (AFTA)</a> after TensorFeed. The agreement enforces three guarantees in code: automatic no-charge on 5xx, billing breaker, schema fail, and stale data; Ed25519-signed receipts on every paid call; a public on-chain payment rail (USDC on Base).</p>
+  <p>Reciprocal access is the user-visible payoff. A bearer token minted on either site spends on either site. The credit ledger lives on TensorFeed; TerminalFeed validates and charges through the cross-Worker AFTA rail (POST /api/internal/validate then POST /api/internal/commit). Each site signs its own receipts with its own keypair, fetched from its own /.well-known/.</p>
+  <ul style="font-size:13px;color:#8A8880;line-height:1.7;margin:8px 0 16px;padding-left:18px">
+    <li>Manifest: <a href="/.well-known/agent-fair-trade.json">/.well-known/agent-fair-trade.json</a></li>
+    <li>Public Ed25519 key: <a href="/.well-known/terminalfeed-receipt-key.json">/.well-known/terminalfeed-receipt-key.json</a></li>
+    <li>Verify a receipt: POST <a href="/api/receipt/verify">/api/receipt/verify</a></li>
+    <li>Public no-charge ledger: <a href="/api/payment/no-charge-stats">/api/payment/no-charge-stats</a></li>
+    <li>Per-endpoint freshness SLAs and AFTA status: <a href="/api/meta">/api/meta</a></li>
+    <li>Sister-site manifest: <a href="https://tensorfeed.ai/.well-known/agent-fair-trade.json" rel="external">tensorfeed.ai/.well-known/agent-fair-trade.json</a></li>
+  </ul>
+
   <h2>Quick Start</h2>
 
   <p>Three steps to start querying premium endpoints. No SDK required in v1; standard HTTP works fine.</p>

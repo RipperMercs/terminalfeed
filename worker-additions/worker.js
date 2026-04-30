@@ -4189,6 +4189,28 @@ async function handleApiMeta(request, env) {
           { site: 'terminalfeed.io', manifest: AFTA_MANIFEST_URL, manifesto: AFTA_DOC },
         ],
       },
+      x402: {
+        compliant: true,
+        manifest: 'https://tensorfeed.ai/.well-known/x402.json',
+        manifest_note: 'TerminalFeed inherits the federation host x402 manifest. Credit ledger and merchant relationship live on tensorfeed.ai.',
+        live: [
+          {
+            method: 'exact',
+            network: 'eip155:8453',
+            asset_symbol: 'USDC',
+            note: 'USDC on Base mainnet, validated and charged through the federation rail (/api/internal/validate + /api/internal/commit on tensorfeed.ai)',
+          },
+        ],
+        evaluating: [
+          {
+            method: 'stripe',
+            credential_type: 'shared_payment_token',
+            spec: 'https://link.com/agents',
+            via: 'federation_host:tensorfeed.ai',
+            note: 'Stripe Link Shared Payment Tokens via x402 with method=stripe in www-authenticate. Under evaluation on the federation host; not yet accepted on TerminalFeed.',
+          },
+        ],
+      },
     },
     payment: {
       info: 'https://terminalfeed.io/api/payment/info',

@@ -3,6 +3,19 @@
 > TerminalFeed is a free real-time dashboard aggregating 35+ live data feeds.
 > This file helps AI agents understand what data is available.
 
+> Agent Fair-Trade Agreement (AFTA): TerminalFeed is agent fair-trade certified.
+> Code-enforced no-charge guarantees on 5xx, breaker, schema fail, and stale data.
+> Ed25519-signed receipts on every paid call. Public on-chain payment rail (USDC on Base).
+> Inference-only license. Built with Claude. Reciprocal access with TensorFeed: a single
+> bearer token works on tensorfeed.ai and terminalfeed.io; credits live in one ledger.
+> Standard at https://terminalfeed.io/.well-known/agent-fair-trade.json
+> Manifesto at https://terminalfeed.io/agent-fair-trade
+> Public no-charge ledger at https://terminalfeed.io/api/payment/no-charge-stats
+> Receipt verify endpoint at https://terminalfeed.io/api/receipt/verify
+> Public Ed25519 key at https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json
+
+**x402 method support.** TerminalFeed accepts x402 payments today through the federation with TensorFeed: a bearer token minted on either site (via USDC on Base mainnet, network eip155:8453) works on both. Stripe Link agents (link.com/agents) holding Shared Payment Tokens cannot pay TerminalFeed directly today; the federation host (tensorfeed.ai) is evaluating SPT verification, and once live, TerminalFeed will inherit SPT acceptance without its own Stripe merchant account. Until then, Link agents should use the credits flow at /api/payment/buy-credits (which proxies to TF) or send USDC on Base. The full x402 manifest is at https://tensorfeed.ai/.well-known/x402.json (TerminalFeed inherits TF's x402 manifest by federation).
+
 ## For AI agents and frameworks
 
 Machine-readable manifests:
@@ -158,10 +171,10 @@ Failure modes (HTTP 402 Payment Required, body field `error`):
 Pricing: $1 USDC on Base mainnet = 50 credits. No subscription. No expiry. No KYC.
 License: inference and reasoning only; not licensed as training data, fine-tuning input, model distillation, or dataset redistribution.
 Refunds: none. All credit purchases are final and non-refundable. Credits never expire, however, and remain spendable indefinitely across terminalfeed.io and tensorfeed.ai. Recommendation: buy small ($1 = 50 credits) until call volume is calibrated, then top up.
-Atomic charge: credits decrement before upstream fetch; partial responses still count.
-SLA: best-effort, stale-cache-on-failure means always-200 with usable data.
+AFTA deferred-debit: credits validate on entry but only debit on success. No charge on 5xx, billing-rail breaker, schema validation failure, or stale data. Each premium response includes an Ed25519-signed receipt and the no-charge events appear at /api/payment/no-charge-stats.
+SLA: best-effort, stale-cache-on-failure means always-200 with usable data on the free tier; premium tier honors the freshness SLAs published at /api/meta.
 
-Cross-site bundle: credits work on https://tensorfeed.ai (AI news + model intelligence). Same wallet, shared pool.
+Cross-site bundle: credits work on https://tensorfeed.ai (AI news + model intelligence). Same wallet, shared pool. A bearer token minted on either site works on the other; both sites are AFTA adopters.
 Full docs: https://terminalfeed.io/developers/agent-payments
 Mainnet proof: https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c
 
@@ -179,8 +192,7 @@ Original articles credited to one of five author personas. Each persona has a pe
 
 ## Sister Sites
 
-- https://tensorfeed.ai — AI news aggregation and intelligence tracking
-- https://phreak.fm — Hacker culture, phreaking history, and underground tech
+- https://tensorfeed.ai, AI news aggregation and intelligence tracking
 
 ## Contact
 

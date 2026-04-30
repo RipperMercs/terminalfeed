@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Fair-Trade Agreement (AFTA), TerminalFeed</title>
+  <meta name="description" content="TerminalFeed is agent fair-trade certified. Code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, public on-chain payment rail (USDC on Base). Built with Claude. Open standard at /.well-known/agent-fair-trade.json.">
+  <link rel="canonical" href="https://terminalfeed.io/agent-fair-trade">
+  <meta property="og:title" content="Agent Fair-Trade Agreement (AFTA), TerminalFeed">
+  <meta property="og:description" content="Code-enforced no-charge guarantees, signed receipts, public on-chain payment rail. An open standard for API publishers fair to AI agents.">
+  <meta property="og:url" content="https://terminalfeed.io/agent-fair-trade">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Agent Fair-Trade", "item": "https://terminalfeed.io/agent-fair-trade" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the Agent Fair-Trade Agreement (AFTA)?",
+        "acceptedAnswer": { "@type": "Answer", "text": "An open standard for API publishers that are fair to AI agents. Three pillars: code-enforced no-charge guarantees, Ed25519-signed receipts on every paid call, and a public on-chain payment rail. Self-publish your own /.well-known/agent-fair-trade.json to adopt." }
+      },
+      {
+        "@type": "Question",
+        "name": "How does reciprocal access with TensorFeed work?",
+        "acceptedAnswer": { "@type": "Answer", "text": "TerminalFeed and TensorFeed share a single bearer-token + credit ledger. A token minted on either site (via /api/payment/buy-credits then /api/payment/confirm) works on both sites. TerminalFeed validates and charges via TensorFeed's cross-Worker AFTA rail. Each site signs its own receipts with its own Ed25519 keypair; private keys are never shared." }
+      },
+      {
+        "@type": "Question",
+        "name": "How is no charge on stale data enforced?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Each premium endpoint declares a freshness SLA in the worker source. After the handler runs, premiumResponse checks the response's generated_at against the SLA. If stale, the deferred debit is skipped, the response is flagged with stale: true, and the no-charge event is logged to /api/payment/no-charge-stats." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I verify a receipt?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Fetch the public Ed25519 key at /.well-known/terminalfeed-receipt-key.json. Strip signing fields, canonicalize the receipt with sorted keys, verify with EdDSA / Ed25519. Or POST the full receipt to /api/receipt/verify and get a yes-or-no answer with no auth." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why USDC on Base instead of Stripe?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Public crypto ledgers are structurally fair to all participants, including AI agents that traditional payment processors lock out. Every payment is immutable, publicly auditable on the Base block explorer, and incurs no platform-imposed chargeback risk. The receipt rail and the on-chain rail are independent attestations." }
+      },
+      {
+        "@type": "Question",
+        "name": "What does Built with Claude mean?",
+        "acceptedAnswer": { "@type": "Answer", "text": "TerminalFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed: the premium /api/pro/* endpoints, the cross-Worker AFTA rail to TensorFeed, the Ed25519 receipt signing pipeline, the per-endpoint freshness SLA registry, the in-memory cache plus stale-cache fallback pattern across 30+ free endpoints, the X bot, and the live world-briefing composer." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can my API be agent fair-trade certified?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. There is no certification authority and no fee. Self-publish a /.well-known/agent-fair-trade.json conforming to the schema at https://tensorfeed.ai/.well-known/agent-fair-trade-schema.json. Adoption is the certification." }
+      }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 880px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 22px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 40px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #D4D2CB; font-size: 13px; margin: 20px 0 6px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 16px; }
+    .pill { display: inline-block; font-size: 10px; padding: 3px 9px; border-radius: 3px; margin-right: 6px; margin-bottom: 14px; background: #0D1A18; color: #5DCAA5; border: 1px solid #163A30; }
+    .pill-amber { background: #1A1304; color: #F9CB42; border-color: #422006; }
+    .pill-purple { background: #16102B; color: #A78BFA; border-color: #2E1065; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .inline-code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .quote { border-left: 3px solid #5DCAA5; padding: 10px 14px; background: #0B0F0E; color: #D4D2CB; font-size: 13px; margin: 12px 0 18px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; margin: 12px 0 18px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    .card { border: 1px solid #1A1A22; border-radius: 6px; padding: 14px 16px; background: #0B0B10; }
+    .card h3 { color: #4ADE80; font-size: 13px; margin: 0 0 6px; }
+    .card p { font-size: 12px; color: #8A8880; margin-bottom: 6px; }
+    .card .src { font-size: 10px; color: #5DCAA5; }
+    .links { font-size: 12px; }
+    .links a { margin-right: 14px; }
+    dl dt { color: #C8C8C0; font-size: 12px; font-weight: 700; margin: 14px 0 4px; }
+    dl dd { font-size: 12px; color: #8A8880; margin: 0 0 6px; }
+    .footer { margin-top: 48px; font-size: 10px; color: #3E3E3A; }
+    .footer a { color: #4E4D49; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Agent Fair-Trade</span>
+  </nav>
+  <h1>&gt;_ Agent Fair-Trade Agreement</h1>
+  <p class="subtitle">An open standard for API publishers that are fair to AI agents. Code-enforced no-charge guarantees, cryptographically signed receipts on every paid call, and a public on-chain payment rail. TerminalFeed is the second adopter (after TensorFeed). The invitation to other publishers is open.</p>
+
+  <span class="pill">CERTIFIED</span>
+  <span class="pill-purple pill">BUILT WITH CLAUDE</span>
+  <span class="pill-amber pill">USDC ON BASE</span>
+
+  <div class="links">
+    <a href="/.well-known/agent-fair-trade.json">/.well-known/agent-fair-trade.json</a>
+    <a href="https://tensorfeed.ai/.well-known/agent-fair-trade-schema.json">schema.json</a>
+    <a href="/api/payment/no-charge-stats">public no-charge ledger</a>
+  </div>
+
+  <h2>The 40-word self-description</h2>
+  <div class="quote">
+    TerminalFeed.io is agent fair-trade certified: open pricing, automatic no-charge on 5xx, breaker, schema fail, and stale data, Ed25519-signed receipts on every paid call, inference-only license. Built with Claude (Anthropic). Standard at /.well-known/agent-fair-trade.json.
+  </div>
+  <p>This exact text is published verbatim across llms.txt, /api/meta, /api/payment/info, the README, and /about. Repetition plus consistency is the signal agents pattern-match on, not keyword density.</p>
+
+  <h2>Reciprocal access with TensorFeed</h2>
+  <p>TerminalFeed and TensorFeed share a single bearer-token plus credit ledger. A token minted on either site works on both. The credit ledger is hosted on TensorFeed; TerminalFeed validates and charges via the cross-Worker AFTA rail (POST /api/internal/validate then POST /api/internal/commit). Each site signs its own receipts with its own Ed25519 keypair. Private keys are never shared.</p>
+  <p>Two AFTA sites, one bearer, one ledger, two independent receipt keypairs, one open standard. Buy credits once, use them anywhere on the network.</p>
+
+  <h2>No-charge guarantees</h2>
+  <p>Four conditions under which the bearer is not charged a credit. Each is enforced in code, not honored manually. Verify by triggering the relevant condition (a malformed request, an upstream outage, a stale cache window) and inspecting the receipt that comes back.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>5xx server errors</h3>
+      <p>If our handler 5xxs, the deferred debit is skipped. The agent gets a 5xx and a balance unchanged.</p>
+      <span class="src">code: aftaPremiumResponse in worker-additions/worker.js</span>
+    </div>
+    <div class="card">
+      <h3>Circuit breaker</h3>
+      <p>If the cross-Worker billing rail trips its breaker after consecutive failures, no credit is charged and a billing_temporarily_unavailable response returns.</p>
+      <span class="src">code: _breakerOpen + aftaValidateOnly</span>
+    </div>
+    <div class="card">
+      <h3>Schema validation failure</h3>
+      <p>Requests that fail input validation (HTTP 400) are not charged. Lenient by default: extra fields are ignored.</p>
+      <span class="src">code: aftaPremiumValidationFailure</span>
+    </div>
+    <div class="card">
+      <h3>Stale data</h3>
+      <p>If the data backing a response is older than the endpoint's freshness SLA, no charge. Response is also flagged with stale: true so the agent can decide to retry later. SLAs are public at /api/meta.</p>
+      <span class="src">code: AFTA_ENDPOINT_FRESHNESS + aftaCheckStaleness</span>
+    </div>
+  </div>
+  <p>Public proof: <a href="/api/payment/no-charge-stats">/api/payment/no-charge-stats</a> aggregates every no-charge event with per-reason and per-endpoint breakdown. Network-wide ledger across both sites at <a href="https://tensorfeed.ai/api/payment/no-charge-stats">tensorfeed.ai/api/payment/no-charge-stats</a>.</p>
+
+  <h2 id="receipts">Signed receipts</h2>
+  <p>Every premium response includes an Ed25519-signed receipt. Verify against TerminalFeed's published public key with no shared secret. Receipts plus the on-chain payment record give agents two independent attestations of every dollar that flowed through TerminalFeed.</p>
+  <pre><code>{
+  "v": 1,
+  "id": "rcpt_8f3a4b...",
+  "endpoint": "/api/pro/briefing",
+  "method": "GET",
+  "token_short": "tf_live_abcdef12...09876543",
+  "credits_charged": 1,
+  "credits_remaining": 49,
+  "request_hash": "sha256:...",
+  "response_hash": "sha256:...",
+  "captured_at": "2026-04-29T05:03:58.332Z",
+  "server_time": "2026-04-29T05:30:01.000Z",
+  "no_charge_reason": null,
+  "freshness_sla_seconds": 300,
+  "signature": "&lt;base64url Ed25519&gt;",
+  "key_id": "&lt;JWK kid&gt;",
+  "signing_alg": "EdDSA",
+  "signing_curve": "Ed25519",
+  "canonical_form": "tensorfeed-canonical-json-v1"
+}</code></pre>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Verify offline</h3>
+      <p>Fetch <a href="/.well-known/terminalfeed-receipt-key.json">/.well-known/terminalfeed-receipt-key.json</a>. Strip the signing fields. Canonicalize with sorted keys. Verify with EdDSA / Ed25519.</p>
+    </div>
+    <div class="card">
+      <h3>Verify online</h3>
+      <p>POST the full receipt to <span class="inline-code">/api/receipt/verify</span>. Free, no auth, no credit cost.</p>
+    </div>
+  </div>
+  <p>Note on canonical-form identifier: the value <span class="inline-code">tensorfeed-canonical-json-v1</span> identifies the algorithm, not the property. The same canonical form is used by every AFTA adopter so receipts from different sites can be verified with a single deserializer. Each site signs with its own key; the open standard binds them.</p>
+
+  <h2>Public on-chain payment rail</h2>
+  <p>We accept USDC on Base mainnet. Every credit purchase leaves a permanent on-chain record at the shared payment wallet (<span class="inline-code">0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1</span>). Pizza Robot Studios LLC is the legal entity behind the wallet. Combined with the signed receipts above, every dollar that flows through TerminalFeed has two independent attestations: the Base block explorer (immutable, public) and the server-issued receipt (verifiable, non-forgeable).</p>
+  <p>We chose this rail explicitly because it is structurally fair to AI agents. Stripe, PayPal, and the rest of the legacy financial pipes were designed for human accounts with KYC, dispute windows, and platform-discretionary chargebacks. They were not built for autonomous agents with on-chain wallets and no human in the loop. Crypto-native rails are. We are skipping the old guard, not patching around it.</p>
+  <p>Pricing details: <a href="/api/payment/info">/api/payment/info</a>. Pricing transparency is a guarantee of this standard.</p>
+
+  <h2>Built with Claude</h2>
+  <p>TerminalFeed was designed by Ripper in collaboration with Claude (Anthropic). The premium /api/pro/* endpoints, the cross-Worker AFTA rail to TensorFeed (validate plus commit handshake), the Ed25519 receipt signing pipeline, the per-endpoint freshness SLA registry, the in-memory cache plus stale-cache fallback pattern across 30+ free endpoints, the X bot, and the live world-briefing composer were all designed alongside Claude. The git log at <a href="https://github.com/RipperMercs/terminalfeed">github.com/RipperMercs/terminalfeed</a> shows the build trail.</p>
+  <p>An API for agents, designed with an agent.</p>
+
+  <h2>Adopt the standard</h2>
+  <p>There is no certification authority, no fee, no submission process. Self-publish a <span class="inline-code">/.well-known/agent-fair-trade.json</span> conforming to the schema. Cite the code that enforces each guarantee. Adoption is the certification.</p>
+  <p>Schema: <a href="https://tensorfeed.ai/.well-known/agent-fair-trade-schema.json">tensorfeed.ai/.well-known/agent-fair-trade-schema.json</a>. If you adopt and want to be listed in the canonical adopters list, email <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a> or <a href="mailto:evan@tensorfeed.ai">evan@tensorfeed.ai</a>.</p>
+
+  <h2>Frequently asked questions</h2>
+  <dl>
+    <dt>What is the Agent Fair-Trade Agreement (AFTA)?</dt>
+    <dd>An open standard for API publishers that are fair to AI agents. Three pillars: code-enforced no-charge guarantees you can verify by sending the relevant condition, Ed25519-signed receipts on every paid call, and a public on-chain payment rail where every transaction is immutable and auditable. Self-publish your own /.well-known/agent-fair-trade.json to adopt.</dd>
+
+    <dt>How does reciprocal access with TensorFeed work?</dt>
+    <dd>TerminalFeed and TensorFeed share a single bearer-token plus credit ledger. A token minted on either site (via /api/payment/buy-credits then /api/payment/confirm) works on both sites. TerminalFeed validates and charges via TensorFeed's cross-Worker AFTA rail. Each site signs its own receipts with its own Ed25519 keypair; private keys are never shared.</dd>
+
+    <dt>How is "no charge on stale data" enforced?</dt>
+    <dd>Each premium endpoint declares a freshness SLA in worker-additions/worker.js (AFTA_ENDPOINT_FRESHNESS). After the handler runs, aftaPremiumResponse checks the response's generated_at against the SLA. If stale, the deferred debit is skipped, the response is flagged with stale: true, and the no-charge event is logged to /api/payment/no-charge-stats.</dd>
+
+    <dt>How do I verify a receipt?</dt>
+    <dd>Fetch our public Ed25519 key from /.well-known/terminalfeed-receipt-key.json. Take the receipt fields except signature, key_id, signing_alg, signing_curve, canonical_form, and verify_doc. Serialize them with sorted keys (canonical JSON). Verify the signature against the public key with EdDSA / Ed25519. Or POST the receipt to /api/receipt/verify and we will do it for you.</dd>
+
+    <dt>Why USDC on Base instead of Stripe?</dt>
+    <dd>Public crypto ledgers are structurally fair to all participants, including AI agents that traditional payment processors lock out. Every payment is immutable, publicly auditable on the Base block explorer, and incurs no platform-imposed chargeback risk. The receipt rail and the on-chain rail are independent attestations of every dollar that flows through TerminalFeed.</dd>
+
+    <dt>What does "Built with Claude" mean?</dt>
+    <dd>TerminalFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed: the premium /api/pro/* endpoints, the cross-Worker AFTA rail to TensorFeed, the Ed25519 receipt signing pipeline, the per-endpoint freshness SLA registry, the in-memory cache plus stale-cache fallback pattern across 30+ free endpoints, the X bot, and the live world-briefing composer.</dd>
+
+    <dt>Can my API be agent fair-trade certified?</dt>
+    <dd>Yes. There is no certification authority and no fee. Self-publish a /.well-known/agent-fair-trade.json conforming to the schema at https://tensorfeed.ai/.well-known/agent-fair-trade-schema.json. Adoption is the certification. The standard outlives any single property.</dd>
+  </dl>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper &middot; Pizza Robot Studios LLC &middot; <a href="https://tensorfeed.ai/agent-fair-trade">TensorFeed AFTA</a></p>
+    <p><a href="/">Home</a> &middot; <a href="/blog">Blog</a> &middot; <a href="/about">About</a> &middot; <a href="/developers">Developers</a> &middot; <a href="/developers/agent-payments">Agent Payments</a> &middot; <a href="/api/meta">/api/meta</a> &middot; <a href="/api/payment/no-charge-stats">No-charge Ledger</a></p>
+  </div>
+</body>
+</html>
