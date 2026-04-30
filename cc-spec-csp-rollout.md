@@ -44,7 +44,6 @@ https://pagead2.googlesyndication.com  AdSense (when re-approved)
 
 ```
 https://tensorfeed.ai
-https://phreak.fm
 ```
 
 ### Inline scripts
