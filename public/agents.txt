@@ -1,117 +1,53 @@
-# TerminalFeed Agent Manifest
-# Capability and pricing descriptor for autonomous AI agents.
-# Companion to /llms.txt (which targets human-readable agent context)
-# and /openapi.json (which targets machine-readable API contracts).
+# TerminalFeed.io
+# Agent discovery directive. The full agent-readable manifest lives at
+# /llms.txt and the canonical Agent Fair-Trade Agreement manifest at
+# /.well-known/agent-fair-trade.json.
+#
+# This file follows the agents.txt convention as referenced by Stripe
+# Link's create-payment-credential skill ("respect /agents.txt and
+# /llms.txt site directives") and other emerging agent-side conventions.
+# The full discovery payload is the same across both surfaces.
 
-[meta]
-name = TerminalFeed
-url = https://terminalfeed.io
-operator = Pizza Robot Studios LLC
-contact = hello@terminalfeed.io
-sister_sites = tensorfeed.ai
-last_updated = 2026-04-27
+User-agent: *
+Allow: /
 
-[capabilities]
-# What an agent can accomplish here. Plain-language verbs, not endpoint paths.
-- query real-time crypto prices and market data
-- query US stock prices, indices (SPY, DIA, QQQ), and VIX
-- query macroeconomic indicators (Fed rate, CPI, unemployment, GDP, treasury yields)
-- query foreign-exchange rates with USD base
-- query commodity prices (gold, WTI oil, natural gas)
-- query Bitcoin network statistics (block height, fees, hashrate, mempool)
-- query Ethereum gas prices
-- query recent earthquakes globally
-- query upcoming space launches
-- query active prediction markets from Polymarket
-- query global disaster alerts from GDACS
-- query trending stories from Hacker News and tech news sources
-- query infrastructure status of major dev platforms (GitHub, Cloudflare, OpenAI, Anthropic)
-- query weather by lat/lon
-- buy premium credits with USDC on Base mainnet
-- spend credits across TerminalFeed and TensorFeed (cross-site bundle)
-- fetch pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint here (paste directly into your tool-use scaffold, no auth required)
-- connect via Model Context Protocol (MCP) at https://terminalfeed.io/api/mcp; all 21 tools are exposed as native MCP tools and the bearer token doubles as the MCP credential
-- subscribe to webhooks for push delivery instead of polling: POST /api/pro/subscribe with { webhook_url, endpoint }; cron fires every ~5min, HMAC-SHA256 signed, 1 credit per fire
+# Primary agent-readable surfaces
+Manifest: https://terminalfeed.io/llms.txt
+Agent-Landing: https://terminalfeed.io/api/for-agents
+Meta: https://terminalfeed.io/api/meta
+OpenAPI: https://terminalfeed.io/openapi.json
+MCP: https://terminalfeed.io/api/mcp
+LLMTools: https://terminalfeed.io/api/llm-tools
 
-[free_tier]
-auth = none
-endpoints = https://terminalfeed.io/openapi.json
-rate_limit_per_day = 100000
-rate_limit_per_endpoint_per_minute = 2
-license = permissive (cite as "TerminalFeed.io" if used in published derived work)
-trust_signal = stale-cache-on-failure (always 200 with usable data)
+# Agent payments (machine-payable premium tier)
+Standard: https://terminalfeed.io/.well-known/agent-fair-trade.json
+Manifesto: https://terminalfeed.io/agent-fair-trade
+ReceiptKey: https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json
+PaymentInfo: https://terminalfeed.io/api/payment/info
+NoChargeLedger: https://terminalfeed.io/api/payment/no-charge-stats
+ReceiptVerify: https://terminalfeed.io/api/receipt/verify
 
-[premium_tier]
-auth = bearer_token
-auth_format = "tf_live_<64-char-hex>"
-auth_obtained_via = "POST /api/payment/buy-credits + USDC on Base + POST /api/payment/confirm"
-docs = https://terminalfeed.io/developers/agent-payments
-contract = https://terminalfeed.io/openapi.json
-discovery = https://terminalfeed.io/.well-known/agent-payments
-pricing_model = pay_per_call
-pricing = "$1 USDC = 50 credits"
-chain = base_mainnet
-wallet = 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
-wallet_cross_verified_at = ["/terms#premium", "/developers/agent-payments", "/llms.txt", "github.com/RipperMercs/terminalfeed/README.md"]
-expiry = none
-refunds = none_all_sales_final
-license = inference_only
-training_data_use = prohibited
-mainnet_proof = https://basescan.org/tx/0x6aa357c7e984e9bedef0987021f67ac4616b5446c3895d2eb64da5e98c56614c
-sla = best_effort
-atomic_charge = "credits decrement before upstream fetch; partial-fetch responses still count"
+# x402 manifest (inherited via federation host)
+# TerminalFeed does not publish its own /.well-known/x402.json. The credit
+# ledger and merchant relationship live on the federation host (TensorFeed),
+# so TF's x402 manifest is the source of truth for both sites.
+X402: https://tensorfeed.ai/.well-known/x402.json
 
-[premium_endpoints]
-# endpoint, cost_credits, cost_usd, primary_value
-"/api/pro/briefing" = "1, $0.02, world-state snapshot composed from BTC + Fear&Greed + earthquakes + HN + Polymarket"
-"/api/pro/macro" = "2, $0.04, FRED economic series + forex + commodities + US indices + VIX"
-"/api/pro/crypto-deep" = "2, $0.04, top 50 coins + Binance ticker + Bitcoin network stats + Ethereum gas"
-"/api/pro/sentiment" = "2, $0.04, Fear & Greed + VIX + trending ticker mentions across HN/Reddit with sentiment scores + Polymarket signals"
-"/api/pro/world-deltas" = "2, $0.04, time-sorted event stream of recent earthquakes, HN front-page items, Polymarket market updates, and space launches; ?since= for poll-friendly diff semantics"
-"/api/pro/agent-context" = "2, $0.04, curated world-state from 13 sources + paste-ready system_prompt (~350 tokens) for LLM context. The 'always start here' call."
-"/api/pro/defi-tvl" = "2, $0.04, top 50 DeFi protocols by TVL via DefiLlama with category aggregates and biggest 24h/7d movers"
-"/api/pro/stablecoin-flows" = "2, $0.04, net stablecoin circulation changes (top 20 by supply) over 24h/7d/30d with growing/shrinking bias label; leading indicator for crypto buying power"
-"/api/pro/github-velocity" = "2, $0.04, top 30 GitHub repos created in last 7d by stars, top 15 AI/ML active repos, language mix, AI/ML share-of-trending percentage"
-"/api/pro/correlation-matrix" = "2, $0.04, 30-day Pearson correlations across crypto (BTC, ETH, SOL, AVAX, LINK), gold, treasury yields, USD index, oil"
-"/api/pro/whales" = "2, $0.04, near-real-time large on-chain transactions: BTC mempool >=10 BTC + last 3 ETH blocks >=100 ETH, with USD-equivalents"
-"/api/pro/exchange-flows" = "2, $0.04, ETH inflow/outflow tracking against major CEX hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin); per-exchange + aggregate net flow with bias label"
+# Payment rails accepted (x402)
+# Live: USDC on Base mainnet (eip155:8453), federated through tensorfeed.ai's
+#       /api/internal/validate + /api/internal/commit rail
+# Evaluating: Stripe Shared Payment Tokens (method=stripe) via the federation
+#             host. When TensorFeed ships SPT verification, TerminalFeed
+#             inherits SPT acceptance without needing its own Stripe merchant
+#             account. See pricing.x402_compatibility on the AFTA manifest.
+# Other x402 method= variants: not yet supported
 
-[failure_modes]
-# 402 Payment Required reason codes for /api/pro/* endpoints
-missing_token = "no Authorization header sent"
-invalid_token = "token format wrong or token does not exist"
-insufficient_credits = "token valid but balance too low for this endpoint"
-billing_unavailable = "auth service unreachable; retry"
-expired = "token revoked"
+# Federation
+# Bearer tokens minted on terminalfeed.io also work on tensorfeed.ai, and vice
+# versa. Credits live in one ledger (tensorfeed.ai). Each site signs its own
+# receipts with its own Ed25519 keypair. See agent-fair-trade.json
+# adoption.network_federation.
 
-[cross_site_bundle]
-partner = tensorfeed.ai
-partner_capabilities = "AI news aggregation, model leaderboards, AI infrastructure intelligence"
-partner_endpoints_directory = https://tensorfeed.ai/.well-known/openapi.json
-shared_credit_pool = true
-shared_wallet = 0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1
-shared_token_format = "tf_live_<64-char-hex>"
-note = "A token minted on either site spends on either site. One purchase, both data sources."
-
-[sdk]
-python_reference = https://github.com/RipperMercs/terminalfeed/blob/master/sdk-python/terminalfeed_client.py
-python_pypi = "Phase 2 (not yet published; use the reference client above)"
-typescript = "Phase 2"
-go = "Phase 2"
-note = "Bearer-token auth is plain HTTP; any HTTP client works. The reference client wraps it with typed methods and 402 reason parsing."
-
-[discovery_signals]
-llms_txt = https://terminalfeed.io/llms.txt
-openapi_json = https://terminalfeed.io/openapi.json
-well_known_openapi = https://terminalfeed.io/.well-known/openapi.json
-well_known_agent_payments = https://terminalfeed.io/.well-known/agent-payments
-llm_tools = "https://terminalfeed.io/api/llm-tools?format=anthropic   (or ?format=openai)"
-mcp_server = "https://terminalfeed.io/api/mcp   (JSON-RPC 2.0 / HTTP; protocolVersion 2024-11-05)"
-sitemap = https://terminalfeed.io/sitemap.xml
-robots_allows_ai = "GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, CCBot, Meta-ExternalAgent, cohere-ai, plus 9 more"
-response_header_advertising_premium = "X-TerminalFeed-Pricing"
-
-[partner_integrations]
-status = open
-contact = hello@terminalfeed.io
-note = "We work with agent platforms, model registries, and SDK frameworks who want to surface TerminalFeed as a paid data option to their users. No revenue share required for v1; we want distribution."
+# Built with Claude
+# TerminalFeed was designed by Ripper in collaboration with Claude (Anthropic).
+# Build trail: https://github.com/RipperMercs/terminalfeed

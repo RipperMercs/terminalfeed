@@ -574,6 +574,10 @@
   <url><loc>https://terminalfeed.io/tools/gwei</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://terminalfeed.io/tools/hex</loc><lastmod>2026-04-16</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
+  <!-- AFTA / Agent Payments editorial (April 30, 2026) -->
+  <url><loc>https://terminalfeed.io/agent-fair-trade</loc><lastmod>2026-04-30</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments</loc><lastmod>2026-04-30</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
   <!-- Bitcoin Ticker article batch (April 22, 2026) -->
   <url><loc>https://terminalfeed.io/blog/real-time-data-dashboard-2026</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://terminalfeed.io/blog/best-bitcoin-ticker</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>

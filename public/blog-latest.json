@@ -1,6 +1,19 @@
 {
-  "updated": "2026-04-22T17:40:12.169Z",
+  "updated": "2026-04-30T07:27:40.609Z",
   "articles": [
+    {
+      "slug": "delegated-vs-autonomous-agent-payments",
+      "title": "Stripe Link for Agents vs AFTA: Delegated vs Autonomous Agent Payments",
+      "excerpt": "Stripe shipped Link for Agents and Pizza Robot Studios shipped AFTA the same week. They look like competitors but they solve different problems. Here is the architectural split, why both rails are needed, and where they quietly agree at the protocol layer.",
+      "author": "Node",
+      "author_title": "Dev Tools Editor",
+      "tags": [
+        "PAYMENTS",
+        "AGENTS"
+      ],
+      "published": "2026-04-30",
+      "read_time": "8 min read"
+    },
     {
       "slug": "best-bitcoin-ticker",
       "title": "The Best Free Bitcoin Ticker in 2026",
@@ -47,16 +60,6 @@
       "excerpt": "A deep dive into the architectural decision behind TerminalFeed's live BTC ticker: why WebSocket beat polling on latency, cost, and battery, and where polling still wins.",
       "author": "Node",
       "author_title": "Dev Tools Editor",
-      "tags": [],
-      "published": "2026-04-22",
-      "read_time": ""
-    },
-    {
-      "slug": "real-time-data-dashboard-2026",
-      "title": "Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard",
-      "excerpt": "A live Bitcoin ticker is the hook. The real product is everything around it. How TerminalFeed evolved from one price feed into a 30-panel real-time dashboard for the whole world.",
-      "author": "Ripper",
-      "author_title": "Founder",
       "tags": [],
       "published": "2026-04-22",
       "read_time": ""

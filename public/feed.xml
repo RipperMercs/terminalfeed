@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Wed, 22 Apr 2026 17:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 30 Apr 2026 17:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Stripe Link for Agents vs AFTA: Two Payment Models, One Protocol</title>
+      <link>https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments</link>
+      <description>Stripe shipped Link for Agents and Pizza Robot Studios shipped AFTA the same week. They look like competitors but they solve different problems. The architectural split, the use-case fit test, and where they quietly agree at the protocol layer.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Thu, 30 Apr 2026 17:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments</guid>
+    </item>
 
     <item>
       <title>Beyond the Bitcoin Ticker: Building a Real-Time Data Dashboard</title>

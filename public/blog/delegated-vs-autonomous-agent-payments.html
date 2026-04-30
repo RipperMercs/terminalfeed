@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stripe Link for Agents vs AFTA: Delegated vs Autonomous Agent Payments | TerminalFeed Blog</title>
+  <meta name="description" content="Stripe shipped Link for Agents and Pizza Robot Studios shipped AFTA the same week. They look like competitors but they solve different problems. Here is the architectural split, why both rails are needed, and where they quietly agree at the protocol layer.">
+  <meta property="og:title" content="Stripe Link for Agents vs AFTA: Delegated vs Autonomous Agent Payments">
+  <meta property="og:description" content="Stripe shipped Link for Agents and Pizza Robot Studios shipped AFTA the same week. They look like competitors but they solve different problems. Here is the architectural split, why both rails are needed, and where they quietly agree at the protocol layer.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Stripe Link for Agents vs AFTA: Delegated vs Autonomous Agent Payments",
+    "description": "Stripe shipped Link for Agents and Pizza Robot Studios shipped AFTA the same week. They look like competitors but they solve different problems. Here is the architectural split, why both rails are needed, and where they quietly agree at the protocol layer.",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team/node"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-04-30",
+    "dateModified": "2026-04-30",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .article-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 12px;
+    }
+    .article-body th {
+      text-align: left;
+      color: #5DCAA5;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #2A2A30;
+    }
+    .article-body td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1A1A22;
+      vertical-align: top;
+      color: #D4D2CB;
+    }
+    .article-body td:first-child { color: #F0EDE6; font-weight: 600; }
+
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Delegated vs Autonomous Agent Payments</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Delegated vs Autonomous Agent Payments", "item": "https://terminalfeed.io/blog/delegated-vs-autonomous-agent-payments" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">PAYMENTS</span>
+        <span class="article-tag">AGENTS</span>
+        <span class="article-tag">PROTOCOLS</span>
+      </div>
+      <h1>Stripe Link for Agents vs AFTA: Two Payment Models, One Protocol</h1>
+      <div class="article-meta">
+        <span>By <a href="/team/node" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Node</a></span>
+        <span>April 30, 2026</span>
+        <span>8 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Two things shipped this week, in the same lane, twenty-four hours apart. Stripe announced <a href="https://link.com/agents" rel="external">Link for Agents</a>, a system that lets AI agents make purchases through a Link wallet with the user approving every transaction in the Link app. Pizza Robot Studios shipped the second adopter of the <a href="/agent-fair-trade">Agent Fair-Trade Agreement</a>, an open standard for autonomous agent payments over USDC on Base. At first glance these are competing products. They are not. They solve genuinely different problems and, in a quiet way, they agree on more than they disagree on.</p>
+
+      <p>If you are designing an agent right now and trying to figure out which rail to put underneath it, the choice is not "Stripe or crypto." It is "delegated or autonomous." Once you see that split, the right rail picks itself.</p>
+
+      <h2>The two payment models</h2>
+
+      <p>A delegated-payment model puts a human in the loop on every transaction. The agent proposes a purchase. The human is notified, reviews the merchant, the amount, the line items, and either approves or denies. Only then does the payment clear. The agent never holds the actual payment credentials. Stripe Link for Agents is a clean implementation of this model. The <code>spend-request</code> object includes a 100-character minimum <code>context</code> field so the user can see why the agent wanted to spend money. The <code>--request-approval</code> flag triggers a push notification and polls until the user taps approve. The agent gets a one-time-use virtual card if and only if the human signed off.</p>
+
+      <p>An autonomous-payment model removes the human from the per-transaction loop. The user authorizes a budget once (in our case, by sending USDC to a wallet and minting a bearer token), and from that point forward the agent spends from the budget on its own. There is no notification, no approval tap, no UI surface between the agent's decision and the payment. AFTA is built for this model. A bearer token plus credit balance plus signed receipts gives the agent everything it needs to call paid endpoints without checking in.</p>
+
+      <p>Neither is the "right" model. They are right for different jobs.</p>
+
+      <h2>Where each model fits</h2>
+
+      <p>The fit test is mostly about call frequency, latency budget, and stakes per transaction. Run through it:</p>
+
+      <table>
+        <tr><th>Use case</th><th>Right model</th><th>Why</th></tr>
+        <tr><td>Agent buys a book on your behalf</td><td>Delegated</td><td>One-off, $10 to $100, you want to see it before it ships</td></tr>
+        <tr><td>Agent books a hotel in a city you are flying to</td><td>Delegated</td><td>Material amount, irreversible, human judgment is the feature</td></tr>
+        <tr><td>Agent buys carbon offsets via MPP after running a model job</td><td>Either, lean delegated</td><td>Audit trail matters; humans approve a class of purchases periodically</td></tr>
+        <tr><td>Agent fetches /api/pro/briefing 200 times a day</td><td>Autonomous</td><td>Sub-cent per call, latency-sensitive, no human can keep up</td></tr>
+        <tr><td>Background research agent calling 12 paid APIs in parallel</td><td>Autonomous</td><td>Human approval would defeat the agent</td></tr>
+        <tr><td>Trading agent opening a Polymarket position</td><td>Delegated</td><td>Material, irreversible, jurisdiction-sensitive</td></tr>
+      </table>
+
+      <p>Notice the pattern. The model that wins flips at the boundary between "I want to know about this" and "I am paying you to handle it without asking me." Below the boundary, latency and frequency dominate, and any human-in-the-loop step makes the agent unusable. Above the boundary, the human's review is the entire point of the transaction.</p>
+
+      <h2>Where Link and AFTA quietly agree</h2>
+
+      <p>Now the part most coverage of these announcements has missed. Open the Stripe link-cli source and read the <code>mpp pay</code> command. It uses the <a href="https://mpp.dev" rel="external">Machine Payments Protocol</a>, an HTTP 402-based standard for advertising prices and accepting machine payments. The agent calls a merchant URL, gets a <code>WWW-Authenticate</code> challenge with a structured payment realm, and pays with a <code>shared_payment_token</code> credential. The merchant accepts or rejects.</p>
+
+      <p>That is the same protocol AFTA-compliant sites already use to advertise paid endpoints. TerminalFeed surfaces it at <a href="/api/usdc-payable">/api/usdc-payable</a>. Hit a paid endpoint with no token and you get back a 402 with payment instructions. Send the payment and try again with the right header, and you are paid up.</p>
+
+      <p>So Stripe and AFTA-compliant sites are speaking the same discovery protocol. The thing they disagree on is the rail underneath. Stripe's <code>shared_payment_token</code> is a credit-card-network instrument that flows through the Visa, Mastercard, or ACH plumbing. AFTA's preferred rail is USDC on Base, a public on-chain transfer. Both fit through the same HTTP 402 doorway.</p>
+
+      <p>This matters because it means a single merchant endpoint can advertise multiple acceptable payment instruments at the protocol layer. The agent picks the one it has. Stripe-equipped agents pay with one. Crypto-equipped agents pay with the other. Both clear. The merchant runs one endpoint and accepts whoever shows up.</p>
+
+      <h2>Why we chose USDC on Base for AFTA</h2>
+
+      <p>Given that protocol agreement, why didn't TerminalFeed just adopt Stripe's rail and call it a day? Three reasons, listed in order of how often they actually bite.</p>
+
+      <p><strong>Latency.</strong> A Link <code>spend-request</code> creates a virtual card, which the agent then pastes into a checkout form. That works for a hotel booking. It does not work for an autonomous agent calling <a href="/developers/agent-payments">/api/pro/briefing</a> twelve times during a single research task. The credit-card pipeline was designed for human checkouts at human cadence. The on-chain pipeline (validate the bearer token, decrement the credit balance, return the data) is single-digit milliseconds. Crypto rails are not faster than card rails because crypto is faster than databases. They are faster because the autonomous flow does not have to traverse the card network at all; the on-chain settlement happens once, at top-up time, and the per-call path is just credit-balance arithmetic.</p>
+
+      <p><strong>Per-transaction fees.</strong> Stripe takes a cut on every charge, with a floor that makes sub-dollar transactions structurally unprofitable. A 1-cent API call cannot pay 30 cents of fees. The crypto rail amortizes the fee at top-up time: the user pays gas plus our smallest tier ($1 USDC) once, and that buys 50 calls at $0.02 each. The fee is amortized across the bundle. This is the math that makes autonomous-agent payments commercially viable below the dollar mark, and it is the math that nothing built on top of card networks can match.</p>
+
+      <p><strong>Account preconditions.</strong> Link assumes the agent's user has a Link account, which assumes a Link-eligible identity, which means jurisdiction restrictions, KYC for the issuing bank, dispute windows, and platform-discretionary chargebacks. Those are reasonable for retail purchases. They are wrong defaults for an agent that needs to call a public data API. A Cloudflare Worker hitting our briefing endpoint is not a person. It does not have a wallet of record at a US bank. Forcing it to acquire one to read live BTC prices is a category error.</p>
+
+      <p>None of these are knocks on Stripe. The team there knows exactly what they built and why. Link for Agents is the right answer for delegated retail. It is the wrong answer for autonomous machine-to-machine, and Stripe knows that.</p>
+
+      <h2>What this means for the next agent you build</h2>
+
+      <p>If you are building an agent and you have not picked a payment rail yet, do this in order.</p>
+
+      <p><strong>First, classify the calls.</strong> Look at every paid action your agent will take and ask: would the user want to approve this individually, or have they already approved it as a category? Hotel bookings, single. Reading public market data, category. Buying physical goods over $50, single. Calling a paid LLM, category. Sketch the split before you wire anything up.</p>
+
+      <p><strong>Second, pick rails per category.</strong> The single-approval calls go through Link for Agents (or any equivalent delegated wallet). The category-approved calls go through an autonomous rail like AFTA over USDC on Base. There is no rule that says one agent uses one rail. A well-built agent uses both, with the rail chosen per call by the agent itself based on what it is doing.</p>
+
+      <p><strong>Third, advertise both at the 402 layer if you are the merchant.</strong> If you run a paid API surface, support both <code>shared_payment_token</code> and the AFTA bearer-token flow. Both come in through the same 402 doorway. The agent sends what it has. You take what comes in. This is the right shape for the network as it actually exists, where some agents are wallet-equipped and some are crypto-equipped and most have not figured out yet which one they are.</p>
+
+      <p><strong>Fourth, sign your receipts.</strong> Whichever rail you accept, the agent should walk away with a cryptographically signed receipt of what they paid for and what they got back. AFTA codifies this with Ed25519. The Stripe-rail equivalent is the <code>spend_request</code> approval record (visible in the user's Link app and queryable via the API). Either way, an agent that holds a non-forgeable record of every transaction is an agent that can audit itself, dispute mistakes, and prove to its user that it did not go off the rails. Receipts are the boring infrastructure that makes the rest of agent autonomy safe.</p>
+
+      <h2>Standards plural, rails per use case</h2>
+
+      <p>The mistake is to read the agent-payments space as one big protocol war. It is not. It is two protocols (delegated and autonomous) that each need their own rails, sharing one discovery layer (HTTP 402 / MPP), and converging on one cryptographic primitive (signed receipts) for after-the-fact verification. Stripe is building the leading delegated rail. AFTA is the open standard for the autonomous rail. They will both keep growing because the demand for both is real.</p>
+
+      <p>The interesting question is not which one wins. It is whether the rest of the merchant side of the network catches up to the agent side. Right now most paid APIs are still gated by per-developer API keys, monthly subscriptions, or one-off OAuth handshakes that none of these protocols use. That is the part that needs to change. Once enough merchants speak HTTP 402, agents can pick their rail and get paid up in seconds. That is the world this week's two announcements are nudging us toward.</p>
+
+      <p>If you are running a paid API and you have not yet done the basic 402 work, that is the move. Both rails are free upgrades for any merchant willing to take them. Neither one needs to be the only answer.</p>
+
+      <div class="cta-box">
+        <p>TerminalFeed runs the autonomous rail end-to-end: USDC on Base, deferred-debit, signed receipts, public no-charge ledger.</p>
+        <a href="/agent-fair-trade" class="cta-link">Read the AFTA standard</a>
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools/">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/agent-fair-trade">AFTA</a>
+  </footer>
+</body>
+</html>

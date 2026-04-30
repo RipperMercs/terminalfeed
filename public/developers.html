@@ -83,6 +83,16 @@
     </div>
   </div>
 
+  <div class="premium-banner" style="background:linear-gradient(135deg,#0B201A 0%,#0B0F12 100%);border-color:#163A30">
+    <div class="pb-icon" style="color:#5DCAA5">&gt;_</div>
+    <div class="pb-text">
+      <strong style="color:#5DCAA5">Agent Fair-Trade certified.</strong> Code-enforced no-charge guarantees on 5xx, breaker, schema fail, and stale data. Ed25519-signed receipts on every paid call. Public on-chain payment rail. Reciprocal access on the network: a single bearer token works on tensorfeed.ai and terminalfeed.io. <a href="/agent-fair-trade">Read the AFTA standard →</a>
+    </div>
+  </div>
+
+  <h3 style="color:#5DCAA5;margin-top:20px;font-size:13px">Access on the network</h3>
+  <p>TerminalFeed runs on the same bearer-token rail as TensorFeed. Mint a token on either site (POST /api/payment/buy-credits then POST /api/payment/confirm) and use it on both. Credits live in one ledger; receipts are signed by each site with its own Ed25519 key. Verify a receipt at <a href="/api/receipt/verify">/api/receipt/verify</a>. Inspect the public no-charge ledger at <a href="/api/payment/no-charge-stats">/api/payment/no-charge-stats</a>. Site meta at <a href="/api/meta">/api/meta</a>.</p>
+
   <p>Base URL: <span class="inline-code">https://terminalfeed.io/api</span></p>
   <p>All responses are JSON. CORS is enabled, so call from any domain, any app, any AI agent. Please keep individual endpoint calls to 1 per 30 seconds. For a deep dive into the data sources behind these endpoints, read <a href="/blog/free-apis-2026">30+ Free APIs Every Developer Should Know in 2026</a>.</p>
 
