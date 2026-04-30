@@ -3480,6 +3480,734 @@ function handleLLMTools(parsedUrl) {
 
 
 // =============================================================================
+// Agent Fair-Trade Agreement (AFTA)
+// =============================================================================
+//
+// AFTA pillars enforced here:
+//   1. Code-enforced no-charge guarantees (5xx, circuit_breaker,
+//      schema_validation_failure, stale_data). Each premium call runs the
+//      handler first and only commits the credit debit on success. Failures
+//      log a no-charge event to a public ledger.
+//   2. Ed25519-signed receipts on every premium response. Verifiable offline
+//      against the public key at /.well-known/terminalfeed-receipt-key.json.
+//   3. Public on-chain payment rail (USDC on Base) inherited from the shared
+//      credit pool with TensorFeed.
+//
+// TerminalFeed accepts TF bearer tokens via the cross-Worker AFTA rail
+// (POST /api/internal/validate + POST /api/internal/commit on tensorfeed-api).
+// TerminalFeed does not mint its own bearer tokens; credits live in one
+// ledger so a token works on either site.
+//
+// Trust is federated through the open AFTA standard. Each adopter signs its
+// own receipts with its own keypair. Public key URL for TerminalFeed:
+//   https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json
+// Standard at /.well-known/agent-fair-trade.json.
+
+var AFTA_PUBLIC_KEY_URL = 'https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json';
+var AFTA_VERIFY_DOC = 'https://terminalfeed.io/agent-fair-trade#receipts';
+var AFTA_DOC = 'https://terminalfeed.io/agent-fair-trade';
+var AFTA_MANIFEST_URL = 'https://terminalfeed.io/.well-known/agent-fair-trade.json';
+
+// === Canonical JSON (deterministic serialization shared with TensorFeed) ===
+// Keys sorted lexicographically, no whitespace, standard JSON escaping.
+// Identifier remains tensorfeed-canonical-json-v1 because the algorithm is
+// shared across every AFTA adopter; renaming would fork the standard.
+var _afta_textEnc = new TextEncoder();
+
+function aftaCanonicalJSON(value) {
+  if (value === null) return 'null';
+  if (value === undefined) throw new Error('canonicalJSON: undefined not allowed');
+  var t = typeof value;
+  if (t === 'boolean') return value ? 'true' : 'false';
+  if (t === 'number') {
+    if (!Number.isFinite(value)) throw new Error('canonicalJSON: non-finite number not allowed');
+    return JSON.stringify(value);
+  }
+  if (t === 'string') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    var parts = [];
+    for (var i = 0; i < value.length; i++) parts.push(aftaCanonicalJSON(value[i]));
+    return '[' + parts.join(',') + ']';
+  }
+  if (t === 'object') {
+    var keys = Object.keys(value).sort();
+    var kv = [];
+    for (var j = 0; j < keys.length; j++) {
+      kv.push(JSON.stringify(keys[j]) + ':' + aftaCanonicalJSON(value[keys[j]]));
+    }
+    return '{' + kv.join(',') + '}';
+  }
+  throw new Error('canonicalJSON: unsupported value type ' + t);
+}
+
+async function _aftaSha256Hex(input) {
+  var buf = await crypto.subtle.digest('SHA-256', _afta_textEnc.encode(input));
+  var bytes = new Uint8Array(buf);
+  var s = '';
+  for (var i = 0; i < bytes.length; i++) s += bytes[i].toString(16).padStart(2, '0');
+  return s;
+}
+
+async function aftaHashRequest(method, url) {
+  var pairs = [];
+  url.searchParams.forEach(function(v, k) { pairs.push([k, v]); });
+  pairs.sort(function(a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
+  var canonicalQuery = pairs.map(function(p) { return p[0] + '=' + p[1]; }).join('&');
+  return 'sha256:' + (await _aftaSha256Hex(method.toUpperCase() + ' ' + url.pathname + '?' + canonicalQuery));
+}
+
+async function aftaHashResponse(result) {
+  return 'sha256:' + (await _aftaSha256Hex(aftaCanonicalJSON(result)));
+}
+
+function aftaTokenShort(token) {
+  if (!token || token.length < 16) return token || '';
+  if (token.indexOf('tf_live_') !== 0) return token.slice(0, 8) + '...' + token.slice(-4);
+  var body = token.slice(8);
+  return 'tf_live_' + body.slice(0, 8) + '...' + body.slice(-8);
+}
+
+function aftaGenerateReceiptId() {
+  var bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  var s = '';
+  for (var i = 0; i < bytes.length; i++) s += bytes[i].toString(16).padStart(2, '0');
+  return 'rcpt_' + s;
+}
+
+function _aftaB64UrlFromBytes(bytes) {
+  var s = '';
+  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  var b64 = btoa(s);
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function _aftaBytesFromB64Url(s) {
+  var pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
+  var b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+  var bin = atob(b64);
+  var out = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// Cached Ed25519 signing key. Re-imported when the secret string changes
+// (rotation) and otherwise reused across requests in the same isolate.
+var _aftaCachedKey = null;
+var _aftaCachedKeySource = null;
+
+async function aftaLoadSigningKey(env) {
+  var secret = env && env.RECEIPT_PRIVATE_KEY_JWK;
+  if (!secret) {
+    _aftaCachedKey = null;
+    _aftaCachedKeySource = null;
+    return null;
+  }
+  if (_aftaCachedKey && _aftaCachedKeySource === secret) return _aftaCachedKey;
+  var parsed;
+  try { parsed = JSON.parse(secret); } catch (e) {
+    console.error('afta: RECEIPT_PRIVATE_KEY_JWK is not valid JSON');
+    return null;
+  }
+  if (!parsed || parsed.kty !== 'OKP' || parsed.crv !== 'Ed25519' || !parsed.d || !parsed.x) {
+    console.error('afta: RECEIPT_PRIVATE_KEY_JWK missing required Ed25519 fields');
+    return null;
+  }
+  var key;
+  try {
+    key = await crypto.subtle.importKey('jwk', parsed, { name: 'Ed25519' }, false, ['sign']);
+  } catch (e) {
+    console.error('afta: Ed25519 importKey failed', e && e.message);
+    return null;
+  }
+  var kid = parsed.kid || (await _aftaSha256Hex(parsed.x)).slice(0, 16);
+  _aftaCachedKey = { key: key, kid: kid };
+  _aftaCachedKeySource = secret;
+  return _aftaCachedKey;
+}
+
+async function aftaSignReceipt(env, core) {
+  var loaded = await aftaLoadSigningKey(env);
+  if (!loaded) return null;
+  var msg = _afta_textEnc.encode(aftaCanonicalJSON(core));
+  var sig;
+  try {
+    sig = await crypto.subtle.sign({ name: 'Ed25519' }, loaded.key, msg);
+  } catch (e) {
+    console.error('afta: sign failed', e && e.message);
+    return null;
+  }
+  return Object.assign({}, core, {
+    signature: _aftaB64UrlFromBytes(new Uint8Array(sig)),
+    key_id: loaded.kid,
+    signing_alg: 'EdDSA',
+    signing_curve: 'Ed25519',
+    canonical_form: 'tensorfeed-canonical-json-v1',
+    verify_doc: AFTA_VERIFY_DOC,
+  });
+}
+
+async function aftaVerifyReceiptSignature(signed, publicJwk) {
+  // Strip signing fields back down to the core, in the same field order
+  // signReceipt produced. canonicalJSON re-sorts keys so order does not
+  // actually matter; we list every signed field for clarity.
+  var core = {
+    v: signed.v,
+    id: signed.id,
+    endpoint: signed.endpoint,
+    method: signed.method,
+    token_short: signed.token_short,
+    credits_charged: signed.credits_charged,
+    credits_remaining: signed.credits_remaining,
+    request_hash: signed.request_hash,
+    response_hash: signed.response_hash,
+    captured_at: signed.captured_at,
+    server_time: signed.server_time,
+    no_charge_reason: signed.no_charge_reason,
+    freshness_sla_seconds: signed.freshness_sla_seconds,
+  };
+  var key;
+  try {
+    key = await crypto.subtle.importKey('jwk', publicJwk, { name: 'Ed25519' }, false, ['verify']);
+  } catch (e) { return false; }
+  var sigBytes;
+  try { sigBytes = _aftaBytesFromB64Url(signed.signature); } catch (e) { return false; }
+  var msg = _afta_textEnc.encode(aftaCanonicalJSON(core));
+  try {
+    return await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, msg);
+  } catch (e) { return false; }
+}
+
+function aftaReceiptStatus(env) {
+  return {
+    configured: !!(env && env.RECEIPT_PRIVATE_KEY_JWK),
+    algorithm: 'EdDSA / Ed25519',
+    canonical_form: 'tensorfeed-canonical-json-v1',
+    public_key_url: AFTA_PUBLIC_KEY_URL,
+    verify_endpoint: 'https://terminalfeed.io/api/receipt/verify',
+    verify_doc: AFTA_VERIFY_DOC,
+  };
+}
+
+// === Per-endpoint freshness SLA registry ===
+// null means no freshness SLA applies (compute-only or immutable history).
+// Concrete maxAgeSeconds means "if the data backing the response is older
+// than this, no charge."
+var AFTA_ENDPOINT_FRESHNESS = {
+  '/api/pro/briefing':           { maxAgeSeconds: 5 * 60 },
+  '/api/pro/macro':              { maxAgeSeconds: 30 * 60 },
+  '/api/pro/crypto-deep':        { maxAgeSeconds: 5 * 60 },
+  '/api/pro/agent-context':      { maxAgeSeconds: 10 * 60 },
+  '/api/pro/sentiment':          { maxAgeSeconds: 10 * 60 },
+  '/api/pro/world-deltas':       { maxAgeSeconds: 5 * 60 },
+  // correlation-matrix is a heavy compute over a 30-day window; the answer
+  // changes slowly. A 1h SLA matches the 30-min server cache plus headroom.
+  '/api/pro/correlation-matrix': { maxAgeSeconds: 60 * 60 },
+  '/api/pro/whales':             { maxAgeSeconds: 10 * 60 },
+  '/api/pro/exchange-flows':     { maxAgeSeconds: 10 * 60 },
+  // defi-tvl + stablecoin-flows roll up multi-window deltas; 2h covers the
+  // server cache (30m for tvl, 1h for stablecoins) plus rollover slack.
+  '/api/pro/defi-tvl':           { maxAgeSeconds: 2 * 60 * 60 },
+  '/api/pro/stablecoin-flows':   { maxAgeSeconds: 2 * 60 * 60 },
+  '/api/pro/github-velocity':    { maxAgeSeconds: 60 * 60 },
+};
+
+var AFTA_FRESHNESS_REASONS = {
+  '/api/pro/briefing':           'composed live snapshot; capture window is the underlying minute-scale upstreams',
+  '/api/pro/macro':              'macro indicators (FRED, Finnhub, Frankfurter) update on multi-minute cadence',
+  '/api/pro/crypto-deep':        'live crypto + on-chain rollup; minute-scale cadence',
+  '/api/pro/agent-context':      'composed system-prompt of current world state; 5-10 min freshness',
+  '/api/pro/sentiment':          'live sentiment over trending crypto symbols',
+  '/api/pro/world-deltas':       'rolling 1h bucket of world events; polling endpoint',
+  '/api/pro/correlation-matrix': '30-day correlation series; recomputes hourly',
+  '/api/pro/whales':             'large transaction stream across BTC/ETH/SOL',
+  '/api/pro/exchange-flows':     'labeled-wallet flow ledger; minute-scale',
+  '/api/pro/defi-tvl':           'top-50 DeFi protocols + chain rollups; ~30 min upstream cadence',
+  '/api/pro/stablecoin-flows':   'top-20 stablecoins multi-window deltas; hourly upstream',
+  '/api/pro/github-velocity':    'GitHub trending + computed velocity; hourly cadence',
+};
+
+function aftaResolveSLA(path) {
+  if (Object.prototype.hasOwnProperty.call(AFTA_ENDPOINT_FRESHNESS, path)) {
+    return AFTA_ENDPOINT_FRESHNESS[path];
+  }
+  return null;
+}
+
+function aftaCheckStaleness(endpoint, capturedAt, now) {
+  var sla = aftaResolveSLA(endpoint);
+  if (!sla) {
+    return { stale: false, ageSeconds: null, slaSeconds: null, capturedAt: capturedAt || null, applies: false };
+  }
+  if (!capturedAt) {
+    return { stale: false, ageSeconds: null, slaSeconds: sla.maxAgeSeconds, capturedAt: null, applies: true };
+  }
+  var captured = Date.parse(capturedAt);
+  if (!Number.isFinite(captured)) {
+    return { stale: false, ageSeconds: null, slaSeconds: sla.maxAgeSeconds, capturedAt: capturedAt, applies: true };
+  }
+  var nowMs = now ? now.getTime() : Date.now();
+  var ageSeconds = Math.max(0, Math.floor((nowMs - captured) / 1000));
+  return {
+    stale: ageSeconds > sla.maxAgeSeconds,
+    ageSeconds: ageSeconds,
+    slaSeconds: sla.maxAgeSeconds,
+    capturedAt: capturedAt,
+    applies: true,
+  };
+}
+
+function aftaDescribeSLAs() {
+  var out = [];
+  Object.keys(AFTA_ENDPOINT_FRESHNESS).forEach(function(ep) {
+    out.push({
+      endpoint: ep,
+      max_age_seconds: AFTA_ENDPOINT_FRESHNESS[ep] ? AFTA_ENDPOINT_FRESHNESS[ep].maxAgeSeconds : null,
+      reason: AFTA_FRESHNESS_REASONS[ep] || '',
+    });
+  });
+  return out;
+}
+
+// === Local no-charge ledger (TerminalFeed view) ===
+// Network-wide no-charge events also land in TensorFeed's ledger via the
+// /api/internal/commit handshake; this local copy lets TerminalFeed expose
+// /api/payment/no-charge-stats with a TerminalFeed-scoped view that does
+// not depend on a TF round-trip to read.
+//
+// KV layout in WEBHOOK_SUBS:
+//   pay:no-charge:{YYYY-MM-DD}  -> DailyNoChargeRollup
+//   pay:no-charge:index         -> ["YYYY-MM-DD", ...] (newest first, capped)
+
+var AFTA_NO_CHARGE_PREFIX = 'pay:no-charge:';
+var AFTA_NO_CHARGE_INDEX_KEY = 'pay:no-charge:index';
+var AFTA_NO_CHARGE_MAX_INDEX_DATES = 365 * 3;
+var AFTA_NO_CHARGE_MAX_EVENTS = 200;
+
+function _aftaNoChargeKey(date) { return AFTA_NO_CHARGE_PREFIX + date; }
+function _aftaTodayUtc() { return new Date().toISOString().slice(0, 10); }
+
+async function _aftaReadNoChargeIndex(env) {
+  if (!env || !env.WEBHOOK_SUBS) return [];
+  var raw = await env.WEBHOOK_SUBS.get(AFTA_NO_CHARGE_INDEX_KEY, 'json');
+  return Array.isArray(raw) ? raw : [];
+}
+
+async function _aftaPushNoChargeIndexDate(env, date) {
+  if (!env || !env.WEBHOOK_SUBS) return;
+  var dates = await _aftaReadNoChargeIndex(env);
+  if (dates.indexOf(date) === -1) {
+    dates.unshift(date);
+    if (dates.length > AFTA_NO_CHARGE_MAX_INDEX_DATES) dates.length = AFTA_NO_CHARGE_MAX_INDEX_DATES;
+    await env.WEBHOOK_SUBS.put(AFTA_NO_CHARGE_INDEX_KEY, JSON.stringify(dates));
+  }
+}
+
+async function aftaLogNoChargeEvent(env, reason, endpoint, costSkipped, token) {
+  if (!env || !env.WEBHOOK_SUBS) return;
+  try {
+    var date = _aftaTodayUtc();
+    var key = _aftaNoChargeKey(date);
+    var existing = await env.WEBHOOK_SUBS.get(key, 'json');
+    var rollup = existing || {
+      date: date,
+      count: 0,
+      by_reason: {},
+      by_endpoint: {},
+      credits_skipped: 0,
+      events: [],
+    };
+    var event = {
+      ts: new Date().toISOString(),
+      reason: reason,
+      endpoint: endpoint,
+      cost_skipped: costSkipped,
+      token_short: aftaTokenShort(token || ''),
+    };
+    rollup.count = (rollup.count || 0) + 1;
+    rollup.credits_skipped = (rollup.credits_skipped || 0) + costSkipped;
+    rollup.by_reason[reason] = (rollup.by_reason[reason] || 0) + 1;
+    rollup.by_endpoint[endpoint] = (rollup.by_endpoint[endpoint] || 0) + 1;
+    rollup.events.unshift(event);
+    if (rollup.events.length > AFTA_NO_CHARGE_MAX_EVENTS) rollup.events.length = AFTA_NO_CHARGE_MAX_EVENTS;
+    await env.WEBHOOK_SUBS.put(key, JSON.stringify(rollup));
+    await _aftaPushNoChargeIndexDate(env, date);
+  } catch (e) {
+    console.error('afta: logNoChargeEvent failed', e && e.message);
+  }
+}
+
+async function aftaGetNoChargeRollup(env, date) {
+  if (!env || !env.WEBHOOK_SUBS) return null;
+  var d = date || _aftaTodayUtc();
+  return await env.WEBHOOK_SUBS.get(_aftaNoChargeKey(d), 'json');
+}
+
+async function aftaListNoChargeDates(env) {
+  return await _aftaReadNoChargeIndex(env);
+}
+
+// === Cross-Worker AFTA rail to TensorFeed (validate + commit) ===
+//
+// The legacy validateAndCharge() helper below stays in place for callers
+// that are not running through handlePremium (subscription validation,
+// webhook commit, MCP tool dispatch). New AFTA-shaped traffic goes through
+// these two helpers. Same X-Internal-Auth secret as validateAndCharge.
+
+async function aftaValidateOnly(env, token, cost) {
+  if (!env || !env.TENSORFEED_AUTH_URL || !env.SHARED_INTERNAL_SECRET) {
+    return { ok: false, reason: 'billing_unavailable' };
+  }
+  if (_breakerOpen()) return { ok: false, reason: 'billing_temporarily_unavailable' };
+  try {
+    var res = await fetchWithTimeout(
+      env.TENSORFEED_AUTH_URL + '/api/internal/validate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Internal-Auth': env.SHARED_INTERNAL_SECRET },
+        body: JSON.stringify({ token: token, cost: cost }),
+      },
+      8000,
+    );
+    if (!res.ok) {
+      // 4xx auth failures are not breaker-fed (legitimate bad-token traffic
+      // shouldn't trip the circuit). 5xx feeds the breaker because it is a
+      // TensorFeed health signal.
+      if (res.status >= 500) _breakerRecord(false);
+      return { ok: false, reason: 'billing_unavailable' };
+    }
+    var json = await res.json();
+    if (!json || typeof json.ok !== 'boolean') return { ok: false, reason: 'billing_unavailable' };
+    if (json.ok) _breakerRecord(true);
+    return json;
+  } catch (e) {
+    _breakerRecord(false);
+    return { ok: false, reason: 'billing_unavailable' };
+  }
+}
+
+async function aftaCommitInternal(env, token, cost, endpoint, noChargeReason) {
+  if (!env || !env.TENSORFEED_AUTH_URL || !env.SHARED_INTERNAL_SECRET) {
+    return { ok: false, reason: 'billing_unavailable' };
+  }
+  try {
+    var body = {
+      token: token,
+      cost: cost,
+      endpoint: endpoint,
+      no_charge_reason: noChargeReason || null,
+    };
+    var res = await fetchWithTimeout(
+      env.TENSORFEED_AUTH_URL + '/api/internal/commit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Internal-Auth': env.SHARED_INTERNAL_SECRET },
+        body: JSON.stringify(body),
+      },
+      8000,
+    );
+    if (!res.ok) return { ok: false, reason: 'billing_unavailable' };
+    var json = await res.json();
+    if (!json || typeof json.ok !== 'boolean') return { ok: false, reason: 'billing_unavailable' };
+    return json;
+  } catch (e) {
+    return { ok: false, reason: 'billing_unavailable' };
+  }
+}
+
+// === premiumResponse + premiumValidationFailure (AFTA helpers) ===
+//
+// premiumResponse() is the single exit point for a successful premium
+// handler. It runs the staleness check, commits the deferred debit (or
+// skips on no-charge), signs an Ed25519 receipt, and embeds it in the
+// response. premiumValidationFailure() is the corresponding helper for
+// 400 schema-validation paths so those calls are visibly free + receipt-
+// signed.
+
+async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
+  // handlerResult may be:
+  //   - The raw object from the fetcher (premium body)
+  //   - { __error: <message>, __status: 5xx } when the fetcher threw
+  //
+  // paymentCtx: { token, cost, endpoint, currentBalance }
+  var url = new URL(request.url);
+  var endpoint = paymentCtx.endpoint;
+  var cost = paymentCtx.cost;
+  var token = paymentCtx.token;
+
+  // Determine no_charge_reason and the body we will sign over.
+  var noChargeReason = null;
+  var bodyResult;
+  var status = 200;
+
+  if (handlerResult && handlerResult.__error) {
+    // 5xx no-charge path. Body is a generic agent-friendly error envelope.
+    noChargeReason = '5xx';
+    status = handlerResult.__status || 500;
+    bodyResult = {
+      source: 'terminalfeed-pro',
+      endpoint: endpoint,
+      generated_at: new Date().toISOString(),
+      error: 'upstream_error',
+      message: 'Aggregator caught an exception. Some sources may have returned data; retry shortly.',
+    };
+  } else {
+    bodyResult = Object.assign({}, handlerResult);
+
+    // Staleness check. Premium fetchers expose freshness via _meta.generated_at
+    // (per _premiumMeta) which is the moment we composed the response. For
+    // endpoints with stale data the captured_at is older than the SLA and we
+    // skip the debit.
+    var capturedAt = null;
+    if (typeof bodyResult.captured_at === 'string') capturedAt = bodyResult.captured_at;
+    else if (typeof bodyResult.generated_at === 'string') capturedAt = bodyResult.generated_at;
+    else if (bodyResult._meta && typeof bodyResult._meta.generated_at === 'string') capturedAt = bodyResult._meta.generated_at;
+
+    var staleness = aftaCheckStaleness(endpoint, capturedAt, new Date());
+    if (staleness.applies && staleness.stale) {
+      noChargeReason = 'stale_data';
+      bodyResult.stale = true;
+      bodyResult.stale_age_seconds = staleness.ageSeconds;
+      bodyResult.stale_sla_seconds = staleness.slaSeconds;
+    }
+  }
+
+  // Commit the deferred debit on the TensorFeed credit ledger. On the
+  // no-charge path, this writes a no-charge event to TF's network ledger
+  // (with the TerminalFeed endpoint path so the network view is correct)
+  // and we ALSO write a local copy so /api/payment/no-charge-stats works
+  // without a round-trip.
+  var commit = await aftaCommitInternal(env, token, cost, 'tf:' + endpoint, noChargeReason);
+  var creditsCharged;
+  var creditsRemaining;
+  if (commit.ok) {
+    creditsCharged = (typeof commit.credits_charged === 'number') ? commit.credits_charged : (noChargeReason ? 0 : cost);
+    creditsRemaining = (typeof commit.balance_after === 'number') ? commit.balance_after : (paymentCtx.currentBalance - (noChargeReason ? 0 : cost));
+  } else {
+    // The commit handshake failed AFTER the handler ran. Treat as
+    // no-charge so the agent is not billed for an event we cannot
+    // commit cleanly. Mirrors TF's stance in commitPayment.
+    noChargeReason = noChargeReason || 'circuit_breaker';
+    creditsCharged = 0;
+    creditsRemaining = paymentCtx.currentBalance;
+  }
+  if (noChargeReason) {
+    await aftaLogNoChargeEvent(env, noChargeReason, endpoint, cost, token);
+  }
+
+  var requestHash = await aftaHashRequest(request.method, url);
+  var responseHash = await aftaHashResponse(bodyResult);
+  var capturedForReceipt = null;
+  if (typeof bodyResult.captured_at === 'string') capturedForReceipt = bodyResult.captured_at;
+  else if (typeof bodyResult.generated_at === 'string') capturedForReceipt = bodyResult.generated_at;
+  else if (bodyResult._meta && typeof bodyResult._meta.generated_at === 'string') capturedForReceipt = bodyResult._meta.generated_at;
+
+  var slaSeconds = (function() {
+    var sla = aftaResolveSLA(endpoint);
+    return sla ? sla.maxAgeSeconds : null;
+  })();
+
+  var core = {
+    v: 1,
+    id: aftaGenerateReceiptId(),
+    endpoint: endpoint,
+    method: request.method,
+    token_short: aftaTokenShort(token),
+    credits_charged: creditsCharged,
+    credits_remaining: creditsRemaining,
+    request_hash: requestHash,
+    response_hash: responseHash,
+    captured_at: capturedForReceipt,
+    server_time: new Date().toISOString(),
+    no_charge_reason: noChargeReason,
+    freshness_sla_seconds: slaSeconds,
+  };
+  var signed = await aftaSignReceipt(env, core);
+
+  var billing = {
+    credits_charged: creditsCharged,
+    credits_remaining: creditsRemaining,
+  };
+  if (noChargeReason) {
+    billing.no_charge_reason = noChargeReason;
+    billing.afta_doc = AFTA_DOC;
+  }
+
+  var responseBody = Object.assign({}, bodyResult, { billing: billing });
+  if (signed) responseBody.receipt = signed;
+  else responseBody.receipt_status = 'pending_key_bootstrap';
+
+  var headers = Object.assign({}, SECURITY_HEADERS, {
+    'Content-Type': 'application/json',
+    'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    'Cache-Control': 'no-store',
+    'X-Robots-Tag': 'noindex, nofollow, noarchive',
+    'X-Credits-Remaining': String(creditsRemaining),
+  });
+  if (signed) headers['X-TerminalFeed-Receipt-Id'] = signed.id;
+  applyCorsHeaders(headers, request, 'premium');
+
+  return new Response(JSON.stringify(responseBody), { status: status, headers: headers });
+}
+
+async function aftaPremiumValidationFailure(errorBody, paymentCtx, request, env) {
+  // Used after validate-only succeeded but the handler detects malformed
+  // input. We log the no-charge event, sign a receipt with credits_charged=0,
+  // and return 400. No debit happens because we never call commit with a
+  // non-null cost on this path.
+  var url = new URL(request.url);
+  var endpoint = paymentCtx.endpoint;
+  var cost = paymentCtx.cost;
+  var token = paymentCtx.token;
+
+  var commit = await aftaCommitInternal(env, token, cost, 'tf:' + endpoint, 'schema_validation_failure');
+  var creditsRemaining = (commit.ok && typeof commit.balance_after === 'number') ? commit.balance_after : paymentCtx.currentBalance;
+  await aftaLogNoChargeEvent(env, 'schema_validation_failure', endpoint, cost, token);
+
+  var bodyResult = Object.assign({ ok: false }, errorBody || {});
+  var requestHash = await aftaHashRequest(request.method, url);
+  var responseHash = await aftaHashResponse(bodyResult);
+  var core = {
+    v: 1,
+    id: aftaGenerateReceiptId(),
+    endpoint: endpoint,
+    method: request.method,
+    token_short: aftaTokenShort(token),
+    credits_charged: 0,
+    credits_remaining: creditsRemaining,
+    request_hash: requestHash,
+    response_hash: responseHash,
+    captured_at: null,
+    server_time: new Date().toISOString(),
+    no_charge_reason: 'schema_validation_failure',
+    freshness_sla_seconds: null,
+  };
+  var signed = await aftaSignReceipt(env, core);
+
+  var billing = {
+    credits_charged: 0,
+    credits_remaining: creditsRemaining,
+    no_charge_reason: 'schema_validation_failure',
+    afta_doc: AFTA_DOC,
+  };
+  var responseBody = Object.assign({}, bodyResult, { billing: billing });
+  if (signed) responseBody.receipt = signed;
+  else responseBody.receipt_status = 'pending_key_bootstrap';
+
+  var headers = Object.assign({}, SECURITY_HEADERS, {
+    'Content-Type': 'application/json',
+    'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    'Cache-Control': 'no-store',
+    'X-Robots-Tag': 'noindex, nofollow, noarchive',
+    'X-Credits-Remaining': String(creditsRemaining),
+  });
+  if (signed) headers['X-TerminalFeed-Receipt-Id'] = signed.id;
+  applyCorsHeaders(headers, request, 'premium');
+
+  return new Response(JSON.stringify(responseBody), { status: 400, headers: headers });
+}
+
+// === AFTA route handlers ===
+
+async function handleReceiptVerify(request) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  var body;
+  try { body = await request.json(); } catch (e) { return jsonResponse({ ok: false, error: 'invalid_json_body' }, 400); }
+  var receipt = body && body.receipt;
+  if (!receipt || typeof receipt !== 'object') {
+    return jsonResponse({ ok: false, error: 'receipt_required' }, 400);
+  }
+  // Fetch our own public key. Static asset on the Pages frontend.
+  var publicJwk;
+  try {
+    var keyRes = await fetchWithTimeout(AFTA_PUBLIC_KEY_URL, { headers: { Accept: 'application/json' } }, 5000);
+    if (!keyRes.ok) return jsonResponse({ ok: false, error: 'public_key_unavailable' }, 503);
+    publicJwk = await keyRes.json();
+  } catch (e) { return jsonResponse({ ok: false, error: 'public_key_unavailable' }, 503); }
+  if (!publicJwk || publicJwk.kty !== 'OKP' || publicJwk.crv !== 'Ed25519' || !publicJwk.x) {
+    return jsonResponse({ ok: false, error: 'public_key_malformed' }, 503);
+  }
+  var valid = await aftaVerifyReceiptSignature(receipt, publicJwk);
+  return jsonResponse({
+    ok: true,
+    valid: !!valid,
+    key_id: publicJwk.kid || null,
+    algorithm: 'EdDSA / Ed25519',
+    canonical_form: 'tensorfeed-canonical-json-v1',
+    verify_doc: AFTA_VERIFY_DOC,
+  }, 200, 0);
+}
+
+async function handleNoChargeStats(request, env, url) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  var dateParam = url.searchParams.get('date');
+  var rollup = await aftaGetNoChargeRollup(env, dateParam || undefined);
+  if (!rollup) {
+    return jsonResponse({
+      ok: true,
+      date: dateParam || _aftaTodayUtc(),
+      count: 0,
+      credits_skipped: 0,
+      by_reason: {},
+      by_endpoint: {},
+      events: [],
+      note: 'No no-charge events recorded for this date on terminalfeed.io. Either no AFTA guarantees triggered, or the date is in the future. The network-wide view is at https://tensorfeed.ai/api/payment/no-charge-stats.',
+      network_view: 'https://tensorfeed.ai/api/payment/no-charge-stats',
+    }, 200, 60);
+  }
+  return jsonResponse(Object.assign({ ok: true }, rollup, {
+    network_view: 'https://tensorfeed.ai/api/payment/no-charge-stats',
+  }), 200, 60);
+}
+
+async function handleNoChargeStatsDates(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  var dates = await aftaListNoChargeDates(env);
+  return jsonResponse({ ok: true, dates: dates }, 200, 60);
+}
+
+async function handleApiMeta(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  return jsonResponse({
+    source: 'terminalfeed.io',
+    site: 'TerminalFeed.io',
+    legal_entity: 'Pizza Robot Studios LLC',
+    version: '2.1.0',
+    server_time: new Date().toISOString(),
+    agent_fair_trade: {
+      certified: true,
+      manifest: AFTA_MANIFEST_URL,
+      manifesto: AFTA_DOC,
+      no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'stale_data'],
+      no_charge_ledger: 'https://terminalfeed.io/api/payment/no-charge-stats',
+      receipts: aftaReceiptStatus(env),
+      freshness_slas: aftaDescribeSLAs(),
+      network: {
+        description: 'TerminalFeed and TensorFeed share a single bearer-token + credit ledger. A token minted on either site works on both. Each site signs receipts with its own keypair.',
+        sister_sites: [
+          { site: 'tensorfeed.ai', manifest: 'https://tensorfeed.ai/.well-known/agent-fair-trade.json', manifesto: 'https://tensorfeed.ai/agent-fair-trade' },
+          { site: 'terminalfeed.io', manifest: AFTA_MANIFEST_URL, manifesto: AFTA_DOC },
+        ],
+      },
+    },
+    payment: {
+      info: 'https://terminalfeed.io/api/payment/info',
+      buy_credits: 'https://terminalfeed.io/api/payment/buy-credits',
+      confirm: 'https://terminalfeed.io/api/payment/confirm',
+      balance: 'https://terminalfeed.io/api/payment/balance',
+      history: 'https://terminalfeed.io/api/payment/history',
+    },
+    discovery: {
+      llms_txt: 'https://terminalfeed.io/llms.txt',
+      openapi: 'https://terminalfeed.io/openapi.json',
+      mcp: 'https://terminalfeed.io/api/mcp',
+      ai_plugin: 'https://terminalfeed.io/.well-known/ai-plugin.json',
+    },
+  }, 200, 60);
+}
+
+
+// =============================================================================
 // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
 // =============================================================================
 //
@@ -3699,38 +4427,40 @@ async function handlePremium(request, env, url, endpointPath, costCredits, fetch
   }
 
   // Per-token rate limit (advisory). Stops a runaway agent from burning
-  // credits in seconds and DoSing TensorFeed validate-and-charge. Loose by
-  // design — paying agents shouldn't bump this in normal use. Key is sha256
-  // of the token so we never write raw tokens into KV.
+  // credits in seconds and DoSing TensorFeed validate. Loose by design —
+  // paying agents shouldn't bump this in normal use. Key is sha256 of the
+  // token so we never write raw tokens into KV.
   var tokenHashShort = (await _sha256Hex(token)).slice(0, 16);
   var tokenRl = await checkRateLimit(env, 'prem', tokenHashShort, 600, 60);
   if (!tokenRl.allowed) return rateLimit429(tokenRl);
 
-  var validation = await validateAndCharge(env, token, costCredits, 'tf:' + endpointPath);
+  // AFTA deferred-debit: validate the bearer + balance via the cross-Worker
+  // /api/internal/validate (no charge). The handler runs next and either
+  // succeeds (commit charges the credit) or fails under one of the
+  // published no-charge guarantees (5xx / stale_data) where commit logs a
+  // no-charge event without touching the balance.
+  var validation = await aftaValidateOnly(env, token, costCredits);
   if (!validation.ok) {
     return json402(validation.reason || 'invalid_token', null, request);
   }
 
-  // Atomic-charge property: credits already decremented on the TensorFeed side.
-  // If the upstream fetch fails, the credit still counts (matches TensorFeed's model).
-  // Document this on /developers/agent-payments.
+  var paymentCtx = {
+    token: token,
+    cost: costCredits,
+    endpoint: endpointPath,
+    currentBalance: typeof validation.credits_remaining === 'number' ? validation.credits_remaining : 0,
+  };
+
+  var handlerResult;
   try {
-    var data = await fetchFn(env, url);
-    return premiumJsonResponse(data, validation.credits_remaining, 200, request);
+    handlerResult = await fetchFn(env, url);
   } catch (e) {
-    return premiumJsonResponse(
-      {
-        source: 'terminalfeed-pro',
-        endpoint: endpointPath,
-        generated_at: new Date().toISOString(),
-        warning: 'upstream_partial',
-        message: 'Aggregator caught an exception. Some sources may have returned data; retry shortly.',
-      },
-      validation.credits_remaining,
-      200,
-      request
-    );
+    // 5xx no-charge path. premiumResponse handles the body, the no-charge
+    // log entry, and the receipt sign with no_charge_reason: "5xx".
+    handlerResult = { __error: (e && e.message) || 'upstream_exception', __status: 500 };
   }
+
+  return await aftaPremiumResponse(handlerResult, paymentCtx, request, env);
 }
 
 
@@ -6580,6 +7310,13 @@ async function dispatchRoute(request, env, url, path) {
       case 'payment/confirm':    return await handleConfirmPayment(request, env);
       case 'payment/balance':    return await handleBalance(request, env);
       case 'payment/history':    return await handlePaymentHistory(request, env);
+
+      // Agent Fair-Trade Agreement (AFTA): public ledger of no-charge events,
+      // free Ed25519 receipt verification, and the canonical site meta surface.
+      case 'payment/no-charge-stats':       return await handleNoChargeStats(request, env, url);
+      case 'payment/no-charge-stats/dates': return await handleNoChargeStatsDates(request, env);
+      case 'receipt/verify':                return await handleReceiptVerify(request);
+      case 'meta':                           return await handleApiMeta(request, env);
 
       default:
         return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);
