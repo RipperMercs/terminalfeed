@@ -79,6 +79,10 @@ import { useGasTracker } from './hooks/useGasTracker';
 import { useHuggingFace } from './hooks/useHuggingFace';
 import { useSolanaNetwork } from './hooks/useSolanaNetwork';
 import { useHarnesses } from './hooks/useHarnesses';
+import { useSpaceWeather } from './hooks/useSpaceWeather';
+import { useWildfires } from './hooks/useWildfires';
+import { useSevereWeather } from './hooks/useSevereWeather';
+import { useFundingRates } from './hooks/useFundingRates';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -178,6 +182,10 @@ function App() {
   const hfModels = useHuggingFace();
   const solanaNet = useSolanaNetwork();
   const harnesses = useHarnesses();
+  const spaceWeather = useSpaceWeather();
+  const wildfires = useWildfires();
+  const severeWeather = useSevereWeather();
+  const fundingRates = useFundingRates();
 
   // Safety nets: if these panels never get data within their window, hide
   // them rather than wedge the viewer on a placeholder. Resets if data
@@ -1238,6 +1246,162 @@ function App() {
         </div>
       )}
     </>),
+    'space-weather': (() => {
+      const kp = spaceWeather?.kpIndex ?? null;
+      const kpColor = kp == null ? 'var(--text-dim)' : kp < 5 ? 'var(--green)' : kp < 7 ? 'var(--amber)' : 'var(--red)';
+      const flare = spaceWeather?.flareClass24h ?? null;
+      const flareColor = flare === 'A' || flare === 'B' ? 'var(--green)' : flare === 'C' ? 'var(--amber)' : flare === 'M' || flare === 'X' ? 'var(--red)' : 'var(--text-dim)';
+      const stormPretty = (spaceWeather?.kpStormLevel ?? '').replace(/_/g, ' ');
+      const auroraVis = spaceWeather?.auroraVisibility ?? null;
+      const auroraText = auroraVis && auroraVis !== 'high_latitude_only' ? auroraVis.replace(/_/g, ' ') : null;
+      return (<>
+        <PanelHead panelId="space-weather" isStale={panelHealth.isStale('space-weather')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Space Weather</span><span className="panelTag">NOAA</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>5m</span>
+        </PanelHead>
+        {!spaceWeather && <LoadingOrHide label="loading swpc..." />}
+        {spaceWeather && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ minWidth: 60 }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: kpColor, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{kp != null ? kp.toFixed(1) : '–'}</div>
+                <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 2 }}>Kp index</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: 'var(--text)', textTransform: 'capitalize' }}>{stormPretty || '-'}</div>
+                {auroraText && <div style={{ fontSize: 9, color: 'var(--cyan)', marginTop: 2 }}>aurora visible: {auroraText}</div>}
+              </div>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 10, color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+              <span>solar wind: <span style={{ color: 'var(--text)' }}>{spaceWeather.solarWindSpeedKms ?? '–'} km/s</span></span>
+              <span>flare 24h: <span style={{ color: flareColor, fontWeight: 600 }}>{flare ?? '–'}</span></span>
+            </div>
+            {spaceWeather.activeAlerts.length > 0 && (
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 9, color: 'var(--text-dim)' }}>
+                <div style={{ letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>active alerts</div>
+                {spaceWeather.activeAlerts.slice(0, 2).map((a, i) => (
+                  <div key={i} style={{ color: 'var(--text)', fontSize: 10, lineHeight: 1.4, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.message}>{a.product_id}: {(a.message ?? '').slice(0, 60)}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </>);
+    })(),
+    'wildfires': (() => {
+      const total = wildfires?.total24h ?? 0;
+      const top = wildfires?.top ?? [];
+      const stateRollup: Record<string, number> = {};
+      top.forEach(d => { stateRollup[d.approxState] = (stateRollup[d.approxState] ?? 0) + 1; });
+      const topStates = Object.entries(stateRollup).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      return (<>
+        <PanelHead panelId="wildfires" isStale={panelHealth.isStale('wildfires')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Wildfires</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>FIRMS</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>10m</span>
+        </PanelHead>
+        {!wildfires && <LoadingOrHide label="loading firms..." />}
+        {wildfires && wildfires.error === 'firms_key_unconfigured' && (
+          <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>FIRMS key not configured. Set NASA_FIRMS_MAP_KEY in worker.</div>
+        )}
+        {wildfires && !wildfires.error && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: total > 500 ? 'var(--red)' : total > 100 ? 'var(--amber)' : 'var(--green)', fontVariantNumeric: 'tabular-nums' }}>{total.toLocaleString()}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>detections 24h · north america</span>
+            </div>
+            {topStates.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {topStates.map(([st, n]) => (
+                  <span key={st} style={{ fontSize: 9, color: 'var(--text)', background: '#15151a', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: 3 }}>{st} <span style={{ color: 'var(--amber)', fontWeight: 600 }}>{n}</span></span>
+                ))}
+              </div>
+            )}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 9, color: 'var(--text-dim)' }}>
+              <div style={{ letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>most intense</div>
+              {top.slice(0, 4).map((d, i) => (
+                <div key={i} className="listRow" style={{ paddingTop: 2, paddingBottom: 2 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text)' }}>{d.approxState} <span style={{ color: 'var(--text-dim)', fontSize: 9 }}>{d.lat.toFixed(2)},{d.lon.toFixed(2)}</span></span>
+                  <span style={{ fontSize: 10, color: 'var(--red)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{(d.frpMw ?? 0).toFixed(1)} MW</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>);
+    })(),
+    'severe-weather': (() => {
+      const top = severeWeather?.top ?? [];
+      const counts = severeWeather?.countsBySeverity ?? {};
+      const sevColor = (sev: string) => sev === 'Extreme' ? 'var(--red)' : sev === 'Severe' ? 'var(--red)' : sev === 'Moderate' ? 'var(--amber)' : 'var(--text-dim)';
+      const catGlyph = (cat: string) => cat === 'tornado' ? '🌪' : cat === 'tropical' ? '🌀' : cat === 'flood' ? '🌊' : cat === 'thunderstorm' ? '⛈' : cat === 'winter' ? '❄' : cat === 'fire' ? '🔥' : cat === 'heat' ? '🔆' : cat === 'wind' ? '💨' : '⚠';
+      return (<>
+        <PanelHead panelId="severe-weather" isStale={panelHealth.isStale('severe-weather')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Severe Weather</span><span className="panelTag" style={{ color: 'var(--amber)', background: 'rgba(239,159,39,0.1)' }}>NWS</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1m</span>
+        </PanelHead>
+        {!severeWeather && <LoadingOrHide label="loading nws..." />}
+        {severeWeather && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: severeWeather.totalActive > 50 ? 'var(--red)' : severeWeather.totalActive > 10 ? 'var(--amber)' : 'var(--green)', fontVariantNumeric: 'tabular-nums' }}>{severeWeather.totalActive}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>active alerts · us</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {Object.entries(counts).filter(([, n]) => (n ?? 0) > 0).slice(0, 4).map(([sev, n]) => (
+                <span key={sev} style={{ fontSize: 9, color: sevColor(sev), background: '#15151a', border: `1px solid ${sevColor(sev)}30`, padding: '2px 6px', borderRadius: 3 }}>{sev} <span style={{ fontWeight: 600 }}>{n}</span></span>
+              ))}
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 2, fontSize: 9, color: 'var(--text-dim)' }}>
+              <div style={{ letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>top events</div>
+              {top.slice(0, 5).map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'baseline', padding: '2px 0', borderBottom: i < 4 ? '1px solid var(--border)' : 'none' }}>
+                  <span style={{ fontSize: 11 }}>{catGlyph(a.category)}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.event}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.areaDesc}</div>
+                  </div>
+                  <span style={{ fontSize: 9, color: sevColor(a.severity), fontWeight: 600 }}>{a.severity}</span>
+                </div>
+              ))}
+              {top.length === 0 && <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>no active alerts</div>}
+            </div>
+          </div>
+        )}
+      </>);
+    })(),
+    'funding-rates': (() => {
+      const top = fundingRates?.top ?? [];
+      const venueColor = (v: string) => v === 'binance' ? 'var(--gold)' : v === 'bybit' ? 'var(--amber)' : v === 'dydx' ? 'var(--purple)' : v === 'hyperliquid' ? 'var(--cyan)' : 'var(--text-dim)';
+      return (<>
+        <PanelHead panelId="funding-rates" isStale={panelHealth.isStale('funding-rates')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Funding Rates</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>PERPS</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1m</span>
+        </PanelHead>
+        {!fundingRates && <LoadingOrHide label="loading venues..." />}
+        {fundingRates && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {top.slice(0, 8).map((r, i) => {
+              const ann = r.annualizedPct ?? 0;
+              const annColor = ann >= 0 ? 'var(--green)' : 'var(--red)';
+              const annSign = ann >= 0 ? '+' : '';
+              return (
+                <div key={r.venue + r.symbol + i} className="listRow">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: 9, color: venueColor(r.venue), minWidth: 38, fontWeight: 600 }}>{r.venue.slice(0, 4)}</span>
+                    <span className="listRowSymbol" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(r.symbol ?? '').replace(/USDT$/, '').replace(/-PERP$/, '')}</span>
+                  </div>
+                  <span style={{ fontSize: 11, color: annColor, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{annSign}{ann.toFixed(1)}%</span>
+                </div>
+              );
+            })}
+            {top.length === 0 && <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>loading venues...</div>}
+            {fundingRates.failedVenues.length > 0 && (
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 4, fontStyle: 'italic' }}>fail: {fundingRates.failedVenues.join(', ')}</div>
+            )}
+          </div>
+        )}
+      </>);
+    })(),
     'bluesky': (<>
       <PanelHead panelId="bluesky" isStale={panelHealth.isStale('bluesky')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Bluesky</span><span className="panelTag">LIVE</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

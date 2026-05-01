@@ -40,10 +40,9 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 
 ### CANONICAL WORKER FILE (read before editing)
 
-There are two worker source trees in this repo. Only one deploys.
+The canonical Worker is `worker-additions/worker.js`, deployed via `worker-additions/wrangler.toml`. ~7500 lines. Contains all free `/api/*` routes, all 12 `/api/pro/*` premium routes, payment endpoints, MCP tools, KV binding (`WEBHOOK_SUBS`), Analytics Engine binding, dual cron (`0 14 * * *` daily briefing + `*/5 * * * *` source sync). This is what runs on terminalfeed.io.
 
-- **CANONICAL (production):** `worker-additions/worker.js`, deployed via `worker-additions/wrangler.toml`. ~6500 lines. Contains all free `/api/*` routes, all 12 `/api/pro/*` premium routes, payment endpoints, MCP tools, KV binding (`WEBHOOK_SUBS`), Analytics Engine binding, dual cron (`0 14 * * *` daily briefing + `*/5 * * * *` source sync). This is what runs on terminalfeed.io.
-- **ORPHAN (do NOT edit, do NOT deploy):** `worker-additions/terminalfeed-api/src/worker.js` with `worker-additions/terminalfeed-api/wrangler.jsonc`. Older/smaller (~300 lines), only has free endpoints, no KV, no premium tier. Both wrangler configs declare the same worker name (`terminalfeed-api`) and the same route (`terminalfeed.io/api/*`), so deploying the orphan would clobber production. Treat as deprecated. Plan: remove in next cleanup.
+The previous orphan subfolder `worker-additions/terminalfeed-api/` was deleted on 2026-04-30. Do not recreate it.
 
 Always edit `worker-additions/worker.js` for any API route work. Deploy from `worker-additions/` with `npx wrangler deploy`.
 
@@ -544,7 +543,7 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 ### Infrastructure Protection Rules (learned from April 15, 2026 Pages deletion)
 - **NEVER add @cloudflare/vite-plugin to this project.** It converts Pages projects into Workers projects and will destroy the deployment.
 - **NEVER add wrangler.jsonc or wrangler.toml to the project root.** The only wrangler config allowed is inside `worker-additions/` for the API Worker. A root-level wrangler config with `"name": "terminalfeed"` will hijack the domain from the Pages project.
-- **NEVER edit `worker-additions/terminalfeed-api/src/worker.js`** or its `wrangler.jsonc`. That subfolder is an orphan with the same worker name and route as the canonical `worker-additions/worker.js`. Deploying it would clobber production. The canonical Worker source is `worker-additions/worker.js` deployed via `worker-additions/wrangler.toml`.
+- **The canonical Worker source is `worker-additions/worker.js` deployed via `worker-additions/wrangler.toml`.** The old orphan subfolder `worker-additions/terminalfeed-api/` was deleted on 2026-04-30; do not recreate it. Any worker source other than the canonical one is forbidden.
 - **NEVER add `wrangler deploy` or `wrangler dev` as npm scripts.** Those are Workers commands, not Pages commands. Pages deploys via git push to Cloudflare Pages, not via wrangler.
 - **NEVER let Cowork or any non-CC tool directly edit vite.config.ts, package.json, or any Cloudflare config file.** These are critical infrastructure files. Other tools write specs, CC executes.
 - **Before any deploy, verify the Pages project exists:** `npx wrangler pages project list` must show "terminalfeed". If it doesn't, STOP and investigate.

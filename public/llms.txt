@@ -94,6 +94,10 @@ All free endpoints return JSON, support CORS, and follow a stale-cache-on-failur
 - GET /api/hf-trending          HuggingFace trending models (top 15 by 7d likes)
 - GET /api/solana-network       Solana network health (TPS, slot, epoch)
 - GET /api/harnesses            Agentic-coding harness leaderboards (Claude Code, Cursor, Codex, Aider, OpenHands, Devin, SWE-Agent) across SWE-bench Verified, Terminal-Bench, Aider Polyglot, METR HCAST. ?view=summary|gaps|combined|raw
+- GET /api/space-weather        NOAA SWPC: planetary Kp index, solar wind, X-ray flare class 24h, active alerts. 5min cache.
+- GET /api/wildfires            NASA FIRMS active fire detections (North America 24h, top 25 by Fire Radiative Power). 10min cache.
+- GET /api/severe-weather       National Weather Service active US alerts (top 15 by severity score: tornado, flood, severe thunderstorm, hurricane, winter, etc). 60s cache.
+- GET /api/funding-rates        Top 20 perp futures funding rates across Binance, Bybit, dYdX, Hyperliquid (sorted by absolute annualized %). 60s cache.
 - GET /api/llm-tools            pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint above. Pass ?format=openai or ?format=anthropic and paste the result directly into your tool-use scaffold. Free.
 
 Full machine-readable contract: https://terminalfeed.io/openapi.json

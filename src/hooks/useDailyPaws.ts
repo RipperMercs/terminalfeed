@@ -15,7 +15,7 @@ async function fetchCat(): Promise<PawData | null> {
   // Try up to 3 times to get a non-Tumblr image
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch('https://api.thecatapi.com/v1/images/search?size=small&mime_types=jpg,png&limit=1', {
+      const res = await fetch('https://api.thecatapi.com/v1/images/search?size=small&mime_types=jpg,png&limit=1', { // direct-fetch-exempt: keyless image-search API, returns CDN URL only; TODO migrate to worker
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok) return null;
@@ -36,7 +36,7 @@ async function fetchCat(): Promise<PawData | null> {
 
 async function fetchDog(): Promise<PawData | null> {
   try {
-    const res = await fetch('https://dog.ceo/api/breeds/image/random', {
+    const res = await fetch('https://dog.ceo/api/breeds/image/random', { // direct-fetch-exempt: keyless image-search API, returns CDN URL only; TODO migrate to worker
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return null;

@@ -29,7 +29,7 @@ export function useFooterQuote(): Quote | null {
 
     const fetch_ = async () => {
       try {
-        const res = await fetch('https://zenquotes.io/api/random', { signal: AbortSignal.timeout(5000) });
+        const res = await fetch('https://zenquotes.io/api/random', { signal: AbortSignal.timeout(5000) }); // direct-fetch-exempt: keyless quote API; TODO migrate to worker
         if (!res.ok || !mountedRef.current) return;
         const data = await res.json();
         if (data && data[0]) {

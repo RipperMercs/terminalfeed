@@ -22,7 +22,7 @@ async function fetchTrending(): Promise<TrendingMovie[]> {
   const items: TrendingMovie[] = [];
 
   try {
-    const res = await fetch('https://api.themoviedb.org/3/trending/all/day?language=en-US', {
+    const res = await fetch('https://api.themoviedb.org/3/trending/all/day?language=en-US', { // direct-fetch-exempt: TMDB read token in client bundle (pre-existing hardcode; FIXME: migrate to worker + env var)
       headers: {
         'Authorization': `Bearer ${API_KEY}`,
         'Accept': 'application/json',

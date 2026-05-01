@@ -48,6 +48,67 @@ try {
   errors++;
 }
 
+// 5b. No direct browser-to-external-API fetches in src/ (CLAUDE.md rule #6).
+// Apr 17 2026 incident: ~50 direct fetches in src/ were exposing the Finnhub
+// key on every page view. Every external call must route through the Worker
+// at /api/*. This grep blocks new instances at build time.
+//
+// Allowed: relative paths like fetch('/api/...'), fetch(`/api/...`).
+// Blocked: fetch('https://...'), fetch('http://...'), and the same with backticks.
+// Exemptions: lines tagged with `direct-fetch-exempt` (e.g. WebSocket/SSE
+// streams the Worker can't proxy at scale).
+function scanDirectFetches() {
+  const SCAN_ROOTS = ['src'];
+  const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.jsx']);
+  const violations = [];
+
+  // Match fetch( / new EventSource( / new WebSocket( with a quoted/templated
+  // absolute URL. Matches single quote, double quote, or backtick.
+  // Example matches: fetch('https://x'), new WebSocket("wss://x"), fetch(`http://${h}`)
+  const RE = /\b(fetch|EventSource|WebSocket)\s*\(\s*['"`](https?:|wss?:)/i;
+
+  function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'node_modules' || entry.name === 'dist') continue;
+        walk(full);
+      } else if (SCAN_EXT.has(path.extname(entry.name))) {
+        scanFile(full);
+      }
+    }
+  }
+
+  function scanFile(file) {
+    const content = fs.readFileSync(file, 'utf8');
+    if (!RE.test(content)) return;
+
+    const lines = content.split('\n');
+    lines.forEach((line, i) => {
+      if (!RE.test(line)) return;
+      if (line.includes('direct-fetch-exempt')) return;
+      violations.push({ file: path.relative(root, file), line: i + 1, text: line.trim().slice(0, 160) });
+    });
+  }
+
+  for (const r of SCAN_ROOTS) walk(path.join(root, r));
+  return violations;
+}
+
+const directFetches = scanDirectFetches();
+if (directFetches.length) {
+  console.error(`\n[direct-fetch] ${directFetches.length} direct external fetch(es) in src/:`);
+  for (const v of directFetches) {
+    console.error(`  ${v.file}:${v.line}  ${v.text}`);
+  }
+  console.error('\n[direct-fetch] CLAUDE.md rule #6: every external API call must go through the Worker at /api/*.');
+  console.error('[direct-fetch] If this is a WebSocket/SSE stream that cannot be proxied, append // direct-fetch-exempt to the line.');
+  errors++;
+} else {
+  console.log('[direct-fetch] no direct external fetches in src/');
+}
+
 // 6. Em-dash guard (CLAUDE.md rule #1). Blocking by default as of
 // 2026-04-22 after the visual-diff gate cleared on homepage,
 // /blog/building-terminalfeed, and /tools/json. Set SEO_LINT_STRICT=0
