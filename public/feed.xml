@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Thu, 30 Apr 2026 17:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 30 Apr 2026 21:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent</title>
+      <link>https://terminalfeed.io/blog/why-the-harness-gap-matters</link>
+      <description>Same model, different harnesses, different scores. The agent scaffold around the language model decides whether you ship working code or watch a 30-step retry loop fail. Why the harness gap is the most important number in agentic coding right now.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Thu, 30 Apr 2026 21:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/why-the-harness-gap-matters</guid>
+    </item>
 
     <item>
       <title>Stripe Link for Agents vs AFTA: Two Payment Models, One Protocol</title>

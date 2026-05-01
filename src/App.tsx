@@ -78,6 +78,7 @@ import { LoadingOrHide } from './components/LoadingOrHide';
 import { useGasTracker } from './hooks/useGasTracker';
 import { useHuggingFace } from './hooks/useHuggingFace';
 import { useSolanaNetwork } from './hooks/useSolanaNetwork';
+import { useHarnesses } from './hooks/useHarnesses';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -176,6 +177,7 @@ function App() {
   const { gas: gasData, trend: gasTrend } = useGasTracker();
   const hfModels = useHuggingFace();
   const solanaNet = useSolanaNetwork();
+  const harnesses = useHarnesses();
 
   // Safety nets: if these panels never get data within their window, hide
   // them rather than wedge the viewer on a placeholder. Resets if data
@@ -1198,6 +1200,44 @@ function App() {
         ))}
       </div>
     </>),
+    'harnesses': (<>
+      <PanelHead panelId="harnesses" isStale={panelHealth.isStale('harnesses')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft">
+          <span className="panelTitle">AI Coding Harnesses</span>
+          <span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>BENCH</span>
+        </div>
+        <a href="/harnesses" style={{ fontSize: 9, color: 'var(--text-dim)', textDecoration: 'none' }}>view &rarr;</a>
+      </PanelHead>
+      {!harnesses && <LoadingOrHide label="loading benchmarks..." />}
+      {harnesses && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {harnesses.topCombined.slice(0, 6).map((row, i) => (
+            <div key={row.harness + row.model} className="listRow">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+                <span style={{ fontSize: 10, color: i < 3 ? 'var(--gold)' : 'var(--text-dim)', fontWeight: 700, minWidth: 16 }}>#{i + 1}</span>
+                <div style={{ minWidth: 0 }}>
+                  <span className="listRowSymbol">{row.harness}</span>
+                  <span className="listRowName" style={{ display: 'block', fontSize: 9, color: 'var(--purple)' }}>{row.model}</span>
+                </div>
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--cyan)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{(row.combinedScore ?? 0).toFixed(1)}</span>
+            </div>
+          ))}
+          {harnesses.biggestHarnessGaps.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 4 }}>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>biggest harness gap</div>
+              <div style={{ fontSize: 10, color: 'var(--text)', lineHeight: 1.5 }}>
+                <span style={{ color: 'var(--text)' }}>{harnesses.biggestHarnessGaps[0].model}</span>:{' '}
+                <span style={{ color: 'var(--green)' }}>{harnesses.biggestHarnessGaps[0].best.harness}</span> vs{' '}
+                <span style={{ color: 'var(--red)' }}>{harnesses.biggestHarnessGaps[0].worst.harness}</span>{' '}
+                <span style={{ color: 'var(--amber)', fontWeight: 600 }}>+{(harnesses.biggestHarnessGaps[0].delta ?? 0).toFixed(1)}</span>
+                <span style={{ color: 'var(--text-dim)', fontSize: 9 }}> on {harnesses.biggestHarnessGaps[0].benchmark}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </>),
     'bluesky': (<>
       <PanelHead panelId="bluesky" isStale={panelHealth.isStale('bluesky')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Bluesky</span><span className="panelTag">LIVE</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1380,6 +1420,8 @@ function App() {
           <a href="/tools/" target="_blank" rel="noopener noreferrer" className="liveBriefingLink toolsLink">TOOLS</a>
           <span className="topNavDivider">|</span>
           <a href="/agent" target="_blank" rel="noopener noreferrer" className="liveBriefingLink agentLink">AGENTS</a>
+          <span className="topNavDivider">|</span>
+          <a href="/harnesses" target="_blank" rel="noopener noreferrer" className="liveBriefingLink agentLink">HARNESSES</a>
           <span className="topNavDivider">|</span>
           <a href="/radio" target="_blank" rel="noopener noreferrer" className="liveBriefingLink radioLink">RADIO</a>
           <span className="topNavDivider">|</span>
@@ -1601,6 +1643,7 @@ function App() {
           <a href="/changelog" className="footerLink">Changelog</a>
           <a href="/tools/" className="footerLink">Dev Tools</a>
           <a href="/agent" className="footerLink">Agents</a>
+          <a href="/harnesses" className="footerLink">Harnesses</a>
           <a href="/cleaner" className="footerLink">Disk Cleaner</a>
           <a href="/radio" className="footerLink">Radio</a>
           <a href="/blog" className="footerLink">Blog</a>

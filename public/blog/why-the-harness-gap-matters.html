@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent | TerminalFeed Blog</title>
+  <meta name="description" content="Same model, different harnesses, different scores. The agent scaffold around the language model decides whether you ship working code or watch a 30-step retry loop fail. Why this gap is the most important number in agentic coding right now.">
+  <meta property="og:title" content="Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent">
+  <meta property="og:description" content="Same model, different harnesses, different scores. The harness, not just the model, drives agentic-coding outcomes. Here is why.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/why-the-harness-gap-matters">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/why-the-harness-gap-matters">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent",
+    "description": "Same model, different harnesses, different scores. The harness, not just the model, drives agentic-coding outcomes. We track the gap as a first-class number on /harnesses.",
+    "author": {
+      "@type": "Person",
+      "name": "Signal",
+      "url": "https://terminalfeed.io/team/signal"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" }
+    },
+    "datePublished": "2026-04-30",
+    "dateModified": "2026-04-30",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/why-the-harness-gap-matters",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C; color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh; padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block; font-size: 9px; color: #5DCAA5;
+      border: 1px solid #5DCAA530; background: #5DCAA510;
+      padding: 2px 8px; border-radius: 3px; margin-right: 6px; letter-spacing: 1px;
+    }
+    .article-header h1 { font-size: 22px; color: #F0EDE6; line-height: 1.4; margin-bottom: 12px; font-weight: 600; }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 { font-size: 16px; color: #4ADE80; margin-top: 36px; margin-bottom: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul { margin-bottom: 18px; padding-left: 20px; }
+    .article-body li { margin-bottom: 10px; color: #D4D2CB; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114; border: 1px solid #1E1E24;
+      padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5;
+    }
+    .article-body blockquote {
+      border-left: 3px solid #5DCAA5; padding: 4px 16px; margin: 18px 0;
+      color: #8A8880; font-style: italic;
+    }
+
+    .cta-box {
+      background: #111114; border: 1px solid #5DCAA530; border-radius: 8px;
+      padding: 24px; margin: 32px 0; text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block; font-size: 13px; color: #0A0A0C; background: #5DCAA5;
+      padding: 10px 24px; border-radius: 6px; text-decoration: none;
+      font-family: inherit; font-weight: 600; letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    footer.footer {
+      margin-top: 48px; text-align: center; padding: 24px 0;
+      font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Why the Harness Gap Matters</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Why the Harness Gap Matters", "item": "https://terminalfeed.io/blog/why-the-harness-gap-matters" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">AI</span>
+        <span class="article-tag">AGENTS</span>
+        <span class="article-tag">BENCHMARKS</span>
+        <span class="article-tag">DEVTOOLS</span>
+      </div>
+      <h1>Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent</h1>
+      <div class="article-meta">
+        <span>By <a href="/team/signal" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Signal</a></span>
+        <span>April 30, 2026</span>
+        <span>7 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>If you have spent any time in agentic coding tools this year you have probably had the same experience I have: you give Claude Code a task, it ships in two prompts. You give the same task to a different harness with the same underlying Claude Opus 4.7, and it spirals through 30 retries, edits the wrong file, opens a shell, ignores the output, and eventually gives up. Same model. Different result.</p>
+
+      <p>That gap is not a glitch. It is the most important number in agentic coding right now, and most leaderboards do not surface it. We just shipped <a href="/harnesses">/harnesses</a> to track it as a first-class metric, and the page is built on a free public endpoint, <code>/api/harnesses</code>, so any agent or analyst can pull the same data we do.</p>
+
+      <h2>What a harness actually is</h2>
+
+      <p>A frontier language model is a black box that takes tokens in and emits tokens out. By itself it cannot edit a file, run a test, or check whether a patch compiles. Everything that turns &ldquo;text generation&rdquo; into &ldquo;agentic coding&rdquo; lives in the scaffold around the model. That scaffold is the harness.</p>
+
+      <p>The harness owns:</p>
+
+      <ul>
+        <li><strong>The system prompt.</strong> The hidden instructions that shape every reply. A two-paragraph difference here can swing benchmark scores ten points.</li>
+        <li><strong>Tool design.</strong> Whether the model gets a structured <code>edit_file(path, diff)</code> tool, or a raw shell, or a search-and-replace primitive. Every choice changes how the model thinks about edits.</li>
+        <li><strong>Context curation.</strong> What files the model sees when it asks a question. The naive answer is &ldquo;everything,&rdquo; but everything is too much. A good harness has its own idea of how to surface the right ten files instead of the wrong thousand.</li>
+        <li><strong>The retry and verifier loop.</strong> When a test fails, what does the harness do with that failure? Pipe it back as plain text? Strip it? Re-summarize it? Run a second model to triage it?</li>
+        <li><strong>Error surfacing.</strong> The model can only fix what it can see. Harnesses that swallow stderr or truncate stack traces leave the model flying blind.</li>
+        <li><strong>Memory and compaction.</strong> The 1M-token context still fills up. How the harness summarizes long sessions changes which clues survive into the next decision.</li>
+      </ul>
+
+      <p>None of that is in the model weights. All of it is engineering that ships separately, on a faster cadence than model releases, and most of it is not open source.</p>
+
+      <h2>What the numbers say</h2>
+
+      <p>Look at the same Claude Opus 4.7 across the major leaderboards we track:</p>
+
+      <ul>
+        <li><strong>Terminal-Bench:</strong> Claude Code scores 58.2 percent. Aider running the same model scores 38.5 percent. That is a 20-point gap on identical weights.</li>
+        <li><strong>SWE-bench Verified:</strong> Claude Code 79.4. Cursor 76.1. SWE-Agent 64.2. Cline 61.8. All Opus 4.7. The bottom of the harness pile is 15 points behind the top.</li>
+        <li><strong>METR HCAST:</strong> Claude Code holds a 220-minute 50-percent task horizon on Opus 4.7. Aider is at 90 minutes. The model is the same. The harness has more than doubled the autonomous task length.</li>
+      </ul>
+
+      <p>You will see this called &ldquo;the harness gap&rdquo; on /harnesses. We compute it the obvious way: for every model, find the best harness and the worst harness on each benchmark, and take the spread. Then we sort by it. The numbers at the top are sometimes embarrassing for the worse harness and sometimes embarrassing for the better one. Both are useful information.</p>
+
+      <h2>Why this is the metric, not raw model ELO</h2>
+
+      <p>If you are trying to ship code, the question is not &ldquo;which model is best on Chatbot Arena.&rdquo; That question would be load-bearing if you were calling the API by hand. You are not. You are running an agent.</p>
+
+      <p>The agent is a model plus a harness, and the harness is doing more work than people think. When a Cursor user says Cursor &ldquo;feels different&rdquo; with Opus 4.7 than Claude Code does with the same Opus 4.7, they are not imagining it. The system prompts are different. The tool definitions are different. The verifier loops are different. Cursor optimizes for IDE flow; Claude Code optimizes for terminal-driven autonomous runs. Both are good at what they target.</p>
+
+      <p>This also explains a thing people complain about that does not actually have a model explanation: <strong>regressions when a harness updates.</strong> Anthropic ships Sonnet 4.6, which is excellent. But your specific Aider workflow may have been tuned for Sonnet 4.5&apos;s tool-use bias. The new model is better in the abstract; the harness has not yet caught up. Until Aider tunes for the new model, the &ldquo;upgrade&rdquo; degrades your agent. The model is not the problem. The harness has not caught up.</p>
+
+      <h2>What changed in the last six months</h2>
+
+      <p>Two things, both quiet, both important.</p>
+
+      <p><strong>First, the harness vendors got serious about scaffold engineering.</strong> A year ago, &ldquo;agentic coding&rdquo; meant a chat window with a vague filesystem tool. Today, Claude Code, Cursor, and Codex CLI all ship dedicated edit primitives, structured retry loops, and quietly run a second cheaper model behind the scenes for things like context compaction. The frontier here is software, not weights.</p>
+
+      <p><strong>Second, the benchmark community caught up.</strong> Terminal-Bench (Stanford) and METR HCAST in particular were designed to measure things SWE-bench Verified misses: long-horizon planning, recovery from a wrong path, multi-tool orchestration. These are the things harnesses, not models, dominate.</p>
+
+      <p>The result is that the leaderboard you actually want is two-dimensional, harness x model. That is what /harnesses gives you.</p>
+
+      <h2>Practical advice if you are picking a stack today</h2>
+
+      <p>I am going to be careful here because the answer depends on what you are doing. But a few things hold up across the data:</p>
+
+      <ul>
+        <li><strong>For autonomous, terminal-driven work,</strong> Claude Code on Opus 4.7 Thinking is the strongest harness/model pair we measure across SWE-bench Verified, Terminal-Bench, and METR HCAST. Codex CLI on GPT-5.4 is a close second on SWE-bench and METR but trails on Terminal-Bench.</li>
+        <li><strong>For IDE-integrated work,</strong> Cursor with Opus 4.7 Thinking is the right default, with the caveat that it does not always pick the right model unless you tell it to.</li>
+        <li><strong>For polyglot editing across many languages,</strong> Aider with Opus 4.7 leads its own benchmark by a wide margin. This is partially because Aider Polyglot is run by Aider, but the underlying scaffold is genuinely strong on cross-language edit accuracy.</li>
+        <li><strong>For Linux server work that must be done by an agent without supervision,</strong> the METR HCAST horizon matters more than SWE-bench scores. Claude Code on Opus 4.7 currently leads at roughly 3.7 hours of autonomous task length at 50 percent success. Most other harnesses are at 1 to 2.5 hours.</li>
+      </ul>
+
+      <p>Do not pick a harness based on which model you like. Pick the model based on which harness fits how you work, and then read the harness gap chart to see if your model choice is leaving points on the table.</p>
+
+      <h2>The data, the API, and the caveat</h2>
+
+      <p>The /harnesses page is a snapshot of public leaderboard data, refreshed manually as upstream maintainers update. We do not re-run benchmarks. Each row links to the upstream report.</p>
+
+      <p>The data is also available as JSON at <code>/api/harnesses</code> with no auth, no key, no signup. Pass <code>?view=summary</code> for a top-line snapshot, <code>?view=gaps</code> for the full harness-gap analysis, <code>?view=combined</code> for normalized cross-benchmark ranking, or no parameter for the raw graph. The same dataset is exposed as the MCP tool <code>tf_harnesses</code> on our <a href="/api/mcp">MCP endpoint</a> and as a function-calling tool definition at <a href="/api/llm-tools?format=anthropic">/api/llm-tools</a>.</p>
+
+      <p>One caveat we want to be loud about: vendors self-report most of these scores. Some are reproduced by independent third parties; many are not. Aider Polyglot is maintained by Aider, so the Aider scaffold is naturally the most-tuned baseline there. Devin&apos;s scores are self-reported with a mixed-model selection that the company does not fully disclose. We label each row with what we know. <strong>Treat the absolute numbers as approximate; the within-model gaps across harnesses are the trustworthy signal.</strong></p>
+
+      <p>If you maintain a harness or run benchmarks and we have you wrong, email <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a> and we will fix the snapshot.</p>
+
+      <h2>Where this goes next</h2>
+
+      <p>The interesting thing about a harness/model leaderboard is that the harness side updates faster than the model side. Models drop every six to nine months. Harnesses update every two weeks. If we are right that the harness is doing more work than people think, then the leaderboard you should care about is going to move twice as fast as you expect, and the stack ranking is going to look different in three months.</p>
+
+      <p>That is the point of /harnesses. Watch the gap, not the model.</p>
+
+    </article>
+
+    <div class="cta-box">
+      <p>Want the data instead of the hot take?</p>
+      <a href="/harnesses" class="cta-link">View live leaderboard &rarr;</a>
+    </div>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">&middot;</span>
+      <a href="/blog">Blog</a><span class="sep">&middot;</span>
+      <a href="/harnesses">Harnesses</a><span class="sep">&middot;</span>
+      <a href="/developers">API</a><span class="sep">&middot;</span>
+      <a href="/team/signal">More from Signal</a>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-04-30T07:27:40.609Z",
+  "updated": "2026-05-01T03:45:45.787Z",
   "articles": [
     {
       "slug": "delegated-vs-autonomous-agent-payments",
@@ -13,6 +13,19 @@
       ],
       "published": "2026-04-30",
       "read_time": "8 min read"
+    },
+    {
+      "slug": "why-the-harness-gap-matters",
+      "title": "Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent",
+      "excerpt": "Same model, different harnesses, different scores. The agent scaffold around the language model decides whether you ship working code or watch a 30-step retry loop fail. Why this gap is the most important number in agentic coding right now.",
+      "author": "Signal",
+      "author_title": "Infrastructure Writer",
+      "tags": [
+        "AI",
+        "AGENTS"
+      ],
+      "published": "2026-04-30",
+      "read_time": "7 min read"
     },
     {
       "slug": "best-bitcoin-ticker",
@@ -48,16 +61,6 @@
       "slug": "bitcoin-ticker-mobile",
       "title": "Why Your Mobile Bitcoin Ticker Lies",
       "excerpt": "Mobile Bitcoin tickers often show stale prices long after you've opened the app. Tab suspension, radio handoff, and battery throttling are the hidden culprits. Here's how to build one that doesn't lie.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [],
-      "published": "2026-04-22",
-      "read_time": ""
-    },
-    {
-      "slug": "bitcoin-ticker-websocket-vs-polling",
-      "title": "Why We Built a WebSocket Bitcoin Ticker Instead of Polling",
-      "excerpt": "A deep dive into the architectural decision behind TerminalFeed's live BTC ticker: why WebSocket beat polling on latency, cost, and battery, and where polling still wins.",
       "author": "Node",
       "author_title": "Dev Tools Editor",
       "tags": [],

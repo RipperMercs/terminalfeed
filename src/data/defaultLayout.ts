@@ -38,6 +38,7 @@ export const DEFAULT_LAYOUT = {
     'humans-in-space',
     'launches',
     'ai-leaderboard',
+    'harnesses',
     'wiki-live',
     'claude-status',
     'cloud-status',
