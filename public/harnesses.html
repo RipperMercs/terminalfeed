@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Coding Harness Leaderboards | Claude Code vs Cursor vs Aider vs Codex | TerminalFeed</title>
+  <meta name="description" content="Cross-harness, cross-model agentic-coding scores. Same model, different harnesses, very different results. SWE-bench Verified, Terminal-Bench, Aider Polyglot, METR HCAST. Updated weekly.">
+
+  <meta property="og:title" content="AI Coding Harness Leaderboards | TerminalFeed">
+  <meta property="og:description" content="Cross-harness, cross-model agentic-coding scores. SWE-bench Verified, Terminal-Bench, Aider Polyglot, METR HCAST.">
+  <meta property="og:url" content="https://terminalfeed.io/harnesses">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Coding Harness Leaderboards | TerminalFeed">
+  <meta name="twitter:description" content="Cross-harness, cross-model agentic-coding scores across SWE-bench Verified, Terminal-Bench, Aider Polyglot, METR HCAST.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+
+  <link rel="canonical" href="https://terminalfeed.io/harnesses">
+  <link rel="icon" href="/favicon.ico">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AI Coding Harness Leaderboards",
+    "description": "Cross-harness, cross-model agentic-coding scores across SWE-bench Verified, Terminal-Bench, Aider Polyglot, and METR HCAST. Refreshed weekly.",
+    "url": "https://terminalfeed.io/harnesses",
+    "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" },
+    "dateModified": "2026-04-30",
+    "about": [
+      { "@type": "Thing", "name": "Claude Code" },
+      { "@type": "Thing", "name": "Cursor" },
+      { "@type": "Thing", "name": "Aider" },
+      { "@type": "Thing", "name": "Codex CLI" },
+      { "@type": "Thing", "name": "OpenHands" },
+      { "@type": "Thing", "name": "Devin" },
+      { "@type": "Thing", "name": "SWE-Agent" },
+      { "@type": "Thing", "name": "SWE-bench Verified" },
+      { "@type": "Thing", "name": "Terminal-Bench" },
+      { "@type": "Thing", "name": "Aider Polyglot" },
+      { "@type": "Thing", "name": "METR HCAST" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home",      "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Harnesses", "item": "https://terminalfeed.io/harnesses" }
+    ]
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C; color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    h1 { font-size: 14px; color: #5DCAA5; letter-spacing: 3px; font-weight: 400; margin-bottom: 8px; }
+    .lede { font-size: 14px; line-height: 1.7; color: #D4D2CB; max-width: 720px; margin: 16px 0 28px; }
+    .lede strong { color: #F0EDE6; font-weight: 500; }
+    .updated { font-size: 11px; color: #5DCAA5; margin-bottom: 4px; }
+    .meta { font-size: 10px; color: #4E4D49; }
+
+    .pulse-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #4ADE80; margin-right: 6px;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    hr.divider { border: none; border-top: 1px solid #1E1E24; margin: 24px 0; }
+
+    .section { margin-bottom: 32px; }
+    .section-label { font-size: 10px; color: #5DCAA5; letter-spacing: 2px; margin-bottom: 6px; }
+    .section-sub { font-size: 11px; color: #8A8880; margin-bottom: 12px; line-height: 1.6; }
+    .section-caveat { font-size: 10px; color: #4E4D49; font-style: italic; margin-top: 8px; }
+
+    table.lb {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;
+      background: #111114; border: 1px solid #1E1E24; border-radius: 6px; overflow: hidden;
+    }
+    table.lb th, table.lb td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1A1A1E;
+      text-align: left;
+    }
+    table.lb thead th {
+      font-size: 10px; color: #4E4D49; letter-spacing: 1px;
+      text-transform: uppercase; font-weight: 500;
+      background: #0D0D10;
+      border-bottom: 1px solid #1E1E24;
+    }
+    table.lb tbody tr:last-child td { border-bottom: none; }
+    table.lb tbody tr:hover { background: #14141a; }
+    table.lb td.score {
+      font-weight: 600; color: #F0EDE6; text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    table.lb td.score-bar { padding: 0; vertical-align: middle; width: 30%; }
+    .bar-wrap { background: #1A1A1E; height: 22px; position: relative; margin: 0 12px; border-radius: 3px; overflow: hidden; }
+    .bar-fill { background: linear-gradient(90deg, #5DCAA5, #4ADE80); height: 100%; transition: width 0.3s; }
+    .bar-fill.amber { background: linear-gradient(90deg, #EF9F27, #F9CB42); }
+    .bar-fill.red   { background: linear-gradient(90deg, #F87171, #EF4444); }
+    table.lb td.harness { color: #F0EDE6; font-weight: 500; }
+    table.lb td.model { color: #A78BFA; font-size: 11px; }
+    table.lb td.notes { color: #8A8880; font-size: 10px; }
+    table.lb td.date { color: #4E4D49; font-size: 10px; white-space: nowrap; }
+    table.lb td a { color: #5DCAA5; text-decoration: none; }
+    table.lb td a:hover { text-decoration: underline; }
+
+    .gap-card {
+      background: #111114; border: 1px solid #1E1E24; border-radius: 6px;
+      padding: 14px 16px; margin-top: 12px;
+    }
+    .gap-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #1A1A1E; gap: 12px; }
+    .gap-row:last-child { border-bottom: none; }
+    .gap-model { color: #F0EDE6; font-weight: 500; font-size: 12px; }
+    .gap-detail { color: #8A8880; font-size: 11px; flex: 1; margin-left: 12px; }
+    .gap-detail .h-good { color: #4ADE80; }
+    .gap-detail .h-bad  { color: #F87171; }
+    .gap-delta { color: #EF9F27; font-weight: 600; font-size: 13px; white-space: nowrap; }
+
+    .source-link { font-size: 10px; color: #4E4D49; margin-top: 4px; }
+    .source-link a { color: #5DCAA5; }
+
+    .info-box {
+      background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px;
+      padding: 16px 18px; margin: 24px 0;
+      font-size: 12px; line-height: 1.7; color: #D4D2CB;
+    }
+    .info-box h3 { color: #5DCAA5; font-size: 11px; letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 400; }
+    .info-box ul { margin: 8px 0 0 18px; }
+    .info-box li { margin-bottom: 4px; }
+
+    .api-box {
+      background: #111114; border: 1px solid #1E1E24; border-radius: 6px;
+      padding: 14px 16px; margin-top: 24px;
+    }
+    .api-box .label { font-size: 10px; color: #5DCAA5; letter-spacing: 2px; margin-bottom: 6px; }
+    .api-box code { color: #A78BFA; font-size: 11px; word-break: break-all; }
+    .api-box .desc { font-size: 11px; color: #8A8880; margin-top: 8px; line-height: 1.6; }
+
+    .footer {
+      margin-top: 48px; padding-top: 24px; border-top: 1px solid #1E1E24;
+      text-align: center; font-size: 10px; color: #3A3A44;
+    }
+    .footer a { color: #4E4D49; text-decoration: none; }
+    .footer a:hover { color: #5DCAA5; }
+
+    .loading { text-align: center; padding: 60px 0; color: #4E4D49; font-size: 12px; }
+
+    @media (max-width: 700px) {
+      body { padding: 24px 16px; }
+      table.lb td.notes, table.lb td.date { display: none; }
+      .gap-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .gap-detail { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>Harnesses</span>
+    </nav>
+
+    <h1>&gt;_ AI CODING HARNESS LEADERBOARDS</h1>
+    <div class="updated"><span class="pulse-dot"></span><span id="generated-at">loading snapshot...</span></div>
+    <div class="meta">cross-harness, cross-model agentic-coding scores</div>
+
+    <p class="lede">
+      Same model, different harnesses, very different results. The harness owns context curation, tool design, retry policy, and verifier integration, so a Claude Opus 4.7 inside Claude Code can score 20+ points higher on Terminal-Bench than the same model called by Aider with default settings. <strong>This page tracks the harness gap as a first-class number.</strong> Snapshots are aggregated weekly from public leaderboards. We do not re-run benchmarks; each row links to the upstream report.
+    </p>
+
+    <div id="content">
+      <div class="loading">fetching harness data...</div>
+    </div>
+
+    <div class="info-box">
+      <h3>WHAT IS A HARNESS?</h3>
+      <p>The harness is the agent scaffold that wraps a base language model: the system prompt, the tools, the file-edit format, the retry and verifier loop, the context-management strategy, and the way errors are surfaced back to the model.</p>
+      <ul>
+        <li><strong style="color:#F0EDE6">Claude Code</strong>, Anthropic&apos;s CLI-native agent, default Opus or Sonnet</li>
+        <li><strong style="color:#F0EDE6">Cursor</strong>, IDE-integrated agent, model-agnostic but Anthropic-default</li>
+        <li><strong style="color:#F0EDE6">Codex CLI</strong>, OpenAI&apos;s terminal agent, default GPT-5.x family</li>
+        <li><strong style="color:#F0EDE6">Aider</strong>, open-source pair-programmer, broadest model support</li>
+        <li><strong style="color:#F0EDE6">OpenHands</strong>, formerly OpenDevin, open-source autonomous agent</li>
+        <li><strong style="color:#F0EDE6">Devin</strong>, Cognition&apos;s SaaS agent, mixed-model internal selection</li>
+        <li><strong style="color:#F0EDE6">SWE-Agent</strong>, Princeton&apos;s reference scaffold</li>
+        <li><strong style="color:#F0EDE6">Cline</strong>, open-source VSCode agent</li>
+      </ul>
+    </div>
+
+    <div class="api-box">
+      <div class="label">FREE API</div>
+      <code>GET /api/harnesses</code>
+      <div class="desc">
+        Returns the same dataset as JSON. Pass <code>?view=summary</code> for top combined leaderboard and biggest harness gaps,
+        <code>?view=gaps</code> for full harness-gap analysis,
+        <code>?view=combined</code> for normalized cross-benchmark ranking,
+        or no param for the raw benchmark graph.
+        12-hour cache. CORS enabled. No auth, no key, no signup.
+      </div>
+      <div class="desc" style="margin-top:10px;">
+        Also available as MCP tool <code>tf_harnesses</code> via <a href="/api/mcp" style="color:#5DCAA5;">/api/mcp</a> and
+        as a function-calling tool definition at <a href="/api/llm-tools?format=anthropic" style="color:#5DCAA5;">/api/llm-tools</a>.
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>&copy; 2026 TerminalFeed.io &middot; Built by Ripper &middot; Data aggregated from public leaderboards</p>
+      <p>
+        <a href="/">Home</a> &middot;
+        <a href="/live">Live</a> &middot;
+        <a href="/blog">Blog</a> &middot;
+        <a href="/developers">API</a> &middot;
+        <a href="/agent">Agents</a> &middot;
+        <a href="/about">About</a>
+      </p>
+      <p style="margin-top:8px;">
+        Sources:
+        <a href="https://www.swebench.com/" target="_blank" rel="noopener">SWE-bench</a> &middot;
+        <a href="https://www.terminal-bench.org/" target="_blank" rel="noopener">Terminal-Bench</a> &middot;
+        <a href="https://aider.chat/docs/leaderboards/" target="_blank" rel="noopener">Aider</a> &middot;
+        <a href="https://metr.org/" target="_blank" rel="noopener">METR</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function fmtScore(s, unit) {
+      if (s == null) return '-';
+      if (unit && unit.indexOf('minutes') >= 0) {
+        if (s >= 60) return (s / 60).toFixed(1) + 'h';
+        return Math.round(s) + 'm';
+      }
+      return Number(s).toFixed(1);
+    }
+
+    function barColor(scoreNorm) {
+      if (scoreNorm >= 0.75) return '';
+      if (scoreNorm >= 0.5)  return 'amber';
+      return 'red';
+    }
+
+    function renderBenchmark(b) {
+      var max = b.results.reduce(function (m, r) { return Math.max(m, r.score); }, 1);
+      var sorted = b.results.slice().sort(function (a, c) { return c.score - a.score; });
+      var rows = sorted.map(function (r) {
+        var norm = r.score / max;
+        var pct = (norm * 100).toFixed(1) + '%';
+        var cls = barColor(norm);
+        return ''
+          + '<tr>'
+          + '<td class="harness">' + escapeHtml(r.harness) + '</td>'
+          + '<td class="model">'   + escapeHtml(r.model)   + '</td>'
+          + '<td class="score">'   + fmtScore(r.score, b.unit) + '</td>'
+          + '<td class="score-bar"><div class="bar-wrap"><div class="bar-fill ' + cls + '" style="width:' + pct + ';"></div></div></td>'
+          + '<td class="notes">'   + escapeHtml(r.notes || '') + '</td>'
+          + '<td class="date"><a href="' + escapeHtml(r.sourceUrl) + '" target="_blank" rel="noopener">' + escapeHtml(r.reportedAt) + '</a></td>'
+          + '</tr>';
+      }).join('');
+
+      return ''
+        + '<div class="section">'
+        + '<div class="section-label">' + escapeHtml(b.name) + ' &middot; ' + escapeHtml(b.unit) + '</div>'
+        + '<div class="section-sub">' + escapeHtml(b.description) + '</div>'
+        + '<table class="lb">'
+        + '<thead><tr><th>Harness</th><th>Model</th><th style="text-align:right;">Score</th><th></th><th>Notes</th><th>Reported</th></tr></thead>'
+        + '<tbody>' + rows + '</tbody>'
+        + '</table>'
+        + '<div class="section-caveat">' + escapeHtml(b.caveat) + ' &middot; <a href="' + escapeHtml(b.sourceUrl) + '" target="_blank" rel="noopener" style="color:#5DCAA5;">upstream &rarr;</a></div>'
+        + '</div>';
+    }
+
+    function computeCombined(data) {
+      var tally = {};
+      for (var i = 0; i < data.benchmarks.length; i++) {
+        var b = data.benchmarks[i];
+        var max = b.results.reduce(function (m, r) { return Math.max(m, r.score); }, 1);
+        for (var j = 0; j < b.results.length; j++) {
+          var r = b.results[j];
+          var key = r.harness + '||' + r.model;
+          if (!tally[key]) tally[key] = { harness: r.harness, model: r.model, totalNorm: 0, n: 0 };
+          tally[key].totalNorm += r.score / max;
+          tally[key].n += 1;
+        }
+      }
+      var rows = [];
+      for (var k in tally) {
+        var v = tally[k];
+        rows.push({ harness: v.harness, model: v.model, combinedScore: +(100 * v.totalNorm / v.n).toFixed(1), benchmarks: v.n });
+      }
+      rows.sort(function (a, b) { return b.combinedScore - a.combinedScore; });
+      return rows;
+    }
+
+    function computeGaps(data) {
+      var gaps = [];
+      for (var i = 0; i < data.benchmarks.length; i++) {
+        var b = data.benchmarks[i];
+        var byModel = {};
+        for (var j = 0; j < b.results.length; j++) {
+          var r = b.results[j];
+          if (!byModel[r.model]) byModel[r.model] = [];
+          byModel[r.model].push(r);
+        }
+        for (var model in byModel) {
+          var runs = byModel[model];
+          if (runs.length < 2) continue;
+          var sorted = runs.slice().sort(function (a, c) { return c.score - a.score; });
+          var best = sorted[0];
+          var worst = sorted[sorted.length - 1];
+          gaps.push({
+            model: model,
+            best: best,
+            worst: worst,
+            delta: +(best.score - worst.score).toFixed(2),
+            benchmark: b.name,
+            unit: b.unit
+          });
+        }
+      }
+      gaps.sort(function (a, b) { return b.delta - a.delta; });
+      return gaps;
+    }
+
+    function renderCombined(rows) {
+      var top = rows.slice(0, 12);
+      var max = top[0] ? top[0].combinedScore : 100;
+      var html = top.map(function (r, i) {
+        var pct = ((r.combinedScore / max) * 100).toFixed(1) + '%';
+        var rank = (i + 1).toString().padStart(2, '0');
+        return ''
+          + '<tr>'
+          + '<td class="date" style="width:40px;">' + rank + '</td>'
+          + '<td class="harness">' + escapeHtml(r.harness) + '</td>'
+          + '<td class="model">'   + escapeHtml(r.model) + '</td>'
+          + '<td class="score">'   + r.combinedScore + '</td>'
+          + '<td class="score-bar"><div class="bar-wrap"><div class="bar-fill" style="width:' + pct + ';"></div></div></td>'
+          + '<td class="notes">'   + r.benchmarks + ' benchmark' + (r.benchmarks === 1 ? '' : 's') + '</td>'
+          + '</tr>';
+      }).join('');
+
+      return ''
+        + '<div class="section">'
+        + '<div class="section-label">COMBINED LEADERBOARD &middot; normalized 0-100</div>'
+        + '<div class="section-sub">Each score is normalized to 100 within its benchmark, then averaged across the benchmarks where this harness/model pair appears. Higher is better. Coverage varies; pairs evaluated on more benchmarks are more comparable.</div>'
+        + '<table class="lb">'
+        + '<thead><tr><th>#</th><th>Harness</th><th>Model</th><th style="text-align:right;">Score</th><th></th><th>Coverage</th></tr></thead>'
+        + '<tbody>' + html + '</tbody>'
+        + '</table>'
+        + '</div>';
+    }
+
+    function renderGaps(gaps) {
+      var top = gaps.slice(0, 8);
+      var rows = top.map(function (g) {
+        return ''
+          + '<div class="gap-row">'
+          + '<span class="gap-model">' + escapeHtml(g.model) + '</span>'
+          + '<span class="gap-detail">'
+          +   '<span class="h-good">' + escapeHtml(g.best.harness)  + ' ' + fmtScore(g.best.score,  g.unit)  + '</span>'
+          +   ' &nbsp;vs&nbsp; '
+          +   '<span class="h-bad">'  + escapeHtml(g.worst.harness) + ' ' + fmtScore(g.worst.score, g.unit) + '</span>'
+          +   ' &nbsp;<span style="color:#4E4D49;">on ' + escapeHtml(g.benchmark) + '</span>'
+          + '</span>'
+          + '<span class="gap-delta">+' + fmtScore(g.delta, g.unit) + '</span>'
+          + '</div>';
+      }).join('');
+
+      return ''
+        + '<div class="section">'
+        + '<div class="section-label">THE HARNESS GAP &middot; same model, different scores</div>'
+        + '<div class="section-sub">Biggest spread between the best and worst harness for the same base model on the same benchmark. The gap is mostly scaffold quality: prompt design, tool ergonomics, retry policy, error handling. If you are picking an agent for an unfamiliar codebase, the harness matters more than the model.</div>'
+        + '<div class="gap-card">' + rows + '</div>'
+        + '</div>';
+    }
+
+    fetch('/api/harnesses', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.benchmarks)) {
+          document.getElementById('content').innerHTML = '<div class="loading">data unavailable, please retry</div>';
+          return;
+        }
+        document.getElementById('generated-at').textContent = 'snapshot generated ' + (data.generatedAt || 'unknown');
+
+        var html = '';
+        var combined = computeCombined(data);
+        html += renderCombined(combined);
+        var gaps = computeGaps(data);
+        if (gaps.length > 0) html += renderGaps(gaps);
+        html += '<hr class="divider">';
+
+        for (var i = 0; i < data.benchmarks.length; i++) {
+          html += renderBenchmark(data.benchmarks[i]);
+        }
+
+        document.getElementById('content').innerHTML = html;
+      })
+      .catch(function (e) {
+        document.getElementById('content').innerHTML = '<div class="loading">failed to load: ' + escapeHtml(e && e.message ? e.message : 'error') + '</div>';
+      });
+  </script>
+</body>
+</html>

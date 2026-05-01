@@ -846,6 +846,7 @@ function handleIndex() {
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
       '/api/hf-trending', '/api/solana-network',
+      '/api/harnesses',
       '/api/llm-tools',
     ],
     premium: {
@@ -1365,6 +1366,185 @@ async function handleHfTrending() {
     if (stale) return jsonResponse(stale);
     return jsonResponse({ data: [] });
   }
+}
+
+// =============================================================================
+// /api/harnesses : agentic-coding harness leaderboards
+// =============================================================================
+// Snapshot of public benchmark data across SWE-bench Verified, Terminal-Bench,
+// Aider Polyglot, and METR HCAST. Same data shape as src/data/harnesses.ts;
+// keep them in sync when refreshing the snapshot.
+
+const HARNESS_DATA = {
+  generatedAt: '2026-04-30',
+  schemaVersion: 1,
+  note: 'Snapshot of public agentic-coding leaderboards. Each row is the score the harness vendor (or an independent third party) reported on the upstream benchmark; we do not re-run. Refreshed manually as upstream leaderboards update. Same model on different harnesses scores differently because the harness owns context curation, tool design, retry policy, and verifier integration.',
+  benchmarks: [
+    {
+      id: 'swe_bench_verified',
+      name: 'SWE-bench Verified',
+      description: 'Princeton/OpenAI-curated subset of 500 real GitHub issues from popular Python repos. The harness must produce a patch that resolves the issue and passes the project test suite.',
+      unit: '% resolved',
+      sourceUrl: 'https://www.swebench.com/',
+      caveat: 'Python-only. Vendors self-report; the leaderboard accepts independent submissions.',
+      results: [
+        { id: 'claude-code:opus-4.7',     harness: 'Claude Code',  model: 'Claude Opus 4.7 Thinking', score: 79.4, reportedAt: '2026-04-22', sourceUrl: 'https://www.swebench.com/', notes: 'Single-attempt, default scaffold' },
+        { id: 'cursor:opus-4.7',          harness: 'Cursor',       model: 'Claude Opus 4.7 Thinking', score: 76.1, reportedAt: '2026-04-18', sourceUrl: 'https://www.swebench.com/', notes: 'Cursor Agent, single-attempt' },
+        { id: 'codex-cli:gpt-5.4',        harness: 'Codex CLI',    model: 'GPT-5.4 High',             score: 75.8, reportedAt: '2026-04-15', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'aider:opus-4.7',           harness: 'Aider',        model: 'Claude Opus 4.7 Thinking', score: 71.2, reportedAt: '2026-04-12', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'claude-code:sonnet-4.6',   harness: 'Claude Code',  model: 'Claude Sonnet 4.6',        score: 70.6, reportedAt: '2026-04-22', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'openhands:opus-4.7',       harness: 'OpenHands',    model: 'Claude Opus 4.7 Thinking', score: 69.4, reportedAt: '2026-04-10', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'devin:internal',           harness: 'Devin',        model: 'Cognition mix',            score: 68.0, reportedAt: '2026-03-28', sourceUrl: 'https://www.cognition.ai/blog/devin-2', notes: 'Self-reported; mixed model selection' },
+        { id: 'codex-cli:gpt-5.3-codex',  harness: 'Codex CLI',    model: 'GPT-5.3 Codex',            score: 67.5, reportedAt: '2026-03-30', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'cursor:gpt-5.4',           harness: 'Cursor',       model: 'GPT-5.4 High',             score: 66.9, reportedAt: '2026-04-18', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'swe-agent:opus-4.7',       harness: 'SWE-Agent',    model: 'Claude Opus 4.7 Thinking', score: 64.2, reportedAt: '2026-04-08', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'aider:gpt-5.4',            harness: 'Aider',        model: 'GPT-5.4 High',             score: 63.6, reportedAt: '2026-04-12', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'cline:opus-4.7',           harness: 'Cline',        model: 'Claude Opus 4.7 Thinking', score: 61.8, reportedAt: '2026-04-05', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'openhands:deepseek-v3.1',  harness: 'OpenHands',    model: 'DeepSeek V3.1',            score: 55.2, reportedAt: '2026-04-10', sourceUrl: 'https://www.swebench.com/' },
+        { id: 'aider:gemini-3.1-pro',     harness: 'Aider',        model: 'Gemini 3.1 Pro',           score: 54.9, reportedAt: '2026-04-12', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:deepseek-v3.1',      harness: 'Aider',        model: 'DeepSeek V3.1',            score: 51.4, reportedAt: '2026-04-12', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+      ],
+    },
+    {
+      id: 'terminal_bench',
+      name: 'Terminal-Bench',
+      description: 'Stanford-led benchmark of multi-step terminal tasks. The harness is given a shell, a task description, and must produce the right end-state on disk or in a process. Tests harness ability to plan and recover, not just to write code.',
+      unit: '% completed',
+      sourceUrl: 'https://www.terminal-bench.org/',
+      caveat: 'Heavily harness-dependent. Same model can score 10-20 points apart between Claude Code vs Aider vs OpenHands purely from scaffold quality.',
+      results: [
+        { id: 'claude-code:opus-4.7',     harness: 'Claude Code', model: 'Claude Opus 4.7 Thinking', score: 58.2, reportedAt: '2026-04-25', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'cursor:opus-4.7',          harness: 'Cursor',      model: 'Claude Opus 4.7 Thinking', score: 51.8, reportedAt: '2026-04-20', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'codex-cli:gpt-5.4',        harness: 'Codex CLI',   model: 'GPT-5.4 High',             score: 49.6, reportedAt: '2026-04-15', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'openhands:opus-4.7',       harness: 'OpenHands',   model: 'Claude Opus 4.7 Thinking', score: 48.4, reportedAt: '2026-04-10', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'claude-code:sonnet-4.6',   harness: 'Claude Code', model: 'Claude Sonnet 4.6',        score: 46.0, reportedAt: '2026-04-25', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'devin:internal',           harness: 'Devin',       model: 'Cognition mix',            score: 43.2, reportedAt: '2026-04-01', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'cursor:gpt-5.4',           harness: 'Cursor',      model: 'GPT-5.4 High',             score: 41.7, reportedAt: '2026-04-20', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'aider:opus-4.7',           harness: 'Aider',       model: 'Claude Opus 4.7 Thinking', score: 38.5, reportedAt: '2026-04-12', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'swe-agent:opus-4.7',       harness: 'SWE-Agent',   model: 'Claude Opus 4.7 Thinking', score: 35.1, reportedAt: '2026-04-08', sourceUrl: 'https://www.terminal-bench.org/' },
+      ],
+    },
+    {
+      id: 'aider_polyglot',
+      name: 'Aider Polyglot',
+      description: '225 hand-picked Exercism problems across C++, Go, Java, JavaScript, Python, and Rust. Tests cross-language editing accuracy. Aider runs the canonical scaffold; other harnesses run their own.',
+      unit: '% solved',
+      sourceUrl: 'https://aider.chat/docs/leaderboards/',
+      caveat: 'Aider authors maintain; their own scaffold is the most-tuned baseline. Use as model-comparison data within the Aider scaffold.',
+      results: [
+        { id: 'aider:opus-4.7',          harness: 'Aider', model: 'Claude Opus 4.7 Thinking', score: 84.1, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:gpt-5.4',           harness: 'Aider', model: 'GPT-5.4 High',             score: 81.4, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:gemini-3.1-pro',    harness: 'Aider', model: 'Gemini 3.1 Pro',           score: 78.2, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:sonnet-4.6',        harness: 'Aider', model: 'Claude Sonnet 4.6',        score: 76.8, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:gpt-5.3-codex',     harness: 'Aider', model: 'GPT-5.3 Codex',            score: 73.9, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:grok-4.20',         harness: 'Aider', model: 'Grok 4.20 Beta1',          score: 71.5, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:deepseek-v3.1',     harness: 'Aider', model: 'DeepSeek V3.1',            score: 67.2, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:glm-5',             harness: 'Aider', model: 'GLM-5',                    score: 62.8, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+        { id: 'aider:haiku-4.5',         harness: 'Aider', model: 'Claude Haiku 4.5',         score: 58.6, reportedAt: '2026-04-22', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
+      ],
+    },
+    {
+      id: 'metr_hcast',
+      name: 'METR HCAST (50% time horizon)',
+      description: 'METR\'s task suite measures the longest task length (in minutes of human-expert time) at which the harness/model pair succeeds 50% of the time. Higher = the harness can autonomously complete longer tasks.',
+      unit: 'minutes (50% success horizon)',
+      sourceUrl: 'https://metr.org/',
+      caveat: 'Not all model/harness pairs are evaluated. METR publishes selected runs only.',
+      results: [
+        { id: 'claude-code:opus-4.7',  harness: 'Claude Code', model: 'Claude Opus 4.7 Thinking', score: 220, reportedAt: '2026-04-18', sourceUrl: 'https://metr.org/', notes: '~3.7 hour 50% horizon' },
+        { id: 'codex-cli:gpt-5.4',     harness: 'Codex CLI',   model: 'GPT-5.4 High',             score: 195, reportedAt: '2026-04-10', sourceUrl: 'https://metr.org/' },
+        { id: 'cursor:opus-4.7',       harness: 'Cursor',      model: 'Claude Opus 4.7 Thinking', score: 180, reportedAt: '2026-04-15', sourceUrl: 'https://metr.org/' },
+        { id: 'devin:internal',        harness: 'Devin',       model: 'Cognition mix',            score: 145, reportedAt: '2026-04-01', sourceUrl: 'https://metr.org/' },
+        { id: 'openhands:opus-4.7',    harness: 'OpenHands',   model: 'Claude Opus 4.7 Thinking', score: 130, reportedAt: '2026-04-08', sourceUrl: 'https://metr.org/' },
+        { id: 'aider:opus-4.7',        harness: 'Aider',       model: 'Claude Opus 4.7 Thinking', score: 90,  reportedAt: '2026-04-05', sourceUrl: 'https://metr.org/' },
+      ],
+    },
+  ],
+};
+
+// Compute the harness gap (same model, different harnesses, biggest delta).
+function computeHarnessGaps() {
+  var gaps = [];
+  for (var b = 0; b < HARNESS_DATA.benchmarks.length; b++) {
+    var bench = HARNESS_DATA.benchmarks[b];
+    var byModel = {};
+    for (var i = 0; i < bench.results.length; i++) {
+      var r = bench.results[i];
+      if (!byModel[r.model]) byModel[r.model] = [];
+      byModel[r.model].push(r);
+    }
+    for (var model in byModel) {
+      var runs = byModel[model];
+      if (runs.length < 2) continue;
+      var sorted = runs.slice().sort(function(a, b) { return b.score - a.score; });
+      var best = sorted[0];
+      var worst = sorted[sorted.length - 1];
+      gaps.push({
+        model: model,
+        best: { harness: best.harness, score: best.score },
+        worst: { harness: worst.harness, score: worst.score },
+        delta: +(best.score - worst.score).toFixed(2),
+        benchmark: bench.name,
+      });
+    }
+  }
+  gaps.sort(function(a, b) { return b.delta - a.delta; });
+  return gaps;
+}
+
+// Combined leaderboard across benchmarks (each score normalized to its benchmark max).
+function computeHarnessCombined() {
+  var tally = {};
+  for (var b = 0; b < HARNESS_DATA.benchmarks.length; b++) {
+    var bench = HARNESS_DATA.benchmarks[b];
+    var max = 1;
+    for (var i = 0; i < bench.results.length; i++) {
+      if (bench.results[i].score > max) max = bench.results[i].score;
+    }
+    for (var j = 0; j < bench.results.length; j++) {
+      var r = bench.results[j];
+      var key = r.harness + '||' + r.model;
+      if (!tally[key]) tally[key] = { totalNorm: 0, n: 0, harness: r.harness, model: r.model };
+      tally[key].totalNorm += r.score / max;
+      tally[key].n += 1;
+    }
+  }
+  var rows = [];
+  for (var k in tally) {
+    var v = tally[k];
+    rows.push({ harness: v.harness, model: v.model, combinedScore: +(100 * v.totalNorm / v.n).toFixed(1), benchmarks: v.n });
+  }
+  rows.sort(function(a, b) { return b.combinedScore - a.combinedScore; });
+  return rows;
+}
+
+// GET /api/harnesses
+// Returns the harness leaderboard snapshot. Supports ?view=raw|gaps|combined|summary
+// (default: raw). 12-hour cache (the upstream is hand-curated).
+function handleHarnesses(url) {
+  var view = (url && url.searchParams) ? (url.searchParams.get('view') || 'raw') : 'raw';
+  var body;
+  if (view === 'gaps') {
+    body = { generatedAt: HARNESS_DATA.generatedAt, view: 'gaps', gaps: computeHarnessGaps() };
+  } else if (view === 'combined') {
+    body = { generatedAt: HARNESS_DATA.generatedAt, view: 'combined', leaderboard: computeHarnessCombined() };
+  } else if (view === 'summary') {
+    var combined = computeHarnessCombined();
+    var gaps = computeHarnessGaps();
+    body = {
+      generatedAt: HARNESS_DATA.generatedAt,
+      view: 'summary',
+      benchmarks: HARNESS_DATA.benchmarks.map(function(b) {
+        var top = b.results.slice().sort(function(a, c) { return c.score - a.score; })[0];
+        return { id: b.id, name: b.name, unit: b.unit, top: { harness: top.harness, model: top.model, score: top.score } };
+      }),
+      topCombined: combined.slice(0, 10),
+      biggestHarnessGaps: gaps.slice(0, 5),
+    };
+  } else {
+    body = HARNESS_DATA;
+  }
+  return jsonResponse(body, 200, 43200); // 12h cache
 }
 
 // GET /api/gh-events
@@ -2895,6 +3075,7 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_economic_data':       path = '/api/economic-data'; break;
     case 'tf_forex':               path = '/api/forex'; break;
     case 'tf_hf_trending':         path = '/api/hf-trending'; break;
+    case 'tf_harnesses':           path = '/api/harnesses'; break;
     case 'tf_solana_network':      path = '/api/solana-network'; break;
     case 'tf_premium_briefing':    path = '/api/pro/briefing'; break;
     case 'tf_premium_macro':       path = '/api/pro/macro'; break;
@@ -2958,6 +3139,7 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_economic_data':       return await handleEconomicData(env);
     case 'tf_forex':               return await handleForex();
     case 'tf_hf_trending':         return await handleHfTrending();
+    case 'tf_harnesses':           return handleHarnesses(url);
     case 'tf_solana_network':      return await handleSolanaNetwork();
     case 'tf_premium_briefing':    return await handleProBriefing(req, env, url);
     case 'tf_premium_macro':       return await handleProMacro(req, env, url);
@@ -3214,6 +3396,18 @@ const LLM_TOOL_DEFINITIONS = [
     auth: 'none',
     tier: 'free',
     parameters: {}
+  },
+  {
+    name: 'tf_harnesses',
+    short_description: 'Agentic-coding harness leaderboards (Claude Code, Cursor, Codex, Aider, OpenHands, Devin, SWE-Agent).',
+    description: 'Returns a snapshot of public agentic-coding benchmark scores across SWE-bench Verified, Terminal-Bench, Aider Polyglot, and METR HCAST. Each row pairs a harness with a model. Same model can score very differently on different harnesses; that gap is the value-add. Pass ?view=summary for top 10 combined leaderboard plus biggest harness gaps; ?view=gaps for full per-model harness deltas; ?view=combined for normalized cross-benchmark ranking; ?view=raw (default) for the full benchmark/result graph. Source: hand-curated from upstream leaderboards (swebench.com, terminal-bench.org, aider.chat, metr.org). Cache TTL 12h. Use when the agent needs to recommend a harness/model combo or explain why two agents using the same model perform differently.',
+    url: 'https://terminalfeed.io/api/harnesses',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {
+      view: { type: 'string', enum: ['raw', 'summary', 'gaps', 'combined'], description: 'Output shape; default raw' }
+    }
   },
   {
     name: 'tf_solana_network',
@@ -7272,6 +7466,7 @@ async function dispatchRoute(request, env, url, path) {
       case 'gh-trending':    return await handleGhTrending(url, env);
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
+      case 'harnesses':      return handleHarnesses(url);
       case 'solana-network': return await handleSolanaNetwork();
       case 'hn-topstories':  return await handleHnTopStories(url);
       case 'hn-show':        return await handleHnShow(url);
