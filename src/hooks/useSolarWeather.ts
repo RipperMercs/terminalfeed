@@ -35,8 +35,8 @@ export function useSolarWeather(): SolarData | null {
 
         // Fetch solar flares
         const [flrRes, gstRes] = await Promise.allSettled([
-          fetch(`https://api.nasa.gov/DONKI/FLR?startDate=${startDate}&endDate=${endDate}&api_key=DEMO_KEY`, { signal: AbortSignal.timeout(8000) }),
-          fetch(`https://api.nasa.gov/DONKI/GST?startDate=${startDate}&endDate=${endDate}&api_key=DEMO_KEY`, { signal: AbortSignal.timeout(8000) }),
+          fetch(`https://api.nasa.gov/DONKI/FLR?startDate=${startDate}&endDate=${endDate}&api_key=DEMO_KEY`, { signal: AbortSignal.timeout(8000) }), // direct-fetch-exempt: NASA DEMO_KEY is intentionally public; superseded by /api/space-weather
+          fetch(`https://api.nasa.gov/DONKI/GST?startDate=${startDate}&endDate=${endDate}&api_key=DEMO_KEY`, { signal: AbortSignal.timeout(8000) }), // direct-fetch-exempt: NASA DEMO_KEY is intentionally public; superseded by /api/space-weather
         ]);
 
         if (!mountedRef.current) return;

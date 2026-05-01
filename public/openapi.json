@@ -1683,6 +1683,62 @@
         "security": []
       }
     },
+    "/api/space-weather": {
+      "get": {
+        "tags": ["free"],
+        "summary": "NOAA SWPC: Kp index, solar wind, X-ray flare class, active alerts",
+        "description": "Geomagnetic Kp index, solar wind speed/density, peak X-ray flare class over last 24h (A/B/C/M/X), and up to 5 active NOAA space weather alerts. Source: services.swpc.noaa.gov. 5-minute cache.",
+        "responses": {
+          "200": {
+            "description": "Current space weather snapshot",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/wildfires": {
+      "get": {
+        "tags": ["free"],
+        "summary": "NASA FIRMS active fire detections (North America 24h)",
+        "description": "Top 25 most intense satellite fire detections in North America over last 24 hours, sorted by Fire Radiative Power (MW). Includes lat/lon, approximate US state, satellite, confidence. Source: NASA FIRMS VIIRS SNPP NRT. 10-minute cache. Requires NASA_FIRMS_MAP_KEY env var on the worker.",
+        "responses": {
+          "200": {
+            "description": "Wildfire detections snapshot",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/severe-weather": {
+      "get": {
+        "tags": ["free"],
+        "summary": "NWS active US severe weather alerts (top 15 by severity)",
+        "description": "Top 15 active National Weather Service alerts ranked by severity score (severity x urgency x certainty). Tornado, flood, severe thunderstorm, hurricane, winter storm, fire, heat, wind. Source: api.weather.gov. 60-second cache.",
+        "responses": {
+          "200": {
+            "description": "Active severe weather alerts",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/funding-rates": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Top 20 perp futures funding rates across 4 venues",
+        "description": "Top 20 perpetual futures contracts by absolute annualized funding rate, across Binance USD-M, Bybit linear, dYdX v4, and Hyperliquid. Includes venue, symbol, period rate, annualized %, mark price. 60-second cache.",
+        "responses": {
+          "200": {
+            "description": "Funding rate leaderboard",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/harnesses": {
       "get": {
         "tags": ["free"],

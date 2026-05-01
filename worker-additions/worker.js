@@ -847,6 +847,7 @@ function handleIndex() {
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
       '/api/hf-trending', '/api/solana-network',
       '/api/harnesses',
+      '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/llm-tools',
     ],
     premium: {
@@ -1545,6 +1546,502 @@ function handleHarnesses(url) {
     body = HARNESS_DATA;
   }
   return jsonResponse(body, 200, 43200); // 12h cache
+}
+
+// =============================================================================
+// /api/space-weather : NOAA SWPC geomagnetic + solar conditions
+// =============================================================================
+// Source: NOAA Space Weather Prediction Center, free, no auth.
+// Cache 5 min (Kp updates every 3h, solar wind every 1m upstream).
+
+async function fetchSwpcKpIndex() {
+  var res = await fetchWithTimeout('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json', {}, 8000);
+  if (!res.ok) throw new Error('swpc-kp ' + res.status);
+  var arr = await res.json();
+  if (!Array.isArray(arr) || arr.length < 2) return [];
+  return arr.slice(1).map(function(row) {
+    return { time: row[0], kp: parseFloat(row[1]) || 0, a_running: parseFloat(row[2]) || null };
+  });
+}
+
+async function fetchSwpcSolarWind() {
+  var res = await fetchWithTimeout('https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json', {}, 8000);
+  if (!res.ok) throw new Error('swpc-wind ' + res.status);
+  var arr = await res.json();
+  if (!Array.isArray(arr) || arr.length < 2) return [];
+  return arr.slice(1).map(function(row) {
+    return { time: row[0], density: parseFloat(row[1]) || null, speed: parseFloat(row[2]) || null, temperature: parseFloat(row[3]) || null };
+  });
+}
+
+async function fetchSwpcXrays() {
+  var res = await fetchWithTimeout('https://services.swpc.noaa.gov/json/goes/primary/xrays-1-day.json', {}, 8000);
+  if (!res.ok) throw new Error('swpc-xrays ' + res.status);
+  var arr = await res.json();
+  if (!Array.isArray(arr)) return [];
+  return arr.map(function(p) {
+    return { time: p.time_tag, flux: parseFloat(p.flux) || 0, energy: p.energy };
+  });
+}
+
+async function fetchSwpcAlerts() {
+  var res = await fetchWithTimeout('https://services.swpc.noaa.gov/products/alerts.json', {}, 8000);
+  if (!res.ok) throw new Error('swpc-alerts ' + res.status);
+  var arr = await res.json();
+  if (!Array.isArray(arr)) return [];
+  return arr.slice(0, 20).map(function(a) {
+    return {
+      issue_time: a.issue_datetime,
+      message: a.message,
+      product_id: a.product_id,
+      space_weather_message_code: a.space_weather_message_code,
+    };
+  });
+}
+
+function _classifyXrayFlux(maxFlux) {
+  if (maxFlux === null || maxFlux === undefined) return null;
+  if (maxFlux < 1e-7) return 'A';
+  if (maxFlux < 1e-6) return 'B';
+  if (maxFlux < 1e-5) return 'C';
+  if (maxFlux < 1e-4) return 'M';
+  return 'X';
+}
+function _kpStormLevel(kp) {
+  if (kp == null) return null;
+  if (kp < 5) return 'quiet';
+  if (kp < 6) return 'minor_storm';
+  if (kp < 7) return 'moderate_storm';
+  if (kp < 8) return 'strong_storm';
+  if (kp < 9) return 'severe_storm';
+  return 'extreme_storm';
+}
+function _auroraVisibilityHint(kp) {
+  if (kp == null) return null;
+  if (kp < 4) return 'high_latitude_only';
+  if (kp < 5) return 'northern_us_canada';
+  if (kp < 6) return 'mid_us_states';
+  if (kp < 7) return 'central_us_states';
+  return 'southern_us_states';
+}
+
+async function handleSpaceWeather() {
+  var KEY = 'space-weather';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+
+  try {
+    var settled = await Promise.allSettled([
+      fetchSwpcKpIndex(),
+      fetchSwpcSolarWind(),
+      fetchSwpcXrays(),
+      fetchSwpcAlerts(),
+    ]);
+    var kp = settled[0].status === 'fulfilled' ? settled[0].value : [];
+    var wind = settled[1].status === 'fulfilled' ? settled[1].value : [];
+    var xrays = settled[2].status === 'fulfilled' ? settled[2].value : [];
+    var alerts = settled[3].status === 'fulfilled' ? settled[3].value : [];
+
+    var currentKp = kp.length > 0 ? kp[kp.length - 1].kp : null;
+    var currentWind = wind.length > 0 ? wind[wind.length - 1] : null;
+    var maxXrayFlux = xrays.length > 0 ? Math.max.apply(null, xrays.map(function(x) { return x.flux || 0; })) : null;
+
+    var result = {
+      source: 'terminalfeed.io',
+      endpoint: 'space-weather',
+      updated_at: new Date().toISOString(),
+      data: {
+        kp_index: currentKp,
+        kp_storm_level: _kpStormLevel(currentKp),
+        aurora_visibility: _auroraVisibilityHint(currentKp),
+        solar_wind_speed_kms: currentWind && currentWind.speed != null ? Math.round(currentWind.speed) : null,
+        solar_wind_density: currentWind && currentWind.density != null ? parseFloat(currentWind.density.toFixed(2)) : null,
+        flare_class_24h: _classifyXrayFlux(maxXrayFlux),
+        active_alerts: alerts.slice(0, 5),
+        attribution: 'NOAA Space Weather Prediction Center',
+      },
+    };
+    setCache(KEY, result);
+    return jsonResponse(result, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({ data: { kp_index: null, error: 'upstream_unavailable' } });
+  }
+}
+
+// =============================================================================
+// /api/wildfires : NASA FIRMS active fire detections (North America)
+// =============================================================================
+// Source: NASA FIRMS VIIRS SNPP NRT. Requires NASA_FIRMS_MAP_KEY env var.
+// Free key from https://firms.modaps.eosdis.nasa.gov/api/map_key/
+// Cache 10 min.
+
+async function fetchFirmsNorthAmerica(env) {
+  var key = env && env.NASA_FIRMS_MAP_KEY;
+  if (!key) throw new Error('firms-no-key');
+  var url = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv/'
+          + encodeURIComponent(key)
+          + '/VIIRS_SNPP_NRT/-170,15,-50,72/1';
+  var res = await fetchWithTimeout(url, {}, 12000);
+  if (!res.ok) throw new Error('firms ' + res.status);
+  var csv = await res.text();
+  return _parseFirmsCsv(csv);
+}
+
+function _parseFirmsCsv(csv) {
+  if (!csv || typeof csv !== 'string') return [];
+  var lines = csv.split('\n');
+  if (lines.length < 2) return [];
+  var header = lines[0].split(',').map(function(h) { return h.trim(); });
+  var idx = {};
+  header.forEach(function(h, i) { idx[h] = i; });
+  var out = [];
+  for (var i = 1; i < lines.length; i++) {
+    var parts = lines[i].split(',');
+    if (parts.length < header.length) continue;
+    var lat = parseFloat(parts[idx.latitude]);
+    var lon = parseFloat(parts[idx.longitude]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    out.push({
+      lat: lat,
+      lon: lon,
+      brightness_ti4: parseFloat(parts[idx.bright_ti4]) || null,
+      acq_date: parts[idx.acq_date],
+      acq_time: parts[idx.acq_time],
+      satellite: parts[idx.satellite],
+      confidence: parts[idx.confidence],
+      frp: parseFloat(parts[idx.frp]) || 0,
+      daynight: parts[idx.daynight],
+    });
+  }
+  return out;
+}
+
+function _approximateUsState(lat, lon) {
+  var BOXES = [
+    { st: 'CA', n: 42.0, s: 32.5, w: -124.5, e: -114.1 },
+    { st: 'OR', n: 46.3, s: 42.0, w: -124.6, e: -116.5 },
+    { st: 'WA', n: 49.0, s: 45.5, w: -124.8, e: -117.0 },
+    { st: 'NV', n: 42.0, s: 35.0, w: -120.0, e: -114.0 },
+    { st: 'AZ', n: 37.0, s: 31.3, w: -114.8, e: -109.0 },
+    { st: 'NM', n: 37.0, s: 31.3, w: -109.1, e: -103.0 },
+    { st: 'UT', n: 42.0, s: 37.0, w: -114.1, e: -109.0 },
+    { st: 'CO', n: 41.0, s: 37.0, w: -109.1, e: -102.0 },
+    { st: 'WY', n: 45.0, s: 41.0, w: -111.1, e: -104.0 },
+    { st: 'MT', n: 49.0, s: 44.4, w: -116.1, e: -104.0 },
+    { st: 'ID', n: 49.0, s: 42.0, w: -117.3, e: -111.0 },
+    { st: 'TX', n: 36.5, s: 25.8, w: -106.7, e: -93.5 },
+    { st: 'OK', n: 37.0, s: 33.6, w: -103.0, e: -94.5 },
+    { st: 'FL', n: 31.0, s: 24.5, w: -87.6, e: -80.0 },
+  ];
+  for (var i = 0; i < BOXES.length; i++) {
+    var b = BOXES[i];
+    if (lat <= b.n && lat >= b.s && lon >= b.w && lon <= b.e) return b.st;
+  }
+  if (lat > 49 && lat < 72) return 'CAN';
+  if (lat > 14 && lat < 33 && lon > -118 && lon < -86) return 'MX';
+  return 'OTHER';
+}
+
+async function handleWildfires(env) {
+  var KEY = 'wildfires';
+  var cached = getCached(KEY, 600000);
+  if (cached) return jsonResponse(cached, 200, 600);
+
+  if (!env || !env.NASA_FIRMS_MAP_KEY) {
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'wildfires',
+      updated_at: new Date().toISOString(),
+      data: { total_24h: 0, top: [], error: 'firms_key_unconfigured', attribution: 'NASA FIRMS VIIRS SNPP NRT' },
+    }, 200, 60);
+  }
+
+  try {
+    var detections = await fetchFirmsNorthAmerica(env);
+    var top = detections.slice()
+      .sort(function(a, b) { return (b.frp || 0) - (a.frp || 0); })
+      .slice(0, 25)
+      .map(function(d) {
+        return {
+          lat: d.lat,
+          lon: d.lon,
+          frp_mw: d.frp,
+          confidence: d.confidence,
+          acq_date: d.acq_date,
+          acq_time: d.acq_time,
+          approx_state: _approximateUsState(d.lat, d.lon),
+          satellite: d.satellite,
+        };
+      });
+
+    var result = {
+      source: 'terminalfeed.io',
+      endpoint: 'wildfires',
+      updated_at: new Date().toISOString(),
+      data: {
+        total_24h: detections.length,
+        top: top,
+        attribution: 'NASA FIRMS (Fire Information for Resource Management System), VIIRS SNPP NRT',
+      },
+    };
+    if (detections.length > 0) setCache(KEY, result);
+    return jsonResponse(result, 200, 600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({ data: { total_24h: 0, top: [], error: 'upstream_unavailable' } });
+  }
+}
+
+// =============================================================================
+// /api/severe-weather : NWS active severe weather alerts (US)
+// =============================================================================
+// Source: api.weather.gov, free, requires descriptive User-Agent.
+// Cache 60s.
+
+async function fetchNwsActiveAlerts() {
+  var res = await fetchWithTimeout('https://api.weather.gov/alerts/active', {
+    headers: {
+      'User-Agent': 'terminalfeed.io (hello@terminalfeed.io) data-aggregator/1.0',
+      'Accept': 'application/geo+json',
+    },
+  }, 8000);
+  if (!res.ok) throw new Error('nws ' + res.status);
+  var json = await res.json();
+  var features = (json && json.features) || [];
+  return features.map(function(f) {
+    var p = f.properties || {};
+    return {
+      id: p.id || null,
+      event: p.event || null,
+      severity: p.severity || null,
+      certainty: p.certainty || null,
+      urgency: p.urgency || null,
+      headline: p.headline || null,
+      area_desc: p.areaDesc || null,
+      sender_name: p.senderName || null,
+      effective: p.effective || null,
+      expires: p.expires || null,
+    };
+  });
+}
+
+function _severityScore(a) {
+  var sevMap  = { Extreme: 4, Severe: 3, Moderate: 2, Minor: 1, Unknown: 0 };
+  var urgMap  = { Immediate: 3, Expected: 2, Future: 1, Past: 0, Unknown: 0 };
+  var certMap = { Observed: 3, Likely: 2, Possible: 1, Unlikely: 0, Unknown: 0 };
+  return (sevMap[a.severity] || 0) * 10 + (urgMap[a.urgency] || 0) + (certMap[a.certainty] || 0) * 0.5;
+}
+
+function _eventCategory(eventName) {
+  if (!eventName) return 'other';
+  var e = eventName.toLowerCase();
+  if (e.indexOf('tornado') !== -1) return 'tornado';
+  if (e.indexOf('hurricane') !== -1 || e.indexOf('tropical storm') !== -1) return 'tropical';
+  if (e.indexOf('flood') !== -1) return 'flood';
+  if (e.indexOf('thunderstorm') !== -1) return 'thunderstorm';
+  if (e.indexOf('winter') !== -1 || e.indexOf('blizzard') !== -1 || e.indexOf('ice') !== -1) return 'winter';
+  if (e.indexOf('fire') !== -1) return 'fire';
+  if (e.indexOf('heat') !== -1) return 'heat';
+  if (e.indexOf('wind') !== -1) return 'wind';
+  return 'other';
+}
+
+async function handleSevereWeather() {
+  var KEY = 'severe-weather';
+  var cached = getCached(KEY, 60000);
+  if (cached) return jsonResponse(cached, 200, 60);
+
+  try {
+    var alerts = await fetchNwsActiveAlerts();
+    var scored = alerts.map(function(a) { return Object.assign({}, a, { _score: _severityScore(a) }); })
+                       .sort(function(x, y) { return y._score - x._score; });
+    var top = scored.slice(0, 15).map(function(a) {
+      return {
+        event: a.event,
+        severity: a.severity,
+        urgency: a.urgency,
+        certainty: a.certainty,
+        area_desc: a.area_desc,
+        headline: a.headline,
+        effective: a.effective,
+        expires: a.expires,
+        category: _eventCategory(a.event),
+      };
+    });
+
+    var counts = {};
+    alerts.forEach(function(a) {
+      var sev = a.severity || 'Unknown';
+      counts[sev] = (counts[sev] || 0) + 1;
+    });
+
+    var result = {
+      source: 'terminalfeed.io',
+      endpoint: 'severe-weather',
+      updated_at: new Date().toISOString(),
+      data: {
+        top: top,
+        total_active: alerts.length,
+        counts_by_severity: counts,
+        attribution: 'National Weather Service (api.weather.gov)',
+      },
+    };
+    setCache(KEY, result);
+    return jsonResponse(result, 200, 60);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({ data: { top: [], total_active: 0, error: 'upstream_unavailable' } });
+  }
+}
+
+// =============================================================================
+// /api/funding-rates : Top 20 perp funding rates across 4 venues
+// =============================================================================
+// Source: Binance USD-M, Bybit linear, dYdX v4, Hyperliquid. All free, no auth.
+// Cache 60s.
+
+async function fetchBinanceFunding() {
+  var res = await fetchWithTimeout('https://fapi.binance.com/fapi/v1/premiumIndex', {}, 8000);
+  if (!res.ok) throw new Error('binance ' + res.status);
+  var arr = await res.json();
+  if (!Array.isArray(arr)) return [];
+  var periodHours = 8;
+  var periodsPerYear = (365 * 24) / periodHours;
+  return arr
+    .filter(function(r) { return typeof r.symbol === 'string' && r.symbol.endsWith('USDT'); })
+    .map(function(r) {
+      var periodRate = parseFloat(r.lastFundingRate) || 0;
+      return {
+        venue: 'binance',
+        symbol: r.symbol,
+        periodHours: periodHours,
+        periodRate: periodRate,
+        annualizedPct: periodRate * periodsPerYear * 100,
+        nextFundingTime: Number(r.nextFundingTime) || null,
+        markPrice: parseFloat(r.markPrice) || null,
+      };
+    });
+}
+
+async function fetchBybitFunding() {
+  var res = await fetchWithTimeout('https://api.bybit.com/v5/market/tickers?category=linear', {}, 8000);
+  if (!res.ok) throw new Error('bybit ' + res.status);
+  var json = await res.json();
+  var list = json && json.result && json.result.list;
+  if (!Array.isArray(list)) return [];
+  var periodHours = 8;
+  var periodsPerYear = (365 * 24) / periodHours;
+  return list
+    .filter(function(r) { return typeof r.symbol === 'string' && r.symbol.endsWith('USDT'); })
+    .map(function(r) {
+      var periodRate = parseFloat(r.fundingRate) || 0;
+      return {
+        venue: 'bybit',
+        symbol: r.symbol,
+        periodHours: periodHours,
+        periodRate: periodRate,
+        annualizedPct: periodRate * periodsPerYear * 100,
+        nextFundingTime: Number(r.nextFundingTime) || null,
+        markPrice: parseFloat(r.markPrice) || null,
+      };
+    });
+}
+
+async function fetchDydxFunding() {
+  var res = await fetchWithTimeout('https://indexer.dydx.trade/v4/perpetualMarkets', {}, 8000);
+  if (!res.ok) throw new Error('dydx ' + res.status);
+  var json = await res.json();
+  var markets = json && json.markets;
+  if (!markets || typeof markets !== 'object') return [];
+  var periodHours = 1;
+  var periodsPerYear = (365 * 24) / periodHours;
+  return Object.values(markets)
+    .filter(function(m) { return m && typeof m.ticker === 'string'; })
+    .map(function(m) {
+      var periodRate = parseFloat(m.nextFundingRate) || 0;
+      return {
+        venue: 'dydx',
+        symbol: m.ticker,
+        periodHours: periodHours,
+        periodRate: periodRate,
+        annualizedPct: periodRate * periodsPerYear * 100,
+        nextFundingTime: null,
+        markPrice: parseFloat(m.oraclePrice) || null,
+      };
+    });
+}
+
+async function fetchHyperliquidFunding() {
+  var res = await fetchWithTimeout('https://api.hyperliquid.xyz/info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
+  }, 8000);
+  if (!res.ok) throw new Error('hyperliquid ' + res.status);
+  var json = await res.json();
+  if (!Array.isArray(json) || json.length < 2) return [];
+  var universe = json[0] && json[0].universe;
+  var ctxs = json[1];
+  if (!Array.isArray(universe) || !Array.isArray(ctxs)) return [];
+  var periodHours = 1;
+  var periodsPerYear = (365 * 24) / periodHours;
+  return universe.map(function(u, i) {
+    var ctx = ctxs[i] || {};
+    var periodRate = parseFloat(ctx.funding) || 0;
+    return {
+      venue: 'hyperliquid',
+      symbol: ((u && u.name) || '') + '-PERP',
+      periodHours: periodHours,
+      periodRate: periodRate,
+      annualizedPct: periodRate * periodsPerYear * 100,
+      nextFundingTime: null,
+      markPrice: parseFloat(ctx.markPx) || null,
+    };
+  }).filter(function(r) { return r.symbol !== '-PERP'; });
+}
+
+async function handleFundingRates() {
+  var KEY = 'funding-rates';
+  var cached = getCached(KEY, 60000);
+  if (cached) return jsonResponse(cached, 200, 60);
+
+  var settled = await Promise.allSettled([
+    fetchBinanceFunding(),
+    fetchBybitFunding(),
+    fetchDydxFunding(),
+    fetchHyperliquidFunding(),
+  ]);
+  var venueNames = ['binance', 'bybit', 'dydx', 'hyperliquid'];
+
+  var flat = [];
+  var failed = [];
+  settled.forEach(function(r, i) {
+    if (r.status === 'fulfilled') flat = flat.concat(r.value);
+    else failed.push(venueNames[i]);
+  });
+
+  var top = flat
+    .filter(function(r) { return Number.isFinite(r.annualizedPct); })
+    .sort(function(a, b) { return Math.abs(b.annualizedPct) - Math.abs(a.annualizedPct); })
+    .slice(0, 20);
+
+  if (top.length === 0) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+  }
+
+  var result = {
+    source: 'terminalfeed.io',
+    endpoint: 'funding-rates',
+    updated_at: new Date().toISOString(),
+    data: { top: top, failed_venues: failed },
+  };
+  if (top.length > 0) setCache(KEY, result);
+  return jsonResponse(result, 200, 60);
 }
 
 // GET /api/gh-events
@@ -7467,6 +7964,10 @@ async function dispatchRoute(request, env, url, path) {
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
+      case 'space-weather':  return await handleSpaceWeather();
+      case 'wildfires':      return await handleWildfires(env);
+      case 'severe-weather': return await handleSevereWeather();
+      case 'funding-rates':  return await handleFundingRates();
       case 'solana-network': return await handleSolanaNetwork();
       case 'hn-topstories':  return await handleHnTopStories(url);
       case 'hn-show':        return await handleHnShow(url);
