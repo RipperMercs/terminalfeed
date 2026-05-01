@@ -134,6 +134,52 @@
       letter-spacing: 1px;
     }
 
+    /* Harness leaderboard callout */
+    .harness-callout {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: #0D0D0F;
+      border: 1px solid #5DCAA530;
+      border-left: 3px solid #5DCAA5;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 12px;
+      color: #D4D2CB;
+    }
+    .harness-callout .hc-text { line-height: 1.6; }
+    .harness-callout .hc-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      background: #5DCAA510;
+      border: 1px solid #5DCAA530;
+      padding: 1px 6px;
+      border-radius: 3px;
+      letter-spacing: 1px;
+      margin-right: 8px;
+    }
+    .harness-callout strong { color: #F0EDE6; font-weight: 500; }
+    .harness-callout .hc-link {
+      flex-shrink: 0;
+      font-size: 12px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 8px 14px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .harness-callout .hc-link:hover { background: #4ADE80; }
+    @media (max-width: 600px) {
+      .harness-callout { flex-direction: column; align-items: flex-start; }
+      .harness-callout .hc-link { align-self: stretch; text-align: center; }
+    }
+
     /* Filter bar */
     .filter-bar {
       background: #0D0D0F;
@@ -439,6 +485,14 @@
       </div>
     </header>
 
+    <aside class="harness-callout" aria-label="Harness leaderboards">
+      <div class="hc-text">
+        <span class="hc-tag">NEW</span>
+        <strong>Harness leaderboards.</strong> Same model, different harnesses, very different scores. Compare Claude Code, Cursor, Codex CLI, Aider, OpenHands, Devin, and SWE-Agent across SWE-bench Verified, Terminal-Bench, Aider Polyglot, and METR HCAST.
+      </div>
+      <a href="/harnesses" class="hc-link">View leaderboards &rarr;</a>
+    </aside>
+
     <div class="filter-bar">
       <div class="filter-row">
         <button class="filter-btn active" data-category="All" data-i18n="filter_all">All</button>
@@ -472,6 +526,7 @@
       <a href="/live" data-i18n="footer_live">Live</a>
       <a href="/tools/" data-i18n="footer_tools">Tools</a>
       <a href="/agent" data-i18n="footer_agents">Agents</a>
+      <a href="/harnesses">Harnesses</a>
       <a href="/radio" data-i18n="footer_radio">Radio</a>
       <a href="/wifi" data-i18n="footer_wifi">WiFi</a>
       <a href="/developers" data-i18n="footer_api">API</a>
