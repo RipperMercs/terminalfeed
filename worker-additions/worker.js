@@ -1680,12 +1680,20 @@ async function handleSpaceWeather() {
 async function fetchFirmsNorthAmerica(env) {
   var key = env && env.NASA_FIRMS_MAP_KEY;
   if (!key) throw new Error('firms-no-key');
+  // 2-day window: FIRMS has a 3h data lag and a 1-day window can roll empty
+  // around UTC midnight. 2 days gives a stable population.
   var url = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv/'
           + encodeURIComponent(key)
-          + '/VIIRS_SNPP_NRT/-170,15,-50,72/1';
+          + '/VIIRS_SNPP_NRT/-170,15,-50,72/2';
   var res = await fetchWithTimeout(url, {}, 12000);
   if (!res.ok) throw new Error('firms ' + res.status);
   var csv = await res.text();
+  // FIRMS returns plain-text errors (200 OK body like "Invalid MAP_KEY ...")
+  // when the key is wrong. Detect by checking for the expected CSV header.
+  var firstLine = (csv || '').split('\n')[0] || '';
+  if (firstLine.indexOf('latitude') === -1) {
+    throw new Error('firms-bad-response: ' + firstLine.slice(0, 80));
+  }
   return _parseFirmsCsv(csv);
 }
 
@@ -1791,7 +1799,13 @@ async function handleWildfires(env) {
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale, 200, 60);
-    return jsonResponse({ data: { total_24h: 0, top: [], error: 'upstream_unavailable' } });
+    var msg = (e && e.message) ? String(e.message) : 'upstream_unavailable';
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'wildfires',
+      updated_at: new Date().toISOString(),
+      data: { total_24h: 0, top: [], error: msg, attribution: 'NASA FIRMS VIIRS SNPP NRT' },
+    }, 200, 60);
   }
 }
 
