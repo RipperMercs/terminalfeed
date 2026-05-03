@@ -1,0 +1,14 @@
+{
+  "name": "terminalfeed-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Cloudflare Worker for terminalfeed.io. Premium endpoints validate against the TensorFeed federation rail.",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "afta-cloudflare-worker": "^0.1.0",
+    "afta-protocol": "^0.1.0"
+  }
+}

@@ -19,6 +19,11 @@
 // =============================================================================
 
 
+// Library-based AFTA premium handler. Used by the side-by-side POC endpoint
+// /api/pro/briefing-afta. The legacy handlePremium() above (~5147) keeps
+// driving the production /api/pro/* endpoints during the migration period.
+import { createPremiumHandler } from "afta-cloudflare-worker";
+
 const workerStartTime = Date.now();
 
 // =============================================================================
@@ -7562,6 +7567,46 @@ async function fetchProCryptoDeep(env, url) {
 
 // --- Premium handlers (caller-facing) ---
 
+// POC: same data shape as /api/pro/briefing, but driven by the
+// afta-cloudflare-worker library instead of the inline handlePremium().
+// Lets us validate the npm-published library against a live federation
+// member before flipping all 12 pro endpoints. Costs the same 1 credit
+// against the same federated ledger; receipt is signed with the same
+// terminalfeed-receipt-key.json. Only the canonical_form differs:
+// library emits "afta-canonical-json-v1" while legacy emits
+// "tensorfeed-canonical-json-v1".
+async function handleProBriefingAfta(request, env, url) {
+  if (!env.SHARED_INTERNAL_SECRET || !env.TENSORFEED_AUTH_URL) {
+    return jsonResponse({ error: 'billing_unavailable' }, 503);
+  }
+  var premium = createPremiumHandler({
+    validateUrl: env.TENSORFEED_AUTH_URL + '/api/internal/validate',
+    commitUrl: env.TENSORFEED_AUTH_URL + '/api/internal/commit',
+    sharedSecret: env.SHARED_INTERNAL_SECRET,
+    signingKeyJwk: env.RECEIPT_PRIVATE_KEY_JWK,
+    verifyDoc: AFTA_VERIFY_DOC,
+    freshnessRegistry: {
+      // Same 60s ceiling the legacy /api/pro/briefing serves at.
+      '/api/pro/briefing-afta': { maxAgeSeconds: 60 },
+    },
+    endpointPrefix: 'tf:',
+  });
+  return premium({
+    request: request,
+    endpoint: '/api/pro/briefing-afta',
+    cost: 1,
+    handler: async function () {
+      var KEY = 'pro:briefing-afta:' + (url.searchParams.get('include') || '*') + ':' + (url.searchParams.get('history') || '');
+      var result = await cacheLookupOrFetch(KEY, 60000, function() { return fetchProBriefing(env, url); });
+      // Surface captured_at so the library's staleness check has something
+      // to read. The legacy /api/pro/briefing carries this in _meta; copy
+      // it up for the library's reach.
+      var capturedAt = (result && result._meta && result._meta.captured_at) || new Date().toISOString();
+      return Object.assign({}, result, { captured_at: capturedAt });
+    },
+  });
+}
+
 async function handleProBriefing(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/briefing', 1, async function(env2, url2) {
     var KEY = 'pro:briefing:' + (url2.searchParams.get('include') || '*') + ':' + (url2.searchParams.get('history') || '');
@@ -8017,6 +8062,10 @@ async function dispatchRoute(request, env, url, path) {
 
       // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
+      // POC: same shape as /api/pro/briefing, but driven by the
+      // afta-cloudflare-worker npm package. Side-by-side until the legacy
+      // inline path is fully retired.
+      case 'pro/briefing-afta': return await handleProBriefingAfta(request, env, url);
       case 'pro/macro':       return await handleProMacro(request, env, url);
       case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
       case 'pro/sentiment':   return await handleProSentiment(request, env, url);
