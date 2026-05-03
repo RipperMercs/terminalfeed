@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "verify": "node scripts/verify-deploy.js",
+    "audit:feeds": "node scripts/audit-feeds.js",
     "prebuild": "node scripts/verify-deploy.js && node scripts/generate-blog-data.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

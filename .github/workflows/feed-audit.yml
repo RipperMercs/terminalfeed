@@ -1,0 +1,68 @@
+name: Feed Audit
+
+# Weekly check that every real-time /api/* route on terminalfeed.io is returning
+# fresh, non-empty data. Opens or comments on a GitHub issue if anything is
+# STALE or BROKEN. Run locally with `npm run audit:feeds`.
+
+on:
+  schedule:
+    # Mondays 09:00 UTC (02:00 PT)
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run feed audit
+        id: audit
+        run: |
+          set +e
+          node scripts/audit-feeds.js > audit-report.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          cat audit-report.txt
+
+      - name: Open or comment on issue if audit failed
+        if: steps.audit.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          report=$(cat audit-report.txt)
+          body=$(cat <<EOF
+          The weekly feed audit found stale or broken real-time feeds. Full report below.
+
+          \`\`\`
+          ${report}
+          \`\`\`
+
+          Reproduce locally:
+          \`\`\`
+          npm run audit:feeds
+          \`\`\`
+
+          Audit script: \`scripts/audit-feeds.js\`. Workflow: \`.github/workflows/feed-audit.yml\`.
+          EOF
+          )
+
+          existing=$(gh issue list --search "Feed audit in:title" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            echo "Commenting on existing issue #$existing"
+            gh issue comment "$existing" --body "$body"
+          else
+            echo "Opening new issue"
+            gh issue create --title "Feed audit: stale or broken feeds detected" --body "$body"
+          fi
+
+      - name: Fail the run if audit failed
+        if: steps.audit.outputs.exit_code != '0'
+        run: exit 1
