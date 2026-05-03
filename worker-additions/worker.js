@@ -2443,26 +2443,51 @@ async function handleCloudStatus() {
 }
 
 
+// CISA Known Exploited Vulnerabilities catalog. ~1.4MB JSON, so cache for 6h
+// in its own key and merge into the cyber-threats response.
+async function fetchCisaKev() {
+  var KEY = 'cisa-kev';
+  var cached = getCached(KEY, 21600000);
+  if (cached) return cached;
+  try {
+    var res = await fetchWithTimeout('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json', {}, 15000);
+    var d = await res.json();
+    var top = (d.vulnerabilities || [])
+      .sort(function(a, b) { return (b.dateAdded || '').localeCompare(a.dateAdded || ''); })
+      .slice(0, 50);
+    setCache(KEY, top);
+    return top;
+  } catch (e) {
+    return getStale(KEY) || [];
+  }
+}
+
 // GET /api/cyber-threats
-async function handleCyberThreats() {
+// abuse.ch added auth in 2026 — set ABUSE_CH_AUTH_KEY (free signup at auth.abuse.ch)
+// to re-enable URLhaus and ThreatFox. CISA KEV always works without auth.
+async function handleCyberThreats(env) {
   var KEY = 'cyber-threats';
   var cached = getCached(KEY, 300000);
   if (cached) return jsonResponse(cached, 200, 300);
 
   try {
+    var abuseHeaders = env && env.ABUSE_CH_AUTH_KEY ? { 'Auth-Key': env.ABUSE_CH_AUTH_KEY } : {};
     var results = await Promise.allSettled([
       fetchWithTimeout('https://urlhaus-api.abuse.ch/v1/urls/recent/limit/10/', {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, abuseHeaders),
       }),
       fetchWithTimeout('https://threatfox-api.abuse.ch/api/v1/', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, abuseHeaders),
         body: JSON.stringify({ query: 'get_iocs', days: 1 }),
       }),
+      fetchCisaKev(),
     ]);
 
     var threats = [];
 
-    if (results[0].status === 'fulfilled') {
+    if (results[0].status === 'fulfilled' && results[0].value.ok) {
       try {
         var d = await results[0].value.json();
         if (d.urls) {
@@ -2473,7 +2498,7 @@ async function handleCyberThreats() {
       } catch (e) {}
     }
 
-    if (results[1].status === 'fulfilled') {
+    if (results[1].status === 'fulfilled' && results[1].value.ok) {
       try {
         var d2 = await results[1].value.json();
         if (d2.data && Array.isArray(d2.data)) {
@@ -2482,6 +2507,18 @@ async function handleCyberThreats() {
           });
         }
       } catch (e) {}
+    }
+
+    if (results[2].status === 'fulfilled' && Array.isArray(results[2].value)) {
+      results[2].value.slice(0, 5).forEach(function(v) {
+        threats.push({
+          source: 'CISA KEV',
+          type: 'cve',
+          indicator: v.cveID || '',
+          threat: (v.vendorProject ? v.vendorProject + ' ' + (v.product || '') + ': ' : '') + (v.vulnerabilityName || ''),
+          date: v.dateAdded || '',
+        });
+      });
     }
 
     var data = { data: threats };
@@ -2530,6 +2567,25 @@ async function handleForex() {
 }
 
 
+// open-notify.org froze on a May-2024 crew snapshot, so we read active astronauts
+// from The Space Devs Launch Library and infer station from nationality.
+async function fetchAstrosFromSpaceDevs() {
+  // 8s default can be tight for thespacedevs from CF egress; give it more room.
+  var res = await fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/astronaut/?in_space=true&limit=30', {}, 15000);
+  if (!res.ok) throw new Error('thespacedevs HTTP ' + res.status);
+  var d = await res.json();
+  var results = (d && d.results) || [];
+  function craftFor(nationality) {
+    if (!nationality) return 'Spacecraft';
+    if (/Chinese/i.test(nationality)) return 'Tiangong';
+    return 'ISS';
+  }
+  return {
+    number: results.length,
+    people: results.map(function(p) { return { name: p.name, craft: craftFor(p.nationality) }; }),
+  };
+}
+
 // GET /api/humans-in-space
 async function handleHumansInSpace() {
   var KEY = 'humans-in-space';
@@ -2537,30 +2593,14 @@ async function handleHumansInSpace() {
   if (cached) return jsonResponse(cached, 200, 3600);
 
   try {
-    var res = await fetchWithTimeout('http://api.open-notify.org/astros.json');
-    var d = await res.json();
-    var data = {
-      data: {
-        count: d.number || 0,
-        people: (d.people || []).map(function(p) { return { name: p.name, craft: p.craft }; }),
-      },
-    };
+    var d = await fetchAstrosFromSpaceDevs();
+    var data = { data: { count: d.number, people: d.people } };
     setCache(KEY, data);
     return jsonResponse(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
-    return jsonResponse({
-      data: {
-        count: 7,
-        people: [
-          { name: 'Oleg Kononenko', craft: 'ISS' }, { name: 'Nikolai Chub', craft: 'ISS' },
-          { name: 'Tracy Dyson', craft: 'ISS' }, { name: 'Matthew Dominick', craft: 'ISS' },
-          { name: 'Michael Barratt', craft: 'ISS' }, { name: 'Jeanette Epps', craft: 'ISS' },
-          { name: 'Alexander Grebenkin', craft: 'ISS' },
-        ],
-      },
-    });
+    return jsonResponse({ data: { count: 0, people: [] } });
   }
 }
 
@@ -2760,7 +2800,7 @@ async function handleBriefing() {
     fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),
     fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'),
     fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'),
-    fetchWithTimeout('http://api.open-notify.org/astros.json'),
+    fetchAstrosFromSpaceDevs(),
   ]);
 
   var sections = {};
@@ -2778,7 +2818,7 @@ async function handleBriefing() {
     try { var d4 = await results[3].value.json(); sections.hackernews = { top_story_count: d4.length }; } catch (e) {}
   }
   if (results[4].status === 'fulfilled') {
-    try { var d5 = await results[4].value.json(); sections.humans_in_space = { count: d5.number || 0 }; } catch (e) {}
+    try { sections.humans_in_space = { count: results[4].value.number || 0 }; } catch (e) {}
   }
 
   var data = {
@@ -5220,7 +5260,7 @@ async function fetchProBriefing(env, url) {
   add(want('fear-greed'), 'fear_greed', 'AlternativeMe.fng', fetchWithTimeout('https://api.alternative.me/fng/?limit=1'));
   add(want('earthquakes'), 'earthquakes', 'USGS.earthquakes_2_5_day', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'));
   add(want('hackernews'), 'hackernews', 'HackerNews.topstories', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'));
-  add(want('humans-in-space'), 'humans_in_space', 'OpenNotify.astros', fetchWithTimeout('http://api.open-notify.org/astros.json'));
+  add(want('humans-in-space'), 'humans_in_space', 'TheSpaceDevs.astronauts', fetchAstrosFromSpaceDevs());
   add(want('predictions'), 'predictions', 'Polymarket.gamma', fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false'));
 
   var settled = await Promise.allSettled(fetches.map(function(f) { return f[1]; }));
@@ -5231,6 +5271,15 @@ async function fetchProBriefing(env, url) {
     var r = settled[i];
     if (r.status !== 'fulfilled') continue;
     try {
+      // humans_in_space helper resolves to a parsed object; everyone else returns a Response.
+      if (key === 'humans_in_space') {
+        var hp = r.value || {};
+        sections.humans_in_space = {
+          count: hp.number || 0,
+          names: (hp.people || []).map(function(p) { return sanitizeForLLM(p.name); }),
+        };
+        continue;
+      }
       var d = await r.value.json();
       if (key === 'btc') {
         sections.btc = {
@@ -5257,12 +5306,6 @@ async function fetchProBriefing(env, url) {
         };
       } else if (key === 'hackernews') {
         sections.hackernews = { top_story_count: Array.isArray(d) ? d.length : 0 };
-      } else if (key === 'humans_in_space') {
-        sections.humans_in_space = {
-          count: (d && d.number) || 0,
-          // Astronaut names are short and from a fixed roster; sanitize defensively.
-          names: ((d && d.people) || []).map(function(p) { return sanitizeForLLM(p.name); }),
-        };
       } else if (key === 'predictions') {
         var arr = Array.isArray(d) ? d : [];
         sections.predictions = {
@@ -8034,7 +8077,7 @@ async function dispatchRoute(request, env, url, path) {
       case 'service-status': return await handleServiceStatus();
       case 'cloud-status':   return await handleCloudStatus();
       case 'claude-status':  return await handleClaudeStatus();
-      case 'cyber-threats':  return await handleCyberThreats();
+      case 'cyber-threats':  return await handleCyberThreats(env);
       case 'forex':          return await handleForex();
       case 'humans-in-space':return await handleHumansInSpace();
       case 'disaster-alerts':return await handleDisasterAlerts();
