@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is a UTXO? - TerminalFeed Glossary</title>
+  <meta name="description" content="UTXO stands for Unspent Transaction Output. It is the data structure Bitcoin uses to track ownership. Learn how UTXOs work and why they differ from account balances.">
+  <meta property="og:title" content="What is a UTXO? - TerminalFeed Glossary">
+  <meta property="og:description" content="Unspent Transaction Output: the data model Bitcoin uses to track ownership instead of account balances.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/utxo">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/utxo">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "UTXO",
+    "description": "Unspent Transaction Output: the data structure Bitcoin uses to track ownership and validate spending.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/utxo"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "UTXO", "item": "https://terminalfeed.io/glossary/utxo" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #111114; color: #5DCAA5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>UTXO</span>
+    </nav>
+
+    <h1>UTXO</h1>
+    <div class="category-label">CRYPTOCURRENCY</div>
+
+    <h2>Quick Definition</h2>
+    <p>UTXO stands for Unspent Transaction Output. It is the data structure <a href="/glossary/bitcoin">Bitcoin</a> uses to track ownership. Instead of maintaining account balances, Bitcoin tracks discrete chunks of value that have been received in transactions but not yet spent.</p>
+
+    <h2>How it works</h2>
+    <p>Every Bitcoin transaction consumes one or more UTXOs as inputs and produces one or more new UTXOs as outputs. When the network sees a valid signature spending an existing UTXO, that UTXO is marked spent and the new UTXO it created becomes available for the recipient to spend later.</p>
+    <p>Your wallet's "balance" is not stored anywhere on the <a href="/glossary/blockchain">blockchain</a>. Your wallet software calculates it by scanning every UTXO that can be spent with a key you control and adding them up. A wallet with three UTXOs of 0.5, 0.3, and 0.2 BTC has a balance of 1.0 BTC, but those three chunks are tracked separately.</p>
+
+    <h2>Why it differs from account balances</h2>
+    <p>Ethereum and most other blockchains use the account model: each address has a single balance number that gets debited and credited. Bitcoin's UTXO model is more like physical cash. If you owe someone $7 and you have only a $10 bill, you hand over the $10 and receive $3 in change. Bitcoin transactions work the same way: to spend 0.5 BTC when your only UTXO is 0.7 BTC, the transaction consumes the full 0.7 UTXO and produces two new UTXOs (0.5 to the recipient, 0.2 back to you minus fees).</p>
+    <p>This design is harder to reason about but enables better privacy (you can split UTXOs across many addresses), parallel transaction validation (UTXOs are independent), and cleaner pruning (spent UTXOs can be discarded from working memory).</p>
+
+    <h2>Why it matters</h2>
+    <p>For users: understanding UTXOs explains why Bitcoin transactions sometimes have unexpected change outputs and why fees scale with the number of inputs. For developers: building on Bitcoin requires UTXO-aware coin selection algorithms, since picking which UTXOs to spend affects fees and privacy. For analysts: UTXO age distribution (the "HODL waves" chart) is a powerful on-chain metric for measuring long-term holder behavior.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The BTC Network panel on the <a href="/">TerminalFeed dashboard</a> shows mempool size in transactions, which directly maps to pending UTXO movements. <a href="/blog/bitcoin-mempool">Our mempool guide</a> walks through how transactions and UTXOs flow into blocks. The Whale Watch surfaces large UTXO movements as they happen.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/bitcoin">Bitcoin</a></li>
+        <li><a href="/glossary/blockchain">Blockchain</a></li>
+        <li><a href="/glossary/mempool">Mempool</a></li>
+        <li><a href="/glossary/satoshi">Satoshi</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>
