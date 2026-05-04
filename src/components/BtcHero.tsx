@@ -113,6 +113,13 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
           <span className="panelTitle">Bitcoin</span>
           <span className="panelTag">BTC/USD</span>
           {data?.source && <span className="panelTagDim">{data.source}</span>}
+          <a
+            href="/bitcoin-ticker"
+            style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 8, textDecoration: 'none', letterSpacing: '0.5px' }}
+            title="Bitcoin Ticker landing page"
+          >
+            BITCOIN TICKER &rarr;
+          </a>
         </div>
         <div className="panelLive" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <LatencyChip lastUpdateMs={data?.lastUpdate ?? null} label="TICK" />
