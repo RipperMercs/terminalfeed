@@ -156,6 +156,48 @@
     footer.footer a { color: #4E4D49; text-decoration: none; }
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
+    .profile-bio p { margin-bottom: 12px; }
+    .profile-bio p:last-child { margin-bottom: 0; }
+    .section-block {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #1E1E24;
+    }
+    .section-block h2 {
+      font-size: 12px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+    }
+    .section-block p {
+      font-size: 13px;
+      color: #D4D2CB;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .section-block p:last-child { margin-bottom: 0; }
+    .picks-list { list-style: none; padding: 0; margin: 0; }
+    .picks-list li {
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+      padding: 10px 0;
+      border-bottom: 1px solid #1A1A1E;
+    }
+    .picks-list li:last-child { border-bottom: none; }
+    .picks-list strong { color: #F0EDE6; font-weight: 600; }
+    .contact-line { font-size: 13px; color: #8A8880; }
+    .contact-line a { color: #5DCAA5; text-decoration: none; font-weight: 600; }
+    .contact-line a:hover { text-decoration: underline; }
+    .pen-disclosure {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #1A1A1E;
+      font-size: 11px;
+      color: #4E4D49;
+      font-style: italic;
+      text-align: center;
+    }
     @media (max-width: 600px) {
       .profile-header { flex-direction: column; align-items: center; text-align: center; }
       .topics { justify-content: center; }
@@ -175,7 +217,7 @@
       <div class="profile-info">
         <h1>Pulse</h1>
         <div class="profile-title">MARKET ANALYST</div>
-        <div class="profile-bio">Watches the numbers so you don't have to. Covers cryptocurrency markets, traditional equities, prediction market odds, economic indicators, and the Fear and Greed Index. Translates complex financial data into insights that actually make sense. Not financial advice.</div>
+        <div class="profile-bio"><p>Worked in markets long enough to decide the most useful thing a market analyst can do is shut up about price targets. Now writes about what the data actually says, which is usually more boring and more interesting than what the cycle wants you to believe.</p><p>The beat is anything quantifiable: crypto markets, equities, prediction markets, on-chain flows, funding rates, and whatever new sentiment metric people are pretending is a leading indicator this week. Especially interested in where the consumer narrative diverges from what the numbers show. The Fear and Greed Index says "extreme fear" while BTC trades sideways at all-time highs. Polymarket says one thing, mainstream polling says another. Often only one of them is right. Sometimes neither.</p><p>Not a financial advisor, not in your DMs about which token to buy, will not call the top. Will, however, walk you through why funding rate on a perp matters more than spot price most weeks, and why the Fear and Greed Index is a contrarian indicator if you read its history.</p></div>
         <div class="topics">
           <span class="topic">Crypto</span>
           <span class="topic">Stocks</span>
@@ -184,6 +226,26 @@
         </div>
       </div>
     </div>
+
+    <section class="section-block">
+      <h2>&gt;_ THE BEAT</h2>
+      <p>Markets through a data lens. Crypto, equities, macro indicators, prediction markets, funding rates, sentiment metrics. The point is not to predict tomorrow, the point is to read today honestly. Most market commentary is selling something. This isn't.</p>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CURRENTLY READING</h2>
+      <ul class="picks-list">
+        <li><strong>Coin Metrics State of the Network.</strong> Best free on-chain newsletter, no shilling, no token affiliations, weekly. If you only read one crypto research source, it should be this one.</li>
+        <li><strong>FRED data releases.</strong> If you don't know what CPI did this month, you don't know what's happening to your money. The St. Louis Fed gives you the raw number 30 minutes after BLS publishes.</li>
+        <li><strong>Polymarket high-volume markets.</strong> Liquid prediction markets remain a better signal on contested questions than most pundits. Always check volume before trusting an odds shift.</li>
+      </ul>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CONTACT</h2>
+      <p class="contact-line">Data corrections, methodology disputes, story tips: <a href="mailto:pulse@terminalfeed.io">pulse@terminalfeed.io</a></p>
+      <p class="contact-line" style="margin-top: 8px;">Will not respond to "what's your price target on $TICKER" emails. Sorry.</p>
+    </section>
 
     <div class="articles-section">
       <h2>&gt;_ ARTICLES BY Pulse</h2>
@@ -214,6 +276,10 @@
           <div class="article-meta">March 31, 2026 &middot; 5 min read</div>
         </div>
       </a>
+    </div>
+
+    <div class="pen-disclosure">
+      Pen name. Real work, real perspective. Not financial advice, ever.
     </div>
   </div>
 

@@ -156,6 +156,48 @@
     footer.footer a { color: #4E4D49; text-decoration: none; }
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
+    .profile-bio p { margin-bottom: 12px; }
+    .profile-bio p:last-child { margin-bottom: 0; }
+    .section-block {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #1E1E24;
+    }
+    .section-block h2 {
+      font-size: 12px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+    }
+    .section-block p {
+      font-size: 13px;
+      color: #D4D2CB;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .section-block p:last-child { margin-bottom: 0; }
+    .picks-list { list-style: none; padding: 0; margin: 0; }
+    .picks-list li {
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+      padding: 10px 0;
+      border-bottom: 1px solid #1A1A1E;
+    }
+    .picks-list li:last-child { border-bottom: none; }
+    .picks-list strong { color: #F0EDE6; font-weight: 600; }
+    .contact-line { font-size: 13px; color: #8A8880; }
+    .contact-line a { color: #5DCAA5; text-decoration: none; font-weight: 600; }
+    .contact-line a:hover { text-decoration: underline; }
+    .pen-disclosure {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #1A1A1E;
+      font-size: 11px;
+      color: #4E4D49;
+      font-style: italic;
+      text-align: center;
+    }
     @media (max-width: 600px) {
       .profile-header { flex-direction: column; align-items: center; text-align: center; }
       .topics { justify-content: center; }
@@ -175,7 +217,7 @@
       <div class="profile-info">
         <h1>zer0day</h1>
         <div class="profile-title">SECURITY CORRESPONDENT</div>
-        <div class="profile-bio">Covers the intersection of cybersecurity and the open internet. Tracks emerging threats, vulnerability disclosures, and the hacker culture that inspired TerminalFeed's terminal aesthetic. Believes information wants to be free but your credentials should stay private.</div>
+        <div class="profile-bio"><p>Spent the better part of a decade in defensive security before getting tired of writing reports nobody read. Started as a bored teenager prodding at home routers, ended up with a day job that involved a lot of NDAs and a lot of pagers. Burned out, came up for air, now writes about the internet's security posture in plain English for people who care about more than the next CVE number.</p><p>The beat is everything that happens when you mix code, networks, and humans who think they're being careful. Vulnerability disclosures, the slow grind of the open web turning into a closed mall, why every browser extension wants to read every page you visit. Has opinions on TOTP versus passkeys (passkeys, with caveats), on the state of email security in 2026 (still terrible), on whether a YubiKey is overkill for normal people (it isn't).</p><p>Information wants to be free. Your credentials should stay private. Both can be true.</p></div>
         <div class="topics">
           <span class="topic">Cybersecurity</span>
           <span class="topic">Privacy</span>
@@ -184,6 +226,26 @@
         </div>
       </div>
     </div>
+
+    <section class="section-block">
+      <h2>&gt;_ THE BEAT</h2>
+      <p>Threat intel, breach analysis, privacy regressions, the surveillance economy, and the slow disappearance of the open internet. Less interested in zero-day blockbusters, more interested in the quiet trends that explain why we keep losing the same fights. Writes for the practitioner who already knows what a CVE is and wants the context underneath the headline.</p>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CURRENTLY READING</h2>
+      <ul class="picks-list">
+        <li><strong>Krebs on Security.</strong> The slow-burn investigations cable news won't touch. Still the best in the business at following the money.</li>
+        <li><strong>CISA Known Exploited Vulnerabilities catalog.</strong> Not the CVE feed, the KEV. What attackers are actually exploiting in the wild right now, not what scored 9.8 on a CVSS calculator.</li>
+        <li><strong>The Phrack archives.</strong> Still the canon. If you have not read Phrack 49 you cannot complain about the state of infosec writing.</li>
+      </ul>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CONTACT</h2>
+      <p class="contact-line">Tips, corrections, breach disclosures, hate mail: <a href="mailto:zeroday@terminalfeed.io">zeroday@terminalfeed.io</a></p>
+      <p class="contact-line" style="margin-top: 8px;">PGP welcome on request. Signal protocol preferred for sensitive sources.</p>
+    </section>
 
     <div class="articles-section">
       <h2>&gt;_ ARTICLES BY zer0day</h2>
@@ -214,6 +276,10 @@
           <div class="article-meta">April 2, 2026 &middot; 7 min read</div>
         </div>
       </a>
+    </div>
+
+    <div class="pen-disclosure">
+      Pen name. Real work, real perspective. No LinkedIn, by design.
     </div>
   </div>
 

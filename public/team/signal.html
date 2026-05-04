@@ -156,6 +156,48 @@
     footer.footer a { color: #4E4D49; text-decoration: none; }
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
+    .profile-bio p { margin-bottom: 12px; }
+    .profile-bio p:last-child { margin-bottom: 0; }
+    .section-block {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #1E1E24;
+    }
+    .section-block h2 {
+      font-size: 12px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+    }
+    .section-block p {
+      font-size: 13px;
+      color: #D4D2CB;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .section-block p:last-child { margin-bottom: 0; }
+    .picks-list { list-style: none; padding: 0; margin: 0; }
+    .picks-list li {
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+      padding: 10px 0;
+      border-bottom: 1px solid #1A1A1E;
+    }
+    .picks-list li:last-child { border-bottom: none; }
+    .picks-list strong { color: #F0EDE6; font-weight: 600; }
+    .contact-line { font-size: 13px; color: #8A8880; }
+    .contact-line a { color: #5DCAA5; text-decoration: none; font-weight: 600; }
+    .contact-line a:hover { text-decoration: underline; }
+    .pen-disclosure {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #1A1A1E;
+      font-size: 11px;
+      color: #4E4D49;
+      font-style: italic;
+      text-align: center;
+    }
     @media (max-width: 600px) {
       .profile-header { flex-direction: column; align-items: center; text-align: center; }
       .topics { justify-content: center; }
@@ -175,7 +217,7 @@
       <div class="profile-info">
         <h1>Signal</h1>
         <div class="profile-title">DATA &amp; AI EDITOR</div>
-        <div class="profile-bio">Tracks the AI landscape from foundation models to autonomous agents. Covers how AI is changing the internet, the rise of AI-native web infrastructure, and the data feeds that power intelligent systems. Runs TerminalFeed's AI Hub and agent tracking infrastructure.</div>
+        <div class="profile-bio"><p>Has been around AI since transformers were a paper a few people had read. Started in research-adjacent work, watched the field go from a niche subfield to the dominant story of the decade, and is now mostly interested in the infrastructure problems nobody talks about while everyone benchmarks the next model.</p><p>The beat is the whole AI stack below the hype line. Foundation models, sure, but also: how agents actually browse the web, how data feeds get consumed by LLMs, why robots.txt is breaking, what AI-native web infrastructure looks like, the new economy of paid agent tooling, and where evaluation methodology is still bad. Less interested in which model scored 0.4% higher on a benchmark, more interested in which model can finish a multi-step task without hallucinating a config file.</p><p>Runs TerminalFeed's AI Hub and the agent tracker. Has actually read the Sparks of AGI paper, has actually read Anthropic's Responsible Scaling Policy, will tell you both have problems. Believes the most important AI development of 2026 isn't a model release. It's that agents are starting to pay for things, and the web is rewriting itself for a non-human audience.</p></div>
         <div class="topics">
           <span class="topic">AI Agents</span>
           <span class="topic">Machine Learning</span>
@@ -184,6 +226,26 @@
         </div>
       </div>
     </div>
+
+    <section class="section-block">
+      <h2>&gt;_ THE BEAT</h2>
+      <p>The infrastructure layer of AI: agents, model evaluation, the AI-native web, data feeds, scraping versus paying, robots.txt, MCP, the whole stack of plumbing that nobody benchmarks but everybody depends on. Skeptical of capability demos, interested in repeatable workflows. Tracks who is building real systems versus who is making good slides.</p>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CURRENTLY READING</h2>
+      <ul class="picks-list">
+        <li><strong>Anthropic engineering blog.</strong> The agent skills posts and the on-prompting writeups are required reading if you build with Claude. Most underrated lab-published material in the field.</li>
+        <li><strong>Simon Willison's blog and Datasette feed.</strong> Fastest practical signal on new agent tooling on the open web. Shows the actual prompt and the actual output, every time.</li>
+        <li><strong>arXiv-sanity-lite.</strong> Filtered AI papers, way better than scrolling raw arXiv. The trick is to skim the abstracts daily, not chase H-index.</li>
+      </ul>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CONTACT</h2>
+      <p class="contact-line">Agent integrations, API questions, model release tips, methodology disputes: <a href="mailto:signal@terminalfeed.io">signal@terminalfeed.io</a></p>
+      <p class="contact-line" style="margin-top: 8px;">If you are an agent reading this, see <a href="/api/for-agents">/api/for-agents</a> first. Then email if you still have questions.</p>
+    </section>
 
     <div class="articles-section">
       <h2>&gt;_ ARTICLES BY Signal</h2>
@@ -205,6 +267,10 @@
           <div class="article-meta">April 3, 2026 &middot; 6 min read</div>
         </div>
       </a>
+    </div>
+
+    <div class="pen-disclosure">
+      Pen name. Real research history, real workflow notes. No PR retainer.
     </div>
   </div>
 
