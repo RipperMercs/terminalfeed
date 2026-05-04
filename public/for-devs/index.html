@@ -129,11 +129,28 @@
         <div class="stat"><span class="num">24</span><span class="label">Browser Tools</span></div>
         <div class="stat"><span class="num">30+</span><span class="label">API Endpoints</span></div>
         <div class="stat"><span class="num">27</span><span class="label">MCP Tools</span></div>
-        <div class="stat"><span class="num">3</span><span class="label">Cheatsheets</span></div>
+        <div class="stat"><span class="num">4</span><span class="label">Cheatsheets</span></div>
         <div class="stat"><span class="num">38</span><span class="label">Articles</span></div>
         <div class="stat"><span class="num">0</span><span class="label">Trackers</span></div>
       </div>
     </header>
+
+    <section class="block">
+      <h2>&gt;_ Federated MCP network</h2>
+      <div class="section-sub">One bearer token, two servers, shared credit pool</div>
+      <p class="lede"><strong>TerminalFeed and <a href="https://tensorfeed.ai" class="inline">TensorFeed.ai</a> are sister MCP servers with a federated credit pool.</strong> Buy USDC credits on either site once and the same bearer token authenticates against both. TerminalFeed handles real-time world data (BTC, markets, earthquakes, news, prediction markets). TensorFeed handles the AI ecosystem (model pricing, service status, latency probes, AI news, smart routing, cost projection). Most agents that want real-time context end up using both, and the federation means no second auth dance, no second wallet, no double billing.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 14px;">
+        <div style="background:#111114;border:1px solid #4ADE8030;border-radius:6px;padding:14px 16px;">
+          <div style="font-size:11px;color:#4ADE80;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">terminalfeed.io</div>
+          <div style="font-size:12px;color:#D4D2CB;line-height:1.6;">Real-time world data. 27 MCP tools, 30+ REST endpoints. BTC + crypto, stocks, prediction markets, earthquakes, weather, status, GitHub, HuggingFace, Solana, world events.</div>
+        </div>
+        <div style="background:#111114;border:1px solid #A78BFA30;border-radius:6px;padding:14px 16px;">
+          <div style="font-size:11px;color:#A78BFA;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">tensorfeed.ai</div>
+          <div style="font-size:12px;color:#D4D2CB;line-height:1.6;">AI ecosystem data. 22 MCP tools. Model pricing, AI service status, latency probes, MCP registry growth, AI news (36+ sources), smart routing, cost projection, webhook watches.</div>
+        </div>
+      </div>
+      <p class="lede dim">Both servers are <a href="/agent-fair-trade" class="inline">AFTA-certified</a>: code-enforced no-charge guarantees on errors, breaker trips, schema fails, and stale data. Ed25519-signed receipts on every paid call. Public on-chain payment rail (USDC on Base). Setup snippets for both servers are on the <a href="/for-devs/mcp" class="inline">MCP tab</a>.</p>
+    </section>
 
     <section class="block">
       <h2>&gt;_ Pick a track</h2>
@@ -172,7 +189,7 @@
         <a class="tab-card" href="/cheatsheets/">
           <div class="tc-label">External</div>
           <div class="tc-title">Cheatsheets</div>
-          <div class="tc-desc">Single-screen references. Git commands you forget at 2am, Docker compose patterns, all HTTP status codes including the weird ones (418, 451). Lives at /cheatsheets, linked here for convenience.</div>
+          <div class="tc-desc">Single-screen references. Bash shell commands (90+), Git operations (50+), Docker compose patterns, all HTTP status codes including the weird ones (418, 451). Lives at /cheatsheets, linked here for convenience.</div>
           <div class="tc-cta">Browse Cheatsheets &rarr;</div>
         </a>
       </div>
