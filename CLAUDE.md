@@ -1,6 +1,6 @@
 # CLAUDE.md, TerminalFeed.io
 
-Last updated: April 29, 2026
+Last updated: May 4, 2026
 
 ## Project Overview
 
@@ -207,33 +207,51 @@ Saturday:  Community Saturday, guest post or tutorial
 Sunday:    Buffer day
 ```
 
-### Tool Pages (live)
+### Tool Pages (24 live)
+All client-side, no server round-trip. Categorized on `/for-devs/tools`.
 ```
-/tools             — Tool landing page / index
-/tools/json        — JSON Formatter & Validator
-/tools/base64      — Base64 Encode/Decode
-/tools/uuid        — UUID Generator
-/tools/timestamp   — Unix Timestamp Converter
-/tools/jwt         — JWT Decoder
-/tools/regex       — Regex Tester
+Encoders:    /tools/json, /tools/base64, /tools/hex, /tools/url,
+             /tools/html-entity, /tools/jwt
+Data:        /tools/yaml, /tools/markdown
+Generators:  /tools/uuid, /tools/password, /tools/hash, /tools/lorem,
+             /tools/qr
+Time/Pattern: /tools/timestamp, /tools/cron, /tools/regex, /tools/diff
+Network:     /tools/api, /tools/http, /tools/port
+System:      /tools/chmod, /tools/color
+Crypto:      /tools/gwei, /tools/satoshi
 ```
 
-### Planned Tools (priority order)
+### Planned Tools (still missing)
 ```
-/tools/diff        — Text/Code Diff Viewer
-/tools/cron        — Cron Expression Builder/Decoder
-/tools/hash        — Hash Generator (MD5/SHA-1/SHA-256/SHA-512)
-/tools/color       — Color Converter & Palette Tool
-/tools/api         — API Request Tester (mini Postman)
-/tools/markdown    — Markdown Preview/Editor
-/tools/yaml        — YAML/JSON Converter
-/tools/chmod       — Permission Calculator
-/tools/port        — Common Port Reference
-/tools/password    — Password Generator
 /tools/dns         — DNS Lookup (needs Worker)
 /tools/ssl         — SSL Certificate Checker (needs Worker)
-/tools/ssh-key     — SSH Key Generator
-/tools/qr          — QR Code Generator
+/tools/ssh-key     — SSH Key Generator (client-side via WebCrypto)
+```
+
+### Developer Hub (live as of May 4, 2026)
+
+`/for-devs` is a 6-page tabbed hub with sticky shared nav. Built in
+response to EthicalAds feedback ("we'd reconsider on a dev-specific
+part of the site"). Pages:
+```
+/for-devs           Overview, hero, stats, tab cards, federation pitch
+/for-devs/tools     All 24 tools categorized
+/for-devs/api       30+ free endpoints, 6 categories, quick-start curl
+/for-devs/mcp       Free + premium config, TensorFeed sister section
+/for-devs/recipes   12 paste-and-go snippets (JS, Python, MCP, payments)
+/for-devs/articles  18+ dev-tagged articles in topic groups
+```
+Each page has a sticky top nav with active-tab indicator. Translucent
+header with backdrop blur. Mobile-responsive (tabs become scrollable).
+
+### Cheatsheets (6 live, up from 3)
+```
+/cheatsheets/bash    90+ shell commands
+/cheatsheets/regex   60+ patterns (incl. 15 ready-to-paste)
+/cheatsheets/jq      70+ filters and recipes
+/cheatsheets/git     50+ git commands
+/cheatsheets/docker  40+ docker commands
+/cheatsheets/http    All HTTP status codes
 ```
 
 ### Planned Sections (specced, not yet built)
@@ -311,6 +329,8 @@ Font:          JetBrains Mono, SF Mono, Fira Code, Consolas, monospace
 - Air Quality (Open-Meteo, US AQI + pollutant breakdown, defaults to LA)
 - Internet Exposure / Shodan (curated public IPs, ports, CVEs, no key)
 - Volcanoes (Smithsonian GVP weekly bulletin)
+- Sponsor Slot ($200/mo direct sponsor pitch, mailto:advertise@)
+- Premium API (USDC pitch panel with pricing table, links to /developers/agent-payments)
 - **TerminalFeed Originals (rotates through latest blog articles every 15s)**
 - Bluesky Feed
 - AI Leaderboard (model rankings)
@@ -545,20 +565,24 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 
 ---
 
-## Current Status (April 15, 2026)
+## Current Status (May 4, 2026)
 
-- Dashboard: Live with 30+ panels including ETH Gas Tracker, TF Originals
-- API Worker: Live with 23+ data endpoints (/api/gas, /api/error added Apr 15; /api/meme-radar deprecated Apr 20 — remove next cleanup; /api/btc-alert added May 3 with KV-backed volatility detection)
-- X Bot: Removed May 3, 2026. Handle @terminalfeed held but no auto-posting (account got flagged previously). Manual posting only when worth it.
-- Blog: 26+ substantial original articles across 5 author personas
-- Tools: 24 live (added satoshi, gwei, hex converters)
+- Dashboard: 30+ panels (added air-quality, shodan, volcanoes, sponsor-slot, premium-api on May 4). Layout version 46.
+- API Worker: 30+ free data endpoints + 12 premium /api/pro/* endpoints (USDC on Base). New free endpoints May 4: /api/air-quality, /api/shodan, /api/volcanoes.
+- Developer Hub: `/for-devs` shipped May 4 as 6-page tabbed hub. Built in response to EthicalAds reviewer feedback.
+- Blog: 39 substantial original articles across 5 author personas (added "How AI Agents Pay for Real-Time Data on TerminalFeed" May 4)
+- Tools: 24 live (full list above)
 - Glossary: 45+ terms across crypto, dev, AI, security categories
-- Cheatsheets: Git, Docker, HTTP status codes
+- Cheatsheets: 6 live (bash, regex, jq, git, docker, http) — bash/regex/jq added May 4
+- Persona pages: substantially beefed up May 4 (longer bios, Beat sections, Currently Reading sections, pen-name disclosures)
 - i18n: Live in Spanish, Portuguese, German
-- SEO: Schema.org + breadcrumbs + RSS feed + static SEO block all deployed
+- SEO: Schema.org + breadcrumbs + RSS feed + static SEO block all deployed. Privacy badges on homepage.
 - Accessibility: ARIA labels, skip-to-content link, role="region" on all panels
 - Error monitoring: Client errors POST to /api/error, visible in Cloudflare Workers logs
-- AdSense: Rejected twice, fixes deployed, awaiting re-review
+- AdSense: Rejected 3x with "Low value content" — paused 6+ months. Structural mismatch with multi-persona authorship.
+- EthicalAds: Rejected May 4. David Fischer offered "willing to reconsider on a dev-specific part of the site." `/for-devs` built as that surface. Follow-up scheduled 2026-07-04 (see `david-followup-2026-07-04.md`).
+- Sponsorship: Direct sponsor slot panel live on dashboard, advertise@terminalfeed.io as inbound channel.
+- X Bot: Removed May 3, 2026. Handle @terminalfeed held but no auto-posting.
 - Traffic: ~350 real visits/day with zero promotion. 12K+ API requests/day.
 - Google Search Console: Verified, sitemap submitted, 140+ pages indexed
 
