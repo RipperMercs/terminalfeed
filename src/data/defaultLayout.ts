@@ -19,6 +19,8 @@ export const DEFAULT_LAYOUT = {
     'volcanoes',
     'air-quality',
     'shodan',
+    'sponsor-slot',
+    'premium-api',
     'space-weather',
     'bitcoin',
     'live-now',

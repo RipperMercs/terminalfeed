@@ -1498,6 +1498,44 @@ function App() {
         )}
       </>);
     })(),
+    'sponsor-slot': (<>
+      <PanelHead panelId="sponsor-slot" isStale={false} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Sponsor</span><span className="panelTag" style={{ color: 'var(--amber)', background: 'rgba(239,159,39,0.1)' }}>AVAILABLE</span></div>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', letterSpacing: 0.5, lineHeight: 1.3 }}>Your panel here</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--amber)', fontVariantNumeric: 'tabular-nums' }}>$200</span>
+          <span style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>/ month</span>
+        </div>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 8, fontSize: 11, color: 'var(--text-dim)', lineHeight: 1.6 }}>
+          30+ live panels. Dev, trader, and AI-agent audience on a dark, terminal-aesthetic dashboard. Native panel placement, no popups, no tracking.
+        </div>
+        <a href="mailto:advertise@terminalfeed.io" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, marginTop: 4 }}>advertise@terminalfeed.io &rarr;</a>
+      </div>
+    </>),
+    'premium-api': (<>
+      <PanelHead panelId="premium-api" isStale={false} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Premium API</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>USDC</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>/api/pro</span>
+      </PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4 }}>Composed agent data, pay per call</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold)', fontVariantNumeric: 'tabular-nums' }}>1&cent;</span>
+          <span style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>per credit · 1-2 credits / call</span>
+        </div>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 10, color: 'var(--text-dim)', lineHeight: 1.7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}><span>Multi-source briefing</span><span style={{ color: 'var(--text)' }}>1 cr</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}><span>Macro rollup (FRED + FX)</span><span style={{ color: 'var(--text)' }}>2 cr</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}><span>Whale tx feed</span><span style={{ color: 'var(--text)' }}>2 cr</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}><span>Exchange flow labels</span><span style={{ color: 'var(--text)' }}>2 cr</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}><span>Correlation matrix</span><span style={{ color: 'var(--text)' }}>2 cr</span></div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>+ 7 more endpoints. USDC on Base. Cross-redeemable on TensorFeed.</div>
+        </div>
+        <a href="/developers/agent-payments" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, marginTop: 2 }}>Get started &rarr;</a>
+      </div>
+    </>),
     'volcanoes': (() => {
       const items = volcanoes?.items ?? [];
       return (<>
