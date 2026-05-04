@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TerminalFeed for Developers: Free Tools, Public API, MCP Server</title>
+  <meta name="description" content="The developer surface of TerminalFeed.io. 24 free browser-based dev tools, a no-signup public API across 30+ data sources, a hosted MCP server with 27 tools, and an agent-payable premium tier on USDC. No tracking, no popups, dark by default.">
+  <meta property="og:title" content="TerminalFeed for Developers">
+  <meta property="og:description" content="24 free browser tools, a public API, a hosted MCP server, and agent-payable premium endpoints. No signup, no tracking, dark by default.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "TerminalFeed for Developers",
+    "url": "https://terminalfeed.io/for-devs",
+    "description": "The developer surface of TerminalFeed.io. 24 free browser-based dev tools, a no-signup public API across 30+ data sources, a hosted MCP server with 27 tools, and an agent-payable premium tier on USDC.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "For Developers", "item": "https://terminalfeed.io/for-devs" }
+      ]
+    }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 880px; margin: 0 auto; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 24px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    .hero {
+      padding-bottom: 32px;
+      border-bottom: 1px solid #1E1E24;
+      margin-bottom: 40px;
+    }
+    .hero h1 {
+      font-size: 28px;
+      color: #F0EDE6;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 14px;
+    }
+    .hero h1 .accent { color: #4ADE80; }
+    .hero p {
+      font-size: 14px;
+      color: #8A8880;
+      line-height: 1.7;
+      margin-bottom: 18px;
+      max-width: 720px;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .badge {
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+    }
+    .badge.green { color: #4ADE80; border: 1px solid #4ADE8030; background: #4ADE8010; }
+    .badge.teal { color: #5DCAA5; border: 1px solid #5DCAA530; background: #5DCAA510; }
+    .badge.amber { color: #EF9F27; border: 1px solid #EF9F2730; background: #EF9F2710; }
+    .badge.purple { color: #A78BFA; border: 1px solid #A78BFA30; background: #A78BFA10; }
+    .badge.gold { color: #F9CB42; border: 1px solid #F9CB4230; background: #F9CB4210; }
+
+    section.block {
+      margin-bottom: 48px;
+    }
+    section.block h2 {
+      font-size: 18px;
+      color: #4ADE80;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    section.block .lede {
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      max-width: 720px;
+    }
+    section.block a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    section.block a.inline:hover { border-bottom-color: #5DCAA5; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 720px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 22px; }
+    }
+
+    .tool-card {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      padding: 14px 16px;
+      transition: border-color 0.15s ease;
+      text-decoration: none;
+      display: block;
+    }
+    .tool-card:hover { border-color: #5DCAA5; }
+    .tool-card .name { font-size: 13px; color: #F0EDE6; font-weight: 600; margin-bottom: 4px; }
+    .tool-card .desc { font-size: 11px; color: #8A8880; line-height: 1.5; }
+
+    pre {
+      background: #0D0D10;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.6;
+      margin: 14px 0;
+      color: #C8C8C0;
+    }
+    pre .comment { color: #4E4D49; }
+    pre .key { color: #5DCAA5; }
+    pre .str { color: #EF9F27; }
+
+    .endpoint-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid #1A1A22;
+      font-size: 12px;
+    }
+    .endpoint-row:last-child { border-bottom: none; }
+    .endpoint-row .path { color: #5DCAA5; font-weight: 600; }
+    .endpoint-row .desc { color: #8A8880; flex: 1; padding: 0 16px; }
+    .endpoint-row .cost { color: #F9CB42; font-size: 10px; letter-spacing: 1px; }
+
+    .article-card {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.15s ease;
+      text-decoration: none;
+      display: block;
+    }
+    .article-card:hover { border-color: #5DCAA5; }
+    .article-card .article-tags { margin-bottom: 6px; }
+    .article-card .a-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 7px;
+      border-radius: 3px;
+      margin-right: 5px;
+      letter-spacing: 1px;
+    }
+    .article-card .article-title {
+      font-size: 14px;
+      color: #F0EDE6;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+    .article-card .article-excerpt { font-size: 11px; color: #8A8880; line-height: 1.6; margin-bottom: 6px; }
+    .article-card .article-meta { font-size: 10px; color: #4E4D49; }
+
+    .cta-strip {
+      background: linear-gradient(180deg, #111114 0%, #0D0D10 100%);
+      border: 1px solid #5DCAA530;
+      border-radius: 10px;
+      padding: 28px 24px;
+      text-align: center;
+      margin: 40px 0 16px;
+    }
+    .cta-strip h3 { font-size: 16px; color: #F0EDE6; margin-bottom: 8px; font-weight: 600; }
+    .cta-strip p { font-size: 12px; color: #8A8880; margin-bottom: 14px; }
+    .cta-strip .cta-buttons { display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .cta-strip a.cta {
+      display: inline-block;
+      font-size: 12px;
+      padding: 10px 18px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-strip a.cta.primary { background: #5DCAA5; color: #0A0A0C; border: 1px solid #5DCAA5; }
+    .cta-strip a.cta.primary:hover { background: #4ADE80; border-color: #4ADE80; }
+    .cta-strip a.cta.secondary { background: transparent; color: #5DCAA5; border: 1px solid #5DCAA550; }
+    .cta-strip a.cta.secondary:hover { border-color: #5DCAA5; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><span>For Developers</span>
+    </nav>
+
+    <header class="hero">
+      <h1>TerminalFeed <span class="accent">for Developers</span></h1>
+      <div class="badges">
+        <span class="badge green">No Tracking</span>
+        <span class="badge teal">No Signup</span>
+        <span class="badge teal">No Popups</span>
+        <span class="badge amber">Free Public API</span>
+        <span class="badge purple">Hosted MCP Server</span>
+        <span class="badge gold">USDC on Base</span>
+      </div>
+      <p style="margin-top:18px">A focused developer surface inside TerminalFeed.io. Twenty-four browser-based dev tools that run locally with no server round-trip. A public REST API across thirty real-time data sources, no API key required. A hosted Model Context Protocol server with twenty-seven tools. An agent-payable premium tier that takes USDC on Base, with credits federated across TensorFeed.ai. Dark by default, monospace by design, built for the second monitor.</p>
+    </header>
+
+    <section class="block">
+      <h2>&gt;_ Free Browser Tools</h2>
+      <p class="lede">Twenty-four single-page tools that run entirely in your browser. No analytics on these pages, no requests to a backend, no telemetry. Bookmark and use offline. <a href="/tools/" class="inline">Full index at /tools</a>.</p>
+      <div class="grid-3">
+        <a class="tool-card" href="/tools/json"><div class="name">JSON Formatter</div><div class="desc">Pretty-print, validate, collapse, jq-style queries</div></a>
+        <a class="tool-card" href="/tools/jwt"><div class="name">JWT Decoder</div><div class="desc">Header, payload, signature, expiry check</div></a>
+        <a class="tool-card" href="/tools/regex"><div class="name">Regex Tester</div><div class="desc">Live match, capture groups, common patterns</div></a>
+        <a class="tool-card" href="/tools/base64"><div class="name">Base64</div><div class="desc">Encode and decode, file upload supported</div></a>
+        <a class="tool-card" href="/tools/timestamp"><div class="name">Unix Timestamp</div><div class="desc">Convert seconds, ms, ISO 8601, timezones</div></a>
+        <a class="tool-card" href="/tools/uuid"><div class="name">UUID Generator</div><div class="desc">v1, v4, v7, batch mode, lowercase or upper</div></a>
+        <a class="tool-card" href="/tools/cron"><div class="name">Cron Decoder</div><div class="desc">Parse expressions, show next 10 runs in your TZ</div></a>
+        <a class="tool-card" href="/tools/hex"><div class="name">Hex Converter</div><div class="desc">Bytes, ints, ASCII, color, two-way</div></a>
+        <a class="tool-card" href="/tools/gwei"><div class="name">Gwei Converter</div><div class="desc">Wei, Gwei, Ether, gas-cost calculator</div></a>
+      </div>
+      <p class="lede" style="margin-top:14px">Plus fifteen more at <a href="/tools/" class="inline">/tools</a>: Markdown preview, YAML to JSON, satoshi converter, hash generator, port reference, color converter, and others.</p>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Public REST API</h2>
+      <p class="lede">Thirty live data endpoints, no signup, no API key, free for any use including commercial. CORS open. Stale-cache fallback on every endpoint, never returns 5xx to clients. Full docs at <a href="/developers" class="inline">/developers</a>, OpenAPI spec at <a href="/openapi.json" class="inline">/openapi.json</a>, agent-discovery file at <a href="/llms.txt" class="inline">/llms.txt</a>.</p>
+      <div>
+        <div class="endpoint-row"><span class="path">/api/briefing</span><span class="desc">One-call world snapshot composed from 5 sources, agent-friendly</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/btc-price</span><span class="desc">Live BTC price, Binance with CoinCap fallback</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/crypto-movers</span><span class="desc">Top 15 cryptos by 24h change, gainers and losers</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/stocks</span><span class="desc">Top US stocks via Finnhub, biggest movers</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/predictions</span><span class="desc">Polymarket prediction market odds</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/earthquake</span><span class="desc">Recent USGS seismic events, magnitude 2.5+</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/service-status</span><span class="desc">GitHub, Cloudflare, Discord, OpenAI, Anthropic, npm, Reddit</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/economic-data</span><span class="desc">FRED Fed rate, CPI, unemployment</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/air-quality</span><span class="desc">Open-Meteo US AQI, PM2.5, ozone, NO2 by lat/lon</span><span class="cost">FREE</span></div>
+        <div class="endpoint-row"><span class="path">/api/shodan</span><span class="desc">Shodan InternetDB exposure scan, ports and CVEs</span><span class="cost">FREE</span></div>
+      </div>
+      <pre><span class="comment"># curl example</span>
+curl https://terminalfeed.io/api/briefing | jq <span class="str">.</span></pre>
+      <p class="lede" style="margin-top:14px">Twenty more endpoints at <a href="/developers" class="inline">/developers</a>: gas, hackernews, github-trending, forex, launches, weather, disaster-alerts, cyber-threats, volcanoes, wildfires, severe-weather, space-weather, funding-rates, humans-in-space, harnesses, and others.</p>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Hosted MCP Server</h2>
+      <p class="lede">Twenty-seven tools exposed via the Model Context Protocol. Drop the snippet below into Claude Desktop or Claude Code config, no auth required for the free tier. Pass an Authorization header to access the agent-payable premium tier.</p>
+      <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"terminalfeed"</span>: {
+      <span class="key">"command"</span>: <span class="str">"npx"</span>,
+      <span class="key">"args"</span>: [
+        <span class="str">"-y"</span>,
+        <span class="str">"mcp-remote"</span>,
+        <span class="str">"https://terminalfeed.io/api/mcp"</span>
+      ]
+    }
+  }
+}</pre>
+      <p class="lede" style="margin-top:14px">MCP discovery endpoint: <a href="/api/mcp" class="inline">/api/mcp</a>. Tool catalog in OpenAI, Anthropic, or raw format: <a href="/api/llm-tools" class="inline">/api/llm-tools</a>. Already listed on the Official MCP Registry, Smithery, and the Glama AI catalog.</p>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Agent-Payable Premium Tier</h2>
+      <p class="lede">For autonomous agents that need composed, normalized, multi-source data, the premium tier (<code style="background:#111114;border:1px solid #1E1E24;padding:1px 5px;border-radius:3px;color:#5DCAA5;font-size:11px">/api/pro/*</code>) accepts USDC micropayments on Base. No OAuth, no signup, no credit card. The agent buys credits, gets a bearer token, and starts calling. Credits are federated with <a href="https://tensorfeed.ai" class="inline">TensorFeed.ai</a>: one purchase, two domains.</p>
+      <div>
+        <div class="endpoint-row"><span class="path">/api/pro/briefing</span><span class="desc">Composed BTC + Fear and Greed + earthquakes + HN + ISS + predictions</span><span class="cost">1 CR</span></div>
+        <div class="endpoint-row"><span class="path">/api/pro/macro</span><span class="desc">FRED + Finnhub + Frankfurter rollup, history supported</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">/api/pro/agent-context</span><span class="desc">Curated paste-ready system prompt of current world state</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">/api/pro/whales</span><span class="desc">Large BTC, ETH, Solana transactions with attribution</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">/api/pro/correlation-matrix</span><span class="desc">Computed correlations across 10 historical series</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">/api/pro/exchange-flows</span><span class="desc">19-wallet labeled list of exchange-controlled addresses</span><span class="cost">2 CR</span></div>
+      </div>
+      <p class="lede" style="margin-top:14px">Pricing: 1 credit = $0.02. A typical 2-credit call costs four cents. Six more endpoints at <a href="/developers/agent-payments" class="inline">/developers/agent-payments</a>. Working integration walkthrough: <a href="/blog/how-ai-agents-pay-terminalfeed" class="inline">"How AI Agents Pay for Real-Time Data on TerminalFeed"</a>.</p>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Articles for Developers</h2>
+      <p class="lede">Editorial coverage focused on dev tooling, AI agents, real-time infrastructure, and the open web. Full feed at <a href="/blog" class="inline">/blog</a>, RSS at <a href="/feed.xml" class="inline">/feed.xml</a>.</p>
+
+      <a class="article-card" href="/blog/how-ai-agents-pay-terminalfeed">
+        <div class="article-tags"><span class="a-tag">AGENTS</span><span class="a-tag">API</span><span class="a-tag">PAYMENTS</span></div>
+        <div class="article-title">How AI Agents Pay for Real-Time Data on TerminalFeed</div>
+        <div class="article-excerpt">A working walkthrough of the payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.</div>
+        <div class="article-meta">By Signal &middot; May 4, 2026 &middot; 9 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/how-ai-agents-browse">
+        <div class="article-tags"><span class="a-tag">AI</span><span class="a-tag">WEB</span><span class="a-tag">INFRASTRUCTURE</span></div>
+        <div class="article-title">How AI Agents Actually Browse the Web</div>
+        <div class="article-excerpt">AI agents are real internet users now. They search, click, read, and call APIs. But most websites are accidentally hostile to them. Here is what is actually happening and what it means for the future of the web.</div>
+        <div class="article-meta">By Signal &middot; April 7, 2026 &middot; 9 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/api-rate-limits-explained">
+        <div class="article-tags"><span class="a-tag">APIS</span><span class="a-tag">DEV</span><span class="a-tag">TUTORIAL</span></div>
+        <div class="article-title">How API Rate Limits Actually Work (And How to Work Around Them)</div>
+        <div class="article-excerpt">Token buckets, sliding windows, retry headers. A practical guide to understanding rate limits and building resilient API clients.</div>
+        <div class="article-meta">By Node &middot; April 7, 2026 &middot; 8 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/free-tier-is-dead">
+        <div class="article-tags"><span class="a-tag">DEV TOOLS</span><span class="a-tag">OPEN SOURCE</span><span class="a-tag">OPINION</span></div>
+        <div class="article-title">The Free Tier Is Dead. Long Live the Open Source Alternative.</div>
+        <div class="article-excerpt">SaaS companies keep gutting their free tiers. The open source ecosystem keeps building better replacements. Here is what to switch to in 2026.</div>
+        <div class="article-meta">By Node &middot; April 8, 2026 &middot; 8 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/self-hosting-is-back">
+        <div class="article-tags"><span class="a-tag">SELF HOSTING</span><span class="a-tag">HOMELAB</span><span class="a-tag">OPEN SOURCE</span></div>
+        <div class="article-title">Self-Hosting Is Having a Moment Again: Here is Why</div>
+        <div class="article-excerpt">After two decades of moving everything to the cloud, developers are quietly building homelabs and self-hosting their own services again. The reasons are more interesting than nostalgia.</div>
+        <div class="article-meta">By Node &middot; April 7, 2026 &middot; 7 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/free-api-testing-tools">
+        <div class="article-tags"><span class="a-tag">DEV TOOLS</span><span class="a-tag">APIS</span></div>
+        <div class="article-title">Stop Paying for Postman: Free API Testing Tools That Actually Work</div>
+        <div class="article-excerpt">Postman went enterprise. Here are the free, open-source API testing tools that developers are actually switching to.</div>
+        <div class="article-meta">By Node &middot; April 1, 2026 &middot; 6 min read</div>
+      </a>
+    </section>
+
+    <div class="cta-strip">
+      <h3>Try the API in 30 seconds</h3>
+      <p>No signup, no API key, no credit card. Just curl.</p>
+      <div class="cta-buttons">
+        <a class="cta primary" href="/api/briefing">Hit /api/briefing</a>
+        <a class="cta secondary" href="/developers">Read the docs</a>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <a href="/">Home</a>
+      <span class="sep">|</span>
+      <a href="/tools/">Tools</a>
+      <span class="sep">|</span>
+      <a href="/developers">API</a>
+      <span class="sep">|</span>
+      <a href="/api/mcp">MCP</a>
+      <span class="sep">|</span>
+      <a href="/blog">Blog</a>
+      <span class="sep">|</span>
+      <a href="/about">About</a>
+      <span class="sep">|</span>
+      <a href="https://github.com/RipperMercs/terminalfeed">GitHub</a>
+    </footer>
+  </div>
+</body>
+</html>
