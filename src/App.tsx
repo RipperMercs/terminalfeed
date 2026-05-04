@@ -400,7 +400,10 @@ function App() {
       };
       return (<>
         <PanelHead panelId="crypto" isStale={panelHealth.isStale('crypto')} layout={layout} getGridCols={getGridCols}>
-          <div className="panelHeaderLeft"><span className="panelTitle">Crypto</span></div>
+          <div className="panelHeaderLeft">
+            <span className="panelTitle">Crypto</span>
+            <a href="/bitcoin-ticker" style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 8, textDecoration: 'none', letterSpacing: '0.5px' }} title="Bitcoin Ticker landing page">BITCOIN TICKER &rarr;</a>
+          </div>
           <div className="panelLive"><span className="liveDot" /><span className="liveText">LIVE</span></div>
         </PanelHead>
         <div className="cryptoPanel">
@@ -454,7 +457,11 @@ function App() {
     </>),
     'btc-network': (<>
       <PanelHead panelId="btc-network" isStale={panelHealth.isStale('btc-network')} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">BTC Network</span><span className="panelTag">MEMPOOL</span></div>
+        <div className="panelHeaderLeft">
+          <span className="panelTitle">BTC Network</span>
+          <span className="panelTag">MEMPOOL</span>
+          <a href="/bitcoin-ticker" style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 8, textDecoration: 'none', letterSpacing: '0.5px' }} title="Bitcoin Ticker landing page">BITCOIN TICKER &rarr;</a>
+        </div>
         <div className="panelLive">
           <span className="liveDot" style={{ background: btcNet.connected ? 'var(--green)' : 'var(--red)' }} />
           <span className="liveText">{btcNet.connected ? 'LIVE' : 'CONNECTING'}</span>
