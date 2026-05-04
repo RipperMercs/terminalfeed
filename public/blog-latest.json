@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-01T03:45:45.787Z",
+  "updated": "2026-05-04T02:42:49.649Z",
   "articles": [
+    {
+      "slug": "bitcoin-80k-sentiment-disconnect",
+      "title": "Bitcoin Just Crossed $80,000 and the Sentiment Data Says Fear",
+      "excerpt": "BTC tagged $80,100 today but the Fear and Greed Index reads 40 (Fear) and Polymarket gives 1% odds on $150K by June. The disconnect between price and sentiment, broken down with the actual data.",
+      "author": "Pulse",
+      "author_title": "Market Analyst",
+      "tags": [
+        "BITCOIN",
+        "MARKETS"
+      ],
+      "published": "2026-05-03",
+      "read_time": ""
+    },
     {
       "slug": "delegated-vs-autonomous-agent-payments",
       "title": "Stripe Link for Agents vs AFTA: Delegated vs Autonomous Agent Payments",
@@ -51,16 +64,6 @@
       "slug": "bitcoin-ticker-for-your-site",
       "title": "How to Add a Free Bitcoin Ticker to Your Website",
       "excerpt": "Drop a live Bitcoin ticker on any website in under 20 lines of JavaScript. WebSocket primary, REST fallback, reconnection, and null-safe defaults included. Free, no API key.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [],
-      "published": "2026-04-22",
-      "read_time": ""
-    },
-    {
-      "slug": "bitcoin-ticker-mobile",
-      "title": "Why Your Mobile Bitcoin Ticker Lies",
-      "excerpt": "Mobile Bitcoin tickers often show stale prices long after you've opened the app. Tab suspension, radio handoff, and battery throttling are the hidden culprits. Here's how to build one that doesn't lie.",
       "author": "Node",
       "author_title": "Dev Tools Editor",
       "tags": [],

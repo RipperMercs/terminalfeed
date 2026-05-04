@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Thu, 30 Apr 2026 21:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2026 16:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Bitcoin Just Crossed $80,000 and the Sentiment Data Says Fear</title>
+      <link>https://terminalfeed.io/blog/bitcoin-80k-sentiment-disconnect</link>
+      <description>BTC tagged $80,100 today but the Fear and Greed Index reads 40 (Fear) and Polymarket gives 1% odds on $150K by June. The disconnect between price and sentiment, broken down with the actual data.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Sun, 03 May 2026 16:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/bitcoin-80k-sentiment-disconnect</guid>
+    </item>
 
     <item>
       <title>Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent</title>
