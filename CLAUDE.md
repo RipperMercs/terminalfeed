@@ -9,10 +9,10 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 **Domain:** terminalfeed.io (Cloudflare Registrar)
 **Hosting:** Cloudflare Pages (auto-deploy from GitHub master branch)
 **Repo:** github.com/RipperMercs/terminalfeed
-**API Backend:** Cloudflare Worker `terminalfeed-api` handling all /api/* routes + X bot
+**API Backend:** Cloudflare Worker `terminalfeed-api` handling all /api/* routes
 **Stack:** Next.js, React, TypeScript, Cloudflare Workers
 **Creator:** Ripper (@terminalfeed on X, hello@terminalfeed.io)
-**X Account:** @terminalfeed (automated bot + manual posts)
+**X Account:** @terminalfeed (handle held; auto-posting disabled May 3, 2026 after the account got flagged for sustained automated posting; occasional manual posts only going forward)
 
 ---
 
@@ -35,12 +35,11 @@ TerminalFeed.io is a free real-time data dashboard, developer tools platform, an
 - 8-second timeout on all external API calls
 - Stale cache returned on failure, never return 500 to client
 - Free tier: 100,000 requests/day (currently using <1% of quota)
-- X bot functions embedded in same Worker (tweet, auto-briefing endpoints + scheduled cron)
 - **Premium /api/pro/\* tier** with credit-based billing, Bearer token auth, MCP tools, subscriptions, and webhook watches all live in the same Worker (see "Premium Tier" section below)
 
 ### CANONICAL WORKER FILE (read before editing)
 
-The canonical Worker is `worker-additions/worker.js`, deployed via `worker-additions/wrangler.toml`. ~7500 lines. Contains all free `/api/*` routes, all 12 `/api/pro/*` premium routes, payment endpoints, MCP tools, KV binding (`WEBHOOK_SUBS`), Analytics Engine binding, dual cron (`0 14 * * *` daily briefing + `*/5 * * * *` source sync). This is what runs on terminalfeed.io.
+The canonical Worker is `worker-additions/worker.js`, deployed via `worker-additions/wrangler.toml`. ~8000 lines. Contains all free `/api/*` routes, all 12 `/api/pro/*` premium routes, payment endpoints, MCP tools, KV binding (`WEBHOOK_SUBS`), Analytics Engine binding, single cron (`*/5 * * * *` for source sync, premium webhook delivery, and BTC volatility alert detection). This is what runs on terminalfeed.io.
 
 The previous orphan subfolder `worker-additions/terminalfeed-api/` was deleted on 2026-04-30. Do not recreate it.
 
@@ -71,8 +70,8 @@ Always edit `worker-additions/worker.js` for any API route work. Deploy from `wo
 /api/gas           — ETH gas prices from Etherscan (15s cache)
 /api/meme-radar    — DEPRECATED as of April 20, 2026. Remove in next cleanup. See Editorial Policy: No Dedicated Memecoin Surfaces.
 /api/error         — POST client error reports (logged to Cloudflare Workers dashboard)
-/api/tweet         — POST tweet to @terminalfeed (Bearer ADMIN_SECRET)
-/api/auto-briefing — Generate and post automated briefing tweet (Bearer ADMIN_SECRET)
+/api/btc-alert     — GET most recent BTC volatility alert (>=3% 1h move) + threshold config
+/api/btc-alert-check — POST force a volatility check now (Bearer ADMIN_SECRET)
 ```
 
 ### Premium Tier: /api/pro/\* (live, paid, Bearer auth)
@@ -120,15 +119,12 @@ MCP tools: each pro endpoint is also exposed as an MCP tool (`tf_premium_<slug>`
 - FINNHUB_API_KEY, stock quotes
 - FRED_API_KEY, economic data from fred.stlouisfed.org
 - ETHERSCAN_API_KEY, ETH gas prices from etherscan.io
-- X_API_KEY, X/Twitter API consumer key
-- X_API_SECRET, X/Twitter API consumer secret
-- X_ACCESS_TOKEN, X/Twitter API access token
-- X_ACCESS_TOKEN_SECRET, X/Twitter API access token secret
-- ADMIN_SECRET, protects /api/tweet and /api/auto-briefing endpoints
+- ADMIN_SECRET, protects admin-only endpoints (e.g. /api/btc-alert-check)
+
+X_* env vars were removed when the X bot was disabled (May 3, 2026). See "X handle" note above.
 
 ### Cron Triggers (canonical worker)
-- `0 14 * * *`, Daily at 9 AM ET (2 PM UTC), runs auto-briefing tweet via scheduled() handler in Worker
-- `*/5 * * * *`, Every 5 minutes, source sync / cache warm for premium endpoints
+- `*/5 * * * *`, Every 5 minutes: source sync / cache warm for premium endpoints, premium webhook delivery, BTC volatility alert detection
 
 ### Worker KV / Analytics bindings
 - `WEBHOOK_SUBS` (KV), stores active premium webhook subscriptions for `/api/pro/subscribe`
@@ -442,23 +438,11 @@ Memecoins are not a viable long-term asset class. Industry data consistently sho
 
 ---
 
-## X Bot (@terminalfeed)
+## X handle (@terminalfeed)
 
-### Setup
-- X Developer account with $25 in credits
-- OAuth 1.0a authentication (HMAC-SHA1 signing in Worker)
-- All keys stored as encrypted secrets in terminalfeed-api Worker
-- ADMIN_SECRET protects manual endpoints
+The handle is held but the auto-posting bot was removed on 2026-05-03 after the account got flagged for sustained automated posting. Posting (if any) is manual and infrequent. Re-enabling auto-posting is not the priority at current traffic levels (~350 visits/day); revisit only if traffic gets to 10k+/day where broadcast distribution starts mattering.
 
-### Automated Tweets
-- **9 AM ET daily briefing** (cron: 0 14 * * *), scheduled() handler in Worker pulls from Binance, Alternative.me, USGS, formats and posts
-- Manual article announcements via POST /api/tweet with Bearer ADMIN_SECRET
-
-### Tweet Formats
-- Daily briefing: BTC price + Fear & Greed + earthquake count + link to /live
-- Article announcement: title + author + excerpt + link + hashtags
-- Tool announcement: tool name + description + link + hashtags
-- Curated news: biggest newsworthy item from data feeds with commentary
+If we ever do bring it back, the prior implementation (Worker-side OAuth 1.0a + daily briefing cron + /api/tweet + /api/auto-briefing) is in git history before the removal commit.
 
 ### Bio
 ">_ real-time feeds for crypto, stocks, news & more. 30+ live data streams on one dark dashboard. your second monitor, curated. terminalfeed.io. built by @RipperMercs"
@@ -558,8 +542,8 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 ## Current Status (April 15, 2026)
 
 - Dashboard: Live with 30+ panels including ETH Gas Tracker, TF Originals
-- API Worker: Live with 23+ data endpoints (/api/gas, /api/error added Apr 15; /api/meme-radar deprecated Apr 20 — remove next cleanup) + X bot
-- X Bot: Live, auto-posts daily briefing at 9 AM ET, manual tweets via POST /api/tweet
+- API Worker: Live with 23+ data endpoints (/api/gas, /api/error added Apr 15; /api/meme-radar deprecated Apr 20 — remove next cleanup; /api/btc-alert added May 3 with KV-backed volatility detection)
+- X Bot: Removed May 3, 2026. Handle @terminalfeed held but no auto-posting (account got flagged previously). Manual posting only when worth it.
 - Blog: 26+ substantial original articles across 5 author personas
 - Tools: 24 live (added satoshi, gwei, hex converters)
 - Glossary: 45+ terms across crypto, dev, AI, security categories
@@ -581,7 +565,7 @@ All CC specs live in the **project root** of `terminalfeed/` as single markdown 
 2. Request re-indexing of homepage
 3. Resubmit AdSense with "I confirm I have fixed the issues"
 4. Write and publish 3-5 more daily blog articles
-5. Monitor X bot for cron reliability
+5. (X bot removed; nothing to monitor)
 
 ### Post-AdSense Approval
 1. Place manual ad units (3 slots, dark styled)
@@ -613,7 +597,7 @@ Evan runs a similar setup for two sister sites with shared patterns:
 - **VR.org**, Rebuilt as Next.js editorial/aggregator with X bot (@vrdotorg, 8-10 posts/day)
 - **DramaRadar.com**, Reality TV aggregator for Carly on Cloudflare Pages/Worker/KV
 
-All three use the same core patterns: Cloudflare Pages frontend, Worker API backend, original blog content for SEO, X bot for automated social posting, AdSense for monetization.
+All three use the same core patterns: Cloudflare Pages frontend, Worker API backend, original blog content for SEO, AdSense for monetization. (TerminalFeed dropped its X bot on 2026-05-03; VR.org's @vrdotorg is still active for now.)
 
 ---
 

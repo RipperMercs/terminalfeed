@@ -7,15 +7,15 @@
 // ENV VARS (set in Cloudflare dashboard > Workers > Settings > Variables):
 //   FINNHUB_API_KEY        - stock quotes from Finnhub
 //   FRED_API_KEY           - economic data from FRED
-//   X_API_KEY              - X/Twitter API consumer key
-//   X_API_SECRET           - X/Twitter API consumer secret
-//   X_ACCESS_TOKEN         - X/Twitter access token
-//   X_ACCESS_TOKEN_SECRET  - X/Twitter access token secret
-//   ADMIN_SECRET           - protects /api/tweet and /api/auto-briefing
+//   ETHERSCAN_API_KEY      - ETH gas oracle
+//   ADMIN_SECRET           - protects admin-only endpoints (e.g. /api/btc-alert-check)
 //
 // CRON TRIGGER (add in dashboard > Triggers):
-//   0 14 * * *   (2 PM UTC / 9 AM ET - daily briefing tweet)
+//   */5 * * * *   - webhook delivery tick + BTC volatility alert check
 //
+// X bot (auto-tweeting from @terminalfeed) was removed 2026-05-03. The
+// account got flagged for sustained auto-posting. The handle is kept
+// for occasional manual posts but the Worker no longer posts to X.
 // =============================================================================
 
 
@@ -789,51 +789,6 @@ function withRateLimitHeaders(resp, rl) {
 
 
 // ---Twitter / X OAuth 1.0a 
-
-function percentEncode(str) {
-  return encodeURIComponent(str)
-    .replace(/!/g, '%21')
-    .replace(/\*/g, '%2A')
-    .replace(/'/g, '%27')
-    .replace(/\(/g, '%28')
-    .replace(/\)/g, '%29');
-}
-
-async function hmacSha1(key, message) {
-  var enc = new TextEncoder();
-  var cryptoKey = await crypto.subtle.importKey(
-    'raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
-  );
-  var sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
-  return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(sig))));
-}
-
-async function postTweet(text, env) {
-  var url = 'https://api.x.com/2/tweets';
-  var params = {
-    oauth_consumer_key: env.X_API_KEY,
-    oauth_nonce: crypto.randomUUID().replace(/-/g, ''),
-    oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
-    oauth_token: env.X_ACCESS_TOKEN,
-    oauth_version: '1.0',
-  };
-  var paramStr = Object.keys(params).sort()
-    .map(function(k) { return percentEncode(k) + '=' + percentEncode(params[k]); }).join('&');
-  var baseStr = ['POST', percentEncode(url), percentEncode(paramStr)].join('&');
-  var sigKey = percentEncode(env.X_API_SECRET) + '&' + percentEncode(env.X_ACCESS_TOKEN_SECRET);
-  params.oauth_signature = await hmacSha1(sigKey, baseStr);
-  var authHeader = 'OAuth ' + Object.keys(params).sort()
-    .map(function(k) { return percentEncode(k) + '="' + percentEncode(params[k]) + '"'; }).join(', ');
-
-  var res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text }),
-  });
-  return { status: res.status, data: await res.json() };
-}
-
 
 // ---Route Handlers 
 
@@ -2834,92 +2789,6 @@ async function handleBriefing() {
   };
   setCache(KEY, data);
   return jsonResponse(data, 200, 60);
-}
-
-
-// POST /api/tweet
-async function handleTweet(request, env) {
-  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
-
-  var auth = request.headers.get('Authorization');
-  if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) return jsonResponse({ error: 'Unauthorized' }, 401);
-
-  // Tweet text caps at 280 chars; keep the body cap tight to reject obvious DoS payloads.
-  var parsed = await readBoundedJson(request, 4096);
-  if (parsed.error) return bodyErrorResponse(parsed);
-  var body = parsed.data || {};
-  var text = body.text;
-  if (!text || text.length === 0) return jsonResponse({ error: 'Missing text field' }, 400);
-  if (text.length > 280) return jsonResponse({ error: 'Tweet exceeds 280 characters', length: text.length }, 400);
-
-  try {
-    var result = await postTweet(text, env);
-    return jsonResponse({ tweeted: true, text: text, result: result });
-  } catch (err) {
-    return jsonResponse({ error: 'Tweet failed', message: err.message }, 500);
-  }
-}
-
-
-// GET /api/auto-briefing
-async function handleAutoBriefing(request, env) {
-  if (request.method !== 'POST' && request.method !== 'GET') {
-    return jsonResponse({ error: 'POST or GET only' }, 405);
-  }
-  var auth = request.headers.get('Authorization');
-  if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) return jsonResponse({ error: 'Unauthorized' }, 401);
-
-  try {
-    var tweetText = await buildBriefingTweet();
-    var result = await postTweet(tweetText, env);
-    return jsonResponse({ tweeted: true, text: tweetText, result: result });
-  } catch (err) {
-    return jsonResponse({ error: 'Auto-briefing tweet failed', message: err.message }, 500);
-  }
-}
-
-
-// ---Briefing Tweet Builder 
-
-async function buildBriefingTweet() {
-  var results = await Promise.allSettled([
-    fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'),
-    fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),
-    fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'),
-  ]);
-
-  var parts = ['>_ What\'s happening right now:', ''];
-
-  if (results[0].status === 'fulfilled') {
-    try {
-      var d = await results[0].value.json();
-      var price = Math.round(parseFloat(d.lastPrice));
-      var change = parseFloat(d.priceChangePercent);
-      var sign = change >= 0 ? '+' : '';
-      parts.push('BTC: $' + price.toLocaleString() + ' (' + sign + change.toFixed(1) + '%)');
-    } catch (e) {}
-  }
-
-  if (results[1].status === 'fulfilled') {
-    try {
-      var d2 = await results[1].value.json();
-      var fg = d2.data[0];
-      parts.push('Fear & Greed: ' + fg.value + ' (' + fg.value_classification + ')');
-    } catch (e) {}
-  }
-
-  if (results[2].status === 'fulfilled') {
-    try {
-      var d3 = await results[2].value.json();
-      parts.push('Earthquakes (24h): ' + (d3.features ? d3.features.length : 0));
-    } catch (e) {}
-  }
-
-  parts.push('', 'Full briefing: terminalfeed.io/live', '', '#bitcoin #crypto #markets #tech');
-
-  var text = parts.join('\n');
-  if (text.length > 280) text = text.slice(0, 277) + '...';
-  return text;
 }
 
 
@@ -8075,9 +7944,9 @@ export default {
       rl = await checkRateLimit(env, 'adm', clientIp, 30, 60);
     } else if (path === 'error') {
       rl = await checkRateLimit(env, 'err', clientIp, 10, 60);
-    } else if (path === 'tweet' || path === 'auto-briefing') {
+    } else if (path === 'btc-alert-check') {
       // Bearer-secret protected; cap is per-IP since secret is shared by one operator.
-      rl = await checkRateLimit(env, 'tweet', clientIp, 5, 300);
+      rl = await checkRateLimit(env, 'adm', clientIp, 5, 300);
     } else if (path.indexOf('pro/') !== 0 && path.indexOf('payment/') !== 0) {
       // Free public endpoints. /api/pro/* and /api/payment/* are bearer-token rate
       // limited inside handlePremium / the proxy, where we have the token to key on.
@@ -8129,12 +7998,7 @@ export default {
 
   async scheduled(event, env, ctx) {
     var cron = event.cron;
-    if (cron === '0 14 * * *') {
-      // Daily 9 AM ET briefing tweet — DISABLED. X bot is off (auto-posting
-      // got the account flagged). Cron schedule kept in wrangler.toml so we
-      // can re-enable later by restoring X creds and uncommenting the body.
-      console.log('daily briefing cron fired but X bot is disabled, skipping');
-    } else if (cron === '*/5 * * * *') {
+    if (cron === '*/5 * * * *') {
       // Webhook delivery tick
       ctx.waitUntil((async function() {
         try {
@@ -8229,8 +8093,6 @@ async function dispatchRoute(request, env, url, path) {
       case 'xkcd':           return await handleXkcd();
       case 'ai-stats':       return handleAiStats();
       case 'briefing':       return await handleBriefing();
-      case 'tweet':          return await handleTweet(request, env);
-      case 'auto-briefing':  return await handleAutoBriefing(request, env);
       case 'btc-alert':       return await handleBtcAlert(env);
       case 'btc-alert-check': return await handleBtcAlertCheck(request, env);
       case 'gas':            return await handleGas(env);

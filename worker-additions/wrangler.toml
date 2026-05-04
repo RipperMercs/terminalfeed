@@ -15,4 +15,4 @@ binding = "AGENT_ANALYTICS"
 dataset = "agent_traffic"
 
 [triggers]
-crons = ["0 14 * * *", "*/5 * * * *"]
+crons = ["*/5 * * * *"]
