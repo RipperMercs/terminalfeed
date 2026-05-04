@@ -6,12 +6,39 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Sun, 03 May 2026 16:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2026 19:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>TerminalFeed vs CoinMarketCap Ticker: Free Bitcoin Price Compared</title>
+      <link>https://terminalfeed.io/blog/terminalfeed-vs-coinmarketcap-ticker</link>
+      <description>CoinMarketCap is the consumer default for crypto prices but is ad-heavy, slow on mobile, and lags on free updates. TerminalFeed is dark, fast, and ad-free. Honest comparison.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Sun, 03 May 2026 19:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/terminalfeed-vs-coinmarketcap-ticker</guid>
+    </item>
+
+    <item>
+      <title>TerminalFeed vs Coinbase Price Widget: Embed Comparison</title>
+      <link>https://terminalfeed.io/blog/terminalfeed-vs-coinbase-price-widget</link>
+      <description>Coinbase's price widget is brokerage-branded and pushes signups. TerminalFeed's embed is unbranded, ad-free, and theme-customizable. Honest comparison of where each one fits.</description>
+      <author>hello@terminalfeed.io (Pulse)</author>
+      <pubDate>Sun, 03 May 2026 18:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/terminalfeed-vs-coinbase-price-widget</guid>
+    </item>
+
+    <item>
+      <title>TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared</title>
+      <link>https://terminalfeed.io/blog/terminalfeed-vs-coingecko-ticker</link>
+      <description>CoinGecko's free Bitcoin API has rate limits, attribution requirements, and minute-level update lag. TerminalFeed has none of those. Honest comparison of when each one wins.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Sun, 03 May 2026 17:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/terminalfeed-vs-coingecko-ticker</guid>
+    </item>
 
     <item>
       <title>Bitcoin Just Crossed $80,000 and the Sentiment Data Says Fear</title>
