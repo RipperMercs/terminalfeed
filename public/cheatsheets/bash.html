@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bash Cheat Sheet - Essential Shell Commands for Developers | TerminalFeed</title>
+    <meta name="description" content="Complete bash cheat sheet with 90+ essential shell commands. Navigation, files, permissions, processes, pipes, networking, scripting. Searchable, printable, single-screen reference.">
+    <meta name="keywords" content="bash, shell, cheat sheet, linux, terminal, commands, reference, scripting">
+    <meta property="og:title" content="Bash Cheat Sheet - Essential Shell Commands | TerminalFeed">
+    <meta property="og:description" content="Complete bash cheat sheet with 90+ essential commands. Searchable reference for shell scripting and daily terminal work.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/bash">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bash Cheat Sheet - Essential Shell Commands | TerminalFeed">
+    <meta name="twitter:description" content="Complete bash cheat sheet with 90+ essential commands. Searchable, printable reference.">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/bash">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #1E1E24; padding-bottom: 20px; }
+        .breadcrumbs { font-size: 12px; color: #8A8880; margin-bottom: 16px; }
+        .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs .sep { margin: 0 8px; }
+        h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #8A8880; }
+        .search-box { margin-bottom: 30px; position: relative; }
+        .search-box input { width: 100%; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 12px 16px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+        .search-box input:focus { outline: none; border-color: #5DCAA5; }
+        .search-box input::placeholder { color: #4E4D49; }
+        .section { margin-bottom: 40px; }
+        .section-title { color: #4ADE80; font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .cmd-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #1A1A1E; align-items: baseline; }
+        .cmd-row:last-child { border-bottom: none; }
+        .cmd-code { flex-shrink: 0; background: #0D0D10; border: 1px solid #1A1A22; padding: 6px 12px; border-radius: 3px; font-size: 11px; color: #5DCAA5; white-space: nowrap; font-weight: 600; }
+        .cmd-desc { font-size: 12px; color: #8A8880; flex-grow: 1; }
+        .hidden { display: none; }
+        footer { border-top: 1px solid #1E1E24; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #8A8880; text-align: center; }
+        footer a { color: #5DCAA5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .sep { margin: 0 8px; color: #4E4D49; }
+        @media print {
+            .search-box { display: none; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Bash Cheat Sheet - Essential Shell Commands for Developers",
+        "description": "Complete bash cheat sheet with 90+ essential commands for navigation, files, permissions, processes, pipes, networking, and scripting.",
+        "url": "https://terminalfeed.io/cheatsheets/bash",
+        "datePublished": "2026-05-04",
+        "dateModified": "2026-05-04",
+        "author": { "@type": "Person", "name": "TerminalFeed" },
+        "publisher": { "@type": "Organization", "name": "TerminalFeed", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/og-image.png" } }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Cheatsheets", "item": "https://terminalfeed.io/cheatsheets" },
+            { "@type": "ListItem", "position": 3, "name": "Bash", "item": "https://terminalfeed.io/cheatsheets/bash" }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>Bash</span>
+            </div>
+            <h1>Bash Cheat Sheet</h1>
+            <p class="subtitle">Essential shell commands for navigation, files, processes, pipes, scripting, and the moves you forget at 2am</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search commands... (e.g., grep, chmod, find, ssh)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Navigation</div>
+            <div class="cmd-row"><div class="cmd-code">pwd</div><div class="cmd-desc">Print working directory (where am I)</div></div>
+            <div class="cmd-row"><div class="cmd-code">cd &lt;dir&gt;</div><div class="cmd-desc">Change directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">cd</div><div class="cmd-desc">Go to home directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">cd -</div><div class="cmd-desc">Go to previous directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">cd ..</div><div class="cmd-desc">Go up one directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">ls</div><div class="cmd-desc">List directory contents</div></div>
+            <div class="cmd-row"><div class="cmd-code">ls -la</div><div class="cmd-desc">List all files with details (incl. hidden)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ls -lh</div><div class="cmd-desc">List with human-readable file sizes</div></div>
+            <div class="cmd-row"><div class="cmd-code">tree</div><div class="cmd-desc">Show directory tree (may need install)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Files & Directories</div>
+            <div class="cmd-row"><div class="cmd-code">touch &lt;file&gt;</div><div class="cmd-desc">Create empty file or update timestamp</div></div>
+            <div class="cmd-row"><div class="cmd-code">mkdir &lt;dir&gt;</div><div class="cmd-desc">Create directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">mkdir -p a/b/c</div><div class="cmd-desc">Create nested dirs, no error if exists</div></div>
+            <div class="cmd-row"><div class="cmd-code">cp src dst</div><div class="cmd-desc">Copy file</div></div>
+            <div class="cmd-row"><div class="cmd-code">cp -r src dst</div><div class="cmd-desc">Copy directory recursively</div></div>
+            <div class="cmd-row"><div class="cmd-code">mv src dst</div><div class="cmd-desc">Move or rename file/directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">rm &lt;file&gt;</div><div class="cmd-desc">Delete file</div></div>
+            <div class="cmd-row"><div class="cmd-code">rm -r &lt;dir&gt;</div><div class="cmd-desc">Delete directory recursively</div></div>
+            <div class="cmd-row"><div class="cmd-code">rm -rf &lt;dir&gt;</div><div class="cmd-desc">Force-delete dir (DANGEROUS, no prompt)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ln -s target link</div><div class="cmd-desc">Create symbolic link</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Viewing & Searching Files</div>
+            <div class="cmd-row"><div class="cmd-code">cat &lt;file&gt;</div><div class="cmd-desc">Print file contents</div></div>
+            <div class="cmd-row"><div class="cmd-code">less &lt;file&gt;</div><div class="cmd-desc">Page through file (q to quit, / to search)</div></div>
+            <div class="cmd-row"><div class="cmd-code">head -n 20 &lt;file&gt;</div><div class="cmd-desc">First 20 lines</div></div>
+            <div class="cmd-row"><div class="cmd-code">tail -n 20 &lt;file&gt;</div><div class="cmd-desc">Last 20 lines</div></div>
+            <div class="cmd-row"><div class="cmd-code">tail -f &lt;file&gt;</div><div class="cmd-desc">Follow file as it grows (logs)</div></div>
+            <div class="cmd-row"><div class="cmd-code">grep "pattern" &lt;file&gt;</div><div class="cmd-desc">Search for pattern in file</div></div>
+            <div class="cmd-row"><div class="cmd-code">grep -r "pattern" .</div><div class="cmd-desc">Recursive search in current dir</div></div>
+            <div class="cmd-row"><div class="cmd-code">grep -i "pattern"</div><div class="cmd-desc">Case-insensitive search</div></div>
+            <div class="cmd-row"><div class="cmd-code">grep -n "pattern"</div><div class="cmd-desc">Show line numbers in matches</div></div>
+            <div class="cmd-row"><div class="cmd-code">find . -name "*.js"</div><div class="cmd-desc">Find files by name pattern</div></div>
+            <div class="cmd-row"><div class="cmd-code">find . -type f -size +10M</div><div class="cmd-desc">Find files larger than 10MB</div></div>
+            <div class="cmd-row"><div class="cmd-code">find . -mtime -7</div><div class="cmd-desc">Files modified in last 7 days</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Permissions & Ownership</div>
+            <div class="cmd-row"><div class="cmd-code">chmod 755 &lt;file&gt;</div><div class="cmd-desc">rwxr-xr-x (owner/group/other)</div></div>
+            <div class="cmd-row"><div class="cmd-code">chmod +x &lt;file&gt;</div><div class="cmd-desc">Make file executable</div></div>
+            <div class="cmd-row"><div class="cmd-code">chmod -R 644 &lt;dir&gt;</div><div class="cmd-desc">Recursive chmod</div></div>
+            <div class="cmd-row"><div class="cmd-code">chown user:group &lt;file&gt;</div><div class="cmd-desc">Change file owner and group</div></div>
+            <div class="cmd-row"><div class="cmd-code">sudo &lt;cmd&gt;</div><div class="cmd-desc">Run command as root</div></div>
+            <div class="cmd-row"><div class="cmd-code">sudo -i</div><div class="cmd-desc">Open root shell</div></div>
+            <div class="cmd-row"><div class="cmd-code">whoami</div><div class="cmd-desc">Current user</div></div>
+            <div class="cmd-row"><div class="cmd-code">id</div><div class="cmd-desc">User ID and groups</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Pipes, Redirection & Substitution</div>
+            <div class="cmd-row"><div class="cmd-code">cmd1 | cmd2</div><div class="cmd-desc">Pipe stdout of cmd1 into cmd2</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd &gt; file</div><div class="cmd-desc">Redirect stdout to file (overwrite)</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd &gt;&gt; file</div><div class="cmd-desc">Append stdout to file</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd 2&gt; file</div><div class="cmd-desc">Redirect stderr to file</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd &gt; file 2&gt;&amp;1</div><div class="cmd-desc">Redirect stdout AND stderr to file</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd &amp;&gt; file</div><div class="cmd-desc">Same as above (bash shorthand)</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd &lt; file</div><div class="cmd-desc">Read stdin from file</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd | tee file</div><div class="cmd-desc">Pipe AND save to file simultaneously</div></div>
+            <div class="cmd-row"><div class="cmd-code">$(cmd)</div><div class="cmd-desc">Command substitution (use cmd's output)</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd1 &amp;&amp; cmd2</div><div class="cmd-desc">Run cmd2 only if cmd1 succeeds</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd1 || cmd2</div><div class="cmd-desc">Run cmd2 only if cmd1 fails</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Process Management</div>
+            <div class="cmd-row"><div class="cmd-code">ps aux</div><div class="cmd-desc">List all running processes</div></div>
+            <div class="cmd-row"><div class="cmd-code">ps aux | grep node</div><div class="cmd-desc">Filter processes by name</div></div>
+            <div class="cmd-row"><div class="cmd-code">top</div><div class="cmd-desc">Live process monitor</div></div>
+            <div class="cmd-row"><div class="cmd-code">htop</div><div class="cmd-desc">Better top (may need install)</div></div>
+            <div class="cmd-row"><div class="cmd-code">kill &lt;pid&gt;</div><div class="cmd-desc">Send SIGTERM to process</div></div>
+            <div class="cmd-row"><div class="cmd-code">kill -9 &lt;pid&gt;</div><div class="cmd-desc">Force-kill (SIGKILL)</div></div>
+            <div class="cmd-row"><div class="cmd-code">killall &lt;name&gt;</div><div class="cmd-desc">Kill all processes matching name</div></div>
+            <div class="cmd-row"><div class="cmd-code">cmd &amp;</div><div class="cmd-desc">Run command in background</div></div>
+            <div class="cmd-row"><div class="cmd-code">jobs</div><div class="cmd-desc">List background jobs in this shell</div></div>
+            <div class="cmd-row"><div class="cmd-code">fg %1</div><div class="cmd-desc">Bring job 1 to foreground</div></div>
+            <div class="cmd-row"><div class="cmd-code">nohup cmd &amp;</div><div class="cmd-desc">Run command immune to hangup, in background</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Environment & Variables</div>
+            <div class="cmd-row"><div class="cmd-code">echo $PATH</div><div class="cmd-desc">Print value of $PATH</div></div>
+            <div class="cmd-row"><div class="cmd-code">env</div><div class="cmd-desc">List all environment variables</div></div>
+            <div class="cmd-row"><div class="cmd-code">export VAR=value</div><div class="cmd-desc">Set environment variable for session</div></div>
+            <div class="cmd-row"><div class="cmd-code">unset VAR</div><div class="cmd-desc">Remove environment variable</div></div>
+            <div class="cmd-row"><div class="cmd-code">VAR=value cmd</div><div class="cmd-desc">Set var only for this command</div></div>
+            <div class="cmd-row"><div class="cmd-code">source ~/.bashrc</div><div class="cmd-desc">Re-load bash config</div></div>
+            <div class="cmd-row"><div class="cmd-code">which cmd</div><div class="cmd-desc">Find which binary runs for cmd</div></div>
+            <div class="cmd-row"><div class="cmd-code">type cmd</div><div class="cmd-desc">Show how cmd is interpreted (alias, builtin, file)</div></div>
+            <div class="cmd-row"><div class="cmd-code">alias ll='ls -la'</div><div class="cmd-desc">Create alias for the session</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Text Processing</div>
+            <div class="cmd-row"><div class="cmd-code">wc -l &lt;file&gt;</div><div class="cmd-desc">Count lines in file</div></div>
+            <div class="cmd-row"><div class="cmd-code">wc -w &lt;file&gt;</div><div class="cmd-desc">Count words</div></div>
+            <div class="cmd-row"><div class="cmd-code">sort &lt;file&gt;</div><div class="cmd-desc">Sort lines alphabetically</div></div>
+            <div class="cmd-row"><div class="cmd-code">sort -n</div><div class="cmd-desc">Numeric sort</div></div>
+            <div class="cmd-row"><div class="cmd-code">sort -u</div><div class="cmd-desc">Sort and remove duplicates</div></div>
+            <div class="cmd-row"><div class="cmd-code">uniq</div><div class="cmd-desc">Remove adjacent duplicate lines (often after sort)</div></div>
+            <div class="cmd-row"><div class="cmd-code">cut -d',' -f1 &lt;file&gt;</div><div class="cmd-desc">First column of CSV</div></div>
+            <div class="cmd-row"><div class="cmd-code">awk '{print $2}'</div><div class="cmd-desc">Print second whitespace-separated field</div></div>
+            <div class="cmd-row"><div class="cmd-code">sed 's/foo/bar/g' &lt;file&gt;</div><div class="cmd-desc">Replace all "foo" with "bar"</div></div>
+            <div class="cmd-row"><div class="cmd-code">sed -i.bak 's/foo/bar/g' &lt;file&gt;</div><div class="cmd-desc">In-place edit with .bak backup</div></div>
+            <div class="cmd-row"><div class="cmd-code">tr 'a-z' 'A-Z'</div><div class="cmd-desc">Translate lowercase to uppercase</div></div>
+            <div class="cmd-row"><div class="cmd-code">xargs cmd</div><div class="cmd-desc">Build command line from stdin</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Networking</div>
+            <div class="cmd-row"><div class="cmd-code">curl &lt;url&gt;</div><div class="cmd-desc">Fetch URL</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -sS &lt;url&gt;</div><div class="cmd-desc">Silent but show errors</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -X POST -d '{}' &lt;url&gt;</div><div class="cmd-desc">POST with JSON body</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Auth: x" &lt;url&gt;</div><div class="cmd-desc">Custom header</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -o file &lt;url&gt;</div><div class="cmd-desc">Save response to file</div></div>
+            <div class="cmd-row"><div class="cmd-code">wget &lt;url&gt;</div><div class="cmd-desc">Download file</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh user@host</div><div class="cmd-desc">SSH into a remote host</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -p 2222 user@host</div><div class="cmd-desc">SSH on a custom port</div></div>
+            <div class="cmd-row"><div class="cmd-code">scp file user@host:/path</div><div class="cmd-desc">Copy file to remote</div></div>
+            <div class="cmd-row"><div class="cmd-code">rsync -av src/ dst/</div><div class="cmd-desc">Sync directories (efficient)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ping &lt;host&gt;</div><div class="cmd-desc">Test reachability</div></div>
+            <div class="cmd-row"><div class="cmd-code">netstat -tulpn</div><div class="cmd-desc">Show listening ports (Linux)</div></div>
+            <div class="cmd-row"><div class="cmd-code">lsof -i :3000</div><div class="cmd-desc">What process is using port 3000</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Archives & Compression</div>
+            <div class="cmd-row"><div class="cmd-code">tar -czvf out.tar.gz dir/</div><div class="cmd-desc">Create gzipped tar archive</div></div>
+            <div class="cmd-row"><div class="cmd-code">tar -xzvf in.tar.gz</div><div class="cmd-desc">Extract gzipped tar archive</div></div>
+            <div class="cmd-row"><div class="cmd-code">tar -tzvf in.tar.gz</div><div class="cmd-desc">List contents without extracting</div></div>
+            <div class="cmd-row"><div class="cmd-code">zip -r out.zip dir/</div><div class="cmd-desc">Create zip archive</div></div>
+            <div class="cmd-row"><div class="cmd-code">unzip in.zip</div><div class="cmd-desc">Extract zip archive</div></div>
+            <div class="cmd-row"><div class="cmd-code">gzip &lt;file&gt;</div><div class="cmd-desc">Compress single file (.gz)</div></div>
+            <div class="cmd-row"><div class="cmd-code">gunzip &lt;file&gt;.gz</div><div class="cmd-desc">Decompress .gz file</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">System Info & Disk</div>
+            <div class="cmd-row"><div class="cmd-code">uname -a</div><div class="cmd-desc">Kernel and system info</div></div>
+            <div class="cmd-row"><div class="cmd-code">df -h</div><div class="cmd-desc">Disk usage by filesystem (human-readable)</div></div>
+            <div class="cmd-row"><div class="cmd-code">du -sh &lt;dir&gt;</div><div class="cmd-desc">Total size of directory</div></div>
+            <div class="cmd-row"><div class="cmd-code">du -h --max-depth=1</div><div class="cmd-desc">Size of subdirectories, one level deep</div></div>
+            <div class="cmd-row"><div class="cmd-code">free -h</div><div class="cmd-desc">Memory usage (Linux)</div></div>
+            <div class="cmd-row"><div class="cmd-code">uptime</div><div class="cmd-desc">System uptime and load average</div></div>
+            <div class="cmd-row"><div class="cmd-code">date</div><div class="cmd-desc">Current date and time</div></div>
+            <div class="cmd-row"><div class="cmd-code">cal</div><div class="cmd-desc">Calendar of current month</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Scripting Essentials</div>
+            <div class="cmd-row"><div class="cmd-code">#!/usr/bin/env bash</div><div class="cmd-desc">Shebang line for portable bash scripts</div></div>
+            <div class="cmd-row"><div class="cmd-code">set -e</div><div class="cmd-desc">Exit on any command failure</div></div>
+            <div class="cmd-row"><div class="cmd-code">set -u</div><div class="cmd-desc">Exit on undefined variable</div></div>
+            <div class="cmd-row"><div class="cmd-code">set -o pipefail</div><div class="cmd-desc">Fail if any command in a pipe fails</div></div>
+            <div class="cmd-row"><div class="cmd-code">set -euo pipefail</div><div class="cmd-desc">All three above (recommended for scripts)</div></div>
+            <div class="cmd-row"><div class="cmd-code">if [ -f file ]; then ...; fi</div><div class="cmd-desc">Conditional, file exists</div></div>
+            <div class="cmd-row"><div class="cmd-code">for x in *; do echo $x; done</div><div class="cmd-desc">For loop over files</div></div>
+            <div class="cmd-row"><div class="cmd-code">while read line; do ...; done &lt; file</div><div class="cmd-desc">Read file line by line</div></div>
+            <div class="cmd-row"><div class="cmd-code">$#</div><div class="cmd-desc">Number of arguments passed to script</div></div>
+            <div class="cmd-row"><div class="cmd-code">$1, $2, $@</div><div class="cmd-desc">First arg, second arg, all args</div></div>
+            <div class="cmd-row"><div class="cmd-code">$?</div><div class="cmd-desc">Exit code of last command (0 = success)</div></div>
+            <div class="cmd-row"><div class="cmd-code">trap "cmd" EXIT</div><div class="cmd-desc">Run cmd on script exit (cleanup)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">History & Shortcuts</div>
+            <div class="cmd-row"><div class="cmd-code">history</div><div class="cmd-desc">Show command history</div></div>
+            <div class="cmd-row"><div class="cmd-code">!!</div><div class="cmd-desc">Run last command again</div></div>
+            <div class="cmd-row"><div class="cmd-code">!$</div><div class="cmd-desc">Last argument of previous command</div></div>
+            <div class="cmd-row"><div class="cmd-code">!grep</div><div class="cmd-desc">Run last command starting with "grep"</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+R</div><div class="cmd-desc">Reverse-search through history</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+A</div><div class="cmd-desc">Move cursor to start of line</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+E</div><div class="cmd-desc">Move cursor to end of line</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+U</div><div class="cmd-desc">Delete from cursor to start of line</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+K</div><div class="cmd-desc">Delete from cursor to end of line</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+W</div><div class="cmd-desc">Delete word before cursor</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+L</div><div class="cmd-desc">Clear screen (same as `clear`)</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+C</div><div class="cmd-desc">Send SIGINT to current foreground process</div></div>
+            <div class="cmd-row"><div class="cmd-code">Ctrl+D</div><div class="cmd-desc">EOF / exit shell if input is empty</div></div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/cheatsheets">Cheatsheets</a><span class="sep">|</span>
+            <a href="/cheatsheets/git">Git</a><span class="sep">|</span>
+            <a href="/cheatsheets/docker">Docker</a><span class="sep">|</span>
+            <a href="/cheatsheets/http">HTTP</a><span class="sep">|</span>
+            <a href="/for-devs">Developer Hub</a><span class="sep">|</span>
+            <a href="/blog">Blog</a><span class="sep">|</span>
+            <a href="/about">About</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>
