@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Developer Hub: Tools, APIs, MCP Server, Cheatsheets, Recipes</title>
+  <meta name="description" content="A focused developer hub. 24 free browser tools, a public REST API across 30+ data sources, a hosted MCP server with 27 tools, ready-to-paste code recipes, cheatsheets, and editorial coverage. No signup, no tracking, dark by default.">
+  <meta property="og:title" content="The Developer Hub at TerminalFeed">
+  <meta property="og:description" content="24 free browser tools, public API, hosted MCP server, code recipes, cheatsheets. No signup, no tracking, dark by default.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "The Developer Hub at TerminalFeed",
+    "url": "https://terminalfeed.io/for-devs",
+    "description": "A focused developer hub at TerminalFeed.io. 24 browser tools, 30+ API endpoints, a hosted MCP server, code recipes, cheatsheets, and editorial coverage for working developers.",
+    "publisher": { "@type": "Organization", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; }
+    a { color: inherit; }
+
+    .hub-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid #1E1E24; padding: 10px 20px 0; }
+    .hub-header-inner { max-width: 980px; margin: 0 auto; }
+    .hub-back { font-size: 10px; color: #4E4D49; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .hub-back a { color: #4E4D49; text-decoration: none; }
+    .hub-back a:hover { color: #5DCAA5; }
+    .hub-row { display: flex; align-items: center; gap: 16px; }
+    .hub-brand { font-size: 13px; color: #F0EDE6; font-weight: 700; flex-shrink: 0; }
+    .hub-brand .hub-prompt { color: #4ADE80; margin-right: 4px; }
+    .hub-tabs { display: flex; gap: 0; overflow-x: auto; flex: 1; }
+    .hub-tabs::-webkit-scrollbar { height: 4px; }
+    .hub-tabs::-webkit-scrollbar-track { background: transparent; }
+    .hub-tabs::-webkit-scrollbar-thumb { background: #1E1E24; }
+    .hub-tabs .tab { padding: 10px 14px; font-size: 11.5px; color: #8A8880; text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.5px; font-weight: 500; transition: color 0.15s, border-color 0.15s; }
+    .hub-tabs .tab:hover { color: #D4D2CB; }
+    .hub-tabs .tab.active { color: #4ADE80; border-bottom-color: #4ADE80; font-weight: 600; }
+    @media (max-width: 700px) { .hub-row { flex-direction: column; align-items: flex-start; gap: 6px; } .hub-tabs { width: 100%; } }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 40px; }
+
+    .hero { padding-bottom: 32px; border-bottom: 1px solid #1E1E24; margin-bottom: 36px; }
+    .hero h1 { font-size: 30px; color: #F0EDE6; font-weight: 700; line-height: 1.25; margin-bottom: 12px; }
+    .hero h1 .accent { color: #4ADE80; }
+    .hero .lede { font-size: 14px; color: #D4D2CB; line-height: 1.7; margin-bottom: 16px; max-width: 760px; }
+    .hero .lede.dim { color: #8A8880; }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .badge { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; }
+    .badge.green { color: #4ADE80; border: 1px solid #4ADE8030; background: #4ADE8010; }
+    .badge.teal { color: #5DCAA5; border: 1px solid #5DCAA530; background: #5DCAA510; }
+    .badge.amber { color: #EF9F27; border: 1px solid #EF9F2730; background: #EF9F2710; }
+    .badge.purple { color: #A78BFA; border: 1px solid #A78BFA30; background: #A78BFA10; }
+    .badge.gold { color: #F9CB42; border: 1px solid #F9CB4230; background: #F9CB4210; }
+    .badge.blue { color: #60A5FA; border: 1px solid #60A5FA30; background: #60A5FA10; }
+
+    .stats-bar { display: flex; flex-wrap: wrap; background: #0D0D10; border: 1px solid #1E1E24; border-radius: 8px; padding: 6px 0; }
+    .stats-bar .stat { flex: 1; min-width: 110px; padding: 10px 16px; text-align: center; border-right: 1px solid #1A1A1E; }
+    .stats-bar .stat:last-child { border-right: none; }
+    .stats-bar .stat .num { font-size: 18px; font-weight: 700; color: #4ADE80; font-variant-numeric: tabular-nums; display: block; }
+    .stats-bar .stat .label { font-size: 9px; color: #8A8880; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; display: block; }
+
+    section.block { margin-bottom: 48px; }
+    section.block h2 { font-size: 18px; color: #4ADE80; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; }
+    section.block .section-sub { font-size: 11px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    section.block .lede { font-size: 13px; color: #8A8880; line-height: 1.7; margin-bottom: 16px; max-width: 760px; }
+    section.block .lede strong { color: #D4D2CB; }
+    a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    a.inline:hover { border-bottom-color: #5DCAA5; }
+
+    .tab-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    @media (max-width: 720px) { .tab-grid { grid-template-columns: 1fr; } }
+    .tab-card { background: #111114; border: 1px solid #1E1E24; border-radius: 8px; padding: 22px 24px; transition: border-color 0.15s; text-decoration: none; display: block; }
+    .tab-card:hover { border-color: #5DCAA5; }
+    .tab-card .tc-label { font-size: 10px; color: #4E4D49; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .tab-card .tc-title { font-size: 18px; color: #F0EDE6; font-weight: 600; margin-bottom: 8px; }
+    .tab-card .tc-desc { font-size: 12px; color: #8A8880; line-height: 1.6; margin-bottom: 12px; }
+    .tab-card .tc-cta { font-size: 11px; color: #5DCAA5; letter-spacing: 1px; text-transform: uppercase; }
+
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-back"><a href="/">&larr; terminalfeed.io</a></div>
+      <div class="hub-row">
+        <div class="hub-brand"><span class="hub-prompt">&gt;_</span>TerminalFeed Devs</div>
+        <nav class="hub-tabs" aria-label="Developer hub navigation">
+          <a href="/for-devs" class="tab active">Overview</a>
+          <a href="/for-devs/tools" class="tab">Tools</a>
+          <a href="/for-devs/api" class="tab">API</a>
+          <a href="/for-devs/mcp" class="tab">MCP</a>
+          <a href="/for-devs/recipes" class="tab">Recipes</a>
+          <a href="/for-devs/articles" class="tab">Articles</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <header class="hero">
+      <h1>The <span class="accent">Developer Hub</span></h1>
+      <div class="badges">
+        <span class="badge green">No Tracking</span>
+        <span class="badge teal">No Signup</span>
+        <span class="badge teal">No Popups</span>
+        <span class="badge amber">Free Public API</span>
+        <span class="badge purple">Hosted MCP Server</span>
+        <span class="badge gold">USDC on Base</span>
+        <span class="badge blue">Open Source Friendly</span>
+      </div>
+      <p class="lede">A focused workspace for working engineers. Twenty-four browser-based tools that run locally with no server round-trip. A public REST API across thirty live data sources, no API key required. A hosted Model Context Protocol server with twenty-seven tools. Code recipes you can paste into a project right now. Editorial coverage written by people who ship. Use the tabs above to navigate.</p>
+      <p class="lede dim">Everything here runs without signing up, without giving an email address, and without a tracking pixel landing on your machine. Built for the second monitor. Dark by default. Monospace by design.</p>
+      <div class="stats-bar">
+        <div class="stat"><span class="num">24</span><span class="label">Browser Tools</span></div>
+        <div class="stat"><span class="num">30+</span><span class="label">API Endpoints</span></div>
+        <div class="stat"><span class="num">27</span><span class="label">MCP Tools</span></div>
+        <div class="stat"><span class="num">3</span><span class="label">Cheatsheets</span></div>
+        <div class="stat"><span class="num">38</span><span class="label">Articles</span></div>
+        <div class="stat"><span class="num">0</span><span class="label">Trackers</span></div>
+      </div>
+    </header>
+
+    <section class="block">
+      <h2>&gt;_ Pick a track</h2>
+      <div class="section-sub">Each tab is its own deep surface</div>
+      <div class="tab-grid">
+        <a class="tab-card" href="/for-devs/tools">
+          <div class="tc-label">Tab 01</div>
+          <div class="tc-title">Tools</div>
+          <div class="tc-desc">Twenty-four single-page browser tools. JSON formatter, JWT decoder, regex tester, base64, hex, UUID, password generator, hash, cron decoder, markdown preview, color converter, and 14 more. All run locally, no server round-trip.</div>
+          <div class="tc-cta">Browse Tools &rarr;</div>
+        </a>
+        <a class="tab-card" href="/for-devs/api">
+          <div class="tc-label">Tab 02</div>
+          <div class="tc-title">Public API</div>
+          <div class="tc-desc">Thirty-plus live REST endpoints across crypto, markets, news, status, world events. No API key, no signup, CORS open, stale-cache fallback. Includes a one-call /api/briefing world snapshot composed from five sources.</div>
+          <div class="tc-cta">Browse API &rarr;</div>
+        </a>
+        <a class="tab-card" href="/for-devs/mcp">
+          <div class="tc-label">Tab 03</div>
+          <div class="tc-title">MCP Server</div>
+          <div class="tc-desc">Hosted Model Context Protocol server with 27 tools. Drop-in config for Claude Desktop and Claude Code. Free tier needs no auth. Premium tier accepts USDC on Base via bearer token. Listed on the Official MCP Registry, Smithery, Glama.</div>
+          <div class="tc-cta">MCP Setup &rarr;</div>
+        </a>
+        <a class="tab-card" href="/for-devs/recipes">
+          <div class="tc-label">Tab 04</div>
+          <div class="tc-title">Recipes</div>
+          <div class="tc-desc">Paste-and-go code snippets. Live BTC ticker in vanilla JS, Python world briefing, embed iframes, MCP config, premium agent calls, polling for deltas. Tested patterns that work today.</div>
+          <div class="tc-cta">Browse Recipes &rarr;</div>
+        </a>
+        <a class="tab-card" href="/for-devs/articles">
+          <div class="tc-label">Tab 05</div>
+          <div class="tc-title">Articles</div>
+          <div class="tc-desc">Editorial coverage on dev tooling, AI agents, real-time infrastructure, and the open web. Written by Node, Signal, and zer0day. Filtered to dev-relevant content from the main blog.</div>
+          <div class="tc-cta">Browse Articles &rarr;</div>
+        </a>
+        <a class="tab-card" href="/cheatsheets/">
+          <div class="tc-label">External</div>
+          <div class="tc-title">Cheatsheets</div>
+          <div class="tc-desc">Single-screen references. Git commands you forget at 2am, Docker compose patterns, all HTTP status codes including the weird ones (418, 451). Lives at /cheatsheets, linked here for convenience.</div>
+          <div class="tc-cta">Browse Cheatsheets &rarr;</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Why this exists</h2>
+      <div class="section-sub">A note from the team</div>
+      <p class="lede">Developer tools have a marketing problem. Most landing pages for dev resources are full of stock photos, signup walls, and analytics pixels that fire before you read the headline. The good free tools are scattered across personal sites, GitHub Gists, and bookmarks shared on Hacker News. The good APIs require key registration even for read-only data. The good cheatsheets are buried under SEO-optimized rewrites of Stack Overflow.</p>
+      <p class="lede">This hub is the version we wanted to find when we were learning. Tools that load in under 200ms and don't phone home. APIs that take a curl command, no auth dance. An MCP server you point Claude at in one config block. Articles that show real code. Recipes you can copy-paste. Cheatsheets that fit on one screen. No signup, no tracking, no popup asking for your email.</p>
+      <p class="lede dim">If you find something broken, a tool that's missing, or a recipe that would help your daily work, the issue tracker is at <a href="https://github.com/RipperMercs/terminalfeed" class="inline">github.com/RipperMercs/terminalfeed</a>. PRs welcome.</p>
+    </section>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/api">API</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/mcp">MCP</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/recipes">Recipes</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/articles">Articles</a>
+    <span class="sep">|</span>
+    <a href="/cheatsheets/">Cheatsheets</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="https://github.com/RipperMercs/terminalfeed">GitHub</a>
+  </footer>
+</body>
+</html>

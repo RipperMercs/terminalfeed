@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hosted MCP Server: 27 Tools, USDC Premium Tier | TerminalFeed Devs</title>
+  <meta name="description" content="A hosted Model Context Protocol server with 27 tools. Drop-in config for Claude Desktop and Claude Code. Free tier needs no auth. Premium tier (12 endpoints) takes USDC on Base, no signup. Listed on the Official MCP Registry, Smithery, and Glama.">
+  <meta property="og:title" content="MCP Server at TerminalFeed">
+  <meta property="og:description" content="Hosted Model Context Protocol server, 27 tools. Free tier no auth, premium tier USDC on Base. Drop-in Claude Desktop config.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs/mcp">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs/mcp">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; }
+    a { color: inherit; }
+
+    .hub-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid #1E1E24; padding: 10px 20px 0; }
+    .hub-header-inner { max-width: 980px; margin: 0 auto; }
+    .hub-back { font-size: 10px; color: #4E4D49; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .hub-back a { color: #4E4D49; text-decoration: none; }
+    .hub-back a:hover { color: #5DCAA5; }
+    .hub-row { display: flex; align-items: center; gap: 16px; }
+    .hub-brand { font-size: 13px; color: #F0EDE6; font-weight: 700; flex-shrink: 0; }
+    .hub-brand .hub-prompt { color: #4ADE80; margin-right: 4px; }
+    .hub-tabs { display: flex; gap: 0; overflow-x: auto; flex: 1; }
+    .hub-tabs::-webkit-scrollbar { height: 4px; }
+    .hub-tabs::-webkit-scrollbar-thumb { background: #1E1E24; }
+    .hub-tabs .tab { padding: 10px 14px; font-size: 11.5px; color: #8A8880; text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.5px; font-weight: 500; transition: color 0.15s, border-color 0.15s; }
+    .hub-tabs .tab:hover { color: #D4D2CB; }
+    .hub-tabs .tab.active { color: #4ADE80; border-bottom-color: #4ADE80; font-weight: 600; }
+    @media (max-width: 700px) { .hub-row { flex-direction: column; align-items: flex-start; gap: 6px; } .hub-tabs { width: 100%; } }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 40px; }
+
+    .page-header { padding-bottom: 24px; border-bottom: 1px solid #1E1E24; margin-bottom: 32px; }
+    .page-header h1 { font-size: 26px; color: #F0EDE6; font-weight: 700; margin-bottom: 10px; }
+    .page-header h1 .accent { color: #A78BFA; }
+    .page-header .lede { font-size: 13px; color: #8A8880; line-height: 1.7; max-width: 760px; margin-bottom: 12px; }
+    .page-header .lede strong { color: #D4D2CB; }
+    a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+
+    section.block { margin-bottom: 40px; }
+    section.block h2 { font-size: 18px; color: #4ADE80; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; }
+    section.block .section-sub { font-size: 11px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    section.block .lede { font-size: 13px; color: #8A8880; line-height: 1.7; max-width: 760px; margin-bottom: 14px; }
+    section.block .lede strong { color: #D4D2CB; }
+
+    pre { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-size: 11.5px; line-height: 1.6; margin: 14px 0; color: #C8C8C0; }
+    pre .comment { color: #4E4D49; }
+    pre .key { color: #5DCAA5; }
+    pre .str { color: #EF9F27; }
+
+    .endpoint-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #1A1A22; font-size: 12px; gap: 12px; }
+    .endpoint-row:last-child { border-bottom: none; }
+    .endpoint-row .path { color: #5DCAA5; font-weight: 600; flex-shrink: 0; min-width: 220px; }
+    .endpoint-row .desc { color: #8A8880; flex: 1; line-height: 1.5; }
+    .endpoint-row .cost { color: #F9CB42; font-size: 10px; letter-spacing: 1px; flex-shrink: 0; }
+
+    .registry-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 720px) { .registry-grid { grid-template-columns: 1fr; } }
+    .registry-card { background: #111114; border: 1px solid #1E1E24; border-radius: 6px; padding: 14px 16px; text-decoration: none; transition: border-color 0.15s; display: block; }
+    .registry-card:hover { border-color: #5DCAA5; }
+    .registry-card .r-name { font-size: 12px; color: #F0EDE6; font-weight: 600; margin-bottom: 4px; }
+    .registry-card .r-status { font-size: 10px; color: #4ADE80; letter-spacing: 1px; text-transform: uppercase; }
+
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-back"><a href="/">&larr; terminalfeed.io</a></div>
+      <div class="hub-row">
+        <div class="hub-brand"><span class="hub-prompt">&gt;_</span>TerminalFeed Devs</div>
+        <nav class="hub-tabs">
+          <a href="/for-devs" class="tab">Overview</a>
+          <a href="/for-devs/tools" class="tab">Tools</a>
+          <a href="/for-devs/api" class="tab">API</a>
+          <a href="/for-devs/mcp" class="tab active">MCP</a>
+          <a href="/for-devs/recipes" class="tab">Recipes</a>
+          <a href="/for-devs/articles" class="tab">Articles</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <header class="page-header">
+      <h1>Hosted <span class="accent">MCP Server</span></h1>
+      <p class="lede"><strong>Twenty-seven tools exposed via the Model Context Protocol.</strong> Drop the snippet below into Claude Desktop or Claude Code config and every tool is available to your assistant. Free tier needs no auth. Premium tier accepts USDC on Base via bearer token. The server is listed on the Official MCP Registry, Smithery, and the Glama AI catalog.</p>
+    </header>
+
+    <section class="block">
+      <h2>&gt;_ Setup: Claude Desktop and Claude Code</h2>
+      <div class="section-sub">One-line config, no install</div>
+      <p class="lede">Add to your <code style="background:#111114;border:1px solid #1E1E24;padding:1px 5px;border-radius:3px;color:#5DCAA5;font-size:11px">claude_desktop_config.json</code> or Claude Code MCP config. After restart, Claude can call all 27 tools.</p>
+      <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"terminalfeed"</span>: {
+      <span class="key">"command"</span>: <span class="str">"npx"</span>,
+      <span class="key">"args"</span>: [
+        <span class="str">"-y"</span>,
+        <span class="str">"mcp-remote"</span>,
+        <span class="str">"https://terminalfeed.io/api/mcp"</span>
+      ]
+    }
+  }
+}</pre>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Setup: Premium tier</h2>
+      <div class="section-sub">Bearer auth unlocks the 12 paid tools</div>
+      <p class="lede">Buy credits with USDC on Base, get a bearer token, pass it as a header. Same config plus an Authorization line. The full payment walkthrough is in the <a href="/blog/how-ai-agents-pay-terminalfeed" class="inline">how-ai-agents-pay article</a>.</p>
+      <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"terminalfeed"</span>: {
+      <span class="key">"command"</span>: <span class="str">"npx"</span>,
+      <span class="key">"args"</span>: [
+        <span class="str">"-y"</span>,
+        <span class="str">"mcp-remote"</span>,
+        <span class="str">"https://terminalfeed.io/api/mcp"</span>,
+        <span class="str">"--header"</span>,
+        <span class="str">"Authorization: Bearer tf_live_&lt;your_token&gt;"</span>
+      ]
+    }
+  }
+}</pre>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Direct HTTP usage</h2>
+      <div class="section-sub">For HTTP-native MCP clients</div>
+      <p class="lede">If you are not using mcp-remote or Claude Desktop, the MCP endpoint is HTTP JSON-RPC at <code style="background:#111114;border:1px solid #1E1E24;padding:1px 5px;border-radius:3px;color:#5DCAA5;font-size:11px">/api/mcp</code>. Standard MCP discovery, tool listing, and tool calls all work over POST.</p>
+      <pre>POST https://terminalfeed.io/api/mcp
+Authorization: Bearer tf_live_&lt;your_token&gt;   <span class="comment">(optional, premium only)</span>
+Content-Type: application/json</pre>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Premium tools (USDC required)</h2>
+      <div class="section-sub">12 paid endpoints, $0.02 per credit</div>
+      <p class="lede">Composed, normalized, multi-source data. Each endpoint has a deterministic credit cost.</p>
+      <div>
+        <div class="endpoint-row"><span class="path">tf_premium_briefing</span><span class="desc">Composed BTC + Fear and Greed + earthquakes + HN + ISS + predictions</span><span class="cost">1 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_macro</span><span class="desc">FRED + Finnhub + Frankfurter rollup, history supported</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_crypto_deep</span><span class="desc">Per-coin deep dive across CoinGecko + on-chain network stats</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_agent_context</span><span class="desc">Curated paste-ready system prompt of current world state</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_sentiment</span><span class="desc">Crypto F and G plus trending symbols with sentiment scoring</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_world_deltas</span><span class="desc">Polling endpoint, events newer than ?since=ISO timestamp</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_correlation_matrix</span><span class="desc">Computed correlations across 10 historical series</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_whales</span><span class="desc">Large BTC, ETH, Solana transactions with attribution</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_exchange_flows</span><span class="desc">19-wallet labeled list of exchange-controlled addresses</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_defi_tvl</span><span class="desc">Top-50 DeFi protocols + chain rollups, normalized</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_stablecoin_flows</span><span class="desc">Top-20 stablecoins with 1d, 7d, 30d deltas + bias</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_github_velocity</span><span class="desc">GitHub trending repos with computed velocity score</span><span class="cost">2 CR</span></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Verified on these registries</h2>
+      <div class="section-sub">Already indexed across the major MCP catalogs</div>
+      <div class="registry-grid">
+        <a class="registry-card" href="https://github.com/modelcontextprotocol/registry"><div class="r-name">Official MCP Registry</div><div class="r-status">Listed</div></a>
+        <a class="registry-card" href="https://smithery.ai"><div class="r-name">Smithery</div><div class="r-status">Listed</div></a>
+        <a class="registry-card" href="https://glama.ai/mcp/servers"><div class="r-name">Glama AI</div><div class="r-status">Indexed</div></a>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2>&gt;_ Discovery endpoints</h2>
+      <div class="section-sub">Machine-readable contracts</div>
+      <p class="lede">For agent-builders and tooling that wants to introspect.</p>
+      <ul style="list-style:none;padding:0;font-size:12px;color:#8A8880;line-height:2;">
+        <li>&middot; MCP discovery: <a href="/api/mcp" class="inline">/api/mcp</a></li>
+        <li>&middot; Tool catalog (OpenAI / Anthropic / raw): <a href="/api/llm-tools" class="inline">/api/llm-tools</a></li>
+        <li>&middot; OpenAPI spec: <a href="/openapi.json" class="inline">/openapi.json</a></li>
+        <li>&middot; Agent discovery file: <a href="/llms.txt" class="inline">/llms.txt</a></li>
+        <li>&middot; Agent landing page: <a href="/api/for-agents" class="inline">/api/for-agents</a></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/for-devs">Hub</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/api">API</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/recipes">Recipes</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/articles">Articles</a>
+    <span class="sep">|</span>
+    <a href="/developers/agent-payments">Agent Payments</a>
+  </footer>
+</body>
+</html>

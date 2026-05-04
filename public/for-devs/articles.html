@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Articles for Developers: AI Agents, Dev Tools, Real-Time Infra | TerminalFeed Devs</title>
+  <meta name="description" content="Editorial coverage on dev tooling, AI agents, real-time infrastructure, and the open web. Curated from the TerminalFeed blog, filtered to dev-relevant articles by Node, Signal, and zer0day.">
+  <meta property="og:title" content="Articles for Developers at TerminalFeed">
+  <meta property="og:description" content="Editorial coverage on dev tooling, AI agents, real-time infrastructure, and the open web.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs/articles">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs/articles">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; }
+    a { color: inherit; }
+
+    .hub-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid #1E1E24; padding: 10px 20px 0; }
+    .hub-header-inner { max-width: 980px; margin: 0 auto; }
+    .hub-back { font-size: 10px; color: #4E4D49; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .hub-back a { color: #4E4D49; text-decoration: none; }
+    .hub-back a:hover { color: #5DCAA5; }
+    .hub-row { display: flex; align-items: center; gap: 16px; }
+    .hub-brand { font-size: 13px; color: #F0EDE6; font-weight: 700; flex-shrink: 0; }
+    .hub-brand .hub-prompt { color: #4ADE80; margin-right: 4px; }
+    .hub-tabs { display: flex; gap: 0; overflow-x: auto; flex: 1; }
+    .hub-tabs::-webkit-scrollbar { height: 4px; }
+    .hub-tabs::-webkit-scrollbar-thumb { background: #1E1E24; }
+    .hub-tabs .tab { padding: 10px 14px; font-size: 11.5px; color: #8A8880; text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.5px; font-weight: 500; transition: color 0.15s, border-color 0.15s; }
+    .hub-tabs .tab:hover { color: #D4D2CB; }
+    .hub-tabs .tab.active { color: #4ADE80; border-bottom-color: #4ADE80; font-weight: 600; }
+    @media (max-width: 700px) { .hub-row { flex-direction: column; align-items: flex-start; gap: 6px; } .hub-tabs { width: 100%; } }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 40px; }
+
+    .page-header { padding-bottom: 24px; border-bottom: 1px solid #1E1E24; margin-bottom: 36px; }
+    .page-header h1 { font-size: 26px; color: #F0EDE6; font-weight: 700; margin-bottom: 10px; }
+    .page-header h1 .accent { color: #60A5FA; }
+    .page-header .lede { font-size: 13px; color: #8A8880; line-height: 1.7; max-width: 760px; }
+    .page-header .lede strong { color: #D4D2CB; }
+    a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+
+    .article-group { margin-bottom: 32px; }
+    .article-group .group-label { font-size: 11px; color: #4ADE80; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #1E1E24; }
+
+    .article-card { background: #111114; border: 1px solid #1E1E24; border-radius: 8px; padding: 18px 20px; margin-bottom: 10px; transition: border-color 0.15s; text-decoration: none; display: block; }
+    .article-card:hover { border-color: #5DCAA5; }
+    .article-card .article-tags { margin-bottom: 6px; }
+    .article-card .a-tag { display: inline-block; font-size: 9px; color: #5DCAA5; border: 1px solid #5DCAA530; background: #5DCAA510; padding: 2px 7px; border-radius: 3px; margin-right: 5px; letter-spacing: 1px; }
+    .article-card .article-title { font-size: 14px; color: #F0EDE6; margin-bottom: 6px; line-height: 1.4; }
+    .article-card .article-excerpt { font-size: 11.5px; color: #8A8880; line-height: 1.6; margin-bottom: 6px; }
+    .article-card .article-meta { font-size: 10px; color: #4E4D49; }
+
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-back"><a href="/">&larr; terminalfeed.io</a></div>
+      <div class="hub-row">
+        <div class="hub-brand"><span class="hub-prompt">&gt;_</span>TerminalFeed Devs</div>
+        <nav class="hub-tabs">
+          <a href="/for-devs" class="tab">Overview</a>
+          <a href="/for-devs/tools" class="tab">Tools</a>
+          <a href="/for-devs/api" class="tab">API</a>
+          <a href="/for-devs/mcp" class="tab">MCP</a>
+          <a href="/for-devs/recipes" class="tab">Recipes</a>
+          <a href="/for-devs/articles" class="tab active">Articles</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <header class="page-header">
+      <h1>Articles for <span class="accent">Developers</span></h1>
+      <p class="lede"><strong>Editorial coverage curated to dev-relevant topics.</strong> Filtered from the main blog at <a href="/blog" class="inline">/blog</a>: AI agents, dev tooling, real-time infrastructure, security, the open web. Written by Node (dev tools beat), Signal (AI/data beat), and zer0day (security beat). Full RSS feed at <a href="/feed.xml" class="inline">/feed.xml</a>.</p>
+    </header>
+
+    <div class="article-group">
+      <div class="group-label">AI Agents &amp; Infrastructure</div>
+
+      <a class="article-card" href="/blog/how-ai-agents-pay-terminalfeed">
+        <div class="article-tags"><span class="a-tag">AGENTS</span><span class="a-tag">API</span><span class="a-tag">PAYMENTS</span></div>
+        <div class="article-title">How AI Agents Pay for Real-Time Data on TerminalFeed</div>
+        <div class="article-excerpt">A working walkthrough of the payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.</div>
+        <div class="article-meta">By Signal &middot; May 4, 2026 &middot; 9 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/why-the-harness-gap-matters">
+        <div class="article-tags"><span class="a-tag">AI</span><span class="a-tag">AGENTS</span><span class="a-tag">BENCHMARKS</span></div>
+        <div class="article-title">Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent</div>
+        <div class="article-excerpt">Same model, different harnesses, different scores. Claude Opus 4.7 inside Claude Code scores 20+ points higher on Terminal-Bench than the same model called by Aider. Why the harness, not just the model, drives agentic-coding outcomes.</div>
+        <div class="article-meta">By Signal &middot; April 30, 2026 &middot; 7 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/how-ai-agents-browse">
+        <div class="article-tags"><span class="a-tag">AI</span><span class="a-tag">WEB</span><span class="a-tag">INFRASTRUCTURE</span></div>
+        <div class="article-title">How AI Agents Actually Browse the Web</div>
+        <div class="article-excerpt">AI agents are real internet users now. They search, click, read, and call APIs. But most websites are accidentally hostile to them. What is happening and what it means for the future of the web.</div>
+        <div class="article-meta">By Signal &middot; April 7, 2026 &middot; 9 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/websites-humans-ai-agents">
+        <div class="article-tags"><span class="a-tag">AI</span><span class="a-tag">WEB</span></div>
+        <div class="article-title">Your Website Has Two Audiences Now: Humans and AI Agents</div>
+        <div class="article-excerpt">If your site only serves HTML to browsers, you are ignoring a growing audience. AI agents need structured data, clean APIs, and machine-readable content.</div>
+        <div class="article-meta">By Signal &middot; April 3, 2026 &middot; 6 min read</div>
+      </a>
+    </div>
+
+    <div class="article-group">
+      <div class="group-label">Dev Tools &amp; APIs</div>
+
+      <a class="article-card" href="/blog/api-rate-limits-explained">
+        <div class="article-tags"><span class="a-tag">APIS</span><span class="a-tag">DEV</span><span class="a-tag">TUTORIAL</span></div>
+        <div class="article-title">How API Rate Limits Actually Work (And How to Work Around Them)</div>
+        <div class="article-excerpt">Token buckets, sliding windows, retry headers. A practical guide to understanding rate limits and building resilient API clients.</div>
+        <div class="article-meta">By Node &middot; April 7, 2026 &middot; 8 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/free-tier-is-dead">
+        <div class="article-tags"><span class="a-tag">DEV TOOLS</span><span class="a-tag">OPEN SOURCE</span><span class="a-tag">OPINION</span></div>
+        <div class="article-title">The Free Tier Is Dead. Long Live the Open Source Alternative.</div>
+        <div class="article-excerpt">SaaS companies keep gutting their free tiers. The open source ecosystem keeps building better replacements. What to switch to in 2026.</div>
+        <div class="article-meta">By Node &middot; April 8, 2026 &middot; 8 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/free-api-testing-tools">
+        <div class="article-tags"><span class="a-tag">DEV TOOLS</span><span class="a-tag">APIS</span></div>
+        <div class="article-title">Stop Paying for Postman: Free API Testing Tools That Actually Work</div>
+        <div class="article-excerpt">Postman went enterprise. The free, open-source API testing tools that developers are actually switching to.</div>
+        <div class="article-meta">By Node &middot; April 1, 2026 &middot; 6 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/free-apis-2026">
+        <div class="article-tags"><span class="a-tag">APIS</span><span class="a-tag">REFERENCE</span></div>
+        <div class="article-title">30+ Free APIs Every Developer Should Bookmark in 2026</div>
+        <div class="article-excerpt">Free APIs that genuinely cover most side-project needs. Crypto, weather, news, status, geocoding, and more. With curl examples and rate-limit notes.</div>
+        <div class="article-meta">By Node &middot; 9 min read</div>
+      </a>
+    </div>
+
+    <div class="article-group">
+      <div class="group-label">Architecture &amp; Protocols</div>
+
+      <a class="article-card" href="/blog/rest-vs-graphql">
+        <div class="article-tags"><span class="a-tag">APIS</span><span class="a-tag">ARCHITECTURE</span></div>
+        <div class="article-title">REST vs GraphQL: When to Use Which (And When Both Are Wrong)</div>
+        <div class="article-excerpt">The endless REST vs GraphQL debate, settled with a simple decision tree. Plus the cases where neither answer is the right one.</div>
+        <div class="article-meta">By Node &middot; 7 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/websocket-vs-sse">
+        <div class="article-tags"><span class="a-tag">REAL-TIME</span><span class="a-tag">PROTOCOLS</span></div>
+        <div class="article-title">WebSocket vs Server-Sent Events: Picking the Right Real-Time Protocol</div>
+        <div class="article-excerpt">When SSE is enough, when WebSocket pays for itself, and the misunderstandings about both that keep showing up in production code.</div>
+        <div class="article-meta">By Node &middot; 6 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/real-time-vs-near-real-time">
+        <div class="article-tags"><span class="a-tag">REAL-TIME</span><span class="a-tag">ARCHITECTURE</span></div>
+        <div class="article-title">Real-Time vs Near-Real-Time: The Word Everyone Misuses</div>
+        <div class="article-excerpt">Real-time means a hard deadline. Near-real-time means low-latency-with-best-effort. The conflation is why so many systems are over-engineered.</div>
+        <div class="article-meta">By Node &middot; 5 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/cron-decoded">
+        <div class="article-tags"><span class="a-tag">DEVOPS</span><span class="a-tag">REFERENCE</span></div>
+        <div class="article-title">Cron Decoded: Reading Schedule Expressions Without Reaching for a Tool</div>
+        <div class="article-excerpt">The five fields, the wildcards, the step values, and the gotchas that bite you on the production deploy at 2am.</div>
+        <div class="article-meta">By Node &middot; 5 min read</div>
+      </a>
+    </div>
+
+    <div class="article-group">
+      <div class="group-label">Self-Hosting &amp; Open Source</div>
+
+      <a class="article-card" href="/blog/self-hosting-is-back">
+        <div class="article-tags"><span class="a-tag">SELF HOSTING</span><span class="a-tag">HOMELAB</span></div>
+        <div class="article-title">Self-Hosting Is Having a Moment Again</div>
+        <div class="article-excerpt">After two decades of moving everything to the cloud, developers are quietly building homelabs and self-hosting again. The reasons are more interesting than nostalgia.</div>
+        <div class="article-meta">By Node &middot; April 7, 2026 &middot; 7 min read</div>
+      </a>
+    </div>
+
+    <div class="article-group">
+      <div class="group-label">Security &amp; Privacy</div>
+
+      <a class="article-card" href="/blog/read-your-browser-console">
+        <div class="article-tags"><span class="a-tag">SECURITY</span><span class="a-tag">PRIVACY</span></div>
+        <div class="article-title">Why You Should Read Your Browser Console Tonight</div>
+        <div class="article-excerpt">Your browser's developer console is leaking more information than you think. Open it up and see what the sites you visit are really doing.</div>
+        <div class="article-meta">By zer0day &middot; April 8, 2026 &middot; 6 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/browser-extensions-watching">
+        <div class="article-tags"><span class="a-tag">SECURITY</span><span class="a-tag">PRIVACY</span><span class="a-tag">BROWSER</span></div>
+        <div class="article-title">Your Browser Extensions Are Watching: An Audit You Can Run Tonight</div>
+        <div class="article-excerpt">Most users have 8-20 extensions installed. Each one can read every page you visit. A practical audit you can do in 10 minutes.</div>
+        <div class="article-meta">By zer0day &middot; 7 min read</div>
+      </a>
+
+      <a class="article-card" href="/blog/2600-still-matters">
+        <div class="article-tags"><span class="a-tag">HACKER CULTURE</span><span class="a-tag">HISTORY</span><span class="a-tag">INFOSEC</span></div>
+        <div class="article-title">The Hacker Quarterly Turns 41: Why 2600 Magazine Still Matters in 2026</div>
+        <div class="article-excerpt">Four decades in, 2600 Magazine is still publishing. Why the longest-running hacker publication remains relevant in the age of AI and mass surveillance.</div>
+        <div class="article-meta">By zer0day &middot; April 7, 2026 &middot; 8 min read</div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/for-devs">Hub</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/api">API</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/mcp">MCP</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/recipes">Recipes</a>
+    <span class="sep">|</span>
+    <a href="/blog">Full Blog</a>
+    <span class="sep">|</span>
+    <a href="/feed.xml">RSS</a>
+  </footer>
+</body>
+</html>
