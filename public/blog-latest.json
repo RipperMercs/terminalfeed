@@ -1,5 +1,5 @@
 {
-  "updated": "2026-05-04T20:49:40.676Z",
+  "updated": "2026-05-04T22:42:19.759Z",
   "articles": [
     {
       "slug": "how-ai-agents-pay-terminalfeed",
@@ -13,6 +13,19 @@
       ],
       "published": "2026-05-04",
       "read_time": "9 min read"
+    },
+    {
+      "slug": "mcp-server-quickstart-2026",
+      "title": "MCP Server Quickstart 2026: Build, Host, and Get Listed",
+      "excerpt": "A practical guide to building a Model Context Protocol server in 2026. Stdio vs hosted architecture, tool definitions, authentication for paid tools, getting listed on the major MCP registries, and the mistakes to skip. Real code from a production MCP server.",
+      "author": "Signal",
+      "author_title": "Infrastructure Writer",
+      "tags": [
+        "MCP",
+        "AGENTS"
+      ],
+      "published": "2026-05-04",
+      "read_time": "11 min read"
     },
     {
       "slug": "bitcoin-80k-sentiment-disconnect",
@@ -65,19 +78,6 @@
       ],
       "published": "2026-05-03",
       "read_time": ""
-    },
-    {
-      "slug": "delegated-vs-autonomous-agent-payments",
-      "title": "Stripe Link for Agents vs AFTA: Delegated vs Autonomous Agent Payments",
-      "excerpt": "Stripe shipped Link for Agents and Pizza Robot Studios shipped AFTA the same week. They look like competitors but they solve different problems. Here is the architectural split, why both rails are needed, and where they quietly agree at the protocol layer.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [
-        "PAYMENTS",
-        "AGENTS"
-      ],
-      "published": "2026-04-30",
-      "read_time": "8 min read"
     }
   ]
 }
