@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Cheat Sheet - Pattern Matching Reference for Developers | TerminalFeed</title>
+    <meta name="description" content="Complete regex cheat sheet covering character classes, anchors, quantifiers, groups, lookaround, flags, and 20+ common patterns (email, URL, IPv4, UUID, dates). Searchable, printable reference.">
+    <meta name="keywords" content="regex, regular expression, pattern matching, cheat sheet, reference, javascript, python, sed, grep">
+    <meta property="og:title" content="Regex Cheat Sheet - Pattern Matching Reference | TerminalFeed">
+    <meta property="og:description" content="Complete regex cheat sheet with character classes, quantifiers, groups, lookaround, common patterns. Searchable, printable.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/regex">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Regex Cheat Sheet | TerminalFeed">
+    <meta name="twitter:description" content="Complete regex cheat sheet with all the syntax and 20+ common patterns.">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/regex">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #1E1E24; padding-bottom: 20px; }
+        .breadcrumbs { font-size: 12px; color: #8A8880; margin-bottom: 16px; }
+        .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs .sep { margin: 0 8px; }
+        h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #8A8880; }
+        .search-box { margin-bottom: 30px; position: relative; }
+        .search-box input { width: 100%; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 12px 16px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+        .search-box input:focus { outline: none; border-color: #5DCAA5; }
+        .search-box input::placeholder { color: #4E4D49; }
+        .section { margin-bottom: 40px; }
+        .section-title { color: #4ADE80; font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .cmd-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #1A1A1E; align-items: baseline; }
+        .cmd-row:last-child { border-bottom: none; }
+        .cmd-code { flex-shrink: 0; background: #0D0D10; border: 1px solid #1A1A22; padding: 6px 12px; border-radius: 3px; font-size: 11px; color: #5DCAA5; white-space: nowrap; font-weight: 600; min-width: 130px; text-align: center; }
+        .cmd-desc { font-size: 12px; color: #8A8880; flex-grow: 1; }
+        .cmd-desc code { background: #0D0D10; border: 1px solid #1A1A22; padding: 1px 5px; border-radius: 2px; font-size: 10.5px; color: #EF9F27; }
+        .hidden { display: none; }
+        .note { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 4px; padding: 14px 18px; margin: 14px 0; font-size: 12px; color: #8A8880; line-height: 1.7; }
+        .note strong { color: #D4D2CB; }
+        footer { border-top: 1px solid #1E1E24; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #8A8880; text-align: center; }
+        footer a { color: #5DCAA5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .sep { margin: 0 8px; color: #4E4D49; }
+        @media print { .search-box { display: none; } .section { page-break-inside: avoid; } }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Regex Cheat Sheet - Pattern Matching Reference for Developers",
+        "description": "Complete regex cheat sheet covering character classes, anchors, quantifiers, groups, lookaround, flags, and 20+ common patterns.",
+        "url": "https://terminalfeed.io/cheatsheets/regex",
+        "datePublished": "2026-05-04",
+        "dateModified": "2026-05-04",
+        "author": { "@type": "Person", "name": "TerminalFeed" },
+        "publisher": { "@type": "Organization", "name": "TerminalFeed", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/og-image.png" } }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Cheatsheets", "item": "https://terminalfeed.io/cheatsheets" },
+            { "@type": "ListItem", "position": 3, "name": "Regex", "item": "https://terminalfeed.io/cheatsheets/regex" }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>Regex</span>
+            </div>
+            <h1>Regex Cheat Sheet</h1>
+            <p class="subtitle">Pattern matching syntax across JavaScript, Python, sed, grep, and most modern engines, plus 20+ ready-to-use patterns</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search patterns... (e.g., email, digit, group, lookahead)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Character Classes</div>
+            <div class="cmd-row"><div class="cmd-code">.</div><div class="cmd-desc">Any single char except newline (with the <code>s</code> flag, includes newline)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\d</div><div class="cmd-desc">Digit, equivalent to <code>[0-9]</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">\D</div><div class="cmd-desc">Non-digit, equivalent to <code>[^0-9]</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">\w</div><div class="cmd-desc">Word char, equivalent to <code>[A-Za-z0-9_]</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">\W</div><div class="cmd-desc">Non-word char</div></div>
+            <div class="cmd-row"><div class="cmd-code">\s</div><div class="cmd-desc">Whitespace (space, tab, newline, etc.)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\S</div><div class="cmd-desc">Non-whitespace</div></div>
+            <div class="cmd-row"><div class="cmd-code">[abc]</div><div class="cmd-desc">Any one of <code>a</code>, <code>b</code>, or <code>c</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">[^abc]</div><div class="cmd-desc">Any char NOT in the set</div></div>
+            <div class="cmd-row"><div class="cmd-code">[a-z]</div><div class="cmd-desc">Range of chars from <code>a</code> to <code>z</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">[A-Za-z0-9]</div><div class="cmd-desc">Combined ranges</div></div>
+            <div class="cmd-row"><div class="cmd-code">\.</div><div class="cmd-desc">Escaped period (matches literal <code>.</code>)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Anchors</div>
+            <div class="cmd-row"><div class="cmd-code">^</div><div class="cmd-desc">Start of string (or line, with <code>m</code> flag)</div></div>
+            <div class="cmd-row"><div class="cmd-code">$</div><div class="cmd-desc">End of string (or line, with <code>m</code> flag)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\b</div><div class="cmd-desc">Word boundary (between <code>\w</code> and <code>\W</code>)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\B</div><div class="cmd-desc">Non-word boundary</div></div>
+            <div class="cmd-row"><div class="cmd-code">\A</div><div class="cmd-desc">Start of string only (Python, PCRE; not JS)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\z</div><div class="cmd-desc">End of string only (Python, PCRE; not JS)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Quantifiers</div>
+            <div class="cmd-row"><div class="cmd-code">*</div><div class="cmd-desc">Zero or more (greedy)</div></div>
+            <div class="cmd-row"><div class="cmd-code">+</div><div class="cmd-desc">One or more (greedy)</div></div>
+            <div class="cmd-row"><div class="cmd-code">?</div><div class="cmd-desc">Zero or one (optional)</div></div>
+            <div class="cmd-row"><div class="cmd-code">{n}</div><div class="cmd-desc">Exactly n times</div></div>
+            <div class="cmd-row"><div class="cmd-code">{n,}</div><div class="cmd-desc">n or more times</div></div>
+            <div class="cmd-row"><div class="cmd-code">{n,m}</div><div class="cmd-desc">Between n and m times (inclusive)</div></div>
+            <div class="cmd-row"><div class="cmd-code">*?</div><div class="cmd-desc">Zero or more, lazy (smallest match)</div></div>
+            <div class="cmd-row"><div class="cmd-code">+?</div><div class="cmd-desc">One or more, lazy</div></div>
+            <div class="cmd-row"><div class="cmd-code">??</div><div class="cmd-desc">Zero or one, lazy</div></div>
+            <div class="cmd-row"><div class="cmd-code">{n,m}?</div><div class="cmd-desc">Bounded, lazy</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Groups & Backreferences</div>
+            <div class="cmd-row"><div class="cmd-code">(abc)</div><div class="cmd-desc">Capturing group</div></div>
+            <div class="cmd-row"><div class="cmd-code">(?:abc)</div><div class="cmd-desc">Non-capturing group (no slot in match array)</div></div>
+            <div class="cmd-row"><div class="cmd-code">(?&lt;name&gt;abc)</div><div class="cmd-desc">Named capturing group (most modern engines)</div></div>
+            <div class="cmd-row"><div class="cmd-code">a|b</div><div class="cmd-desc">Alternation: <code>a</code> or <code>b</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">\1, \2</div><div class="cmd-desc">Backreference to first, second capture group</div></div>
+            <div class="cmd-row"><div class="cmd-code">\k&lt;name&gt;</div><div class="cmd-desc">Backreference to named group</div></div>
+            <div class="cmd-row"><div class="cmd-code">$1, $2</div><div class="cmd-desc">In substitution: insert capture group N</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Lookaround</div>
+            <div class="cmd-row"><div class="cmd-code">(?=abc)</div><div class="cmd-desc">Positive lookahead: followed by <code>abc</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">(?!abc)</div><div class="cmd-desc">Negative lookahead: NOT followed by <code>abc</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">(?&lt;=abc)</div><div class="cmd-desc">Positive lookbehind: preceded by <code>abc</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">(?&lt;!abc)</div><div class="cmd-desc">Negative lookbehind: NOT preceded by <code>abc</code></div></div>
+            <div class="note"><strong>Note:</strong> Lookbehind requires modern engines (JS as of ES2018, Python re, PCRE). Some older engines (Go's RE2, basic POSIX) don't support it.</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Flags</div>
+            <div class="cmd-row"><div class="cmd-code">g</div><div class="cmd-desc">Global, find all matches (not just first)</div></div>
+            <div class="cmd-row"><div class="cmd-code">i</div><div class="cmd-desc">Case-insensitive</div></div>
+            <div class="cmd-row"><div class="cmd-code">m</div><div class="cmd-desc">Multiline, <code>^</code> and <code>$</code> match line breaks</div></div>
+            <div class="cmd-row"><div class="cmd-code">s</div><div class="cmd-desc">Dotall, <code>.</code> matches newlines</div></div>
+            <div class="cmd-row"><div class="cmd-code">u</div><div class="cmd-desc">Unicode (JS, full Unicode support)</div></div>
+            <div class="cmd-row"><div class="cmd-code">x</div><div class="cmd-desc">Extended/verbose, ignore whitespace and allow comments (Python, PCRE)</div></div>
+            <div class="cmd-row"><div class="cmd-code">y</div><div class="cmd-desc">Sticky, match starting at lastIndex (JS only)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Common Patterns</div>
+            <div class="cmd-row"><div class="cmd-code">[\w.+-]+@[\w-]+\.[\w.-]+</div><div class="cmd-desc">Email (loose, good enough for most use cases)</div></div>
+            <div class="cmd-row"><div class="cmd-code">https?://[^\s]+</div><div class="cmd-desc">URL (basic, captures most http and https)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\b(\d{1,3}\.){3}\d{1,3}\b</div><div class="cmd-desc">IPv4 address (loose, doesn't validate ranges 0-255)</div></div>
+            <div class="cmd-row"><div class="cmd-code">[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}</div><div class="cmd-desc">UUID v1-v5 format</div></div>
+            <div class="cmd-row"><div class="cmd-code">\d{4}-\d{2}-\d{2}</div><div class="cmd-desc">ISO 8601 date (YYYY-MM-DD)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\d{2}:\d{2}(:\d{2})?</div><div class="cmd-desc">HH:MM or HH:MM:SS time</div></div>
+            <div class="cmd-row"><div class="cmd-code">^#[0-9a-fA-F]{3,8}$</div><div class="cmd-desc">CSS hex color (3, 4, 6, or 8 chars)</div></div>
+            <div class="cmd-row"><div class="cmd-code">\$?\d{1,3}(,\d{3})*(\.\d{2})?</div><div class="cmd-desc">USD currency with optional dollar sign and cents</div></div>
+            <div class="cmd-row"><div class="cmd-code">\+?[1-9]\d{1,14}</div><div class="cmd-desc">E.164 international phone number</div></div>
+            <div class="cmd-row"><div class="cmd-code">^[a-z0-9-]+$</div><div class="cmd-desc">URL-safe slug (lowercase, digits, hyphens)</div></div>
+            <div class="cmd-row"><div class="cmd-code">^(?=.*[A-Z])(?=.*\d).{8,}$</div><div class="cmd-desc">Password: 8+ chars, has uppercase and digit (lookaheads)</div></div>
+            <div class="cmd-row"><div class="cmd-code">&lt;([a-z]+)([^&gt;]*)&gt;.*?&lt;/\1&gt;</div><div class="cmd-desc">Matched HTML tag pair (loose, won't handle nesting)</div></div>
+            <div class="cmd-row"><div class="cmd-code">^\s*$</div><div class="cmd-desc">Empty line (only whitespace)</div></div>
+            <div class="cmd-row"><div class="cmd-code">^[A-Z][a-z]+\s[A-Z][a-z]+$</div><div class="cmd-desc">Two capitalized words (e.g. a typical full name)</div></div>
+            <div class="cmd-row"><div class="cmd-code">[a-zA-Z]\w{2,30}</div><div class="cmd-desc">Username: starts with letter, 3-31 chars total</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Substitution</div>
+            <div class="cmd-row"><div class="cmd-code">"abc".replace(/b/, "X")</div><div class="cmd-desc">JavaScript: replace first match</div></div>
+            <div class="cmd-row"><div class="cmd-code">"abc".replace(/b/g, "X")</div><div class="cmd-desc">JavaScript: replace all matches</div></div>
+            <div class="cmd-row"><div class="cmd-code">re.sub(r'\d+', 'N', s)</div><div class="cmd-desc">Python: replace all digits with "N"</div></div>
+            <div class="cmd-row"><div class="cmd-code">sed 's/foo/bar/g'</div><div class="cmd-desc">sed: replace all in file (use POSIX BRE or ERE syntax)</div></div>
+            <div class="cmd-row"><div class="cmd-code">sed -E 's/foo/bar/g'</div><div class="cmd-desc">sed extended: ERE allows <code>+</code>, <code>?</code>, <code>{n,m}</code>, <code>()</code> without escaping</div></div>
+            <div class="cmd-row"><div class="cmd-code">$1, $2 in replacement</div><div class="cmd-desc">Insert capture group N (JS, Python, sed, PCRE)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Engine Differences (Heads-up)</div>
+            <div class="cmd-row"><div class="cmd-code">JavaScript</div><div class="cmd-desc">Supports lookahead since forever, lookbehind since ES2018, named groups via <code>(?&lt;name&gt;...)</code>. Use <code>g</code> flag with <code>matchAll()</code>.</div></div>
+            <div class="cmd-row"><div class="cmd-code">Python (re)</div><div class="cmd-desc">Use <code>r"..."</code> raw strings to avoid double-escaping. Named groups via <code>(?P&lt;name&gt;...)</code>. Has verbose <code>x</code> flag for commenting.</div></div>
+            <div class="cmd-row"><div class="cmd-code">grep</div><div class="cmd-desc">Default is BRE (basic). Use <code>grep -E</code> for ERE (where <code>+</code>, <code>?</code>, <code>{n,m}</code>, <code>()</code> are special). Use <code>grep -P</code> for PCRE on GNU grep.</div></div>
+            <div class="cmd-row"><div class="cmd-code">Go (regexp)</div><div class="cmd-desc">Uses RE2: linear time, no lookaround, no backreferences. Trade-off for guaranteed performance.</div></div>
+            <div class="cmd-row"><div class="cmd-code">Rust (regex crate)</div><div class="cmd-desc">RE2-style by default (no lookaround/backrefs). Use <code>fancy-regex</code> crate for those.</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Pro Tips</div>
+            <div class="note"><strong>Always escape special chars in literal text:</strong> <code>. * + ? ^ $ { } ( ) | [ ] \</code>. Inside character classes, you only need to escape <code>]</code> <code>\</code> and the first <code>^</code>.</div>
+            <div class="note"><strong>Greedy vs lazy matters more than people think.</strong> <code>.*</code> matches the longest possible substring. <code>.*?</code> matches the shortest. Wrong one bites you on HTML/JSON-like inputs.</div>
+            <div class="note"><strong>Anchors are free.</strong> Add <code>^</code> and <code>$</code> when you mean "match the whole string" rather than "match anywhere in it." Catches a surprising number of bugs.</div>
+            <div class="note"><strong>Named groups beat positional ones</strong> once you have more than two captures. Future-you will not remember what <code>$3</code> meant.</div>
+            <div class="note"><strong>Test patterns interactively before shipping.</strong> Use <a href="/tools/regex" style="color: #5DCAA5;">/tools/regex</a> for live match feedback.</div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/cheatsheets">Cheatsheets</a><span class="sep">|</span>
+            <a href="/cheatsheets/bash">Bash</a><span class="sep">|</span>
+            <a href="/cheatsheets/git">Git</a><span class="sep">|</span>
+            <a href="/cheatsheets/docker">Docker</a><span class="sep">|</span>
+            <a href="/cheatsheets/http">HTTP</a><span class="sep">|</span>
+            <a href="/tools/regex">Regex Tester</a><span class="sep">|</span>
+            <a href="/for-devs">Developer Hub</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            const notes = document.querySelectorAll('.note');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+            notes.forEach(note => {
+                const text = note.textContent.toLowerCase();
+                note.classList.toggle('hidden', searchTerm && !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>
