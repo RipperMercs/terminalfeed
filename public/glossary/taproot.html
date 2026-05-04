@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Taproot? - TerminalFeed Glossary</title>
+  <meta name="description" content="Taproot is a 2021 Bitcoin protocol upgrade that improved privacy, efficiency, and smart contract capability. Learn what changed and why it matters.">
+  <meta property="og:title" content="What is Taproot? - TerminalFeed Glossary">
+  <meta property="og:description" content="Bitcoin's 2021 protocol upgrade that improved privacy, efficiency, and smart contract capability.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/taproot">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/taproot">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    "name": "Taproot",
+    "description": "A 2021 Bitcoin protocol upgrade that improved privacy, transaction efficiency, and smart contract flexibility through Schnorr signatures and MAST.",
+    "inDefinedTermSet": {
+      "@type": "DefinedTermSet",
+      "name": "TerminalFeed Tech Glossary",
+      "url": "https://terminalfeed.io/glossary"
+    },
+    "url": "https://terminalfeed.io/glossary/taproot"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Glossary", "item": "https://terminalfeed.io/glossary" },
+      { "@type": "ListItem", "position": 3, "name": "Taproot", "item": "https://terminalfeed.io/glossary/taproot" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Taproot</span>
+    </nav>
+
+    <h1>Taproot</h1>
+    <div class="category-label">CRYPTOCURRENCY</div>
+
+    <h2>Quick Definition</h2>
+    <p>Taproot is a soft-fork upgrade to <a href="/glossary/bitcoin">Bitcoin</a> activated in November 2021. It bundled three Bitcoin Improvement Proposals (BIPs 340, 341, 342) that improved privacy, transaction efficiency, and smart contract flexibility on Bitcoin's base layer.</p>
+
+    <h2>How it works</h2>
+    <p>Taproot's three main pieces:</p>
+    <ul>
+      <li><strong>Schnorr signatures</strong> replaced the older ECDSA scheme for new outputs. Schnorr signatures are smaller, faster to verify, and natively support signature aggregation (multiple signatures combined into one).</li>
+      <li><strong>Taproot script paths</strong> (MAST, or Merkelized Abstract Syntax Trees) let complex spending conditions be hidden until the moment they are exercised. A multi-signature wallet, a time-locked contract, and a single-signer payment all look identical on-chain when spent through the cooperative path.</li>
+      <li><strong>Tapscript</strong>, an updated scripting language with cleaner opcodes and room for future upgrades.</li>
+    </ul>
+
+    <h2>Why it matters</h2>
+    <p>The privacy gain is real but subtle: complex contracts (multi-sig, Lightning channels, vaults) now share the same on-chain footprint as ordinary single-signer transactions when they are spent cooperatively. An observer cannot tell which is which without dispute. This breaks the long-standing pattern where every script type had a recognizable on-chain signature.</p>
+    <p>The efficiency gain is concrete: Taproot transactions are typically 10 to 30 percent smaller than equivalent pre-Taproot transactions, which translates directly to lower fees. Lightning Network channel opens and closes are noticeably cheaper post-Taproot.</p>
+    <p>Taproot also enabled the Ordinals protocol in early 2023, which writes arbitrary data into Bitcoin transactions. Ordinals were not the goal of Taproot but are a side effect of how Tapscript handles witness data. They have been controversial and have driven significant fee revenue and mempool congestion since launch.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The BTC Network panel on the <a href="/">TerminalFeed dashboard</a> shows live mempool fee pressure, which jumps during Ordinals or BRC-20 token surges (both downstream of Taproot). The <a href="/blog/bitcoin-mempool">Bitcoin Mempool guide</a> covers how to read those fee spikes.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/bitcoin">Bitcoin</a></li>
+        <li><a href="/glossary/lightning-network">Lightning Network</a></li>
+        <li><a href="/glossary/utxo">UTXO</a></li>
+        <li><a href="/glossary/mempool">Mempool</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>
