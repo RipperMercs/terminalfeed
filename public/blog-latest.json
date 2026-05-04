@@ -1,5 +1,5 @@
 {
-  "updated": "2026-05-04T02:42:49.649Z",
+  "updated": "2026-05-04T02:52:28.782Z",
   "articles": [
     {
       "slug": "bitcoin-80k-sentiment-disconnect",
@@ -10,6 +10,45 @@
       "tags": [
         "BITCOIN",
         "MARKETS"
+      ],
+      "published": "2026-05-03",
+      "read_time": ""
+    },
+    {
+      "slug": "terminalfeed-vs-coinbase-price-widget",
+      "title": "TerminalFeed vs Coinbase Price Widget: Embed Comparison",
+      "excerpt": "Coinbase's price widget is brokerage-branded and pushes signups. TerminalFeed's embed is unbranded, ad-free, and theme-customizable. Honest comparison of where each one fits.",
+      "author": "Pulse",
+      "author_title": "Market Analyst",
+      "tags": [
+        "COMPARISON",
+        "BITCOIN"
+      ],
+      "published": "2026-05-03",
+      "read_time": ""
+    },
+    {
+      "slug": "terminalfeed-vs-coingecko-ticker",
+      "title": "TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared",
+      "excerpt": "CoinGecko's free Bitcoin API has rate limits, attribution requirements, and minute-level update lag. TerminalFeed has none of those. Honest comparison of when each one wins.",
+      "author": "Node",
+      "author_title": "Dev Tools Editor",
+      "tags": [
+        "COMPARISON",
+        "BITCOIN"
+      ],
+      "published": "2026-05-03",
+      "read_time": ""
+    },
+    {
+      "slug": "terminalfeed-vs-coinmarketcap-ticker",
+      "title": "TerminalFeed vs CoinMarketCap Ticker: Free Bitcoin Price Compared",
+      "excerpt": "CoinMarketCap is the consumer default for crypto prices but is ad-heavy, slow on mobile, and lags on free updates. TerminalFeed is dark, fast, and ad-free. Honest comparison.",
+      "author": "Pulse",
+      "author_title": "Market Analyst",
+      "tags": [
+        "COMPARISON",
+        "BITCOIN"
       ],
       "published": "2026-05-03",
       "read_time": ""
@@ -39,36 +78,6 @@
       ],
       "published": "2026-04-30",
       "read_time": "7 min read"
-    },
-    {
-      "slug": "best-bitcoin-ticker",
-      "title": "The Best Free Bitcoin Ticker in 2026",
-      "excerpt": "We benchmarked the main free Bitcoin ticker services on update speed, accuracy, reliability, and features. Here's which live BTC ticker actually deserves your second monitor.",
-      "author": "Pulse",
-      "author_title": "Market Analyst",
-      "tags": [],
-      "published": "2026-04-22",
-      "read_time": ""
-    },
-    {
-      "slug": "bitcoin-ticker-explained",
-      "title": "Bitcoin Ticker: How Live BTC Price Updates Actually Work",
-      "excerpt": "A live Bitcoin ticker looks simple, but the plumbing behind it is not. Here's exactly how real-time BTC price updates get from exchange to your screen in under a second.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [],
-      "published": "2026-04-22",
-      "read_time": ""
-    },
-    {
-      "slug": "bitcoin-ticker-for-your-site",
-      "title": "How to Add a Free Bitcoin Ticker to Your Website",
-      "excerpt": "Drop a live Bitcoin ticker on any website in under 20 lines of JavaScript. WebSocket primary, REST fallback, reconnection, and null-safe defaults included. Free, no API key.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [],
-      "published": "2026-04-22",
-      "read_time": ""
     }
   ]
 }

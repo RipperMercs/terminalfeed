@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared | TerminalFeed</title>
+  <meta name="description" content="CoinGecko's free Bitcoin API has rate limits, attribution requirements, and minute-level update lag. TerminalFeed has none of those. Honest comparison of when each one wins.">
+  <meta property="og:title" content="TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared">
+  <meta property="og:description" content="CoinGecko has rate limits and minute-level lag. TerminalFeed updates every second with no key. When each one wins.">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:url" content="https://terminalfeed.io/blog/terminalfeed-vs-coingecko-ticker">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared">
+  <meta name="twitter:description" content="Rate limits, attribution, update frequency. Honest side-by-side.">
+  <meta name="twitter:image" content="https://terminalfeed.io/og-image.png">
+  <link rel="canonical" href="https://terminalfeed.io/blog/terminalfeed-vs-coingecko-ticker">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed" href="https://terminalfeed.io/feed.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io"},
+      {"@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog"},
+      {"@type": "ListItem", "position": 3, "name": "TerminalFeed vs CoinGecko Ticker", "item": "https://terminalfeed.io/blog/terminalfeed-vs-coingecko-ticker"}
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared",
+    "description": "CoinGecko's free Bitcoin API has rate limits, attribution requirements, and minute-level update lag. TerminalFeed has none of those. Honest comparison of when each one wins.",
+    "image": "https://terminalfeed.io/og-image.png",
+    "datePublished": "2026-05-03T17:00:00Z",
+    "dateModified": "2026-05-03T17:00:00Z",
+    "author": {
+      "@type": "Person",
+      "name": "Node",
+      "url": "https://terminalfeed.io/team/node",
+      "jobTitle": "Developer Advocate"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 760px; margin: 0 auto; }
+    header { margin-bottom: 48px; border-bottom: 1px solid #1E1E24; padding-bottom: 32px; }
+    .breadcrumbs { font-size: 11px; color: #8A8880; margin-bottom: 16px; letter-spacing: 0.5px; }
+    .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    .breadcrumbs span { margin: 0 6px; }
+    h1 { font-size: 28px; color: #F0EDE6; margin: 20px 0 16px 0; font-weight: 600; line-height: 1.3; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #8A8880; margin-top: 12px; }
+    .meta-item { display: flex; align-items: center; gap: 4px; }
+    .article-body { color: #D4D2CB; }
+    .article-body p { margin-bottom: 16px; line-height: 1.7; }
+    .article-body h2 { font-size: 18px; color: #4ADE80; margin: 32px 0 16px 0; font-weight: 600; border-left: 3px solid #4ADE80; padding-left: 12px; }
+    .article-body h3 { font-size: 14px; color: #5DCAA5; margin: 20px 0 12px 0; font-weight: 600; }
+    .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 16px; }
+    .article-body li { margin-bottom: 8px; line-height: 1.6; }
+    .article-body code { background: #111114; color: #5DCAA5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .compare-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 12px; border: 1px solid #1E1E24; }
+    .compare-table th { text-align: left; padding: 12px 12px; border-bottom: 2px solid #1E1E24; color: #5DCAA5; font-weight: 600; background: rgba(93, 202, 165, 0.05); }
+    .compare-table td { padding: 12px 12px; border-bottom: 1px solid #1A1A1E; color: #D4D2CB; }
+    .compare-table tr:nth-child(odd) td { background: rgba(17, 17, 20, 0.5); }
+    .compare-table td:first-child { color: #F0EDE6; font-weight: 500; }
+    .cta-box { background: #111114; border: 1px solid #1E1E24; border-left: 3px solid #F9CB42; padding: 20px; margin: 32px 0; border-radius: 3px; }
+    .cta-box h3 { margin-top: 0; color: #F9CB42; font-size: 14px; }
+    .cta-box p { margin-bottom: 12px; font-size: 13px; }
+    .cta-link { display: inline-block; background: rgba(93, 202, 165, 0.15); color: #5DCAA5; padding: 8px 12px; text-decoration: none; border-radius: 3px; font-size: 12px; border: 1px solid #5DCAA5; transition: all 0.2s; margin-right: 6px; }
+    .cta-link:hover { background: rgba(93, 202, 165, 0.25); }
+    .author-box { background: #111114; border: 1px solid #1E1E24; padding: 20px; margin-top: 40px; border-radius: 3px; }
+    .author-box h3 { font-size: 13px; color: #F0EDE6; margin-top: 0; margin-bottom: 8px; }
+    .author-info { font-size: 12px; color: #8A8880; line-height: 1.6; }
+    .author-info a { color: #5DCAA5; text-decoration: none; }
+    footer { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1E1E24; font-size: 11px; color: #4E4D49; text-align: center; }
+    footer a { color: #5DCAA5; text-decoration: none; }
+    @media (max-width: 600px) { html, body { padding: 24px 16px; } h1 { font-size: 22px; } .article-body h2 { font-size: 16px; } .compare-table { font-size: 11px; } .compare-table th, .compare-table td { padding: 8px 8px; } }
+  </style>
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="breadcrumbs">
+        <a href="https://terminalfeed.io">Home</a>
+        <span>&gt;</span>
+        <a href="https://terminalfeed.io/blog">Blog</a>
+        <span>&gt;</span>
+        <span>TerminalFeed vs CoinGecko Ticker</span>
+      </div>
+      <h1>TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared</h1>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="article-tag">COMPARISON</span>
+          <span class="article-tag">BITCOIN</span>
+          <span class="article-tag">API</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">By <strong><a href="https://terminalfeed.io/team/node" style="color: #5DCAA5; text-decoration: none;">Node</a></strong></div>
+        <div class="meta-item">May 3, 2026</div>
+        <div class="meta-item">~7 min read</div>
+      </div>
+    </header>
+
+    <article class="article-body">
+      <p>CoinGecko is the default for "I need a Bitcoin price in my app" for most developers. It's well known, the data is good, and the free tier exists. We use CoinGecko as a fallback on the TerminalFeed dashboard ourselves. This isn't a hit piece. It's a side-by-side from someone who has run both in production and decided to ship our own to handle the things CoinGecko's free tier wasn't doing.</p>
+
+      <p>If you're picking a Bitcoin price source for a hobby project, dashboard, AI agent, or embed, here is what actually matters and where each option lands.</p>
+
+      <h2>Side by Side</h2>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>TerminalFeed /api/btc-price</th>
+            <th>CoinGecko Free Tier</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>API key required</td><td>No</td><td>Optional, but recommended for stability</td></tr>
+          <tr><td>Rate limit</td><td>None published, no auth</td><td>~30 req/min, throttled aggressively at peak</td></tr>
+          <tr><td>Update frequency</td><td>1s WebSocket-backed cache</td><td>~60s cache</td></tr>
+          <tr><td>Source transparency</td><td>Binance primary, CoinCap fallback (in response)</td><td>Aggregated, not specified per call</td></tr>
+          <tr><td>Attribution required</td><td>No</td><td>Yes, on free tier</td></tr>
+          <tr><td>CORS</td><td>Open</td><td>Open</td></tr>
+          <tr><td>Stale-while-error behavior</td><td>Returns last known good with timestamp</td><td>Returns 429 / 503 directly</td></tr>
+          <tr><td>Embeddable widget</td><td>Yes, /embed/btc-ticker</td><td>No, API only</td></tr>
+          <tr><td>Coverage breadth</td><td>BTC primary, top crypto via /api/crypto-movers</td><td>Thousands of coins, currencies, exchanges</td></tr>
+          <tr><td>Historical data</td><td>Not exposed on free tier</td><td>Yes, OHLC available</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Where CoinGecko Wins</h2>
+      <p>Coverage. CoinGecko tracks every coin, every exchange, every fiat pair. If your project needs altcoin support, exchange-specific prices, or historical OHLC bars, CoinGecko is the right tool. We use it as a fallback for that exact reason.</p>
+      <p>Volume-weighted aggregate price. CoinGecko's BTC price is a smoothed cross-exchange aggregate. For applications that need a "fair" reference price (settlement, accounting, indexing), the aggregate is more defensible than a single exchange's last trade.</p>
+      <p>Mature ecosystem. CoinGecko has wrappers in every language, documentation in many languages, and a stable URL scheme that has lasted years. Boring is good for production.</p>
+
+      <h2>Where TerminalFeed Wins</h2>
+      <p>Latency. TerminalFeed's price comes from a Cloudflare Worker that holds a hot WebSocket connection to Binance and serves the cached value with sub-second freshness. CoinGecko's free tier price updates roughly once per minute. For a live ticker on a dashboard, that gap is the difference between feeling alive and feeling broken.</p>
+      <p>No rate limit, no key. Free CoinGecko gets aggressive throttling during volatile periods exactly when your dashboard needs the data most. TerminalFeed has no auth and no published cap. (We monitor abuse and would intervene if anyone tried to mirror the entire dashboard server-to-server, but normal client-side polling is unbounded.)</p>
+      <p>Stale-while-error. When upstreams flake, CoinGecko returns 429 or 503 and your UI breaks. TerminalFeed returns the last known good price with a timestamp, so your UI shows a slightly stale number instead of a blank screen. Per <a href="/blog/api-rate-limits-explained">our take on rate limits</a>, this matters more for end-user trust than raw latency.</p>
+      <p>Embeddable widget. <a href="/widgets">/widgets</a> ships a drop-in iframe that renders the live BTC ticker with dark or light theme. CoinGecko makes you build your own UI on top of the API.</p>
+
+      <h2>Decision Tree</h2>
+      <ul>
+        <li><strong>You need altcoins, fiat pairs, or historical bars:</strong> CoinGecko. Not even close.</li>
+        <li><strong>You need a smoothed cross-exchange BTC price for settlement or accounting:</strong> CoinGecko.</li>
+        <li><strong>You're building a live BTC dashboard or ticker UI:</strong> TerminalFeed. Latency wins.</li>
+        <li><strong>You want to drop a Bitcoin ticker on a website with no code:</strong> TerminalFeed embed. CoinGecko has no widget.</li>
+        <li><strong>You're an AI agent making one-shot price reads:</strong> Either works. TerminalFeed's <a href="/api/briefing">/api/briefing</a> gives you BTC plus context in one call, which is usually what an agent actually wants.</li>
+        <li><strong>You're already on CoinGecko Pro and paying:</strong> Stay. Pro tier removes the limits that drove us to build our own.</li>
+      </ul>
+
+      <h2>How to Try TerminalFeed in 30 Seconds</h2>
+      <p>The full endpoint is <code>https://terminalfeed.io/api/btc-price</code>. No headers, no auth, returns JSON with current price, 24h high/low, volume, and source. Drop it in fetch:</p>
+      <p><code>const r = await fetch('https://terminalfeed.io/api/btc-price'); const { data } = await r.json();</code></p>
+      <p>For the embeddable widget version, see <a href="/blog/bitcoin-ticker-for-your-site">our setup guide</a> or just iframe <code>https://terminalfeed.io/embed/btc-ticker</code>.</p>
+
+      <div class="cta-box">
+        <h3>Try It Live</h3>
+        <p>Live BTC price plus 30+ other real-time feeds. Free, no signup.</p>
+        <a href="https://terminalfeed.io" class="cta-link">Open the Dashboard</a>
+        <a href="https://terminalfeed.io/bitcoin-ticker" class="cta-link">Bitcoin Ticker</a>
+        <a href="https://terminalfeed.io/developers" class="cta-link">Free API</a>
+      </div>
+
+      <div class="author-box">
+        <h3>About Node</h3>
+        <p class="author-info">Node is TerminalFeed's developer advocate. APIs, dev tools, programming, and the architecture choices behind the dashboard. More at <a href="https://terminalfeed.io/team/node">/team/node</a>.</p>
+      </div>
+    
+<div class="related-content">
+  <h3>RELATED ARTICLES</h3>
+  <a href="/blog/terminalfeed-vs-coinmarketcap-ticker" class="related-article">
+    <div class="related-title">TerminalFeed vs CoinMarketCap Ticker: Free Bitcoin Price Compared</div>
+    <div class="related-meta">By <a href="/team/ripper" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Ripper</a> | COMPARISON</div>
+  </a>
+  <a href="/blog/best-bitcoin-ticker" class="related-article">
+    <div class="related-title">The Best Free Bitcoin Ticker in 2026</div>
+    <div class="related-meta">By <a href="/team/ripper" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Ripper</a> | Article</div>
+  </a>
+  <a href="/blog/bitcoin-ticker-for-your-site" class="related-article">
+    <div class="related-title">How to Add a Free Bitcoin Ticker to Your Website</div>
+    <div class="related-meta">By <a href="/team/ripper" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Ripper</a> | Article</div>
+  </a>
+
+  <div class="related-tools">
+    <h3>RELATED TOOLS</h3>
+    <a href="/tools/json" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> JSON Formatter
+      <span class="tool-desc">Format and validate JSON</span>
+    </a>
+    <a href="/tools/satoshi" class="related-tool">
+      <span class="tool-prefix">&gt;_</span> Satoshi Converter
+      <span class="tool-desc">BTC to sats</span>
+    </a>
+  </div>
+</div>
+
+    </article>
+
+    <footer>
+      <p>&copy; 2026 TerminalFeed. <a href="/">Home</a> · <a href="/blog">Blog</a> · <a href="/feed.xml">RSS</a> · <a href="/developers">API</a></p>
+    </footer>
+  </div>
+</body>
+</html>

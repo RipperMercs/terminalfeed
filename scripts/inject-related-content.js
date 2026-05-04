@@ -68,6 +68,12 @@ const MAPPING = {
   // BTC milestone post (May 3, 2026). Pairs sentiment-adjacent posts with the
   // mempool primer for the on-chain confirmation angle.
   'bitcoin-80k-sentiment-disconnect':      { related: ['fear-greed-guide', 'btc-extreme-fear-data', 'bitcoin-mempool'], tools: ['satoshi', 'gwei'] },
+
+  // Competitor comparison batch (May 3, 2026). Each cross-links the other two
+  // comparisons plus best-bitcoin-ticker as the umbrella benchmark piece.
+  'terminalfeed-vs-coingecko-ticker':      { related: ['terminalfeed-vs-coinmarketcap-ticker', 'best-bitcoin-ticker', 'bitcoin-ticker-for-your-site'], tools: ['json', 'satoshi'] },
+  'terminalfeed-vs-coinbase-price-widget': { related: ['terminalfeed-vs-coingecko-ticker', 'best-bitcoin-ticker', 'bitcoin-ticker-for-your-site'], tools: ['satoshi'] },
+  'terminalfeed-vs-coinmarketcap-ticker':  { related: ['terminalfeed-vs-coingecko-ticker', 'terminalfeed-vs-coinbase-price-widget', 'best-bitcoin-ticker'], tools: ['satoshi', 'gwei'] },
 };
 
 const TOOLS = {
