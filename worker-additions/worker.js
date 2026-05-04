@@ -2923,6 +2923,140 @@ async function buildBriefingTweet() {
 }
 
 
+// --- BTC Volatility Alert (cron-driven, dedupe via KV) ---
+//
+// Posts a tweet when BTC moves >= BTC_ALERT_THRESHOLD_PCT in the last 1h.
+// State stored in WEBHOOK_SUBS KV under key 'btc:alert:last' as JSON:
+//   { ts: <ms>, price: <usd>, direction: 'up'|'down', change_pct: <num> }
+//
+// Cooldown: BTC_ALERT_COOLDOWN_MS prevents spam if price stays above threshold.
+// Reset: cooldown waived if direction reverses (up after down or vice versa).
+
+var BTC_ALERT_THRESHOLD_PCT = 3.0;
+var BTC_ALERT_COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
+var BTC_ALERT_KV_KEY = 'btc:alert:last';
+
+async function checkBtcVolatilityAndAlert(env) {
+  if (!env || !env.WEBHOOK_SUBS) {
+    return { skipped: true, reason: 'no KV binding' };
+  }
+
+  var res;
+  try {
+    res = await fetchWithTimeout(
+      'https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=2',
+      {}, 8000
+    );
+  } catch (err) {
+    return { skipped: true, reason: 'klines fetch failed: ' + err.message };
+  }
+  if (!res.ok) {
+    return { skipped: true, reason: 'klines status ' + res.status };
+  }
+  var klines = await res.json();
+  if (!Array.isArray(klines) || klines.length < 2) {
+    return { skipped: true, reason: 'klines shape unexpected' };
+  }
+
+  // Each kline: [openTime, open, high, low, close, volume, closeTime, ...]
+  var prevClose = parseFloat(klines[0][4]);
+  var currClose = parseFloat(klines[1][4]);
+  if (!(prevClose > 0) || !(currClose > 0)) {
+    return { skipped: true, reason: 'invalid prices' };
+  }
+  var changePct = ((currClose - prevClose) / prevClose) * 100;
+  var absChange = Math.abs(changePct);
+  var direction = changePct >= 0 ? 'up' : 'down';
+
+  if (absChange < BTC_ALERT_THRESHOLD_PCT) {
+    return { triggered: false, change_pct: changePct, threshold: BTC_ALERT_THRESHOLD_PCT };
+  }
+
+  var lastRaw = await env.WEBHOOK_SUBS.get(BTC_ALERT_KV_KEY);
+  var last = null;
+  if (lastRaw) {
+    try { last = JSON.parse(lastRaw); } catch (e) { last = null; }
+  }
+  var now = Date.now();
+  if (last && last.ts) {
+    var elapsed = now - last.ts;
+    var directionReversed = last.direction && last.direction !== direction;
+    if (elapsed < BTC_ALERT_COOLDOWN_MS && !directionReversed) {
+      return {
+        triggered: false,
+        reason: 'cooldown',
+        change_pct: changePct,
+        last_alert_minutes_ago: Math.round(elapsed / 60000),
+      };
+    }
+  }
+
+  var fgLabel = null;
+  var fgValue = null;
+  try {
+    var fgRes = await fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 5000);
+    if (fgRes.ok) {
+      var fgJson = await fgRes.json();
+      if (fgJson && fgJson.data && fgJson.data[0]) {
+        fgValue = fgJson.data[0].value;
+        fgLabel = fgJson.data[0].value_classification;
+      }
+    }
+  } catch (e) {}
+
+  var sign = changePct >= 0 ? '+' : '';
+  var arrow = direction === 'up' ? '▲' : '▼';
+  var lines = [
+    arrow + ' BTC ' + sign + changePct.toFixed(1) + '% in the last hour',
+    '',
+    'Now: $' + Math.round(currClose).toLocaleString(),
+  ];
+  if (fgValue !== null && fgLabel) {
+    lines.push('Fear & Greed: ' + fgValue + ' (' + fgLabel + ')');
+  }
+  lines.push('', 'Live: terminalfeed.io', '', '#bitcoin #btc #crypto');
+  var text = lines.join('\n');
+  if (text.length > 280) text = text.slice(0, 277) + '...';
+
+  var tweetResult;
+  try {
+    tweetResult = await postTweet(text, env);
+  } catch (err) {
+    return { triggered: true, posted: false, error: err.message, text: text };
+  }
+
+  await env.WEBHOOK_SUBS.put(BTC_ALERT_KV_KEY, JSON.stringify({
+    ts: now,
+    price: currClose,
+    direction: direction,
+    change_pct: changePct,
+  }));
+
+  return {
+    triggered: true,
+    posted: true,
+    change_pct: changePct,
+    direction: direction,
+    text: text,
+    tweet_status: tweetResult.status,
+  };
+}
+
+// GET /api/btc-alert-check (Bearer ADMIN_SECRET) — manual trigger for testing.
+async function handleBtcAlertCheck(request, env) {
+  var auth = request.headers.get('Authorization');
+  if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+  try {
+    var result = await checkBtcVolatilityAndAlert(env);
+    return jsonResponse(result);
+  } catch (err) {
+    return jsonResponse({ error: err.message }, 500);
+  }
+}
+
+
 // --- ETH Gas Tracker (Etherscan) ---
 async function handleGas(env) {
   var cached = getCached('gas_oracle', 15000);
@@ -8015,6 +8149,17 @@ export default {
           console.error('webhook tick failed:', err.message);
         }
       })());
+      // BTC volatility alert check (independent of webhook tick; own try/catch).
+      ctx.waitUntil((async function() {
+        try {
+          var result = await checkBtcVolatilityAndAlert(env);
+          if (result.triggered) {
+            console.log('btc volatility alert:', JSON.stringify(result));
+          }
+        } catch (err) {
+          console.error('btc volatility check failed:', err.message);
+        }
+      })());
     } else {
       console.log('unhandled cron schedule:', cron);
     }
@@ -8090,6 +8235,7 @@ async function dispatchRoute(request, env, url, path) {
       case 'briefing':       return await handleBriefing();
       case 'tweet':          return await handleTweet(request, env);
       case 'auto-briefing':  return await handleAutoBriefing(request, env);
+      case 'btc-alert-check': return await handleBtcAlertCheck(request, env);
       case 'gas':            return await handleGas(env);
       case 'nasa-apod':      return await handleNasaApod();
       case 'error':          return await handleErrorReport(request);
