@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Server Quickstart 2026: Build, Host, and Get Listed | TerminalFeed Blog</title>
+  <meta name="description" content="A practical guide to building a Model Context Protocol server in 2026. Stdio vs hosted architecture, tool definitions, authentication for paid tools, getting listed on the major MCP registries, and the mistakes to skip. Real code from a production MCP server.">
+  <meta property="og:title" content="MCP Server Quickstart 2026: Build, Host, and Get Listed">
+  <meta property="og:description" content="A practical guide to building a Model Context Protocol server in 2026. Stdio vs hosted, auth for paid tools, registry submissions, and the mistakes to skip.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/mcp-server-quickstart-2026">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/mcp-server-quickstart-2026">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "MCP Server Quickstart 2026: Build, Host, and Get Listed",
+    "description": "A practical guide to building a Model Context Protocol server in 2026. Stdio vs hosted architecture, tool definitions, authentication for paid tools, registry submissions, and the mistakes to skip.",
+    "author": { "@type": "Person", "name": "Signal", "url": "https://terminalfeed.io/team/signal" },
+    "publisher": { "@type": "Organization", "name": "TerminalFeed", "url": "https://terminalfeed.io", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" } },
+    "datePublished": "2026-05-04",
+    "dateModified": "2026-05-04",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/mcp-server-quickstart-2026",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag { display: inline-block; font-size: 9px; color: #5DCAA5; border: 1px solid #5DCAA530; background: #5DCAA510; padding: 2px 8px; border-radius: 3px; margin-right: 6px; letter-spacing: 1px; }
+    .article-header h1 { font-size: 24px; color: #F0EDE6; line-height: 1.3; margin-bottom: 12px; font-weight: 600; }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 { font-size: 16px; color: #4ADE80; margin-top: 36px; margin-bottom: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .article-body h3 { font-size: 14px; color: #5DCAA5; margin-top: 24px; margin-bottom: 10px; font-weight: 600; }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul { margin-bottom: 18px; padding-left: 20px; }
+    .article-body li { margin-bottom: 10px; color: #D4D2CB; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code { background: #111114; border: 1px solid #1E1E24; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .article-body pre { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 16px 18px; margin: 18px 0; overflow-x: auto; font-size: 11.5px; line-height: 1.6; }
+    .article-body pre code { background: transparent; border: none; padding: 0; color: #C8C8C0; font-size: inherit; }
+    .cta-box { background: #111114; border: 1px solid #5DCAA530; border-radius: 8px; padding: 24px; margin: 32px 0; text-align: center; }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link { display: inline-block; font-size: 13px; color: #0A0A0C; background: #5DCAA5; padding: 10px 24px; border-radius: 6px; text-decoration: none; border: none; font-family: inherit; font-weight: 600; letter-spacing: 0.5px; }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } .article-header h1 { font-size: 20px; } .article-body { font-size: 12px; } }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>MCP Server Quickstart 2026</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "MCP Server Quickstart 2026", "item": "https://terminalfeed.io/blog/mcp-server-quickstart-2026" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">MCP</span>
+        <span class="article-tag">AGENTS</span>
+        <span class="article-tag">TUTORIAL</span>
+        <span class="article-tag">PROTOCOLS</span>
+      </div>
+      <h1>MCP Server Quickstart 2026: Build, Host, and Get Listed</h1>
+      <div class="article-meta">
+        <span>By <a href="/team/signal" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Signal</a></span>
+        <span>May 4, 2026</span>
+        <span>11 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>The Model Context Protocol turned two years old this April. What started as an Anthropic-shipped spec for plugging Claude into external tools has become the closest thing the agent ecosystem has to a working standard. Cursor speaks it. Claude Desktop, Claude Code, Continue, Cline, Zed, and Goose all speak it. The MCP registry has crossed five thousand servers. If you build with AI assistants and you have data your assistant should reach, you can hand it that data with about a hundred lines of code and a config block.</p>
+
+      <p>This post walks through what it actually takes to ship a real, useful MCP server in 2026. It is not a theoretical primer. It is the practical version: what to choose, what to skip, how to get listed, and which mistakes to avoid. The reference implementation is the server running at <a href="/api/mcp">terminalfeed.io/api/mcp</a> and the npm-distributed sister at <code>@tensorfeed/mcp-server</code>. Both are public, both are in production, both got listed on every major registry within a week of shipping.</p>
+
+      <h2>Pick your distribution model first</h2>
+
+      <p>The biggest decision is also the easiest. There are two ways to ship an MCP server in 2026, and they make very different tradeoffs.</p>
+
+      <p><strong>Stdio packages.</strong> You publish your server as an npm or PyPI package. The user installs it with <code>npm install -g your-server</code>, configures Claude Desktop to spawn it as a subprocess, and the protocol runs over the spawned process's stdin and stdout. This is what TensorFeed's MCP does. The advantages are clean local execution (the user's secrets and their LLM client both sit on the same machine), simple distribution (npm publish, done), and zero infra to run. The disadvantages are that you need to handle every install environment (different Node versions, missing dependencies, OS-specific path quirks) and you cannot share state across users without an external service to call into.</p>
+
+      <p><strong>Hosted servers.</strong> You run an HTTP endpoint. Claude Desktop talks to it through <code>mcp-remote</code>, a small adapter that bridges stdio to HTTP. This is what TerminalFeed's MCP does at <code>/api/mcp</code>. The advantages are central state (caches, rate limits, authentication, billing all live in one place you control), zero install footprint (the user pastes a config block, that is it), and the same server can serve thousands of users with consistent behavior. The disadvantages are that you need an HTTPS endpoint with reasonable uptime, and your users have to trust your service with whatever data they are sending it.</p>
+
+      <p>Pick stdio if your server is mostly compute (parsing files, running scripts, talking to local databases). Pick hosted if your server is mostly read-from-the-world (APIs, datasets, anything cached centrally). For TerminalFeed, hosted made sense because the data is already on Cloudflare Workers and the cache is already shared across users. For TensorFeed, npm distribution made sense because there are some cases where the user wants to set their own provider keys and run lookups locally.</p>
+
+      <h2>The minimum viable server</h2>
+
+      <p>An MCP server needs to handle three JSON-RPC methods: <code>initialize</code>, <code>tools/list</code>, and <code>tools/call</code>. That is the entire protocol surface, plus a few optional convenience methods.</p>
+
+      <p>Here is a hosted server in roughly forty lines, running on a Cloudflare Worker. This is a trimmed version of what handles requests to <code>/api/mcp</code> on TerminalFeed:</p>
+
+      <pre><code>export default {
+  async fetch(request) {
+    if (request.method !== 'POST') {
+      return Response.json({ name: 'terminalfeed-mcp', protocol_version: '2024-11-05' });
+    }
+    const body = await request.json();
+    const { id, method, params } = body;
+
+    if (method === 'initialize') {
+      return jsonRpc(id, { protocolVersion: '2024-11-05', capabilities: { tools: {} } });
+    }
+
+    if (method === 'tools/list') {
+      return jsonRpc(id, { tools: TOOLS });
+    }
+
+    if (method === 'tools/call') {
+      const { name, arguments: args } = params;
+      const result = await dispatchTool(name, args);
+      return jsonRpc(id, { content: [{ type: 'text', text: JSON.stringify(result) }] });
+    }
+
+    return jsonRpc(id, null, { code: -32601, message: 'Method not found' });
+  }
+};
+
+function jsonRpc(id, result, error) {
+  return Response.json({ jsonrpc: '2.0', id, ...(error ? { error } : { result }) });
+}</code></pre>
+
+      <p>The interesting part is what goes into <code>TOOLS</code> and <code>dispatchTool</code>. Each tool needs three things: a name (snake_case, like <code>get_btc_price</code>), a human-readable description, and an input schema in JSON Schema format. The description is what the LLM sees when it decides whether to call your tool, so it actually matters for tool selection. Be specific. "Get current Bitcoin price in USD" is better than "Bitcoin price". "Latest 24h earthquakes magnitude 2.5+ from USGS" is better than "Earthquake data".</p>
+
+      <h2>Tool definitions that an LLM will actually pick</h2>
+
+      <p>The single biggest mistake in MCP server design is fuzzy tool descriptions. The LLM sees your tool definition once at the top of its context, then it has to decide for itself when your tool is the right answer to a user's question. If the description is vague, your tool doesn't get picked. If the description is overly specific, your tool gets picked when something else would be better.</p>
+
+      <p>Good tool definitions follow three rules. First, the name says exactly what the tool does. <code>get_btc_price</code>, not <code>btc</code>. <code>list_recent_earthquakes</code>, not <code>earthquakes</code>. Second, the description starts with the verb and ends with the data shape. "Returns the current Bitcoin price in USD with 24h change percentage and trading volume." Third, parameters are strict. If a tool takes a date range, declare both as required, give them ISO 8601 format hints in the description, and validate them server-side. Loose tool definitions cause the LLM to call your tool with garbage inputs.</p>
+
+      <pre><code>{
+  name: 'get_world_briefing',
+  description: 'Returns a one-call composed snapshot of current world state: BTC price, Fear and Greed Index, last 24h earthquakes, top Hacker News stories, current ISS crew, top prediction market odds. Use this when the user asks for a general "what is happening" briefing or when assembling context for a research task.',
+  inputSchema: {
+    type: 'object',
+    properties: {},
+    additionalProperties: false
+  }
+}</code></pre>
+
+      <p>That description tells the LLM exactly when to call this tool, which is the entire point.</p>
+
+      <h2>Authentication for paid tools</h2>
+
+      <p>If your server has any tool that costs you money to run (a third-party API, a paid data feed, an LLM call inside the tool), you will eventually need to charge for it. The cleanest pattern in 2026 is bearer-token authentication on the HTTP endpoint, with the token coupled to a credit balance.</p>
+
+      <p>The token is a long random string the user gets when they buy credits. They pass it in the Authorization header on every request. Your server checks the token's balance before running the tool, decrements the balance atomically, and runs the tool. If the user is on the free tier, you reject the call with a clear "this tool requires credits, here is how to buy them" error message that the LLM will surface to the user.</p>
+
+      <pre><code>async function handleToolCall(request, body) {
+  const auth = request.headers.get('Authorization');
+  const token = auth?.replace('Bearer ', '');
+  const tool = TOOLS_BY_NAME[body.params.name];
+
+  if (tool.cost_credits &gt; 0) {
+    if (!token) return errorResponse('PAYMENT_REQUIRED', tool.cost_credits);
+    const ok = await chargeAndDecrement(token, tool.cost_credits);
+    if (!ok) return errorResponse('INSUFFICIENT_CREDITS');
+  }
+
+  const result = await tool.handler(body.params.arguments);
+  return successResponse(result);
+}</code></pre>
+
+      <p>For the actual payment rail, USDC on Base is the path of least resistance in 2026. Stripe Link for Agents handles the human-in-the-loop case (the user approves each spend), but for autonomous agents that need to make ten paid calls per minute, on-chain micropayments are the only thing that actually works at sub-second latency. Both <a href="/api/mcp">terminalfeed.io/api/mcp</a> and TensorFeed's MCP take USDC on Base, with credits cross-redeemable across both servers. <a href="/blog/how-ai-agents-pay-terminalfeed">How AI Agents Pay for Real-Time Data on TerminalFeed</a> walks through the whole flow.</p>
+
+      <h2>Getting listed</h2>
+
+      <p>An MCP server with no listing is a tree falling in an empty forest. The discovery problem is real, and it is solved by submitting to the registries. There are five that matter in 2026, in priority order:</p>
+
+      <ul>
+        <li><strong>Official MCP Registry</strong> at <code>registry.modelcontextprotocol.io</code>. Submit a JSON manifest, automated review. Highest credibility because it is run by the protocol's maintainers.</li>
+        <li><strong>awesome-mcp-servers</strong> on GitHub (<code>punkpeye/awesome-mcp-servers</code>). Most clicked, most starred. PR a one-line entry to the appropriate category in the README. The maintainer also runs Glama, so a merged PR cross-lists you on the Glama AI catalog automatically.</li>
+        <li><strong>Smithery</strong> at <code>smithery.ai</code>. Form-based submission, fastest turnaround.</li>
+        <li><strong>PulseMCP</strong> at <code>pulsemcp.com</code>. Form-based, similar to Smithery, different audience.</li>
+        <li><strong>mcp.so</strong>. Form-based, smaller but growing.</li>
+      </ul>
+
+      <p>For each, you need the same metadata: name, slug, description (one line and three lines), repo URL, install snippet, categories. Prepare these once, paste five times. The whole batch takes about 90 minutes. Most listings approve within 3-7 days.</p>
+
+      <p>One thing worth noting: registries care about your install snippet being accurate and current. If you ship a breaking change later, update it on the registries. Stale snippets are the most common reason MCP servers stop working for new users.</p>
+
+      <h2>Common mistakes to skip</h2>
+
+      <ul>
+        <li><strong>Vague tool descriptions.</strong> If your description does not tell the LLM exactly when to call the tool, it will not call the tool. "Bitcoin data" loses to "Returns current BTC price in USD with 24h change."</li>
+        <li><strong>Returning massive payloads.</strong> Tool responses go into the LLM's context window and cost the user tokens. Cap response size, paginate, summarize. A tool that returns 50KB of JSON makes you the most expensive tool in the chain.</li>
+        <li><strong>Failing silently.</strong> When your tool errors, return a clear error message in the response, not a 500. The LLM can recover from "Source temporarily unavailable, retry in 30s" but cannot recover from a Python traceback.</li>
+        <li><strong>No rate limiting.</strong> Agents loop. Without a per-token rate limit, one runaway agent can drain your origin's quota in minutes. Set a sane cap (100 calls per minute per token is a good starting point) and return a structured error when hit.</li>
+        <li><strong>Treating MCP as RPC.</strong> The protocol is not just JSON-RPC over a socket. It is JSON-RPC plus a strong implicit contract that tools are described well enough for an LLM to choose between them. Skip the contract part and your server gets installed once, never used, and silently uninstalled.</li>
+      </ul>
+
+      <h2>What's next</h2>
+
+      <p>The MCP spec is evolving. Resources (read-only data attachments separate from tools) and prompts (server-defined templates) are stable now. Sampling (server asks the LLM something) and roots (server-defined filesystem access boundaries) are landing this quarter. The official spec doc at <code>modelcontextprotocol.io</code> is the source of truth; treat anything older than three months as suspect.</p>
+
+      <p>If you build something interesting, consider listing it. The agent ecosystem benefits from more high-quality MCP servers, and the cost to publish is genuinely two days of work plus a registry submission round. The downside is small. The upside is that your server might be running inside thousands of agent contexts a year from now, doing useful work for people you will never meet.</p>
+
+      <div class="cta-box">
+        <p>See a working MCP server in production at /api/mcp. Free tier, no signup required.</p>
+        <a class="cta-link" href="/api/mcp">Inspect /api/mcp</a>
+      </div>
+
+      <p>Further reading: <a href="/blog/how-ai-agents-pay-terminalfeed">How AI Agents Pay for Real-Time Data on TerminalFeed</a>, <a href="/for-devs/mcp">the full TerminalFeed MCP setup page</a>, the <a href="https://modelcontextprotocol.io">official MCP docs</a>, and the <a href="https://github.com/modelcontextprotocol/servers">community servers list</a>.</p>
+
+    </article>
+
+    <footer class="footer">
+      <a href="/">Home</a>
+      <span class="sep">|</span>
+      <a href="/blog">Blog</a>
+      <span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a>
+      <span class="sep">|</span>
+      <a href="/for-devs/mcp">MCP</a>
+      <span class="sep">|</span>
+      <a href="/team/signal">Signal</a>
+    </footer>
+  </div>
+</body>
+</html>

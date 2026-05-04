@@ -14,6 +14,15 @@
     </image>
 
     <item>
+      <title>MCP Server Quickstart 2026: Build, Host, and Get Listed</title>
+      <link>https://terminalfeed.io/blog/mcp-server-quickstart-2026</link>
+      <description>A practical guide to building a Model Context Protocol server in 2026. Stdio vs hosted architecture, tool definitions, authentication for paid tools, getting listed on the major registries, and the mistakes to skip.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Mon, 04 May 2026 16:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/mcp-server-quickstart-2026</guid>
+    </item>
+
+    <item>
       <title>How AI Agents Pay for Real-Time Data on TerminalFeed</title>
       <link>https://terminalfeed.io/blog/how-ai-agents-pay-terminalfeed</link>
       <description>A working walkthrough of the TerminalFeed payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.</description>
