@@ -156,6 +156,48 @@
     footer.footer a { color: #4E4D49; text-decoration: none; }
     footer.footer a:hover { color: #5DCAA5; }
     .sep { margin: 0 4px; color: #2A2A30; }
+    .profile-bio p { margin-bottom: 12px; }
+    .profile-bio p:last-child { margin-bottom: 0; }
+    .section-block {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #1E1E24;
+    }
+    .section-block h2 {
+      font-size: 12px;
+      color: #5DCAA5;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+    }
+    .section-block p {
+      font-size: 13px;
+      color: #D4D2CB;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .section-block p:last-child { margin-bottom: 0; }
+    .picks-list { list-style: none; padding: 0; margin: 0; }
+    .picks-list li {
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+      padding: 10px 0;
+      border-bottom: 1px solid #1A1A1E;
+    }
+    .picks-list li:last-child { border-bottom: none; }
+    .picks-list strong { color: #F0EDE6; font-weight: 600; }
+    .contact-line { font-size: 13px; color: #8A8880; }
+    .contact-line a { color: #5DCAA5; text-decoration: none; font-weight: 600; }
+    .contact-line a:hover { text-decoration: underline; }
+    .pen-disclosure {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #1A1A1E;
+      font-size: 11px;
+      color: #4E4D49;
+      font-style: italic;
+      text-align: center;
+    }
     @media (max-width: 600px) {
       .profile-header { flex-direction: column; align-items: center; text-align: center; }
       .topics { justify-content: center; }
@@ -175,7 +217,7 @@
       <div class="profile-info">
         <h1>Node</h1>
         <div class="profile-title">DEVELOPER ADVOCATE</div>
-        <div class="profile-bio">Full-stack developer who believes the best tools are free, fast, and dark-mode. Writes tutorials, API guides, and opinionated takes on the developer tools landscape. Maintains TerminalFeed's growing suite of browser-based dev tools and the public API documentation.</div>
+        <div class="profile-bio"><p>Senior engineer who has shipped enough production code to be tired of frameworks. Started on PHP back when that was respectable, did a long stretch in Node when that was the answer to everything, watched the JavaScript ecosystem reinvent itself a half-dozen times, and now mostly reaches for Go and a static site generator unless somebody pays differently.</p><p>The beat is dev tools, APIs, the open source ecosystem, and the slow erosion of the free tier. Specifically: which tools are actually worth your time, which are venture-funded vaporware that will pivot or die in 18 months, and which are quietly running the entire internet without anybody noticing. (Also curl. Probably curl.)</p><p>Maintains TerminalFeed's tools section and the public API. Writes the docs you wish more sites had. Believes the best dev tool of the last five years is ripgrep, the most underrated database is SQLite, and the most overrated is whatever cloud-vendor-managed thing is being marketed at you this quarter. Ships things, reviews PRs, gets annoyed when people use "TypeScript" to mean "I added some types."</p></div>
         <div class="topics">
           <span class="topic">APIs</span>
           <span class="topic">Dev Tools</span>
@@ -184,6 +226,26 @@
         </div>
       </div>
     </div>
+
+    <section class="section-block">
+      <h2>&gt;_ THE BEAT</h2>
+      <p>Dev tools, APIs, package ecosystems, infrastructure, the working developer's actual day. Less "here's the new framework" and more "here's why the old one keeps biting you." Tutorials when something deserves one, opinions when the ecosystem has lost the plot, and the occasional shipping note from inside TerminalFeed itself.</p>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CURRENTLY READING</h2>
+      <ul class="picks-list">
+        <li><strong>GitHub Trending, weekly view.</strong> The default "today" view is mostly noise from a handful of viral repos. The weekly view is where genuinely interesting projects bubble up. Underrated.</li>
+        <li><strong>Hacker News (Show HN, Ask HN tabs).</strong> The front page is a casino. Show HN and Ask HN are where the actual signal lives. Sort by new, scan once a day.</li>
+        <li><strong>Simon Willison's TIL feed.</strong> Best practical signal on new tooling on the open web. Shows the work, links the sources, doesn't oversell.</li>
+      </ul>
+    </section>
+
+    <section class="section-block">
+      <h2>&gt;_ CONTACT</h2>
+      <p class="contact-line">Tool suggestions, API gripes, tutorial requests, PRs welcome: <a href="mailto:node@terminalfeed.io">node@terminalfeed.io</a></p>
+      <p class="contact-line" style="margin-top: 8px;">Faster path: file an issue on the public repo, or @ TerminalFeed's GitHub directly.</p>
+    </section>
 
     <div class="articles-section">
       <h2>&gt;_ ARTICLES BY Node</h2>
@@ -223,6 +285,10 @@
           <div class="article-meta">April 1, 2026 &middot; 6 min read</div>
         </div>
       </a>
+    </div>
+
+    <div class="pen-disclosure">
+      Pen name. Real engineer, real shipping log. No conference circuit.
     </div>
   </div>
 
