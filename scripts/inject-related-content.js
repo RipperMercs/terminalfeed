@@ -64,6 +64,10 @@ const MAPPING = {
   'bitcoin-ticker-websocket-vs-polling':   { related: ['websocket-vs-sse', 'real-time-vs-near-real-time', 'api-rate-limits-explained'], tools: ['json'] },
   'bitcoin-ticker-mobile':                 { related: ['bitcoin-ticker-websocket-vs-polling', 'why-second-monitor-dashboards-matter', 'read-your-browser-console'], tools: ['timestamp'] },
   'real-time-data-dashboard-2026':         { related: ['building-terminalfeed', 'why-second-monitor-dashboards-matter', 'free-apis-2026'], tools: ['satoshi', 'gwei', 'json'] },
+
+  // BTC milestone post (May 3, 2026). Pairs sentiment-adjacent posts with the
+  // mempool primer for the on-chain confirmation angle.
+  'bitcoin-80k-sentiment-disconnect':      { related: ['fear-greed-guide', 'btc-extreme-fear-data', 'bitcoin-mempool'], tools: ['satoshi', 'gwei'] },
 };
 
 const TOOLS = {
@@ -147,7 +151,11 @@ function buildBlock(slug, meta, allMeta) {
       const m = allMeta[s];
       const cat = m.category || 'Article';
       const when = m.monthYear || '';
-      const metaStr = [`By ${m.author}`, cat, when].filter(Boolean).join(' | ');
+      const authorSlug = (m.author || '').toLowerCase().replace(/\s+/g, '-');
+      const authorHtml = authorSlug
+        ? `<a href="/team/${authorSlug}" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">${m.author}</a>`
+        : m.author;
+      const metaStr = [`By ${authorHtml}`, cat, when].filter(Boolean).join(' | ');
       return `  <a href="/blog/${s}" class="related-article">
     <div class="related-title">${m.title}</div>
     <div class="related-meta">${metaStr}</div>
