@@ -60,6 +60,8 @@ export const ALL_PANELS = [
   { id: 'volcanoes', label: 'Volcanoes', defaultSpan: 1 },
   { id: 'air-quality', label: 'Air Quality', defaultSpan: 1 },
   { id: 'shodan', label: 'Internet Exposure', defaultSpan: 1 },
+  { id: 'sponsor-slot', label: 'Sponsor', defaultSpan: 1 },
+  { id: 'premium-api', label: 'Premium API', defaultSpan: 1 },
   { id: 'severe-weather', label: 'Severe Weather', defaultSpan: 1 },
   { id: 'funding-rates', label: 'Funding Rates', defaultSpan: 1 },
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
@@ -84,7 +86,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '45'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '46'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
