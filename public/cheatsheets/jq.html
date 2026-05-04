@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jq Cheat Sheet - JSON Processing on the Command Line | TerminalFeed</title>
+    <meta name="description" content="Complete jq cheat sheet for JSON processing on the command line. Filters, selectors, map, select, reduce, recursive descent, conditionals, and 20+ ready-to-paste recipes.">
+    <meta name="keywords" content="jq, json, command line, cheat sheet, reference, shell, bash, scripting">
+    <meta property="og:title" content="jq Cheat Sheet - JSON on the CLI | TerminalFeed">
+    <meta property="og:description" content="Complete jq cheat sheet for command-line JSON processing. Filters, transforms, recipes.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/jq">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/jq">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #1E1E24; padding-bottom: 20px; }
+        .breadcrumbs { font-size: 12px; color: #8A8880; margin-bottom: 16px; }
+        .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs .sep { margin: 0 8px; }
+        h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #8A8880; }
+        .search-box { margin-bottom: 30px; position: relative; }
+        .search-box input { width: 100%; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 12px 16px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+        .search-box input:focus { outline: none; border-color: #5DCAA5; }
+        .search-box input::placeholder { color: #4E4D49; }
+        .section { margin-bottom: 40px; }
+        .section-title { color: #4ADE80; font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .cmd-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #1A1A1E; align-items: baseline; }
+        .cmd-row:last-child { border-bottom: none; }
+        .cmd-code { flex-shrink: 0; background: #0D0D10; border: 1px solid #1A1A22; padding: 6px 12px; border-radius: 3px; font-size: 11px; color: #5DCAA5; white-space: nowrap; font-weight: 600; }
+        .cmd-desc { font-size: 12px; color: #8A8880; flex-grow: 1; }
+        .cmd-desc code { background: #0D0D10; border: 1px solid #1A1A22; padding: 1px 5px; border-radius: 2px; font-size: 10.5px; color: #EF9F27; }
+        .hidden { display: none; }
+        .recipe-block { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 16px 18px; margin: 12px 0; }
+        .recipe-block .recipe-title { font-size: 13px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+        .recipe-block pre { background: #07070a; border: 1px solid #1A1A22; padding: 10px 14px; border-radius: 4px; font-size: 11.5px; color: #5DCAA5; overflow-x: auto; margin-top: 8px; line-height: 1.6; }
+        footer { border-top: 1px solid #1E1E24; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #8A8880; text-align: center; }
+        footer a { color: #5DCAA5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .sep { margin: 0 8px; color: #4E4D49; }
+        @media print { .search-box { display: none; } .section { page-break-inside: avoid; } }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "jq Cheat Sheet - JSON Processing on the Command Line",
+        "description": "Complete jq cheat sheet covering filters, selectors, transforms, conditionals, recipes for command-line JSON processing.",
+        "url": "https://terminalfeed.io/cheatsheets/jq",
+        "datePublished": "2026-05-04",
+        "dateModified": "2026-05-04",
+        "author": { "@type": "Person", "name": "TerminalFeed" },
+        "publisher": { "@type": "Organization", "name": "TerminalFeed", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/og-image.png" } }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Cheatsheets", "item": "https://terminalfeed.io/cheatsheets" },
+            { "@type": "ListItem", "position": 3, "name": "jq", "item": "https://terminalfeed.io/cheatsheets/jq" }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>jq</span>
+            </div>
+            <h1>jq Cheat Sheet</h1>
+            <p class="subtitle">Command-line JSON processing. Filters, selectors, transforms, recipes you actually use.</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search filters... (e.g., select, map, length)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Basics</div>
+            <div class="cmd-row"><div class="cmd-code">.</div><div class="cmd-desc">Identity. Returns the input unchanged. Useful for pretty-printing.</div></div>
+            <div class="cmd-row"><div class="cmd-code">.field</div><div class="cmd-desc">Get value at key <code>field</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">.foo.bar</div><div class="cmd-desc">Nested access</div></div>
+            <div class="cmd-row"><div class="cmd-code">.["foo bar"]</div><div class="cmd-desc">Bracket access for keys with special chars or spaces</div></div>
+            <div class="cmd-row"><div class="cmd-code">.field?</div><div class="cmd-desc">Optional access (no error if not present)</div></div>
+            <div class="cmd-row"><div class="cmd-code">.[]</div><div class="cmd-desc">Iterate: emit each array element (or object value) as separate output</div></div>
+            <div class="cmd-row"><div class="cmd-code">.[0]</div><div class="cmd-desc">First element of array</div></div>
+            <div class="cmd-row"><div class="cmd-code">.[-1]</div><div class="cmd-desc">Last element of array</div></div>
+            <div class="cmd-row"><div class="cmd-code">.[2:5]</div><div class="cmd-desc">Array slice (zero-indexed, end-exclusive)</div></div>
+            <div class="cmd-row"><div class="cmd-code">f1 | f2</div><div class="cmd-desc">Pipe: feed output of f1 into f2</div></div>
+            <div class="cmd-row"><div class="cmd-code">f1, f2</div><div class="cmd-desc">Concatenate outputs of f1 and f2</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">CLI Flags</div>
+            <div class="cmd-row"><div class="cmd-code">-r</div><div class="cmd-desc">Raw output (strip JSON quotes from strings)</div></div>
+            <div class="cmd-row"><div class="cmd-code">-c</div><div class="cmd-desc">Compact output (no pretty-print)</div></div>
+            <div class="cmd-row"><div class="cmd-code">-s</div><div class="cmd-desc">Slurp all inputs into one array (for multi-doc input)</div></div>
+            <div class="cmd-row"><div class="cmd-code">-R</div><div class="cmd-desc">Raw input (treat each line as a string, not JSON)</div></div>
+            <div class="cmd-row"><div class="cmd-code">-n</div><div class="cmd-desc">No input (use null as input, useful for generating data)</div></div>
+            <div class="cmd-row"><div class="cmd-code">--arg name val</div><div class="cmd-desc">Bind shell variable as <code>$name</code> (string)</div></div>
+            <div class="cmd-row"><div class="cmd-code">--argjson name val</div><div class="cmd-desc">Bind shell variable as <code>$name</code> (parsed JSON)</div></div>
+            <div class="cmd-row"><div class="cmd-code">--slurpfile name file</div><div class="cmd-desc">Read file as JSON array, bind to <code>$name</code></div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Selecting & Filtering</div>
+            <div class="cmd-row"><div class="cmd-code">select(.x &gt; 5)</div><div class="cmd-desc">Pass through if predicate is true, drop otherwise</div></div>
+            <div class="cmd-row"><div class="cmd-code">select(.role == "admin")</div><div class="cmd-desc">Filter by string equality</div></div>
+            <div class="cmd-row"><div class="cmd-code">select(has("field"))</div><div class="cmd-desc">Keep only objects that have a key</div></div>
+            <div class="cmd-row"><div class="cmd-code">select(.tags | contains(["urgent"]))</div><div class="cmd-desc">Array contains all elements of the given array</div></div>
+            <div class="cmd-row"><div class="cmd-code">select(.name | startswith("foo"))</div><div class="cmd-desc">String prefix check</div></div>
+            <div class="cmd-row"><div class="cmd-code">select(.name | endswith(".json"))</div><div class="cmd-desc">String suffix check</div></div>
+            <div class="cmd-row"><div class="cmd-code">select(.name | test("^a.*"))</div><div class="cmd-desc">Regex match (returns boolean)</div></div>
+            <div class="cmd-row"><div class="cmd-code">.[] | select(.active)</div><div class="cmd-desc">Iterate, keep only those where .active is truthy</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Transforming</div>
+            <div class="cmd-row"><div class="cmd-code">map(.field)</div><div class="cmd-desc">Apply filter to each element of an array (returns array)</div></div>
+            <div class="cmd-row"><div class="cmd-code">map(. * 2)</div><div class="cmd-desc">Double each value</div></div>
+            <div class="cmd-row"><div class="cmd-code">map(select(.x &gt; 5))</div><div class="cmd-desc">Filter array by predicate (still returns array)</div></div>
+            <div class="cmd-row"><div class="cmd-code">map_values(. + 1)</div><div class="cmd-desc">Apply filter to each value of an object</div></div>
+            <div class="cmd-row"><div class="cmd-code">to_entries</div><div class="cmd-desc">Object to array of <code>{key, value}</code> pairs</div></div>
+            <div class="cmd-row"><div class="cmd-code">from_entries</div><div class="cmd-desc">Reverse: array of pairs back to object</div></div>
+            <div class="cmd-row"><div class="cmd-code">with_entries(.value += 1)</div><div class="cmd-desc">Convenience: to_entries | map(...) | from_entries</div></div>
+            <div class="cmd-row"><div class="cmd-code">. + {newkey: "val"}</div><div class="cmd-desc">Merge object with another (right wins on conflict)</div></div>
+            <div class="cmd-row"><div class="cmd-code">.foo |= ascii_downcase</div><div class="cmd-desc">Update assign: replace .foo with the result of running it through filter</div></div>
+            <div class="cmd-row"><div class="cmd-code">del(.field)</div><div class="cmd-desc">Delete a key from an object</div></div>
+            <div class="cmd-row"><div class="cmd-code">del(.[0])</div><div class="cmd-desc">Delete first element of array</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Aggregation</div>
+            <div class="cmd-row"><div class="cmd-code">length</div><div class="cmd-desc">Length of array, string, or object (key count)</div></div>
+            <div class="cmd-row"><div class="cmd-code">keys</div><div class="cmd-desc">Sorted array of object keys (or array indices)</div></div>
+            <div class="cmd-row"><div class="cmd-code">values</div><div class="cmd-desc">Array of object values</div></div>
+            <div class="cmd-row"><div class="cmd-code">add</div><div class="cmd-desc">Sum of array elements (concat for strings)</div></div>
+            <div class="cmd-row"><div class="cmd-code">min, max</div><div class="cmd-desc">Min or max of array</div></div>
+            <div class="cmd-row"><div class="cmd-code">min_by(.x), max_by(.x)</div><div class="cmd-desc">Element with min or max field value</div></div>
+            <div class="cmd-row"><div class="cmd-code">unique</div><div class="cmd-desc">Sort and remove duplicates</div></div>
+            <div class="cmd-row"><div class="cmd-code">unique_by(.x)</div><div class="cmd-desc">Unique by a field</div></div>
+            <div class="cmd-row"><div class="cmd-code">group_by(.x)</div><div class="cmd-desc">Group elements by field, returns array of arrays</div></div>
+            <div class="cmd-row"><div class="cmd-code">sort</div><div class="cmd-desc">Sort array</div></div>
+            <div class="cmd-row"><div class="cmd-code">sort_by(.x)</div><div class="cmd-desc">Sort by field</div></div>
+            <div class="cmd-row"><div class="cmd-code">reverse</div><div class="cmd-desc">Reverse an array</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Object & Array Construction</div>
+            <div class="cmd-row"><div class="cmd-code">{a: .x, b: .y}</div><div class="cmd-desc">Build object from input fields</div></div>
+            <div class="cmd-row"><div class="cmd-code">{name, email}</div><div class="cmd-desc">Shorthand: <code>{name: .name, email: .email}</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">[.[] | .x]</div><div class="cmd-desc">Wrap iteration back into an array</div></div>
+            <div class="cmd-row"><div class="cmd-code">[.x, .y, .z]</div><div class="cmd-desc">Build array from fields</div></div>
+            <div class="cmd-row"><div class="cmd-code">{(.k): .v}</div><div class="cmd-desc">Use a value as a key</div></div>
+            <div class="cmd-row"><div class="cmd-code">[range(0;10)]</div><div class="cmd-desc">Generate array <code>[0, 1, ..., 9]</code></div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Conditionals & Default Values</div>
+            <div class="cmd-row"><div class="cmd-code">if .x then .y else .z end</div><div class="cmd-desc">Conditional expression</div></div>
+            <div class="cmd-row"><div class="cmd-code">if .x then .y elif .a then .b else .c end</div><div class="cmd-desc">elif chain</div></div>
+            <div class="cmd-row"><div class="cmd-code">.x // "default"</div><div class="cmd-desc">Alternative: if .x is null or false, use "default"</div></div>
+            <div class="cmd-row"><div class="cmd-code">try .field catch null</div><div class="cmd-desc">Catch errors, replace with null</div></div>
+            <div class="cmd-row"><div class="cmd-code">.field?</div><div class="cmd-desc">Shorthand for try .field catch empty</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Strings</div>
+            <div class="cmd-row"><div class="cmd-code">"prefix-\(.field)"</div><div class="cmd-desc">String interpolation</div></div>
+            <div class="cmd-row"><div class="cmd-code">split("/")</div><div class="cmd-desc">Split string into array</div></div>
+            <div class="cmd-row"><div class="cmd-code">join(",")</div><div class="cmd-desc">Join array of strings</div></div>
+            <div class="cmd-row"><div class="cmd-code">ascii_downcase</div><div class="cmd-desc">Lowercase ASCII letters</div></div>
+            <div class="cmd-row"><div class="cmd-code">ascii_upcase</div><div class="cmd-desc">Uppercase ASCII letters</div></div>
+            <div class="cmd-row"><div class="cmd-code">tostring</div><div class="cmd-desc">Convert any value to string</div></div>
+            <div class="cmd-row"><div class="cmd-code">tonumber</div><div class="cmd-desc">Parse string as number</div></div>
+            <div class="cmd-row"><div class="cmd-code">gsub("foo"; "bar")</div><div class="cmd-desc">Global string replace (regex)</div></div>
+            <div class="cmd-row"><div class="cmd-code">@csv, @tsv</div><div class="cmd-desc">Format array as CSV or TSV row</div></div>
+            <div class="cmd-row"><div class="cmd-code">@base64, @base64d</div><div class="cmd-desc">Base64 encode and decode</div></div>
+            <div class="cmd-row"><div class="cmd-code">@uri</div><div class="cmd-desc">URL-encode a string</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Recursive & Path</div>
+            <div class="cmd-row"><div class="cmd-code">..</div><div class="cmd-desc">Recursive descent: yield every value at any depth</div></div>
+            <div class="cmd-row"><div class="cmd-code">.. | strings</div><div class="cmd-desc">Every string anywhere in the document</div></div>
+            <div class="cmd-row"><div class="cmd-code">.. | numbers</div><div class="cmd-desc">Every number anywhere</div></div>
+            <div class="cmd-row"><div class="cmd-code">paths</div><div class="cmd-desc">All paths in the structure</div></div>
+            <div class="cmd-row"><div class="cmd-code">leaf_paths</div><div class="cmd-desc">Paths to all leaf values</div></div>
+            <div class="cmd-row"><div class="cmd-code">getpath(["a","b"])</div><div class="cmd-desc">Get value at a path</div></div>
+            <div class="cmd-row"><div class="cmd-code">setpath(["a","b"]; "val")</div><div class="cmd-desc">Set value at a path</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Common Recipes</div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Extract a single field from each item in an array</div>
+                <pre>cat users.json | jq '.[].email'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Filter and project</div>
+                <pre>jq '.users | map(select(.active) | {id, email})' file.json</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Count items by group</div>
+                <pre>jq 'group_by(.country) | map({country: .[0].country, count: length})'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Get top 5 by score, descending</div>
+                <pre>jq 'sort_by(.score) | reverse | .[0:5]'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Convert array of objects to CSV</div>
+                <pre>jq -r '.[] | [.id, .name, .email] | @csv' file.json</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Pretty-print compact JSON from a file or pipe</div>
+                <pre>cat compact.json | jq '.'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Curl an API and extract one field</div>
+                <pre>curl -s https://terminalfeed.io/api/btc-price | jq '.data.price'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Sum a field across an array</div>
+                <pre>jq '[.items[].amount] | add'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Pass a shell variable as a string</div>
+                <pre>jq --arg name "Alice" '.users[] | select(.name == $name)'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Pass a shell variable as parsed JSON</div>
+                <pre>jq --argjson min 5 '.items | map(select(.score &gt;= $min))'</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Combine multiple JSON files into a single array</div>
+                <pre>jq -s '.' file1.json file2.json file3.json</pre>
+            </div>
+
+            <div class="recipe-block">
+                <div class="recipe-title">Find every value containing "error" anywhere in the structure</div>
+                <pre>jq '.. | strings | select(contains("error"))'</pre>
+            </div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/cheatsheets">Cheatsheets</a><span class="sep">|</span>
+            <a href="/cheatsheets/bash">Bash</a><span class="sep">|</span>
+            <a href="/cheatsheets/regex">Regex</a><span class="sep">|</span>
+            <a href="/cheatsheets/git">Git</a><span class="sep">|</span>
+            <a href="/cheatsheets/docker">Docker</a><span class="sep">|</span>
+            <a href="/cheatsheets/http">HTTP</a><span class="sep">|</span>
+            <a href="/for-devs">Developer Hub</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            const recipes = document.querySelectorAll('.recipe-block');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+            recipes.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                r.classList.toggle('hidden', searchTerm && !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>
