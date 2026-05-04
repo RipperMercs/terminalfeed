@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH Cheat Sheet - Connections, Keys, Tunnels, Config | TerminalFeed</title>
+    <meta name="description" content="Complete SSH cheat sheet. Connections, key management, ~/.ssh/config patterns, port forwarding, tunneling, SCP/SFTP, ProxyJump, troubleshooting. 80+ commands.">
+    <meta name="keywords" content="ssh, scp, sftp, ssh-keygen, port forwarding, tunnel, cheat sheet, reference">
+    <meta property="og:title" content="SSH Cheat Sheet | TerminalFeed">
+    <meta property="og:description" content="Complete SSH reference: connections, keys, tunnels, config, ProxyJump.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/ssh">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/ssh">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #1E1E24; padding-bottom: 20px; }
+        .breadcrumbs { font-size: 12px; color: #8A8880; margin-bottom: 16px; }
+        .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs .sep { margin: 0 8px; }
+        h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #8A8880; }
+        .search-box { margin-bottom: 30px; position: relative; }
+        .search-box input { width: 100%; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 12px 16px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+        .search-box input:focus { outline: none; border-color: #5DCAA5; }
+        .search-box input::placeholder { color: #4E4D49; }
+        .section { margin-bottom: 40px; }
+        .section-title { color: #4ADE80; font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .cmd-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #1A1A1E; align-items: baseline; }
+        .cmd-row:last-child { border-bottom: none; }
+        .cmd-code { flex-shrink: 0; background: #0D0D10; border: 1px solid #1A1A22; padding: 6px 12px; border-radius: 3px; font-size: 11px; color: #5DCAA5; white-space: nowrap; font-weight: 600; }
+        .cmd-desc { font-size: 12px; color: #8A8880; flex-grow: 1; }
+        .cmd-desc code { background: #0D0D10; border: 1px solid #1A1A22; padding: 1px 5px; border-radius: 2px; font-size: 10.5px; color: #EF9F27; }
+        .hidden { display: none; }
+        .config-block { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 16px 18px; margin: 12px 0; }
+        .config-block .config-title { font-size: 13px; color: #F0EDE6; font-weight: 600; margin-bottom: 8px; }
+        .config-block .config-desc { font-size: 12px; color: #8A8880; line-height: 1.6; margin-bottom: 8px; }
+        .config-block pre { background: #07070a; border: 1px solid #1A1A22; padding: 10px 14px; border-radius: 4px; font-size: 11.5px; color: #5DCAA5; overflow-x: auto; line-height: 1.6; }
+        .note { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 4px; padding: 14px 18px; margin: 14px 0; font-size: 12px; color: #8A8880; line-height: 1.7; }
+        .note strong { color: #D4D2CB; }
+        footer { border-top: 1px solid #1E1E24; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #8A8880; text-align: center; }
+        footer a { color: #5DCAA5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .sep { margin: 0 8px; color: #4E4D49; }
+        @media print { .search-box { display: none; } .section { page-break-inside: avoid; } }
+    </style>
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "Article", "headline": "SSH Cheat Sheet - Connections, Keys, Tunnels, Config", "description": "Complete SSH reference covering connections, key management, port forwarding, tunneling, ProxyJump, and troubleshooting.", "url": "https://terminalfeed.io/cheatsheets/ssh", "datePublished": "2026-05-04", "dateModified": "2026-05-04", "author": { "@type": "Person", "name": "TerminalFeed" }, "publisher": { "@type": "Organization", "name": "TerminalFeed", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/og-image.png" } } }
+    </script>
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [ { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" }, { "@type": "ListItem", "position": 2, "name": "Cheatsheets", "item": "https://terminalfeed.io/cheatsheets" }, { "@type": "ListItem", "position": 3, "name": "SSH", "item": "https://terminalfeed.io/cheatsheets/ssh" } ] }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>SSH</span>
+            </div>
+            <h1>SSH Cheat Sheet</h1>
+            <p class="subtitle">Connections, key management, ~/.ssh/config patterns, tunneling, ProxyJump, file transfer, and the troubleshooting moves you forget</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search... (e.g., key, tunnel, scp, jump)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Basic Connection</div>
+            <div class="cmd-row"><div class="cmd-code">ssh user@host</div><div class="cmd-desc">Connect with your default identity</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh user@host -p 2222</div><div class="cmd-desc">Connect on a custom port</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -i ~/.ssh/key user@host</div><div class="cmd-desc">Use a specific identity file</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh user@host "cmd"</div><div class="cmd-desc">Run a single command and exit</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -X user@host</div><div class="cmd-desc">Enable X11 forwarding (GUI apps)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -A user@host</div><div class="cmd-desc">Forward your SSH agent (use with care)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -t user@host</div><div class="cmd-desc">Force pseudo-tty (needed for interactive remote programs)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -v user@host</div><div class="cmd-desc">Verbose, useful for debugging connection issues</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -vvv user@host</div><div class="cmd-desc">Even more verbose</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -o "ConnectTimeout=5" host</div><div class="cmd-desc">Set option inline</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Key Generation & Management</div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -t ed25519</div><div class="cmd-desc">Generate Ed25519 key (modern default, recommended)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -t rsa -b 4096</div><div class="cmd-desc">Generate 4096-bit RSA key (compatible with older systems)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -t ed25519 -C "you@host"</div><div class="cmd-desc">Add a comment (often the email or hostname)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -p -f ~/.ssh/id_ed25519</div><div class="cmd-desc">Change passphrase on existing key</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -y -f key</div><div class="cmd-desc">Print public key from private key file</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -lf key.pub</div><div class="cmd-desc">Show fingerprint of a key</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-keygen -R host</div><div class="cmd-desc">Remove host from known_hosts (after IP/key change)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-copy-id user@host</div><div class="cmd-desc">Install your public key on remote (writes to authorized_keys)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-copy-id -i key.pub user@host</div><div class="cmd-desc">Install a specific key</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">SSH Agent</div>
+            <div class="cmd-row"><div class="cmd-code">eval $(ssh-agent)</div><div class="cmd-desc">Start ssh-agent for current shell</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add ~/.ssh/id_ed25519</div><div class="cmd-desc">Add key to agent (prompts for passphrase once)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add</div><div class="cmd-desc">Add default keys</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add -l</div><div class="cmd-desc">List loaded keys</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add -L</div><div class="cmd-desc">List loaded public keys (full)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add -d ~/.ssh/key</div><div class="cmd-desc">Remove a key from agent</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add -D</div><div class="cmd-desc">Remove all keys from agent</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh-add -t 3600 ~/.ssh/key</div><div class="cmd-desc">Add key with 1-hour timeout</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Config File (~/.ssh/config)</div>
+            <p style="font-size: 12px; color: #8A8880; margin-bottom: 12px;">Persistent connection settings per host. Stop typing long ssh commands.</p>
+
+            <div class="config-block">
+                <div class="config-title">Per-host shortcut</div>
+                <div class="config-desc">After this, <code>ssh prod</code> connects to the full host with the right key and port.</div>
+                <pre>Host prod
+    HostName 198.51.100.10
+    User deploy
+    Port 2222
+    IdentityFile ~/.ssh/prod_key</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Wildcard for an org</div>
+                <div class="config-desc">All <code>*.example.com</code> hosts share the same key.</div>
+                <pre>Host *.example.com
+    User myname
+    IdentityFile ~/.ssh/example_key
+    ServerAliveInterval 60</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Bastion / jump host</div>
+                <div class="config-desc">Connect to <code>internal</code> via <code>bastion.example.com</code>. ProxyJump is the modern way.</div>
+                <pre>Host bastion
+    HostName bastion.example.com
+    User jumper
+
+Host internal
+    HostName 10.0.0.5
+    User app
+    ProxyJump bastion</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Connection multiplexing</div>
+                <div class="config-desc">Reuse one TCP connection for multiple ssh sessions to the same host. Big speedup for repeated commands.</div>
+                <pre>Host *
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%r@%h:%p
+    ControlPersist 10m</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Port Forwarding & Tunneling</div>
+            <div class="cmd-row"><div class="cmd-code">ssh -L 8080:localhost:80 host</div><div class="cmd-desc">Local forward: localhost:8080 on YOU = port 80 on host</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -L 5432:db:5432 jump</div><div class="cmd-desc">Local forward through jump host to internal db server</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -R 9000:localhost:3000 host</div><div class="cmd-desc">Remote forward: host:9000 = your local:3000 (e.g. expose localhost)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -D 1080 host</div><div class="cmd-desc">Dynamic forward: SOCKS proxy on localhost:1080 routed via host</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -N -L 8080:localhost:80 host</div><div class="cmd-desc">Forward only, no shell session (-N)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -f -N -L 8080:localhost:80 host</div><div class="cmd-desc">Forward in background (-f)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">File Transfer</div>
+            <div class="cmd-row"><div class="cmd-code">scp file user@host:/path</div><div class="cmd-desc">Copy local file to remote</div></div>
+            <div class="cmd-row"><div class="cmd-code">scp user@host:/path file</div><div class="cmd-desc">Copy remote file to local</div></div>
+            <div class="cmd-row"><div class="cmd-code">scp -r dir/ user@host:/path</div><div class="cmd-desc">Recursive copy</div></div>
+            <div class="cmd-row"><div class="cmd-code">scp -P 2222 file host:/</div><div class="cmd-desc">Custom port (uppercase P, unlike ssh's lowercase p)</div></div>
+            <div class="cmd-row"><div class="cmd-code">rsync -avz src/ user@host:/dst</div><div class="cmd-desc">Sync directories: archive, verbose, compress (preferred over scp)</div></div>
+            <div class="cmd-row"><div class="cmd-code">rsync -avz --delete src/ host:/dst</div><div class="cmd-desc">Sync and delete files at dst not in src (mirror)</div></div>
+            <div class="cmd-row"><div class="cmd-code">sftp user@host</div><div class="cmd-desc">Interactive file transfer (get, put, ls, cd)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Multi-Hop & ProxyJump</div>
+            <div class="cmd-row"><div class="cmd-code">ssh -J jump user@target</div><div class="cmd-desc">Connect to target via jump host (modern syntax)</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -J jump1,jump2 user@target</div><div class="cmd-desc">Multiple hops</div></div>
+            <div class="cmd-row"><div class="cmd-code">ssh -o ProxyCommand="ssh jump nc %h %p" target</div><div class="cmd-desc">Old-school ProxyCommand (still useful for nc-only hosts)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Server Side (sshd_config)</div>
+            <div class="cmd-row"><div class="cmd-code">/etc/ssh/sshd_config</div><div class="cmd-desc">Server configuration file</div></div>
+            <div class="cmd-row"><div class="cmd-code">PasswordAuthentication no</div><div class="cmd-desc">Disable password login (recommended after key setup)</div></div>
+            <div class="cmd-row"><div class="cmd-code">PermitRootLogin no</div><div class="cmd-desc">Disable root SSH (login as user, then sudo)</div></div>
+            <div class="cmd-row"><div class="cmd-code">Port 2222</div><div class="cmd-desc">Move SSH off port 22 to reduce log noise</div></div>
+            <div class="cmd-row"><div class="cmd-code">AllowUsers alice bob</div><div class="cmd-desc">Whitelist users who can SSH in</div></div>
+            <div class="cmd-row"><div class="cmd-code">MaxAuthTries 3</div><div class="cmd-desc">Disconnect after 3 failed attempts</div></div>
+            <div class="cmd-row"><div class="cmd-code">sudo systemctl reload sshd</div><div class="cmd-desc">Apply config changes (don't restart over an active SSH session)</div></div>
+            <div class="cmd-row"><div class="cmd-code">sshd -t</div><div class="cmd-desc">Test sshd config syntax before applying</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Troubleshooting</div>
+            <div class="note"><strong>Permissions matter.</strong> ~/.ssh must be 700, ~/.ssh/authorized_keys must be 600, private keys must be 600. SSH refuses to use keys with looser perms.</div>
+            <div class="note"><strong>"REMOTE HOST IDENTIFICATION HAS CHANGED" warning</strong>: the server's host key changed (could be legit reinstall, could be MITM). If you trust the change: <code>ssh-keygen -R host</code> to remove the old entry.</div>
+            <div class="note"><strong>"Permission denied (publickey)"</strong>: server has your public key but ssh isn't offering the right private key. Check <code>ssh -v</code> output to see which keys are offered. <code>IdentityFile</code> in ~/.ssh/config or <code>-i</code> flag forces a specific key.</div>
+            <div class="note"><strong>Hung connection on flaky network:</strong> add <code>ServerAliveInterval 60</code> in your config so ssh sends keepalives. Combine with <code>ServerAliveCountMax 3</code> to disconnect cleanly after 3 missed.</div>
+            <div class="note"><strong>"Connection refused" vs "Connection timed out":</strong> refused = port open but service not responding (check sshd is running, check firewall on server). Timed out = network can't reach the host (check IP, check network firewall, check VPN).</div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/cheatsheets">Cheatsheets</a><span class="sep">|</span>
+            <a href="/cheatsheets/bash">Bash</a><span class="sep">|</span>
+            <a href="/cheatsheets/regex">Regex</a><span class="sep">|</span>
+            <a href="/cheatsheets/jq">jq</a><span class="sep">|</span>
+            <a href="/cheatsheets/git">Git</a><span class="sep">|</span>
+            <a href="/cheatsheets/docker">Docker</a><span class="sep">|</span>
+            <a href="/cheatsheets/http">HTTP</a><span class="sep">|</span>
+            <a href="/for-devs">Developer Hub</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            const blocks = document.querySelectorAll('.config-block, .note');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+            blocks.forEach(b => {
+                const text = b.textContent.toLowerCase();
+                b.classList.toggle('hidden', searchTerm && !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>
