@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tmux Cheat Sheet - Sessions, Windows, Panes, Copy Mode | TerminalFeed</title>
+    <meta name="description" content="Complete tmux cheat sheet covering sessions, windows, panes, copy mode, configuration, plugin manager (TPM), and the practical patterns for daily terminal work.">
+    <meta name="keywords" content="tmux, terminal multiplexer, sessions, panes, windows, cheat sheet, reference">
+    <meta property="og:title" content="tmux Cheat Sheet | TerminalFeed">
+    <meta property="og:description" content="Complete tmux reference: sessions, windows, panes, copy mode, config, TPM.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/tmux">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/tmux">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #1E1E24; padding-bottom: 20px; }
+        .breadcrumbs { font-size: 12px; color: #8A8880; margin-bottom: 16px; }
+        .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs .sep { margin: 0 8px; }
+        h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #8A8880; }
+        .search-box { margin-bottom: 30px; position: relative; }
+        .search-box input { width: 100%; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 12px 16px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+        .search-box input:focus { outline: none; border-color: #5DCAA5; }
+        .search-box input::placeholder { color: #4E4D49; }
+        .section { margin-bottom: 40px; }
+        .section-title { color: #4ADE80; font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .cmd-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #1A1A1E; align-items: baseline; }
+        .cmd-row:last-child { border-bottom: none; }
+        .cmd-code { flex-shrink: 0; background: #0D0D10; border: 1px solid #1A1A22; padding: 6px 12px; border-radius: 3px; font-size: 11px; color: #5DCAA5; white-space: nowrap; font-weight: 600; min-width: 130px; text-align: center; }
+        .cmd-desc { font-size: 12px; color: #8A8880; flex-grow: 1; }
+        .cmd-desc code { background: #0D0D10; border: 1px solid #1A1A22; padding: 1px 5px; border-radius: 2px; font-size: 10.5px; color: #EF9F27; }
+        .hidden { display: none; }
+        .note { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 4px; padding: 14px 18px; margin: 14px 0; font-size: 12px; color: #8A8880; line-height: 1.7; }
+        .note strong { color: #D4D2CB; }
+        .config-block { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 16px 18px; margin: 12px 0; }
+        .config-block .config-title { font-size: 13px; color: #F0EDE6; font-weight: 600; margin-bottom: 8px; }
+        .config-block pre { background: #07070a; border: 1px solid #1A1A22; padding: 10px 14px; border-radius: 4px; font-size: 11.5px; color: #5DCAA5; overflow-x: auto; line-height: 1.6; }
+        footer { border-top: 1px solid #1E1E24; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #8A8880; text-align: center; }
+        footer a { color: #5DCAA5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .sep { margin: 0 8px; color: #4E4D49; }
+        @media print { .search-box { display: none; } .section { page-break-inside: avoid; } }
+    </style>
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "Article", "headline": "tmux Cheat Sheet - Sessions, Windows, Panes, Copy Mode", "description": "Complete tmux reference for sessions, windows, panes, copy mode, configuration, and plugins.", "url": "https://terminalfeed.io/cheatsheets/tmux", "datePublished": "2026-05-04", "dateModified": "2026-05-04", "author": { "@type": "Person", "name": "TerminalFeed" }, "publisher": { "@type": "Organization", "name": "TerminalFeed", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/og-image.png" } } }
+    </script>
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [ { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" }, { "@type": "ListItem", "position": 2, "name": "Cheatsheets", "item": "https://terminalfeed.io/cheatsheets" }, { "@type": "ListItem", "position": 3, "name": "tmux", "item": "https://terminalfeed.io/cheatsheets/tmux" } ] }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>tmux</span>
+            </div>
+            <h1>tmux Cheat Sheet</h1>
+            <p class="subtitle">Sessions, windows, panes, copy mode, configuration, and the patterns you actually use day-to-day.</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search... (e.g., split, attach, copy, resize)">
+        </div>
+
+        <div class="note"><strong>Prefix key reminder.</strong> By default, every tmux keybinding is prefaced by <code>Ctrl+b</code> (the prefix). So when you see <code>prefix c</code> below, that means: press Ctrl+b, release, then press c. Many people remap the prefix to <code>Ctrl+a</code> for less finger gymnastics. See the Configuration section.</div>
+
+        <div class="section">
+            <div class="section-title">Sessions (the outermost layer)</div>
+            <div class="cmd-row"><div class="cmd-code">tmux</div><div class="cmd-desc">Start a new session</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux new -s name</div><div class="cmd-desc">Start a new named session (recommended)</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux ls</div><div class="cmd-desc">List sessions</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux a</div><div class="cmd-desc">Attach to last session</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux a -t name</div><div class="cmd-desc">Attach to a specific named session</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux kill-session -t name</div><div class="cmd-desc">Kill a session by name</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux kill-server</div><div class="cmd-desc">Kill all sessions and the tmux server</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix d</div><div class="cmd-desc">Detach from session (it keeps running)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix s</div><div class="cmd-desc">Interactive session picker</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix $</div><div class="cmd-desc">Rename current session</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Windows (tabs)</div>
+            <div class="cmd-row"><div class="cmd-code">prefix c</div><div class="cmd-desc">Create new window</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix ,</div><div class="cmd-desc">Rename current window</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix &amp;</div><div class="cmd-desc">Kill current window (with confirmation)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix n</div><div class="cmd-desc">Next window</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix p</div><div class="cmd-desc">Previous window</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix 0-9</div><div class="cmd-desc">Jump to window by number</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix l</div><div class="cmd-desc">Last (most recent) window</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix w</div><div class="cmd-desc">Interactive window picker</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix f</div><div class="cmd-desc">Find window by content/name</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Panes (splits within a window)</div>
+            <div class="cmd-row"><div class="cmd-code">prefix %</div><div class="cmd-desc">Split pane vertically (creates left/right split)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix "</div><div class="cmd-desc">Split pane horizontally (creates top/bottom split)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix arrow</div><div class="cmd-desc">Move between panes</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix o</div><div class="cmd-desc">Cycle to next pane</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix q</div><div class="cmd-desc">Show pane numbers (press number to jump)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix x</div><div class="cmd-desc">Kill current pane (with confirmation)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix z</div><div class="cmd-desc">Toggle full-screen zoom on current pane</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix Space</div><div class="cmd-desc">Cycle through pane layouts (preset arrangements)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix {</div><div class="cmd-desc">Swap with previous pane</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix }</div><div class="cmd-desc">Swap with next pane</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix !</div><div class="cmd-desc">Convert pane to its own window</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix Ctrl+arrow</div><div class="cmd-desc">Resize pane in steps</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix Alt+arrow</div><div class="cmd-desc">Resize pane in larger steps</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Copy Mode</div>
+            <div class="cmd-row"><div class="cmd-code">prefix [</div><div class="cmd-desc">Enter copy mode (scrollback navigation, search, copy)</div></div>
+            <div class="cmd-row"><div class="cmd-code">q</div><div class="cmd-desc">Exit copy mode</div></div>
+            <div class="cmd-row"><div class="cmd-code">/ then text</div><div class="cmd-desc">Search forward (vi mode)</div></div>
+            <div class="cmd-row"><div class="cmd-code">? then text</div><div class="cmd-desc">Search backward (vi mode)</div></div>
+            <div class="cmd-row"><div class="cmd-code">n / N</div><div class="cmd-desc">Next / previous search match</div></div>
+            <div class="cmd-row"><div class="cmd-code">Space</div><div class="cmd-desc">Start text selection (vi mode)</div></div>
+            <div class="cmd-row"><div class="cmd-code">Enter</div><div class="cmd-desc">Copy selection to tmux paste buffer</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix ]</div><div class="cmd-desc">Paste from tmux paste buffer</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix =</div><div class="cmd-desc">Show all paste buffers and pick one</div></div>
+            <div class="note"><strong>System clipboard:</strong> by default, tmux's paste buffer is internal. To put copied text into your OS clipboard, install <code>xclip</code> (Linux), <code>pbcopy</code> (macOS), or use the <code>tmux-yank</code> plugin which handles all platforms.</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Status & Info</div>
+            <div class="cmd-row"><div class="cmd-code">prefix t</div><div class="cmd-desc">Show big clock</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix i</div><div class="cmd-desc">Show window info</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix ?</div><div class="cmd-desc">List all keybindings</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix :</div><div class="cmd-desc">Open command prompt</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux info</div><div class="cmd-desc">Detailed info about tmux server (from outside tmux)</div></div>
+            <div class="cmd-row"><div class="cmd-code">tmux list-keys</div><div class="cmd-desc">All keybindings, dumped (useful for grepping)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Configuration (~/.tmux.conf)</div>
+            <p style="font-size: 12px; color: #8A8880; margin-bottom: 12px;">Edit <code style="background:#0D0D10;border:1px solid #1A1A22;padding:1px 5px;border-radius:2px;font-size:10.5px;color:#EF9F27;">~/.tmux.conf</code> and reload with <code style="background:#0D0D10;border:1px solid #1A1A22;padding:1px 5px;border-radius:2px;font-size:10.5px;color:#EF9F27;">prefix :source-file ~/.tmux.conf</code> or kill the tmux server.</p>
+
+            <div class="config-block">
+                <div class="config-title">Remap prefix to Ctrl+a (less finger strain)</div>
+                <pre>unbind C-b
+set -g prefix C-a
+bind C-a send-prefix</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">More intuitive split commands</div>
+                <pre>bind | split-window -h
+bind - split-window -v
+unbind '"'
+unbind %</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">vi-style copy mode</div>
+                <pre>set-window-option -g mode-keys vi
+bind-key -T copy-mode-vi 'v' send-keys -X begin-selection
+bind-key -T copy-mode-vi 'y' send-keys -X copy-selection-and-cancel</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Mouse support (scroll, click panes, drag to resize)</div>
+                <pre>set -g mouse on</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Bigger scrollback buffer</div>
+                <pre>set -g history-limit 50000</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Start window/pane numbering at 1 (top row of keyboard)</div>
+                <pre>set -g base-index 1
+setw -g pane-base-index 1
+set -g renumber-windows on</pre>
+            </div>
+
+            <div class="config-block">
+                <div class="config-title">Reload config with prefix r</div>
+                <pre>bind r source-file ~/.tmux.conf \; display-message "Config reloaded"</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Plugin Manager (TPM)</div>
+            <div class="cmd-row"><div class="cmd-code">git clone</div><div class="cmd-desc">Install: <code>git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm</code></div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix I</div><div class="cmd-desc">Install configured plugins (capital I)</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix U</div><div class="cmd-desc">Update all plugins</div></div>
+            <div class="cmd-row"><div class="cmd-code">prefix Alt+u</div><div class="cmd-desc">Uninstall plugins removed from .tmux.conf</div></div>
+
+            <div class="config-block">
+                <div class="config-title">TPM bootstrap in ~/.tmux.conf</div>
+                <pre>set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+# Keep this at the very bottom of the config file
+run '~/.tmux/plugins/tpm/tpm'</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Common Patterns</div>
+            <div class="note"><strong>One project per session.</strong> Name sessions after projects (<code>tmux new -s terminalfeed</code>). Use windows inside the session for different concerns (editor, server, logs, git). Detach (<code>prefix d</code>) when switching projects, never close the terminal window.</div>
+            <div class="note"><strong>Reattach after SSH disconnect.</strong> If you SSH'd into a server and started something long-running in tmux, it survives the disconnect. Reconnect, run <code>tmux a</code>, and you're back.</div>
+            <div class="note"><strong>Pair-programming.</strong> Two people SSH'd into the same machine can attach to the same session and see each other's input. Useful for live debugging or teaching.</div>
+            <div class="note"><strong>Quick split for tail -f.</strong> <code>prefix "</code> then run <code>tail -f log</code>. Watch logs in the bottom while you work in the top. <code>prefix z</code> zooms whichever pane needs full attention.</div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/cheatsheets">Cheatsheets</a><span class="sep">|</span>
+            <a href="/cheatsheets/bash">Bash</a><span class="sep">|</span>
+            <a href="/cheatsheets/regex">Regex</a><span class="sep">|</span>
+            <a href="/cheatsheets/jq">jq</a><span class="sep">|</span>
+            <a href="/cheatsheets/ssh">SSH</a><span class="sep">|</span>
+            <a href="/cheatsheets/vim">Vim</a><span class="sep">|</span>
+            <a href="/cheatsheets/git">Git</a><span class="sep">|</span>
+            <a href="/cheatsheets/docker">Docker</a><span class="sep">|</span>
+            <a href="/cheatsheets/http">HTTP</a><span class="sep">|</span>
+            <a href="/for-devs">Developer Hub</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row');
+            const blocks = document.querySelectorAll('.config-block, .note');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+            blocks.forEach(b => {
+                const text = b.textContent.toLowerCase();
+                b.classList.toggle('hidden', searchTerm && !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>
