@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How AI Agents Pay for Real-Time Data on TerminalFeed | TerminalFeed Blog</title>
+  <meta name="description" content="A working walkthrough of the TerminalFeed payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.">
+  <meta property="og:title" content="How AI Agents Pay for Real-Time Data on TerminalFeed">
+  <meta property="og:description" content="A working walkthrough of the TerminalFeed payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/how-ai-agents-pay-terminalfeed">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/how-ai-agents-pay-terminalfeed">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How AI Agents Pay for Real-Time Data on TerminalFeed",
+    "description": "A working walkthrough of the TerminalFeed payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.",
+    "author": {
+      "@type": "Person",
+      "name": "Signal",
+      "url": "https://terminalfeed.io/team/signal"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-05-04",
+    "dateModified": "2026-05-04",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/how-ai-agents-pay-terminalfeed",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul {
+      margin-bottom: 18px;
+      padding-left: 20px;
+    }
+    .article-body li {
+      margin-bottom: 10px;
+      color: #D4D2CB;
+    }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .article-body pre {
+      background: #0D0D10;
+      border: 1px solid #1E1E24;
+      border-radius: 6px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.6;
+    }
+    .article-body pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #C8C8C0;
+      font-size: inherit;
+    }
+    .article-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 12px;
+    }
+    .article-body th {
+      text-align: left;
+      color: #5DCAA5;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #2A2A30;
+    }
+    .article-body td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1A1A22;
+      vertical-align: top;
+      color: #D4D2CB;
+    }
+    .article-body td:first-child { color: #F0EDE6; font-weight: 600; }
+
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>How AI Agents Pay for Real-Time Data on TerminalFeed</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "How AI Agents Pay for Real-Time Data on TerminalFeed", "item": "https://terminalfeed.io/blog/how-ai-agents-pay-terminalfeed" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">AGENTS</span>
+        <span class="article-tag">API</span>
+        <span class="article-tag">PAYMENTS</span>
+        <span class="article-tag">USDC</span>
+      </div>
+      <h1>How AI Agents Pay for Real-Time Data on TerminalFeed</h1>
+      <div class="article-meta">
+        <span>By <a href="/team/signal" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Signal</a></span>
+        <span>May 4, 2026</span>
+        <span>9 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>If you are building an AI agent that needs real-time data and you do not want to set up an OAuth dance, register for an API key, jam a credit card into a billing page, or commit to a monthly subscription before you have written a single tool call, this post is for you. TerminalFeed exposes 12 premium endpoints that AI agents can call autonomously by paying with USDC on Base. There is no signup form. There is no human approval step. The agent buys credits, gets a bearer token, and starts calling. The whole flow takes about three minutes the first time and zero seconds every time after.</p>
+
+      <p>This walkthrough shows the actual curl commands. No mock data, no diagrams, no architectural philosophy. If you have an agent project open, you can paste these into a terminal and have a working integration before you finish reading.</p>
+
+      <h2>What you get for paying</h2>
+
+      <p>The free tier of <a href="https://terminalfeed.io/developers">TerminalFeed</a> already covers a lot of ground: BTC price, top stocks, crypto movers, Fear and Greed Index, prediction markets, earthquakes, service status, and a one-call <code>/api/briefing</code> endpoint that composes a world snapshot from 5 upstream sources. For most casual agent use cases, the free tier is enough.</p>
+
+      <p>The premium tier (<code>/api/pro/*</code>) is where you go when you want composed, normalized, multi-source data that costs real time to assemble. Twelve endpoints today:</p>
+
+      <table>
+        <tr><th>Endpoint</th><th>Cost</th><th>What it returns</th></tr>
+        <tr><td>/api/pro/briefing</td><td>1 cr</td><td>BTC + Fear and Greed + earthquakes + HN + ISS + predictions, composed</td></tr>
+        <tr><td>/api/pro/macro</td><td>2 cr</td><td>FRED + Finnhub + Frankfurter rollup, history supported</td></tr>
+        <tr><td>/api/pro/crypto-deep</td><td>2 cr</td><td>Per-coin deep dive with on-chain network stats</td></tr>
+        <tr><td>/api/pro/agent-context</td><td>2 cr</td><td>Curated paste-ready system prompt of current world state</td></tr>
+        <tr><td>/api/pro/sentiment</td><td>2 cr</td><td>Crypto F and G plus trending symbols with sentiment scoring</td></tr>
+        <tr><td>/api/pro/world-deltas</td><td>2 cr</td><td>Polling endpoint, events newer than ?since=ISO timestamp</td></tr>
+        <tr><td>/api/pro/correlation-matrix</td><td>2 cr</td><td>Computed correlations across 10 historical series</td></tr>
+        <tr><td>/api/pro/whales</td><td>2 cr</td><td>Large BTC, ETH, Solana transactions with attribution</td></tr>
+        <tr><td>/api/pro/exchange-flows</td><td>2 cr</td><td>19-wallet labeled list of exchange-controlled addresses</td></tr>
+        <tr><td>/api/pro/defi-tvl</td><td>2 cr</td><td>Top-50 DeFi protocols and chain rollups, normalized</td></tr>
+        <tr><td>/api/pro/stablecoin-flows</td><td>2 cr</td><td>Top-20 stablecoins with 1d, 7d, 30d deltas and aggregate bias</td></tr>
+        <tr><td>/api/pro/github-velocity</td><td>2 cr</td><td>GitHub trending repos with computed velocity score</td></tr>
+      </table>
+
+      <p>Pricing: <strong>1 credit = $0.02</strong>. So a typical 2-credit call costs four cents. A research agent that hits ten different premium endpoints to assemble context for a single task spends about twenty cents. A market-watching agent that polls <code>/api/pro/world-deltas</code> every minute for an entire day costs about $30. You can fund the budget once and let the agent run.</p>
+
+      <h2>Step 1: Check the payment surface</h2>
+
+      <p>Before buying anything, ask the API what chain, what asset, and what address to send to. The endpoint is unauthenticated:</p>
+
+      <pre><code>curl https://terminalfeed.io/api/payment/info</code></pre>
+
+      <p>Response includes the receiving wallet address, the chain ID (Base mainnet, eip155:8453), the accepted asset (USDC), and the current credit price. This is the only call that does not require auth.</p>
+
+      <h2>Step 2: Buy credits</h2>
+
+      <p>Send USDC on Base to the address from step 1. Most agents do this with a programmatic wallet (viem, ethers, web3.py). Once the transaction is broadcast, post the transaction hash to TerminalFeed:</p>
+
+      <pre><code>curl -X POST https://terminalfeed.io/api/payment/buy-credits \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_hash": "0xabc123...",
+    "amount_usdc": "10.00"
+  }'</code></pre>
+
+      <p>You get back a bearer token. Format is <code>tf_live_</code> followed by 64 hex chars. Save this somewhere your agent can read it. This token is the credential for every paid call from now on.</p>
+
+      <pre><code>{
+  "token": "tf_live_a1b2c3...",
+  "credits_minted": 500,
+  "balance": 500,
+  "tx_confirmed": true
+}</code></pre>
+
+      <p>Ten dollars of USDC mints 500 credits. That is 250 calls at the typical 2-credit rate, or 500 calls to the cheaper <code>/api/pro/briefing</code> endpoint.</p>
+
+      <h2>Step 3: Make a paid call</h2>
+
+      <p>Pass the bearer token in the Authorization header. That is the only thing that changes from a free call:</p>
+
+      <pre><code>curl https://terminalfeed.io/api/pro/briefing \
+  -H "Authorization: Bearer tf_live_a1b2c3..."</code></pre>
+
+      <p>The response is the data plus a <code>_meta</code> block describing per-source freshness, latencies, and an endpoint echo. The <code>_meta</code> block is required; agents that care about staleness can read it and decide whether to retry. Credit balance is decremented atomically before the upstream fetch starts.</p>
+
+      <h2>Step 4: Check your balance whenever</h2>
+
+      <pre><code>curl https://terminalfeed.io/api/payment/balance \
+  -H "Authorization: Bearer tf_live_a1b2c3..."</code></pre>
+
+      <p>Returns the current balance, the running total of credits ever purchased, and the running total spent. Agents that monitor their own spend can poll this on a schedule and trigger a top-up before they run out.</p>
+
+      <h2>Federation: same token works on TensorFeed</h2>
+
+      <p>TerminalFeed credits are pooled with <a href="https://tensorfeed.ai">TensorFeed.ai</a>, an AI news and intelligence aggregator. The same bearer token authenticates against both sites, and credits drawn down on either site decrement the same balance. So a research agent that needs both real-time market data (TerminalFeed) and AI news context (TensorFeed) does not need two billing relationships. One purchase, one token, two domains.</p>
+
+      <p>This was a deliberate design call. Agents shouldn't have to maintain a wallet of API credentials, one per data provider. The federation is the start of a small bet: if data providers can pool credit, agent developers can stop treating every API as a separate account problem.</p>
+
+      <h2>If you are using MCP</h2>
+
+      <p>TerminalFeed's MCP server exposes every premium endpoint as a tool. The free tools require no auth. The premium tools take the same bearer token. If you are running Claude Desktop or Claude Code, drop this in your config:</p>
+
+      <pre><code>{
+  "mcpServers": {
+    "terminalfeed": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://terminalfeed.io/api/mcp",
+        "--header",
+        "Authorization: Bearer tf_live_a1b2c3..."
+      ]
+    }
+  }
+}</code></pre>
+
+      <p>Without the <code>--header</code> line you get the free tier (8 tools, no payment). With it you get all 27 tools including the premium 12.</p>
+
+      <h2>What this is not</h2>
+
+      <p>A few things worth flagging before you build:</p>
+
+      <ul>
+        <li><strong>Not a subscription.</strong> Credits do not expire (today). You buy what you need. If you want to test the integration with $2 instead of $20, that works.</li>
+        <li><strong>Not delegated payment.</strong> The agent has the bearer token and can spend the budget without checking in. If you need a human in the loop for every transaction, use a delegated rail (Stripe Link for Agents, for instance) and not this.</li>
+        <li><strong>Not a streaming protocol.</strong> Premium endpoints are HTTP request/response. Cache TTLs are 60 seconds to 5 minutes depending on endpoint. If you need sub-second updates, the free WebSocket BTC ticker is a separate path.</li>
+        <li><strong>Not OAuth.</strong> No app registration, no scopes, no refresh tokens. The bearer token is the entire credential. Treat it like a credit card number.</li>
+      </ul>
+
+      <h2>Why this exists</h2>
+
+      <p>The reason a payment rail like this even has a chance in 2026 is that AI agents are starting to do real work, and the work involves data. An agent answering "what is the current state of the crypto market and how does it correlate with the macro picture" can stitch that together from five public APIs and a lot of prompting, or it can call <code>/api/pro/agent-context</code> for two cents and get a paste-ready answer in 600ms. The economics favor the agent paying.</p>
+
+      <p>The web is starting to rewrite itself for a non-human audience. APIs that used to demand human signup forms are quietly building agent-payable surfaces. TerminalFeed is one. There will be more. The interesting question for the next eighteen months is which providers federate their credit pools and which try to lock agents into per-provider accounts. We bet on federation. Time will tell.</p>
+
+      <div class="cta-box">
+        <p>Try the free tier first. Most use cases never need paid endpoints.</p>
+        <a class="cta-link" href="https://terminalfeed.io/api/briefing">Hit /api/briefing</a>
+      </div>
+
+      <p>Full docs: <a href="https://terminalfeed.io/developers/agent-payments">/developers/agent-payments</a>. Tool catalog (OpenAI, Anthropic, raw): <a href="https://terminalfeed.io/api/llm-tools">/api/llm-tools</a>. MCP discovery: <a href="https://terminalfeed.io/api/mcp">/api/mcp</a>. Questions: <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a>.</p>
+
+    </article>
+
+    <footer class="footer">
+      <a href="/">Home</a>
+      <span class="sep">|</span>
+      <a href="/blog">Blog</a>
+      <span class="sep">|</span>
+      <a href="/developers">API</a>
+      <span class="sep">|</span>
+      <a href="/about">About</a>
+      <span class="sep">|</span>
+      <a href="/team/signal">Signal</a>
+    </footer>
+  </div>
+</body>
+</html>

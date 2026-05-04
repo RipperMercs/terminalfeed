@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-04T02:52:28.782Z",
+  "updated": "2026-05-04T20:49:40.676Z",
   "articles": [
+    {
+      "slug": "how-ai-agents-pay-terminalfeed",
+      "title": "How AI Agents Pay for Real-Time Data on TerminalFeed",
+      "excerpt": "A working walkthrough of the TerminalFeed payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.",
+      "author": "Signal",
+      "author_title": "Infrastructure Writer",
+      "tags": [
+        "AGENTS",
+        "API"
+      ],
+      "published": "2026-05-04",
+      "read_time": "9 min read"
+    },
     {
       "slug": "bitcoin-80k-sentiment-disconnect",
       "title": "Bitcoin Just Crossed $80,000 and the Sentiment Data Says Fear",
@@ -65,19 +78,6 @@
       ],
       "published": "2026-04-30",
       "read_time": "8 min read"
-    },
-    {
-      "slug": "why-the-harness-gap-matters",
-      "title": "Why the Harness Gap Matters: The Same Model Inside Two Agents Is Not the Same Agent",
-      "excerpt": "Same model, different harnesses, different scores. The agent scaffold around the language model decides whether you ship working code or watch a 30-step retry loop fail. Why this gap is the most important number in agentic coding right now.",
-      "author": "Signal",
-      "author_title": "Infrastructure Writer",
-      "tags": [
-        "AI",
-        "AGENTS"
-      ],
-      "published": "2026-04-30",
-      "read_time": "7 min read"
     }
   ]
 }
