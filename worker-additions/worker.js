@@ -805,6 +805,7 @@ function handleIndex() {
       '/api/humans-in-space', '/api/disaster-alerts', '/api/launches',
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
+      '/api/air-quality', '/api/shodan', '/api/volcanoes',
       '/api/hf-trending', '/api/solana-network',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
@@ -2712,6 +2713,218 @@ async function handleWeather(parsedUrl) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
     return jsonResponse({ data: {} });
+  }
+}
+
+
+// GET /api/air-quality?lat=...&lon=...
+// Open-Meteo Air Quality API. Free, no key. 30min cache. Per-coords cache key.
+function _aqiCategory(usAqi) {
+  if (usAqi == null) return null;
+  if (usAqi <= 50) return { label: 'good', color: 'green' };
+  if (usAqi <= 100) return { label: 'moderate', color: 'yellow' };
+  if (usAqi <= 150) return { label: 'unhealthy_sensitive', color: 'orange' };
+  if (usAqi <= 200) return { label: 'unhealthy', color: 'red' };
+  if (usAqi <= 300) return { label: 'very_unhealthy', color: 'purple' };
+  return { label: 'hazardous', color: 'maroon' };
+}
+
+async function handleAirQuality(parsedUrl) {
+  var rawLat = parsedUrl.searchParams.get('lat');
+  var rawLon = parsedUrl.searchParams.get('lon');
+  var lat = parseFloat(rawLat);
+  var lon = parseFloat(rawLon);
+  if (!isFinite(lat) || lat < -90 || lat > 90) lat = 34.05;
+  if (!isFinite(lon) || lon < -180 || lon > 180) lon = -118.24;
+  lat = Math.round(lat * 100) / 100;
+  lon = Math.round(lon * 100) / 100;
+  var KEY = 'air-quality-' + lat + '-' + lon;
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  try {
+    var hourly = 'us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone';
+    var u = 'https://air-quality-api.open-meteo.com/v1/air-quality'
+          + '?latitude=' + lat + '&longitude=' + lon
+          + '&hourly=' + hourly
+          + '&timezone=auto&past_hours=0&forecast_hours=1';
+    var res = await fetchWithTimeout(u);
+    if (!res.ok) throw new Error('open-meteo-aq ' + res.status);
+    var json = await res.json();
+    var h = (json && json.hourly) || {};
+    var snap = {
+      time: (h.time && h.time[0]) || null,
+      us_aqi: (h.us_aqi && h.us_aqi[0] != null) ? h.us_aqi[0] : null,
+      european_aqi: (h.european_aqi && h.european_aqi[0] != null) ? h.european_aqi[0] : null,
+      pm2_5: (h.pm2_5 && h.pm2_5[0] != null) ? h.pm2_5[0] : null,
+      pm10: (h.pm10 && h.pm10[0] != null) ? h.pm10[0] : null,
+      ozone: (h.ozone && h.ozone[0] != null) ? h.ozone[0] : null,
+      nitrogen_dioxide: (h.nitrogen_dioxide && h.nitrogen_dioxide[0] != null) ? h.nitrogen_dioxide[0] : null,
+      sulphur_dioxide: (h.sulphur_dioxide && h.sulphur_dioxide[0] != null) ? h.sulphur_dioxide[0] : null,
+      carbon_monoxide: (h.carbon_monoxide && h.carbon_monoxide[0] != null) ? h.carbon_monoxide[0] : null,
+    };
+    var data = {
+      data: {
+        lat: lat,
+        lon: lon,
+        timezone: (json && json.timezone) || null,
+        snapshot: snap,
+        category: _aqiCategory(snap.us_aqi),
+        attribution: 'Open-Meteo Air Quality API (open-meteo.com)',
+      },
+      updated_at: new Date().toISOString(),
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: { lat: lat, lon: lon, snapshot: null, category: null, error: 'upstream_unavailable' } });
+  }
+}
+
+
+// GET /api/shodan?ip=...
+// Shodan InternetDB. Free, no key, no auth. Returns ports, CVEs, hostnames, tags.
+// Default surface: a curated rotation of well-known public IPs (cloudflare DNS,
+// google DNS, etc) so the panel always has something to render. Visitors can
+// pass ?ip= to look up any public IP.
+var SHODAN_DEMO_IPS = [
+  { ip: '1.1.1.1',         name: 'Cloudflare DNS' },
+  { ip: '8.8.8.8',         name: 'Google DNS' },
+  { ip: '9.9.9.9',         name: 'Quad9 DNS' },
+  { ip: '208.67.222.222',  name: 'OpenDNS' },
+  { ip: '140.82.114.4',    name: 'GitHub' },
+  { ip: '151.101.1.69',    name: 'Fastly CDN' },
+];
+
+async function _shodanLookup(ip) {
+  var u = 'https://internetdb.shodan.io/' + encodeURIComponent(ip);
+  var res = await fetchWithTimeout(u);
+  if (res.status === 404) {
+    return { ip: ip, ports: [], vulns: [], hostnames: [], tags: [], cpes: [] };
+  }
+  if (!res.ok) throw new Error('shodan ' + res.status);
+  var d = await res.json();
+  return {
+    ip: d.ip || ip,
+    ports: Array.isArray(d.ports) ? d.ports.slice(0, 30) : [],
+    vulns: Array.isArray(d.vulns) ? d.vulns.slice(0, 20) : [],
+    hostnames: Array.isArray(d.hostnames) ? d.hostnames.slice(0, 10) : [],
+    tags: Array.isArray(d.tags) ? d.tags.slice(0, 10) : [],
+    cpes: Array.isArray(d.cpes) ? d.cpes.slice(0, 10) : [],
+  };
+}
+
+function _isPublicIPv4(ip) {
+  if (typeof ip !== 'string') return false;
+  var m = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  var a = parseInt(m[1], 10), b = parseInt(m[2], 10), c = parseInt(m[3], 10), d = parseInt(m[4], 10);
+  if ([a, b, c, d].some(function(x) { return x < 0 || x > 255; })) return false;
+  if (a === 10) return false;
+  if (a === 127) return false;
+  if (a === 0) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 192 && b === 168) return false;
+  if (a >= 224) return false;
+  return true;
+}
+
+async function handleShodan(parsedUrl) {
+  var ipParam = (parsedUrl.searchParams.get('ip') || '').trim();
+  if (ipParam) {
+    if (!_isPublicIPv4(ipParam)) {
+      return jsonResponse({ data: null, error: 'invalid_or_private_ip' }, 400);
+    }
+    var KEY1 = 'shodan-' + ipParam;
+    var cached1 = getCached(KEY1, 3600000);
+    if (cached1) return jsonResponse(cached1, 200, 3600);
+    try {
+      var single = await _shodanLookup(ipParam);
+      var out1 = { data: { mode: 'single', result: single }, updated_at: new Date().toISOString() };
+      setCache(KEY1, out1);
+      return jsonResponse(out1, 200, 3600);
+    } catch (e) {
+      var stale1 = getStale(KEY1);
+      if (stale1) return jsonResponse(stale1);
+      return jsonResponse({ data: null, error: 'upstream_unavailable' });
+    }
+  }
+
+  var KEY = 'shodan-demo';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+  try {
+    var settled = await Promise.allSettled(SHODAN_DEMO_IPS.map(function(t) { return _shodanLookup(t.ip); }));
+    var rows = settled.map(function(r, i) {
+      var t = SHODAN_DEMO_IPS[i];
+      if (r.status === 'fulfilled') {
+        return Object.assign({ name: t.name }, r.value);
+      }
+      return { name: t.name, ip: t.ip, ports: [], vulns: [], hostnames: [], tags: [], cpes: [], error: 'lookup_failed' };
+    });
+    var data = { data: { mode: 'demo', targets: rows }, updated_at: new Date().toISOString() };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: { mode: 'demo', targets: [] } });
+  }
+}
+
+
+// GET /api/volcanoes
+// Smithsonian Global Volcanism Program weekly activity report. Free, no key.
+async function handleVolcanoes() {
+  var KEY = 'volcanoes';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var res = await fetchWithTimeout('https://volcano.si.edu/news/WeeklyVolcanoRSS.xml', {
+      headers: { 'Accept': 'application/rss+xml,application/xml,text/xml,*/*' },
+    });
+    if (!res.ok) throw new Error('si-volcano ' + res.status);
+    var xml = await res.text();
+    var items = [];
+    var rxItem = /<item>([\s\S]*?)<\/item>/g;
+    var match;
+    while ((match = rxItem.exec(xml)) !== null && items.length < 30) {
+      var block = match[1];
+      var titleM = block.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+      var pubM = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+      var descM = block.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/);
+      var linkM = block.match(/<link>([\s\S]*?)<\/link>/);
+      var rawTitle = titleM ? titleM[1].trim() : '';
+      var name = rawTitle;
+      var country = '';
+      var dash = rawTitle.indexOf(' - ');
+      if (dash > 0) {
+        name = rawTitle.slice(0, dash).trim();
+        country = rawTitle.slice(dash + 3).trim();
+      }
+      items.push({
+        name: name,
+        country: country,
+        title: rawTitle,
+        pub_date: pubM ? pubM[1].trim() : '',
+        summary: descM ? descM[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 280) : '',
+        link: linkM ? linkM[1].trim() : '',
+      });
+    }
+    var data = {
+      data: { count: items.length, items: items, attribution: 'Smithsonian Institution Global Volcanism Program' },
+      updated_at: new Date().toISOString(),
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: { count: 0, items: [] } });
   }
 }
 
@@ -8090,6 +8303,9 @@ async function dispatchRoute(request, env, url, path) {
       case 'economic-data':  return await handleEconomicData(env);
       case 'steam':          return await handleSteam();
       case 'weather':        return await handleWeather(url);
+      case 'air-quality':    return await handleAirQuality(url);
+      case 'shodan':         return await handleShodan(url);
+      case 'volcanoes':      return await handleVolcanoes();
       case 'xkcd':           return await handleXkcd();
       case 'ai-stats':       return handleAiStats();
       case 'briefing':       return await handleBriefing();

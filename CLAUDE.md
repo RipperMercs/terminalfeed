@@ -72,6 +72,9 @@ Always edit `worker-additions/worker.js` for any API route work. Deploy from `wo
 /api/error         — POST client error reports (logged to Cloudflare Workers dashboard)
 /api/btc-alert     — GET most recent BTC volatility alert (>=3% 1h move) + threshold config
 /api/btc-alert-check — POST force a volatility check now (Bearer ADMIN_SECRET)
+/api/air-quality   — Open-Meteo air quality (US AQI, PM2.5, PM10, ozone, NO2) by ?lat=&lon=. Defaults to LA. 30min cache.
+/api/shodan        — Shodan InternetDB exposure scan (ports, CVEs, hostnames). ?ip= for single lookup, default returns curated public IPs. 1h cache. No key required.
+/api/volcanoes     — Smithsonian GVP weekly volcano activity report. 1h cache.
 ```
 
 ### Premium Tier: /api/pro/\* (live, paid, Bearer auth)
@@ -305,6 +308,9 @@ Font:          JetBrains Mono, SF Mono, Fira Code, Consolas, monospace
 - Whale Watch (large BTC transactions)
 - The Wire (2600/hacker culture rotating quotes)
 - AI Hub (API call tracking, world briefing display, endpoint list)
+- Air Quality (Open-Meteo, US AQI + pollutant breakdown, defaults to LA)
+- Internet Exposure / Shodan (curated public IPs, ports, CVEs, no key)
+- Volcanoes (Smithsonian GVP weekly bulletin)
 - **TerminalFeed Originals (rotates through latest blog articles every 15s)**
 - Bluesky Feed
 - AI Leaderboard (model rankings)

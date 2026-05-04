@@ -83,6 +83,9 @@ import { useSpaceWeather } from './hooks/useSpaceWeather';
 import { useWildfires } from './hooks/useWildfires';
 import { useSevereWeather } from './hooks/useSevereWeather';
 import { useFundingRates } from './hooks/useFundingRates';
+import { useAirQuality } from './hooks/useAirQuality';
+import { useShodan } from './hooks/useShodan';
+import { useVolcanoes } from './hooks/useVolcanoes';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -186,6 +189,9 @@ function App() {
   const wildfires = useWildfires();
   const severeWeather = useSevereWeather();
   const fundingRates = useFundingRates();
+  const airQuality = useAirQuality();
+  const shodan = useShodan();
+  const volcanoes = useVolcanoes();
 
   // Safety nets: if these panels never get data within their window, hide
   // them rather than wedge the viewer on a placeholder. Resets if data
@@ -328,6 +334,9 @@ function App() {
     if (humansInSpace) panelHealth.reportData('humans-in-space');
     if (thisDayEvents.length > 0) panelHealth.reportData('this-day');
     if (gasData) panelHealth.reportData('gas');
+    if (airQuality?.snapshot?.usAqi != null) panelHealth.reportData('air-quality');
+    if (shodan && shodan.targets.length > 0) panelHealth.reportData('shodan');
+    if (volcanoes && volcanoes.items.length > 0) panelHealth.reportData('volcanoes');
   });
 
   // Bump a key whenever a new block lands so the mempool queue replays its entry animation
@@ -1405,6 +1414,119 @@ function App() {
             {fundingRates.failedVenues.length > 0 && (
               <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 4, fontStyle: 'italic' }}>fail: {fundingRates.failedVenues.join(', ')}</div>
             )}
+          </div>
+        )}
+      </>);
+    })(),
+    'air-quality': (() => {
+      const snap = airQuality?.snapshot;
+      const cat = airQuality?.category;
+      const aqi = snap?.usAqi ?? null;
+      const colorMap: Record<string, string> = {
+        green: 'var(--green)',
+        yellow: 'var(--amber)',
+        orange: '#f59e0b',
+        red: 'var(--red)',
+        purple: 'var(--purple)',
+        maroon: '#7f1d1d',
+      };
+      const aqiColor = cat ? (colorMap[cat.color] ?? 'var(--text-dim)') : 'var(--text-dim)';
+      const labelText = cat ? cat.label.replace(/_/g, ' ').toUpperCase() : '';
+      return (<>
+        <PanelHead panelId="air-quality" isStale={panelHealth.isStale('air-quality')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Air Quality</span><span className="panelTag" style={{ color: aqiColor, background: `${aqiColor}1a` }}>AQI</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30m</span>
+        </PanelHead>
+        {!airQuality && <LoadingOrHide label="loading aqi..." />}
+        {airQuality && aqi == null && <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>no data for location</div>}
+        {airQuality && aqi != null && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: aqiColor, fontVariantNumeric: 'tabular-nums' }}>{Math.round(aqi)}</span>
+              <span style={{ fontSize: 9, color: aqiColor, letterSpacing: 1, fontWeight: 600 }}>{labelText}</span>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 9, color: 'var(--text-dim)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                <span>PM2.5</span><span style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{snap?.pm25 != null ? `${snap.pm25.toFixed(1)} µg/m³` : 'n/a'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                <span>PM10</span><span style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{snap?.pm10 != null ? `${snap.pm10.toFixed(1)} µg/m³` : 'n/a'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                <span>Ozone</span><span style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{snap?.ozone != null ? `${snap.ozone.toFixed(0)} µg/m³` : 'n/a'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                <span>NO2</span><span style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{snap?.no2 != null ? `${snap.no2.toFixed(0)} µg/m³` : 'n/a'}</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>open-meteo · LA</div>
+          </div>
+        )}
+      </>);
+    })(),
+    'shodan': (() => {
+      const targets = shodan?.targets ?? [];
+      const totalCves = targets.reduce((s, t) => s + (t.vulns?.length ?? 0), 0);
+      return (<>
+        <PanelHead panelId="shodan" isStale={panelHealth.isStale('shodan')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Internet Exposure</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>SHODAN</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!shodan && <LoadingOrHide label="loading shodan..." />}
+        {shodan && targets.length === 0 && <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>no targets returned</div>}
+        {shodan && targets.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: totalCves > 0 ? 'var(--red)' : 'var(--green)', fontVariantNumeric: 'tabular-nums' }}>{totalCves}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>known cves across {targets.length} targets</span>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 9, color: 'var(--text-dim)' }}>
+              {targets.slice(0, 6).map((t, i) => (
+                <div key={t.ip + i} className="listRow" style={{ paddingTop: 3, paddingBottom: 3, alignItems: 'baseline' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name || t.ip}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{t.ip} · {(t.ports?.length ?? 0)} ports</div>
+                  </div>
+                  <span style={{ fontSize: 10, color: (t.vulns?.length ?? 0) > 0 ? 'var(--red)' : 'var(--green)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                    {(t.vulns?.length ?? 0) > 0 ? `${t.vulns.length} CVE` : 'clean'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>internetdb.shodan.io · public IPs</div>
+          </div>
+        )}
+      </>);
+    })(),
+    'volcanoes': (() => {
+      const items = volcanoes?.items ?? [];
+      return (<>
+        <PanelHead panelId="volcanoes" isStale={panelHealth.isStale('volcanoes')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Volcanoes</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>SI/GVP</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!volcanoes && <LoadingOrHide label="loading gvp..." />}
+        {volcanoes && items.length === 0 && <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>no current activity reports</div>}
+        {volcanoes && items.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: items.length > 5 ? 'var(--red)' : 'var(--amber)', fontVariantNumeric: 'tabular-nums' }}>{items.length}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>active reports · weekly</span>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 9, color: 'var(--text-dim)' }}>
+              {items.slice(0, 6).map((v, i) => (
+                <div key={v.name + i} style={{ padding: '3px 0', borderBottom: i < 5 ? '1px solid var(--border)' : 'none' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontSize: 10, color: 'var(--text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name || 'unknown'}</span>
+                    <span style={{ fontSize: 9, color: 'var(--text-dim)', flexShrink: 0 }}>{v.country}</span>
+                  </div>
+                  {v.summary && (
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }} title={v.summary}>{v.summary}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>smithsonian gvp · weekly</div>
           </div>
         )}
       </>);

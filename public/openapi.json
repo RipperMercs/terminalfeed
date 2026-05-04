@@ -1739,6 +1739,55 @@
         "security": []
       }
     },
+    "/api/air-quality": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Open-Meteo Air Quality (US AQI, PM2.5, PM10, ozone, NO2)",
+        "description": "Air quality snapshot for any lat/lon. Returns US AQI band, European AQI, PM2.5, PM10, ozone, nitrogen dioxide, sulphur dioxide, carbon monoxide. Per-coordinates cache (rounded to 2 decimals) for 30 minutes. Defaults to Los Angeles when lat/lon are missing or invalid. Source: Open-Meteo Air Quality API.",
+        "parameters": [
+          { "name": "lat", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Latitude (-90 to 90). Default 34.05." },
+          { "name": "lon", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Longitude (-180 to 180). Default -118.24." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Air quality snapshot",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/shodan": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Shodan InternetDB exposure scan (no key required)",
+        "description": "Shodan InternetDB lookup. Returns open ports, known CVEs, hostnames, tags, and CPEs for public IPv4 addresses. With no parameters, returns a curated rotation across Cloudflare DNS, Google DNS, Quad9, OpenDNS, GitHub, and Fastly. With ?ip=, looks up any single public IPv4. Private and reserved ranges are rejected. 1-hour cache.",
+        "parameters": [
+          { "name": "ip", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Public IPv4 address. Omit for the curated demo set." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exposure snapshot",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/volcanoes": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Smithsonian GVP weekly volcano activity report",
+        "description": "Latest volcano activity reports from the Smithsonian Institution Global Volcanism Program weekly bulletin. Includes volcano name, country, summary, and link. 1-hour cache.",
+        "responses": {
+          "200": {
+            "description": "Active volcano reports",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/harnesses": {
       "get": {
         "tags": ["free"],
