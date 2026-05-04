@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Tools: 24 Free Browser-Based Utilities | TerminalFeed Devs</title>
+  <meta name="description" content="Twenty-four single-page developer tools that run entirely in your browser. JSON formatter, JWT decoder, regex tester, base64, hex, UUID, password generator, hash, cron decoder, markdown preview, color converter, and more. No signup, no tracking, no server round-trip.">
+  <meta property="og:title" content="Developer Tools at TerminalFeed">
+  <meta property="og:description" content="24 single-page developer tools that run entirely in your browser. JSON, JWT, regex, base64, hex, UUID, hash, cron, markdown, color, and more.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs/tools">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs/tools">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; }
+    a { color: inherit; }
+
+    .hub-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid #1E1E24; padding: 10px 20px 0; }
+    .hub-header-inner { max-width: 980px; margin: 0 auto; }
+    .hub-back { font-size: 10px; color: #4E4D49; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .hub-back a { color: #4E4D49; text-decoration: none; }
+    .hub-back a:hover { color: #5DCAA5; }
+    .hub-row { display: flex; align-items: center; gap: 16px; }
+    .hub-brand { font-size: 13px; color: #F0EDE6; font-weight: 700; flex-shrink: 0; }
+    .hub-brand .hub-prompt { color: #4ADE80; margin-right: 4px; }
+    .hub-tabs { display: flex; gap: 0; overflow-x: auto; flex: 1; }
+    .hub-tabs::-webkit-scrollbar { height: 4px; }
+    .hub-tabs::-webkit-scrollbar-thumb { background: #1E1E24; }
+    .hub-tabs .tab { padding: 10px 14px; font-size: 11.5px; color: #8A8880; text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.5px; font-weight: 500; transition: color 0.15s, border-color 0.15s; }
+    .hub-tabs .tab:hover { color: #D4D2CB; }
+    .hub-tabs .tab.active { color: #4ADE80; border-bottom-color: #4ADE80; font-weight: 600; }
+    @media (max-width: 700px) { .hub-row { flex-direction: column; align-items: flex-start; gap: 6px; } .hub-tabs { width: 100%; } }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 40px; }
+
+    .page-header { padding-bottom: 24px; border-bottom: 1px solid #1E1E24; margin-bottom: 36px; }
+    .page-header h1 { font-size: 26px; color: #F0EDE6; font-weight: 700; margin-bottom: 10px; }
+    .page-header h1 .accent { color: #4ADE80; }
+    .page-header .lede { font-size: 13px; color: #8A8880; line-height: 1.7; max-width: 760px; }
+    .page-header .lede strong { color: #D4D2CB; }
+    .page-header a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+
+    .tool-group { margin-bottom: 32px; }
+    .tool-group .group-label { font-size: 11px; color: #4ADE80; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #1E1E24; }
+    .tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 720px) { .tool-grid { grid-template-columns: 1fr; } }
+
+    .tool-card { background: #111114; border: 1px solid #1E1E24; border-radius: 6px; padding: 14px 16px; transition: border-color 0.15s, transform 0.1s; text-decoration: none; display: block; }
+    .tool-card:hover { border-color: #5DCAA5; }
+    .tool-card .name { font-size: 13px; color: #F0EDE6; font-weight: 600; margin-bottom: 4px; }
+    .tool-card .desc { font-size: 11px; color: #8A8880; line-height: 1.55; margin-bottom: 6px; }
+    .tool-card .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tool-card .tag { font-size: 8.5px; color: #4E4D49; letter-spacing: 0.8px; text-transform: uppercase; padding: 2px 6px; border: 1px solid #1E1E24; border-radius: 2px; }
+
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-back"><a href="/">&larr; terminalfeed.io</a></div>
+      <div class="hub-row">
+        <div class="hub-brand"><span class="hub-prompt">&gt;_</span>TerminalFeed Devs</div>
+        <nav class="hub-tabs">
+          <a href="/for-devs" class="tab">Overview</a>
+          <a href="/for-devs/tools" class="tab active">Tools</a>
+          <a href="/for-devs/api" class="tab">API</a>
+          <a href="/for-devs/mcp" class="tab">MCP</a>
+          <a href="/for-devs/recipes" class="tab">Recipes</a>
+          <a href="/for-devs/articles" class="tab">Articles</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <header class="page-header">
+      <h1>Developer <span class="accent">Tools</span></h1>
+      <p class="lede"><strong>Twenty-four single-page browser tools that run entirely on your machine.</strong> No analytics on these pages, no requests to a backend on submit, no telemetry. Bookmark them, use them offline, paste them in incognito tabs. Every tool below loads in under 200ms and respects your time. Full index also at <a href="/tools/" class="inline">/tools</a>.</p>
+    </header>
+
+    <div class="tool-group">
+      <div class="group-label">Encoders &amp; Decoders</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/base64"><div class="name">Base64</div><div class="desc">Encode and decode strings or files. Round-trip safe, supports binary upload, copy with one click.</div><div class="tags"><span class="tag">Encoding</span><span class="tag">Files</span></div></a>
+        <a class="tool-card" href="/tools/hex"><div class="name">Hex Converter</div><div class="desc">Two-way between bytes, integers, ASCII, and color hex. Useful for debugging binary protocols and CSS.</div><div class="tags"><span class="tag">Encoding</span><span class="tag">Color</span></div></a>
+        <a class="tool-card" href="/tools/url"><div class="name">URL Encoder</div><div class="desc">Percent-encode and decode query strings, paths, and fragments. Handles unicode, plus-vs-space variants.</div><div class="tags"><span class="tag">Web</span><span class="tag">Encoding</span></div></a>
+        <a class="tool-card" href="/tools/html-entity"><div class="name">HTML Entities</div><div class="desc">Encode and decode &amp;amp; &amp;lt; &amp;gt; and 250+ named/numeric entities. For XSS-safe output and email templates.</div><div class="tags"><span class="tag">Web</span><span class="tag">Encoding</span></div></a>
+        <a class="tool-card" href="/tools/jwt"><div class="name">JWT Decoder</div><div class="desc">Decode JWTs, inspect header/payload/signature, check expiry. Decoder runs locally, never leaves your browser.</div><div class="tags"><span class="tag">Auth</span><span class="tag">Security</span></div></a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="group-label">Data Formats</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/json"><div class="name">JSON Formatter</div><div class="desc">Pretty-print, validate, collapse, jq-style queries. Handles 50MB inputs without hanging.</div><div class="tags"><span class="tag">Data</span><span class="tag">Validation</span></div></a>
+        <a class="tool-card" href="/tools/yaml"><div class="name">YAML Converter</div><div class="desc">YAML to JSON and back, validation, syntax highlight. Catches indent errors and tab/space mixes.</div><div class="tags"><span class="tag">Data</span><span class="tag">Config</span></div></a>
+        <a class="tool-card" href="/tools/markdown"><div class="name">Markdown Preview</div><div class="desc">Live render, GitHub-flavored, copy HTML output. Tables, fenced code, task lists all supported.</div><div class="tags"><span class="tag">Web</span><span class="tag">Writing</span></div></a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="group-label">Generators</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/uuid"><div class="name">UUID Generator</div><div class="desc">v1, v4, v7, batch mode. Lowercase or upper, with or without hyphens. Bulk export to CSV.</div><div class="tags"><span class="tag">Generator</span><span class="tag">Database</span></div></a>
+        <a class="tool-card" href="/tools/password"><div class="name">Password Generator</div><div class="desc">Length, charset, entropy meter, copy. Generated client-side, never transmitted.</div><div class="tags"><span class="tag">Security</span><span class="tag">Generator</span></div></a>
+        <a class="tool-card" href="/tools/hash"><div class="name">Hash Generator</div><div class="desc">MD5, SHA-1, SHA-256, SHA-512. For checksums, integrity verification, and quick fingerprinting.</div><div class="tags"><span class="tag">Security</span><span class="tag">Generator</span></div></a>
+        <a class="tool-card" href="/tools/lorem"><div class="name">Lorem Ipsum</div><div class="desc">Words, sentences, paragraphs at custom length. Plus a "hacker ipsum" mode for prototype copy.</div><div class="tags"><span class="tag">Generator</span><span class="tag">Design</span></div></a>
+        <a class="tool-card" href="/tools/qr"><div class="name">QR Generator</div><div class="desc">Text, URL, contact card, downloadable PNG/SVG. All sizes, error correction levels, no watermark.</div><div class="tags"><span class="tag">Generator</span><span class="tag">Mobile</span></div></a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="group-label">Time, Date &amp; Pattern Matching</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/timestamp"><div class="name">Unix Timestamp</div><div class="desc">Convert seconds, milliseconds, ISO 8601 across timezones. Live clock for sanity-checking servers.</div><div class="tags"><span class="tag">Time</span><span class="tag">Conversion</span></div></a>
+        <a class="tool-card" href="/tools/cron"><div class="name">Cron Decoder</div><div class="desc">Parse expressions, show next 10 fire times in your timezone. Handles step values, ranges, lists.</div><div class="tags"><span class="tag">DevOps</span><span class="tag">Scheduling</span></div></a>
+        <a class="tool-card" href="/tools/regex"><div class="name">Regex Tester</div><div class="desc">Live match, capture groups, common patterns library. Saves the last 10 patterns to localStorage.</div><div class="tags"><span class="tag">Pattern</span><span class="tag">Validation</span></div></a>
+        <a class="tool-card" href="/tools/diff"><div class="name">Diff Viewer</div><div class="desc">Side-by-side or unified, line and char diff. Useful for config audits and copy-paste comparisons.</div><div class="tags"><span class="tag">Comparison</span><span class="tag">Pattern</span></div></a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="group-label">Network &amp; HTTP</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/api"><div class="name">API Tester</div><div class="desc">Mini Postman, GET, POST, PUT, DELETE, custom headers, JSON body. Saves history locally.</div><div class="tags"><span class="tag">HTTP</span><span class="tag">Testing</span></div></a>
+        <a class="tool-card" href="/tools/http"><div class="name">HTTP Status Codes</div><div class="desc">Every status code with explanation, common causes, RFC link. Includes 418 (teapot) and 451 (legal).</div><div class="tags"><span class="tag">HTTP</span><span class="tag">Reference</span></div></a>
+        <a class="tool-card" href="/tools/port"><div class="name">Common Ports</div><div class="desc">Service-to-port reference, well-known and registered. Quick lookup for firewall and load-balancer config.</div><div class="tags"><span class="tag">Network</span><span class="tag">Reference</span></div></a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="group-label">System &amp; Web</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/chmod"><div class="name">Chmod Calculator</div><div class="desc">Symbolic and numeric Unix permissions. Click bits to compose, paste a mode to decompose.</div><div class="tags"><span class="tag">Unix</span><span class="tag">Permissions</span></div></a>
+        <a class="tool-card" href="/tools/color"><div class="name">Color Converter</div><div class="desc">HEX, RGB, HSL, CSS variables, palettes. Eyedropper for the screen, contrast ratio for accessibility.</div><div class="tags"><span class="tag">Design</span><span class="tag">Web</span></div></a>
+      </div>
+    </div>
+
+    <div class="tool-group">
+      <div class="group-label">Crypto Converters</div>
+      <div class="tool-grid">
+        <a class="tool-card" href="/tools/gwei"><div class="name">Gwei Converter</div><div class="desc">Wei, Gwei, Ether, gas-cost calculator. Live ETH price for USD conversion.</div><div class="tags"><span class="tag">Crypto</span><span class="tag">Ethereum</span></div></a>
+        <a class="tool-card" href="/tools/satoshi"><div class="name">Satoshi Converter</div><div class="desc">Sats, BTC, USD live conversion. Useful for invoices, micropayments, and Lightning channels.</div><div class="tags"><span class="tag">Crypto</span><span class="tag">Bitcoin</span></div></a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/for-devs">Hub</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/api">API</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/mcp">MCP</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/recipes">Recipes</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/articles">Articles</a>
+    <span class="sep">|</span>
+    <a href="/cheatsheets/">Cheatsheets</a>
+    <span class="sep">|</span>
+    <a href="https://github.com/RipperMercs/terminalfeed">GitHub</a>
+  </footer>
+</body>
+</html>

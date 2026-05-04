@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Recipes: Paste-and-Go Snippets for the TerminalFeed API | TerminalFeed Devs</title>
+  <meta name="description" content="Tested, paste-and-go code recipes. Live BTC ticker in vanilla JS, Python world briefing, embed iframes, MCP setup, premium agent calls, polling for deltas, MCP tool calls. Drop into a project and they work.">
+  <meta property="og:title" content="Code Recipes at TerminalFeed">
+  <meta property="og:description" content="Paste-and-go code recipes for the public and premium API. Vanilla JS, Python, MCP, agent integration patterns.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs/recipes">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs/recipes">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; }
+    a { color: inherit; }
+
+    .hub-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid #1E1E24; padding: 10px 20px 0; }
+    .hub-header-inner { max-width: 980px; margin: 0 auto; }
+    .hub-back { font-size: 10px; color: #4E4D49; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .hub-back a { color: #4E4D49; text-decoration: none; }
+    .hub-back a:hover { color: #5DCAA5; }
+    .hub-row { display: flex; align-items: center; gap: 16px; }
+    .hub-brand { font-size: 13px; color: #F0EDE6; font-weight: 700; flex-shrink: 0; }
+    .hub-brand .hub-prompt { color: #4ADE80; margin-right: 4px; }
+    .hub-tabs { display: flex; gap: 0; overflow-x: auto; flex: 1; }
+    .hub-tabs::-webkit-scrollbar { height: 4px; }
+    .hub-tabs::-webkit-scrollbar-thumb { background: #1E1E24; }
+    .hub-tabs .tab { padding: 10px 14px; font-size: 11.5px; color: #8A8880; text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.5px; font-weight: 500; transition: color 0.15s, border-color 0.15s; }
+    .hub-tabs .tab:hover { color: #D4D2CB; }
+    .hub-tabs .tab.active { color: #4ADE80; border-bottom-color: #4ADE80; font-weight: 600; }
+    @media (max-width: 700px) { .hub-row { flex-direction: column; align-items: flex-start; gap: 6px; } .hub-tabs { width: 100%; } }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 40px; }
+
+    .page-header { padding-bottom: 24px; border-bottom: 1px solid #1E1E24; margin-bottom: 36px; }
+    .page-header h1 { font-size: 26px; color: #F0EDE6; font-weight: 700; margin-bottom: 10px; }
+    .page-header h1 .accent { color: #EF9F27; }
+    .page-header .lede { font-size: 13px; color: #8A8880; line-height: 1.7; max-width: 760px; }
+    .page-header .lede strong { color: #D4D2CB; }
+    a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+
+    .recipe-group { margin-bottom: 32px; }
+    .recipe-group .group-label { font-size: 11px; color: #4ADE80; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #1E1E24; }
+
+    .recipe { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 8px; padding: 20px 22px; margin-bottom: 14px; }
+    .recipe .r-tag { display: inline-block; font-size: 9px; color: #4ADE80; border: 1px solid #4ADE8030; background: #4ADE8010; padding: 2px 7px; border-radius: 3px; margin-right: 6px; letter-spacing: 1px; margin-bottom: 8px; }
+    .recipe .r-tag.amber { color: #EF9F27; border-color: #EF9F2730; background: #EF9F2710; }
+    .recipe .r-tag.purple { color: #A78BFA; border-color: #A78BFA30; background: #A78BFA10; }
+    .recipe .r-tag.gold { color: #F9CB42; border-color: #F9CB4230; background: #F9CB4210; }
+    .recipe .r-title { font-size: 14px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .recipe .r-sub { font-size: 11.5px; color: #8A8880; line-height: 1.6; margin-bottom: 12px; }
+    .recipe pre { margin: 0; }
+
+    pre { background: #07070a; border: 1px solid #1E1E24; border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-size: 11.5px; line-height: 1.6; color: #C8C8C0; }
+    pre .comment { color: #4E4D49; }
+    pre .key { color: #5DCAA5; }
+    pre .str { color: #EF9F27; }
+    pre .kw { color: #A78BFA; }
+    pre .num { color: #4ADE80; }
+
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-back"><a href="/">&larr; terminalfeed.io</a></div>
+      <div class="hub-row">
+        <div class="hub-brand"><span class="hub-prompt">&gt;_</span>TerminalFeed Devs</div>
+        <nav class="hub-tabs">
+          <a href="/for-devs" class="tab">Overview</a>
+          <a href="/for-devs/tools" class="tab">Tools</a>
+          <a href="/for-devs/api" class="tab">API</a>
+          <a href="/for-devs/mcp" class="tab">MCP</a>
+          <a href="/for-devs/recipes" class="tab active">Recipes</a>
+          <a href="/for-devs/articles" class="tab">Articles</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <header class="page-header">
+      <h1>Code <span class="accent">Recipes</span></h1>
+      <p class="lede"><strong>Paste-and-go snippets for common integration patterns.</strong> Drop into a project and they work. Each recipe is small, single-purpose, and uses only the public TerminalFeed API or the agent-payable premium tier. Nothing here requires a build step.</p>
+    </header>
+
+    <div class="recipe-group">
+      <div class="group-label">Frontend / Embedding</div>
+
+      <div class="recipe">
+        <span class="r-tag">VANILLA JS</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">Live BTC ticker in vanilla JS, no dependencies</div>
+        <div class="r-sub">Polls /api/btc-price every 30 seconds. Renders price plus 24h change. Drop into any HTML page that has an element with id="btc".</div>
+        <pre><span class="kw">async function</span> tick() {
+  <span class="kw">const</span> r = <span class="kw">await</span> fetch(<span class="str">'https://terminalfeed.io/api/btc-price'</span>);
+  <span class="kw">const</span> d = <span class="kw">await</span> r.json();
+  document.querySelector(<span class="str">'#btc'</span>).textContent =
+    <span class="str">'$'</span> + d.data.price.toLocaleString() +
+    <span class="str">' ('</span> + d.data.change24h.toFixed(<span class="num">2</span>) + <span class="str">'%)'</span>;
+}
+tick();
+setInterval(tick, <span class="num">30000</span>);</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag">HTML</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">Embed the live BTC ticker as an iframe</div>
+        <div class="r-sub">One iframe, no JS, dark by default. Renders the official TerminalFeed BTC ticker on any HTML page.</div>
+        <pre>&lt;iframe src=<span class="str">"https://terminalfeed.io/bitcoin-ticker"</span>
+        width=<span class="str">"320"</span> height=<span class="str">"80"</span>
+        frameborder=<span class="str">"0"</span>&gt;&lt;/iframe&gt;</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag">REACT</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">React hook for the world briefing</div>
+        <div class="r-sub">Fetches /api/briefing once and exposes the snapshot. Cleans up on unmount, handles error gracefully, no toast spam on transient failures.</div>
+        <pre><span class="kw">function</span> useBriefing() {
+  <span class="kw">const</span> [data, setData] = useState(<span class="kw">null</span>);
+  useEffect(() =&gt; {
+    <span class="kw">let</span> alive = <span class="kw">true</span>;
+    fetch(<span class="str">'https://terminalfeed.io/api/briefing'</span>)
+      .then(r =&gt; r.json())
+      .then(j =&gt; { <span class="kw">if</span> (alive) setData(j.data); })
+      .catch(() =&gt; {});
+    <span class="kw">return</span> () =&gt; { alive = <span class="kw">false</span>; };
+  }, []);
+  <span class="kw">return</span> data;
+}</pre>
+      </div>
+    </div>
+
+    <div class="recipe-group">
+      <div class="group-label">Backend / Server-Side</div>
+
+      <div class="recipe">
+        <span class="r-tag purple">PYTHON</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">One-call world briefing in Python</div>
+        <div class="r-sub">Pulls the composed /api/briefing snapshot for an LLM context window. Output fits comfortably in a 4k-token system prompt.</div>
+        <pre><span class="kw">import</span> requests, json
+r = requests.get(<span class="str">'https://terminalfeed.io/api/briefing'</span>)
+briefing = r.json()
+<span class="comment"># briefing['data'] has crypto, fear_greed, earthquakes, hn, astros</span>
+<span class="kw">print</span>(json.dumps(briefing, indent=<span class="num">2</span>))</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag purple">PYTHON</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">Stream multiple endpoints concurrently with asyncio</div>
+        <div class="r-sub">Pulls BTC, F&amp;G, earthquakes, and HN in parallel. Useful for dashboards or agent context preparation that needs sub-second composition time.</div>
+        <pre><span class="kw">import</span> asyncio, httpx
+
+URLS = [
+  <span class="str">'https://terminalfeed.io/api/btc-price'</span>,
+  <span class="str">'https://terminalfeed.io/api/fear-greed'</span>,
+  <span class="str">'https://terminalfeed.io/api/earthquake'</span>,
+  <span class="str">'https://terminalfeed.io/api/hackernews'</span>,
+]
+
+<span class="kw">async def</span> fetch(client, url):
+  r = <span class="kw">await</span> client.get(url, timeout=<span class="num">8</span>)
+  <span class="kw">return</span> r.json()
+
+<span class="kw">async def</span> main():
+  <span class="kw">async with</span> httpx.AsyncClient() <span class="kw">as</span> c:
+    <span class="kw">return await</span> asyncio.gather(*(fetch(c, u) <span class="kw">for</span> u <span class="kw">in</span> URLS))
+
+results = asyncio.run(main())</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag">NODE</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">Cron job that fetches and stores the briefing</div>
+        <div class="r-sub">Runs every 5 minutes via node-cron, persists snapshots for trend analysis. Replace the storage line with whatever your DB or KV is.</div>
+        <pre><span class="kw">import</span> cron <span class="kw">from</span> <span class="str">'node-cron'</span>;
+
+cron.schedule(<span class="str">'*/5 * * * *'</span>, <span class="kw">async</span> () =&gt; {
+  <span class="kw">const</span> r = <span class="kw">await</span> fetch(<span class="str">'https://terminalfeed.io/api/briefing'</span>);
+  <span class="kw">const</span> j = <span class="kw">await</span> r.json();
+  <span class="kw">await</span> store(<span class="str">'briefing:'</span> + Date.now(), j);
+});</pre>
+      </div>
+    </div>
+
+    <div class="recipe-group">
+      <div class="group-label">MCP &amp; Agent Integration</div>
+
+      <div class="recipe">
+        <span class="r-tag gold">MCP</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">Claude Desktop MCP config (free tier)</div>
+        <div class="r-sub">All 27 tools exposed to Claude. Free tier needs no auth.</div>
+        <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"terminalfeed"</span>: {
+      <span class="key">"command"</span>: <span class="str">"npx"</span>,
+      <span class="key">"args"</span>: [<span class="str">"-y"</span>, <span class="str">"mcp-remote"</span>, <span class="str">"https://terminalfeed.io/api/mcp"</span>]
+    }
+  }
+}</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag gold">MCP</span><span class="r-tag">PREMIUM</span>
+        <div class="r-title">Claude Desktop MCP config (premium tier)</div>
+        <div class="r-sub">Adds the Authorization header so Claude can call the 12 paid tools. Replace the token with your own from /api/payment/buy-credits.</div>
+        <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"terminalfeed"</span>: {
+      <span class="key">"command"</span>: <span class="str">"npx"</span>,
+      <span class="key">"args"</span>: [
+        <span class="str">"-y"</span>, <span class="str">"mcp-remote"</span>, <span class="str">"https://terminalfeed.io/api/mcp"</span>,
+        <span class="str">"--header"</span>, <span class="str">"Authorization: Bearer tf_live_&lt;your_token&gt;"</span>
+      ]
+    }
+  }
+}</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag">CURL</span><span class="r-tag">PREMIUM</span>
+        <div class="r-title">Premium agent call with bearer token</div>
+        <div class="r-sub">After buying credits at /api/payment/buy-credits, hit a paid endpoint. /api/pro/agent-context returns a paste-ready system prompt of current world state.</div>
+        <pre>curl https://terminalfeed.io/api/pro/agent-context \
+  -H <span class="str">"Authorization: Bearer tf_live_&lt;your_token&gt;"</span> | jq</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag purple">PYTHON</span><span class="r-tag">PREMIUM</span>
+        <div class="r-title">Polling for world deltas (only events newer than your last check)</div>
+        <div class="r-sub">/api/pro/world-deltas takes a ?since= ISO timestamp and returns only events that happened after it. Cheap way for an agent to stay current without re-fetching the full briefing each loop.</div>
+        <pre><span class="kw">import</span> requests, time
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+
+last = datetime.now(timezone.utc).isoformat()
+<span class="kw">while True</span>:
+  r = requests.get(
+    <span class="str">'https://terminalfeed.io/api/pro/world-deltas'</span>,
+    params={<span class="str">'since'</span>: last},
+    headers={<span class="str">'Authorization'</span>: <span class="str">'Bearer tf_live_&lt;your_token&gt;'</span>},
+  )
+  events = r.json().get(<span class="str">'events'</span>, [])
+  <span class="kw">for</span> e <span class="kw">in</span> events:
+    handle(e)
+  last = datetime.now(timezone.utc).isoformat()
+  time.sleep(<span class="num">60</span>)</pre>
+      </div>
+    </div>
+
+    <div class="recipe-group">
+      <div class="group-label">Payments &amp; Auth</div>
+
+      <div class="recipe">
+        <span class="r-tag">CURL</span><span class="r-tag amber">FREE</span>
+        <div class="r-title">Check the payment surface</div>
+        <div class="r-sub">Unauthenticated. Returns the receiving wallet address, chain ID (Base mainnet), accepted asset (USDC), and current credit price.</div>
+        <pre>curl https://terminalfeed.io/api/payment/info | jq</pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag">CURL</span><span class="r-tag">PREMIUM</span>
+        <div class="r-title">Mint credits after sending USDC on Base</div>
+        <div class="r-sub">Send USDC to the address from /api/payment/info, then post the tx hash. Response includes a bearer token that authenticates every paid call from then on.</div>
+        <pre>curl -X POST https://terminalfeed.io/api/payment/buy-credits \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "tx_hash": "0xabc123...",
+    "amount_usdc": "10.00"
+  }'</span></pre>
+      </div>
+
+      <div class="recipe">
+        <span class="r-tag">CURL</span><span class="r-tag">PREMIUM</span>
+        <div class="r-title">Check your remaining balance</div>
+        <div class="r-sub">For agents that monitor their own spend and trigger top-ups before running out.</div>
+        <pre>curl https://terminalfeed.io/api/payment/balance \
+  -H <span class="str">"Authorization: Bearer tf_live_&lt;your_token&gt;"</span> | jq</pre>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/for-devs">Hub</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/api">API</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/mcp">MCP</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/articles">Articles</a>
+    <span class="sep">|</span>
+    <a href="/blog/how-ai-agents-pay-terminalfeed">Payments Walkthrough</a>
+  </footer>
+</body>
+</html>

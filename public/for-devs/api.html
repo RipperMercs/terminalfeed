@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public API Reference: 30+ Free Endpoints, No Signup | TerminalFeed Devs</title>
+  <meta name="description" content="The TerminalFeed public REST API: 30+ live data endpoints across crypto, markets, news, status, world events, and more. No API key, no signup, CORS open, stale-cache fallback. Plus the agent-payable premium tier with USDC on Base.">
+  <meta property="og:title" content="Public API at TerminalFeed">
+  <meta property="og:description" content="30+ free REST endpoints, no API key. Plus an agent-payable premium tier with USDC on Base.">
+  <meta property="og:url" content="https://terminalfeed.io/for-devs/api">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://terminalfeed.io/for-devs/api">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; }
+    a { color: inherit; }
+
+    .hub-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid #1E1E24; padding: 10px 20px 0; }
+    .hub-header-inner { max-width: 980px; margin: 0 auto; }
+    .hub-back { font-size: 10px; color: #4E4D49; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .hub-back a { color: #4E4D49; text-decoration: none; }
+    .hub-back a:hover { color: #5DCAA5; }
+    .hub-row { display: flex; align-items: center; gap: 16px; }
+    .hub-brand { font-size: 13px; color: #F0EDE6; font-weight: 700; flex-shrink: 0; }
+    .hub-brand .hub-prompt { color: #4ADE80; margin-right: 4px; }
+    .hub-tabs { display: flex; gap: 0; overflow-x: auto; flex: 1; }
+    .hub-tabs::-webkit-scrollbar { height: 4px; }
+    .hub-tabs::-webkit-scrollbar-thumb { background: #1E1E24; }
+    .hub-tabs .tab { padding: 10px 14px; font-size: 11.5px; color: #8A8880; text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.5px; font-weight: 500; transition: color 0.15s, border-color 0.15s; }
+    .hub-tabs .tab:hover { color: #D4D2CB; }
+    .hub-tabs .tab.active { color: #4ADE80; border-bottom-color: #4ADE80; font-weight: 600; }
+    @media (max-width: 700px) { .hub-row { flex-direction: column; align-items: flex-start; gap: 6px; } .hub-tabs { width: 100%; } }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 40px; }
+
+    .page-header { padding-bottom: 24px; border-bottom: 1px solid #1E1E24; margin-bottom: 36px; }
+    .page-header h1 { font-size: 26px; color: #F0EDE6; font-weight: 700; margin-bottom: 10px; }
+    .page-header h1 .accent { color: #4ADE80; }
+    .page-header .lede { font-size: 13px; color: #8A8880; line-height: 1.7; max-width: 760px; margin-bottom: 12px; }
+    .page-header .lede strong { color: #D4D2CB; }
+    a.inline { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+
+    pre { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-size: 11.5px; line-height: 1.6; margin: 14px 0; color: #C8C8C0; }
+    pre .comment { color: #4E4D49; }
+    pre .key { color: #5DCAA5; }
+    pre .str { color: #EF9F27; }
+
+    .endpoint-group { margin-bottom: 28px; }
+    .endpoint-group .group-label { font-size: 11px; color: #4ADE80; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #1E1E24; }
+    .endpoint-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #1A1A22; font-size: 12px; gap: 12px; }
+    .endpoint-row:last-child { border-bottom: none; }
+    .endpoint-row .path { color: #5DCAA5; font-weight: 600; flex-shrink: 0; min-width: 220px; }
+    .endpoint-row .desc { color: #8A8880; flex: 1; line-height: 1.5; }
+    .endpoint-row .cost { color: #F9CB42; font-size: 10px; letter-spacing: 1px; flex-shrink: 0; }
+
+    .quick-start { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 8px; padding: 20px 22px; margin-bottom: 32px; }
+    .quick-start h3 { font-size: 14px; color: #4ADE80; margin-bottom: 10px; }
+    .quick-start p { font-size: 12px; color: #8A8880; line-height: 1.7; margin-bottom: 8px; }
+    .quick-start pre { margin: 10px 0 0; }
+
+    .pro-strip { background: linear-gradient(180deg, #1a1410 0%, #0D0D10 100%); border: 1px solid #F9CB4230; border-radius: 8px; padding: 18px 22px; margin: 14px 0 28px; }
+    .pro-strip h3 { font-size: 14px; color: #F9CB42; margin-bottom: 8px; }
+    .pro-strip p { font-size: 12px; color: #8A8880; line-height: 1.7; }
+    .pro-strip a { color: #F9CB42; text-decoration: none; border-bottom: 1px solid #F9CB4230; }
+
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-back"><a href="/">&larr; terminalfeed.io</a></div>
+      <div class="hub-row">
+        <div class="hub-brand"><span class="hub-prompt">&gt;_</span>TerminalFeed Devs</div>
+        <nav class="hub-tabs">
+          <a href="/for-devs" class="tab">Overview</a>
+          <a href="/for-devs/tools" class="tab">Tools</a>
+          <a href="/for-devs/api" class="tab active">API</a>
+          <a href="/for-devs/mcp" class="tab">MCP</a>
+          <a href="/for-devs/recipes" class="tab">Recipes</a>
+          <a href="/for-devs/articles" class="tab">Articles</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <header class="page-header">
+      <h1>Public <span class="accent">REST API</span></h1>
+      <p class="lede"><strong>Thirty-plus free REST endpoints across crypto, markets, news, status, and world events.</strong> No API key, no signup, CORS open on every endpoint, stale-cache fallback so you never get a 5xx. The full machine-readable contract is at <a href="/openapi.json" class="inline">/openapi.json</a>. Agent discovery file at <a href="/llms.txt" class="inline">/llms.txt</a>. Tool definitions for OpenAI / Anthropic / raw at <a href="/api/llm-tools" class="inline">/api/llm-tools</a>.</p>
+    </header>
+
+    <div class="quick-start">
+      <h3>&gt;_ Quick start</h3>
+      <p>One curl command, zero auth, returns a composed world snapshot pulling from five upstream sources. This is the endpoint AI agents tend to call first.</p>
+      <pre><span class="comment"># Compose a world snapshot for an LLM context window</span>
+curl https://terminalfeed.io/api/briefing | jq .</pre>
+    </div>
+
+    <div class="endpoint-group">
+      <div class="group-label">World Snapshot</div>
+      <div class="endpoint-row"><span class="path">/api/briefing</span><span class="desc">One-call composed snapshot: BTC + Fear and Greed + earthquakes + HN + ISS. Designed to fit in a single LLM context.</span><span class="cost">FREE</span></div>
+    </div>
+
+    <div class="endpoint-group">
+      <div class="group-label">Crypto &amp; Markets</div>
+      <div class="endpoint-row"><span class="path">/api/btc-price</span><span class="desc">Live BTC price, Binance with CoinCap fallback, sub-second on the WebSocket source. 15s cache on REST.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/crypto-movers</span><span class="desc">Top 15 cryptos by 24h change, gainers and losers in one response.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/fear-greed</span><span class="desc">Crypto Fear and Greed Index from Alternative.me. Daily snapshot with classification label.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/stocks</span><span class="desc">Top US stocks via Finnhub, biggest movers. 30s cache.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/forex</span><span class="desc">Currency rates from Frankfurter (no key required). Refreshed daily.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/gas</span><span class="desc">Ethereum gas oracle from Etherscan. 15s cache, low/avg/high tiers.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/funding-rates</span><span class="desc">Top 20 perp futures across Binance, Bybit, dYdX, Hyperliquid, sorted by absolute annualized rate.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/solana-network</span><span class="desc">Solana TPS, slot, slot time, epoch, network health. 30s cache.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/predictions</span><span class="desc">Polymarket prediction market odds via Gamma API.</span><span class="cost">FREE</span></div>
+    </div>
+
+    <div class="endpoint-group">
+      <div class="group-label">News, Tech &amp; Social</div>
+      <div class="endpoint-row"><span class="path">/api/hackernews</span><span class="desc">Top stories from the HN Firebase API.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/gh-trending</span><span class="desc">GitHub trending repos with star deltas. Hourly cache.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/gh-events</span><span class="desc">Live GitHub events (push, PR, release) for activity feeds.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/hf-trending</span><span class="desc">HuggingFace trending models, top 15 by 7-day likes.</span><span class="cost">FREE</span></div>
+    </div>
+
+    <div class="endpoint-group">
+      <div class="group-label">Status &amp; Infrastructure</div>
+      <div class="endpoint-row"><span class="path">/api/service-status</span><span class="desc">GitHub, Cloudflare, Discord, OpenAI, Vercel, npm, Reddit, Atlassian. One-call uptime composite.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/cyber-threats</span><span class="desc">URLhaus + ThreatFox malware/IOCs. Refreshed every 5 min.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/shodan</span><span class="desc">Shodan InternetDB exposure scan, ports, CVEs, hostnames. No key required.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/economic-data</span><span class="desc">Fed rate, CPI, unemployment from FRED.</span><span class="cost">FREE</span></div>
+    </div>
+
+    <div class="endpoint-group">
+      <div class="group-label">World Events &amp; Earth</div>
+      <div class="endpoint-row"><span class="path">/api/earthquake</span><span class="desc">Recent USGS seismic events, magnitude 2.5+, last 24 hours.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/wildfires</span><span class="desc">NASA FIRMS active fire detections, North America 24h, top 25 by Fire Radiative Power.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/severe-weather</span><span class="desc">NWS active US alerts, top 15 by severity score (tornado, flood, hurricane, etc).</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/space-weather</span><span class="desc">NOAA SWPC: Kp index, solar wind, X-ray flare class.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/disaster-alerts</span><span class="desc">Global GDACS disaster alerts.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/launches</span><span class="desc">Upcoming space launches (The Space Devs).</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/humans-in-space</span><span class="desc">ISS crew via Open Notify.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/volcanoes</span><span class="desc">Smithsonian Global Volcanism Program weekly bulletin.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/air-quality</span><span class="desc">Open-Meteo US AQI, PM2.5, ozone, NO2 by lat/lon.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/weather</span><span class="desc">Weather by lat/lon (Open-Meteo, no key).</span><span class="cost">FREE</span></div>
+    </div>
+
+    <div class="endpoint-group">
+      <div class="group-label">Misc &amp; Reference</div>
+      <div class="endpoint-row"><span class="path">/api/steam</span><span class="desc">Top Steam games via SteamSpy.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/nasa-apod</span><span class="desc">NASA Astronomy Picture of the Day with full metadata.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/xkcd</span><span class="desc">Latest xkcd comic metadata.</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/harnesses</span><span class="desc">Agentic-coding harness leaderboards (SWE-bench, Terminal-Bench, Aider Polyglot, METR HCAST).</span><span class="cost">FREE</span></div>
+      <div class="endpoint-row"><span class="path">/api/llm-tools</span><span class="desc">Pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint above.</span><span class="cost">FREE</span></div>
+    </div>
+
+    <div class="pro-strip">
+      <h3>&gt;_ Need composed multi-source data?</h3>
+      <p>For autonomous agents that need normalized, multi-source data and want to pay per call instead of subscribing, the premium tier (<code>/api/pro/*</code>) accepts USDC on Base. Twelve endpoints, one credit equals two cents. <a href="/for-devs/mcp">See the MCP tab for setup</a>, or <a href="/blog/how-ai-agents-pay-terminalfeed">read the integration walkthrough</a>.</p>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/for-devs">Hub</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/tools">Tools</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/mcp">MCP</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/recipes">Recipes</a>
+    <span class="sep">|</span>
+    <a href="/for-devs/articles">Articles</a>
+    <span class="sep">|</span>
+    <a href="/developers">Full API Docs</a>
+    <span class="sep">|</span>
+    <a href="/openapi.json">OpenAPI</a>
+  </footer>
+</body>
+</html>
