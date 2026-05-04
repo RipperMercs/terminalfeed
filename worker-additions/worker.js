@@ -2923,14 +2923,18 @@ async function buildBriefingTweet() {
 }
 
 
-// --- BTC Volatility Alert (cron-driven, dedupe via KV) ---
+// --- BTC Volatility Alert (cron-driven, KV-stored, public read) ---
 //
-// Posts a tweet when BTC moves >= BTC_ALERT_THRESHOLD_PCT in the last 1h.
-// State stored in WEBHOOK_SUBS KV under key 'btc:alert:last' as JSON:
-//   { ts: <ms>, price: <usd>, direction: 'up'|'down', change_pct: <num> }
+// Detects when BTC moves >= BTC_ALERT_THRESHOLD_PCT in the last 1h and stores
+// the event in WEBHOOK_SUBS KV. Public GET /api/btc-alert returns the most
+// recent alert + current state for AI agents and clients to poll.
 //
-// Cooldown: BTC_ALERT_COOLDOWN_MS prevents spam if price stays above threshold.
-// Reset: cooldown waived if direction reverses (up after down or vice versa).
+// Originally built to tweet from @terminalfeed, but the X bot is intentionally
+// disabled (X bans accounts that auto-post too frequently). Tweet posting was
+// removed; the detector is still useful as a polled signal.
+//
+// Cooldown: BTC_ALERT_COOLDOWN_MS prevents repeat alerts if price stays above
+// threshold. Reset: cooldown waived if direction reverses.
 
 var BTC_ALERT_THRESHOLD_PCT = 3.0;
 var BTC_ALERT_COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
@@ -3004,45 +3008,43 @@ async function checkBtcVolatilityAndAlert(env) {
     }
   } catch (e) {}
 
-  var sign = changePct >= 0 ? '+' : '';
-  var arrow = direction === 'up' ? '▲' : '▼';
-  var lines = [
-    arrow + ' BTC ' + sign + changePct.toFixed(1) + '% in the last hour',
-    '',
-    'Now: $' + Math.round(currClose).toLocaleString(),
-  ];
-  if (fgValue !== null && fgLabel) {
-    lines.push('Fear & Greed: ' + fgValue + ' (' + fgLabel + ')');
-  }
-  lines.push('', 'Live: terminalfeed.io', '', '#bitcoin #btc #crypto');
-  var text = lines.join('\n');
-  if (text.length > 280) text = text.slice(0, 277) + '...';
-
-  var tweetResult;
-  try {
-    tweetResult = await postTweet(text, env);
-  } catch (err) {
-    return { triggered: true, posted: false, error: err.message, text: text };
-  }
-
-  await env.WEBHOOK_SUBS.put(BTC_ALERT_KV_KEY, JSON.stringify({
+  var event = {
     ts: now,
     price: currClose,
+    prev_price: prevClose,
     direction: direction,
-    change_pct: changePct,
-  }));
+    change_pct: Number(changePct.toFixed(3)),
+    fg_value: fgValue,
+    fg_label: fgLabel,
+  };
+
+  await env.WEBHOOK_SUBS.put(BTC_ALERT_KV_KEY, JSON.stringify(event));
 
   return {
     triggered: true,
-    posted: true,
-    change_pct: changePct,
-    direction: direction,
-    text: text,
-    tweet_status: tweetResult.status,
+    event: event,
   };
 }
 
-// GET /api/btc-alert-check (Bearer ADMIN_SECRET) — manual trigger for testing.
+// GET /api/btc-alert — public read of most recent alert + threshold config.
+async function handleBtcAlert(env) {
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({ error: 'KV unavailable' }, 503);
+  }
+  var raw = await env.WEBHOOK_SUBS.get(BTC_ALERT_KV_KEY);
+  var last = null;
+  if (raw) {
+    try { last = JSON.parse(raw); } catch (e) { last = null; }
+  }
+  return jsonResponse({
+    threshold_pct: BTC_ALERT_THRESHOLD_PCT,
+    cooldown_minutes: BTC_ALERT_COOLDOWN_MS / 60000,
+    last_alert: last,
+    server_time: Date.now(),
+  });
+}
+
+// POST /api/btc-alert-check (Bearer ADMIN_SECRET) — force a check now.
 async function handleBtcAlertCheck(request, env) {
   var auth = request.headers.get('Authorization');
   if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
@@ -8128,16 +8130,10 @@ export default {
   async scheduled(event, env, ctx) {
     var cron = event.cron;
     if (cron === '0 14 * * *') {
-      // Daily 9 AM ET briefing tweet
-      ctx.waitUntil((async function() {
-        try {
-          var text = await buildBriefingTweet();
-          var result = await postTweet(text, env);
-          console.log('Daily briefing tweeted:', result.status);
-        } catch (err) {
-          console.error('Daily briefing cron failed:', err.message);
-        }
-      })());
+      // Daily 9 AM ET briefing tweet — DISABLED. X bot is off (auto-posting
+      // got the account flagged). Cron schedule kept in wrangler.toml so we
+      // can re-enable later by restoring X creds and uncommenting the body.
+      console.log('daily briefing cron fired but X bot is disabled, skipping');
     } else if (cron === '*/5 * * * *') {
       // Webhook delivery tick
       ctx.waitUntil((async function() {
@@ -8235,6 +8231,7 @@ async function dispatchRoute(request, env, url, path) {
       case 'briefing':       return await handleBriefing();
       case 'tweet':          return await handleTweet(request, env);
       case 'auto-briefing':  return await handleAutoBriefing(request, env);
+      case 'btc-alert':       return await handleBtcAlert(env);
       case 'btc-alert-check': return await handleBtcAlertCheck(request, env);
       case 'gas':            return await handleGas(env);
       case 'nasa-apod':      return await handleNasaApod();
