@@ -49,3 +49,9 @@ server.json
 # Internal design and inventory docs
 design-spec-v2/
 docs/premium-tier-inventory.md
+
+# Claude Code local settings (per-user, not shared)
+.claude/settings.local.json
+
+# Unused / draft embed snippets (not deployed)
+newsletter-embed-snippet.html
