@@ -33,28 +33,27 @@ dist-ssr
 .env*
 !.env.example
 
-# Internal CC specs and planning docs (kept local, not in public repo)
-cc-spec-*.md
-cc-specs-archive/
-cc-improvement-spec.md
-new-panel-specs.md
-related-content-component-spec.md
-claude-design-brief.md
-widget-promo-drafts.md
+# Local-only docs and specs (PRS public-repo rule: docs and specs live locally)
+*.md
+*.markdown
+specs/
+spec/
+docs/
+design/
+plans/
+
+# Claude Code local context (per-user / per-project, not public)
+CLAUDE.md
+.claude/settings.local.json
+
+# Internal design v2 mockups and screenshots
+design-spec-v2/
+
+# Local planning artifacts that aren't tracked
 agent-outreach-kit.md
 david-followup-*.md
 mcp-submissions.md
 server.json
-
-# Internal design and inventory docs
-design-spec-v2/
-docs/premium-tier-inventory.md
-
-# Claude Code local settings (per-user, not shared)
-.claude/settings.local.json
-
-# Claude Code project instructions (internal context, not public)
-CLAUDE.md
 
 # Unused / draft embed snippets (not deployed)
 newsletter-embed-snippet.html
