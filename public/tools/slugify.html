@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slug Generator: Convert Text to URL-Safe Slugs | TerminalFeed</title>
+<meta name="description" content="Free online slug generator. Convert any text to a URL-safe slug. Handles unicode, accents, German umlauts, and emoji. Live preview, click to copy, no signup, runs entirely in your browser.">
+<meta name="keywords" content="slug, slugify, url, generator, kebab-case, online, tool">
+<link rel="canonical" href="https://terminalfeed.io/tools/slugify">
+<meta property="og:title" content="Slug Generator | TerminalFeed">
+<meta property="og:description" content="Free online slug generator. Convert text to URL-safe slugs in your browser.">
+<meta property="og:url" content="https://terminalfeed.io/tools/slugify">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Slug Generator", "url": "https://terminalfeed.io/tools/slugify", "description": "Free online slug generator. Convert text to URL-safe slugs.", "applicationCategory": "DeveloperApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }, "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" } }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [ { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" }, { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://terminalfeed.io/tools" }, { "@type": "ListItem", "position": 3, "name": "Slug Generator", "item": "https://terminalfeed.io/tools/slugify" } ] }
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+  a { color: #5DCAA5; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back-link { align-self: flex-start; max-width: 720px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+  .back-link a { color: #4E4D49; }
+  .back-link a:hover { color: #5DCAA5; }
+  .container { max-width: 720px; width: 100%; }
+  .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; }
+  .header h1 span { color: #5DCAA5; }
+  .badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); white-space: nowrap; }
+  .desc { color: #8A8880; font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.7; }
+  .input-label { display: block; font-size: 0.8rem; color: #8A8880; margin-bottom: 0.5rem; letter-spacing: 0.5px; text-transform: uppercase; }
+  textarea { width: 100%; min-height: 120px; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 0.9rem 1rem; border-radius: 6px; font-family: inherit; font-size: 0.95rem; line-height: 1.6; resize: vertical; margin-bottom: 1rem; }
+  textarea:focus { outline: none; border-color: #5DCAA5; }
+  .options { display: flex; flex-wrap: wrap; gap: 1.2rem; padding: 1rem 1.2rem; background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; margin-bottom: 1.5rem; }
+  .options label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #D4D2CB; cursor: pointer; }
+  .options input[type="checkbox"] { accent-color: #5DCAA5; }
+  .options select { background: #111114; border: 1px solid #1E1E24; color: #D4D2CB; padding: 0.3rem 0.5rem; border-radius: 4px; font-family: inherit; font-size: 0.85rem; }
+  .output-box { background: #0D0D10; border: 1px solid #1E1E24; border-radius: 6px; padding: 1.2rem 1.4rem; margin-bottom: 1rem; cursor: pointer; transition: border-color 0.15s; word-break: break-all; min-height: 3.5rem; display: flex; align-items: center; }
+  .output-box:hover { border-color: #5DCAA5; }
+  .output-box .slug-text { color: #4ADE80; font-size: 1.1rem; flex: 1; }
+  .output-box .placeholder { color: #4E4D49; }
+  .copy-btn { background: transparent; border: 1px solid #1E1E24; color: #5DCAA5; padding: 0.4rem 0.9rem; border-radius: 4px; font-family: inherit; font-size: 0.75rem; cursor: pointer; }
+  .copy-btn:hover { border-color: #5DCAA5; }
+  .copy-status { font-size: 0.75rem; color: #4ADE80; margin-left: 1rem; opacity: 0; transition: opacity 0.2s; }
+  .copy-status.shown { opacity: 1; }
+  .examples { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #1E1E24; }
+  .examples h2 { color: #4ADE80; font-size: 0.9rem; margin-bottom: 0.8rem; letter-spacing: 1px; text-transform: uppercase; }
+  .examples .example-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #1A1A1E; font-size: 0.8rem; gap: 1rem; }
+  .examples .example-row:last-child { border-bottom: none; }
+  .examples .input-text { color: #8A8880; flex: 1; }
+  .examples .arrow { color: #4E4D49; flex-shrink: 0; }
+  .examples .output-text { color: #5DCAA5; flex: 1; }
+  footer { margin-top: 2rem; font-size: 0.75rem; color: #4E4D49; text-align: center; }
+  footer a { color: #4E4D49; }
+  footer a:hover { color: #5DCAA5; }
+  .sep { margin: 0 0.5rem; }
+</style>
+</head>
+<body>
+  <div class="back-link"><a href="/tools/">&larr; All Tools</a></div>
+  <div class="container">
+    <div class="header">
+      <h1>&gt;_ <span>Slug</span> Generator</h1>
+      <span class="badge">100% Local</span>
+    </div>
+    <p class="desc">Convert any text into a URL-safe slug. Handles accented characters (é → e), German umlauts (ü → ue), and strips emoji and punctuation. Runs entirely in your browser — paste in titles, get back URL-safe identifiers.</p>
+
+    <label class="input-label" for="input">Input text</label>
+    <textarea id="input" placeholder="Type or paste text here, e.g. &quot;The 10 Best Free APIs in 2026!&quot;" autofocus>The 10 Best Free APIs in 2026!</textarea>
+
+    <div class="options">
+      <label><input type="checkbox" id="lowercase" checked> Lowercase</label>
+      <label>Separator: <select id="separator"><option value="-">- (hyphen)</option><option value="_">_ (underscore)</option><option value=".">. (dot)</option></select></label>
+      <label><input type="checkbox" id="german" checked> German (ü&rarr;ue)</label>
+      <label>Max length: <select id="maxlen"><option value="0">no limit</option><option value="60">60</option><option value="80" selected>80</option><option value="120">120</option></select></label>
+    </div>
+
+    <label class="input-label">Slug output</label>
+    <div class="output-box" id="output">
+      <span class="slug-text" id="slugText"></span>
+      <button class="copy-btn" id="copyBtn">copy</button>
+      <span class="copy-status" id="copyStatus">copied</span>
+    </div>
+
+    <div class="examples">
+      <h2>Examples</h2>
+      <div class="example-row"><span class="input-text">Hello World!</span><span class="arrow">&rarr;</span><span class="output-text">hello-world</span></div>
+      <div class="example-row"><span class="input-text">Café münchen GmbH</span><span class="arrow">&rarr;</span><span class="output-text">cafe-muenchen-gmbh</span></div>
+      <div class="example-row"><span class="input-text">2026 best APIs &amp; tools</span><span class="arrow">&rarr;</span><span class="output-text">2026-best-apis-tools</span></div>
+      <div class="example-row"><span class="input-text">Naïve résumé 🎉</span><span class="arrow">&rarr;</span><span class="output-text">naive-resume</span></div>
+      <div class="example-row"><span class="input-text">  multiple   spaces  </span><span class="arrow">&rarr;</span><span class="output-text">multiple-spaces</span></div>
+    </div>
+
+    <footer>
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/tools/">Tools</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a><span class="sep">|</span>
+      <a href="/cheatsheets">Cheatsheets</a>
+    </footer>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const slugText = document.getElementById('slugText');
+    const lowercase = document.getElementById('lowercase');
+    const separator = document.getElementById('separator');
+    const german = document.getElementById('german');
+    const maxlen = document.getElementById('maxlen');
+    const copyBtn = document.getElementById('copyBtn');
+    const copyStatus = document.getElementById('copyStatus');
+
+    const GERMAN_MAP = { 'ü': 'ue', 'ö': 'oe', 'ä': 'ae', 'Ü': 'Ue', 'Ö': 'Oe', 'Ä': 'Ae', 'ß': 'ss' };
+
+    function slugify() {
+      let text = input.value;
+      if (!text.trim()) { slugText.textContent = ''; slugText.classList.add('placeholder'); slugText.textContent = '(empty)'; return; }
+      slugText.classList.remove('placeholder');
+      if (german.checked) {
+        text = text.replace(/[üöäÜÖÄß]/g, c => GERMAN_MAP[c] || c);
+      }
+      // Normalize and strip diacritics
+      text = text.normalize('NFKD').replace(/[̀-ͯ]/g, '');
+      // Strip everything that isn't alphanumeric or whitespace
+      text = text.replace(/[^a-zA-Z0-9\s_-]/g, '');
+      // Collapse whitespace and underscores/hyphens to single separator
+      const sep = separator.value;
+      text = text.replace(/[\s_-]+/g, sep);
+      // Trim separators from ends
+      text = text.replace(new RegExp(`^\\${sep}+|\\${sep}+$`, 'g'), '');
+      if (lowercase.checked) text = text.toLowerCase();
+      const max = parseInt(maxlen.value, 10);
+      if (max > 0 && text.length > max) {
+        text = text.slice(0, max).replace(new RegExp(`\\${sep}+$`), '');
+      }
+      slugText.textContent = text || '(empty)';
+      if (!text) slugText.classList.add('placeholder');
+    }
+
+    [input, lowercase, separator, german, maxlen].forEach(el => {
+      el.addEventListener('input', slugify);
+      el.addEventListener('change', slugify);
+    });
+
+    copyBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const t = slugText.textContent;
+      if (!t || t === '(empty)') return;
+      navigator.clipboard.writeText(t).then(() => {
+        copyStatus.classList.add('shown');
+        setTimeout(() => copyStatus.classList.remove('shown'), 1500);
+      });
+    });
+
+    document.getElementById('output').addEventListener('click', () => copyBtn.click());
+
+    slugify();
+  </script>
+</body>
+</html>
