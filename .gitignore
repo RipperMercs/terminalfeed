@@ -32,3 +32,20 @@ dist-ssr
 !.dev.vars.example
 .env*
 !.env.example
+
+# Internal CC specs and planning docs (kept local, not in public repo)
+cc-spec-*.md
+cc-specs-archive/
+cc-improvement-spec.md
+new-panel-specs.md
+related-content-component-spec.md
+claude-design-brief.md
+widget-promo-drafts.md
+agent-outreach-kit.md
+david-followup-*.md
+mcp-submissions.md
+server.json
+
+# Internal design and inventory docs
+design-spec-v2/
+docs/premium-tier-inventory.md
