@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>500 Internal Server Error: HTTP Status Code Meaning, Causes, and Fixes | TerminalFeed</title>
+  <meta name="description" content="The server hit an unhandled error while processing the request.">
+  <meta name="keywords" content="500 status code, http 500, 500 internal server error, 500 meaning, 500 fix, http status code 500">
+  <link rel="canonical" href="https://terminalfeed.io/http/500">
+  <meta property="og:title" content="HTTP 500 Internal Server Error: Meaning, Causes, and Fixes">
+  <meta property="og:description" content="The server hit an unhandled error while processing the request.">
+  <meta property="og:url" content="https://terminalfeed.io/http/500">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"HTTP 500 Internal Server Error: Meaning, Causes, and Fixes","description":"The server hit an unhandled error while processing the request.","url":"https://terminalfeed.io/http/500","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/http/500","about":{"@type":"Thing","name":"HTTP 500"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"HTTP Status Codes","item":"https://terminalfeed.io/http"},{"@type":"ListItem","position":3,"name":"500 Internal Server Error","item":"https://terminalfeed.io/http/500"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the request_id field for?","acceptedAnswer":{"@type":"Answer","text":"When you file a bug report, the server team can pull the exact stack trace and context for your specific failed request. Always include it."}},{"@type":"Question","name":"Should I retry on 500?","acceptedAnswer":{"@type":"Answer","text":"Yes, with exponential backoff. Many 500s are transient. If they persist, the underlying bug needs a fix on the server side."}},{"@type":"Question","name":"How do I avoid 500s in my own service?","acceptedAnswer":{"@type":"Answer","text":"Catch exceptions at the request boundary, convert known failure modes to specific 4xx codes (validation errors → 422, missing → 404, etc.), and reserve 500 for truly unexpected failures."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 32px; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      color: #F87171;
+      border: 1px solid #F8717140;
+      background: #F8717110;
+    }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; font-weight: 600; }
+    .header h1 .num { color: #F87171; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; }
+
+    .section { margin-bottom: 36px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 14px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .section pre {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+    .section pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #C8C8C0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    .bullet-list { margin: 0 0 0 20px; }
+    .bullet-list li { font-size: 13px; color: #C8C8C0; margin-bottom: 8px; line-height: 1.7; }
+    .bullet-list li code { font-size: 11.5px; }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .related-card {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 14px;
+      text-decoration: none !important;
+      border-bottom: 1px solid #1A1A22 !important;
+      transition: border-color 0.15s;
+    }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-code { font-size: 18px; color: #5DCAA5; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 11px; color: #8A8880; }
+
+    .faqs h2 { color: #5DCAA5; }
+    .faq {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+    }
+    .faq summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: #F0EDE6;
+      font-weight: 500;
+      list-style: none;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+
+    .meta-box {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: #8A8880;
+      margin: 24px 0;
+    }
+    .meta-box code { font-size: 11px; color: #F87171; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      .header h1 { font-size: 22px; }
+      .section h2 { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/http">HTTP Status Codes</a><span class="sep">›</span><span>500 Internal Server Error</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">Server Error · 5xx</span>
+      <h1><span class="num">500</span> Internal Server Error</h1>
+      <p class="summary">The server hit an unhandled error while processing the request.</p>
+    </header>
+
+    <section class="section">
+      <h2>What 500 Internal Server Error means</h2>
+      <p>500 Internal Server Error is the catch-all server-fault code. The server encountered an unexpected condition (uncaught exception, null pointer, database connection refused, deserialization crash) and could not complete the request. 500 says nothing about why; the actual cause is in the server logs. From the client's perspective, 500 means "this is not your fault, retry might help, file a bug if it persists".</p>
+      <p><strong style="color:#F0EDE6">When servers should return it:</strong> Return 500 only for genuinely unexpected server-side failures. Use 503 for known overload, 502 for upstream failures, 504 for upstream timeouts.</p>
+    </section>
+
+    
+    <section class="section">
+      <h2>Common causes</h2>
+      <ul class="bullet-list">
+        <li>Uncaught exception in application code</li>
+        <li>Database connection failure</li>
+        <li>Null reference / undefined access</li>
+        <li>Out of memory</li>
+        <li>Deserialization or parsing error in business logic</li>
+        <li>Misconfiguration (missing environment variable, bad credentials)</li>
+      </ul>
+    </section>
+    
+    <section class="section">
+      <h2>How to fix 500 Internal Server Error</h2>
+      <ul class="bullet-list">
+        <li>Check server logs for the stack trace</li>
+        <li>Retry the request, may be transient</li>
+        <li>For consistent 500s, file a bug report with the exact request and timestamp</li>
+        <li>For your own services, add better error handling and convert to specific 4xx where appropriate</li>
+      </ul>
+    </section>
+    
+    <section class="section">
+      <h2>Example response</h2>
+      <pre><code>HTTP/2 500
+content-type: application/json
+{&quot;error&quot;:&quot;internal server error&quot;,&quot;request_id&quot;:&quot;abc123&quot;}</code></pre>
+    </section>
+
+    <section class="section">
+      <h2>Related status codes</h2>
+      <div class="related-grid">
+      <a href="/http/502" class="related-card">
+        <div class="related-code">502</div>
+        <div class="related-name">Bad Gateway</div>
+      </a>
+      <a href="/http/503" class="related-card">
+        <div class="related-code">503</div>
+        <div class="related-name">Service Unavailable</div>
+      </a>
+      <a href="/http/504" class="related-card">
+        <div class="related-code">504</div>
+        <div class="related-name">Gateway Timeout</div>
+      </a>
+      </div>
+    </section>
+
+    
+    <section class="section faqs">
+      <h2>Frequently Asked Questions</h2>
+      <details class="faq">
+        <summary>What is the request_id field for?</summary>
+        <div class="faq-answer">When you file a bug report, the server team can pull the exact stack trace and context for your specific failed request. Always include it.</div>
+      </details>
+      <details class="faq">
+        <summary>Should I retry on 500?</summary>
+        <div class="faq-answer">Yes, with exponential backoff. Many 500s are transient. If they persist, the underlying bug needs a fix on the server side.</div>
+      </details>
+      <details class="faq">
+        <summary>How do I avoid 500s in my own service?</summary>
+        <div class="faq-answer">Catch exceptions at the request boundary, convert known failure modes to specific 4xx codes (validation errors → 422, missing → 404, etc.), and reserve 500 for truly unexpected failures.</div>
+      </details>
+    </section>
+
+    <div class="meta-box">
+      <strong style="color:#C8C8C0">Defined in:</strong> RFC 9110 · <strong style="color:#C8C8C0">Class:</strong> <code>5xx Server Error</code>
+    </div>
+
+    <section class="section">
+      <h2>More references</h2>
+      <p>For a one-page reference of all HTTP status codes, see the <a href="/cheatsheets/http">HTTP cheat sheet</a>. For testing API responses, try the <a href="/tools/api">API Tester tool</a>. For inspecting responses on the command line, the <a href="/cheatsheets/curl">curl cheat sheet</a> covers the most common flags.</p>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/http">All Status Codes</a><span class="sep">|</span>
+      <a href="/cheatsheets/http">HTTP Cheat Sheet</a><span class="sep">|</span>
+      <a href="/cheatsheets/curl">Curl Cheat Sheet</a><span class="sep">|</span>
+      <a href="/tools/api">API Tester</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a>
+    </footer>
+  </div>
+</body>
+</html>

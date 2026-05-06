@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>409 Conflict: HTTP Status Code Meaning, Causes, and Fixes | TerminalFeed</title>
+  <meta name="description" content="The request conflicts with the current state of the resource.">
+  <meta name="keywords" content="409 status code, http 409, 409 conflict, 409 meaning, 409 fix, http status code 409">
+  <link rel="canonical" href="https://terminalfeed.io/http/409">
+  <meta property="og:title" content="HTTP 409 Conflict: Meaning, Causes, and Fixes">
+  <meta property="og:description" content="The request conflicts with the current state of the resource.">
+  <meta property="og:url" content="https://terminalfeed.io/http/409">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"HTTP 409 Conflict: Meaning, Causes, and Fixes","description":"The request conflicts with the current state of the resource.","url":"https://terminalfeed.io/http/409","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/http/409","about":{"@type":"Thing","name":"HTTP 409"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"HTTP Status Codes","item":"https://terminalfeed.io/http"},{"@type":"ListItem","position":3,"name":"409 Conflict","item":"https://terminalfeed.io/http/409"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"409 vs 412?","acceptedAnswer":{"@type":"Answer","text":"412 is specifically about precondition failure (If-Match, If-None-Match). 409 is the general state-conflict code, including unique-key collisions, foreign-key issues, and concurrent updates without explicit preconditions."}},{"@type":"Question","name":"Should I retry on 409?","acceptedAnswer":{"@type":"Answer","text":"Only with new data. Retrying the same request with the same conflicting state will get the same 409."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 32px; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      color: #F87171;
+      border: 1px solid #F8717140;
+      background: #F8717110;
+    }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; font-weight: 600; }
+    .header h1 .num { color: #F87171; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; }
+
+    .section { margin-bottom: 36px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 14px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .section pre {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+    .section pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #C8C8C0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    .bullet-list { margin: 0 0 0 20px; }
+    .bullet-list li { font-size: 13px; color: #C8C8C0; margin-bottom: 8px; line-height: 1.7; }
+    .bullet-list li code { font-size: 11.5px; }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .related-card {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 14px;
+      text-decoration: none !important;
+      border-bottom: 1px solid #1A1A22 !important;
+      transition: border-color 0.15s;
+    }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-code { font-size: 18px; color: #5DCAA5; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 11px; color: #8A8880; }
+
+    .faqs h2 { color: #5DCAA5; }
+    .faq {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+    }
+    .faq summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: #F0EDE6;
+      font-weight: 500;
+      list-style: none;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+
+    .meta-box {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: #8A8880;
+      margin: 24px 0;
+    }
+    .meta-box code { font-size: 11px; color: #F87171; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      .header h1 { font-size: 22px; }
+      .section h2 { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/http">HTTP Status Codes</a><span class="sep">›</span><span>409 Conflict</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">Client Error · 4xx</span>
+      <h1><span class="num">409</span> Conflict</h1>
+      <p class="summary">The request conflicts with the current state of the resource.</p>
+    </header>
+
+    <section class="section">
+      <h2>What 409 Conflict means</h2>
+      <p>409 Conflict signals that the request cannot be completed because of a conflict with the resource's current state. Classic cases: trying to PUT a resource version that is older than the server's (lost-update protection), creating a resource that already exists with a unique-key collision, or DELETE-ing a resource that has dependents. 409 is not "permission denied" (that is 403) or "validation error" (that is 422); it is specifically about state-based conflicts.</p>
+      <p><strong style="color:#F0EDE6">When servers should return it:</strong> Return 409 when the request is well-formed and authorized but conflicts with current state. Always include a body explaining the conflict.</p>
+    </section>
+
+    
+    <section class="section">
+      <h2>Common causes</h2>
+      <ul class="bullet-list">
+        <li>Optimistic concurrency control: ETag/version mismatch on PUT</li>
+        <li>Unique constraint violation on POST (email already exists)</li>
+        <li>DELETE on a resource with dependents (foreign key constraint)</li>
+        <li>Two clients writing to the same resource simultaneously</li>
+      </ul>
+    </section>
+    
+    <section class="section">
+      <h2>How to fix 409 Conflict</h2>
+      <ul class="bullet-list">
+        <li>GET the latest version of the resource, merge changes, retry</li>
+        <li>For unique-key collisions, use a different value or retrieve the existing resource</li>
+        <li>For dependent-resource conflicts, delete the dependents first</li>
+        <li>Implement client-side retry with conflict resolution (merge, prompt user, etc.)</li>
+      </ul>
+    </section>
+    
+    <section class="section">
+      <h2>Example response</h2>
+      <pre><code>curl -i -X PUT -H 'If-Match: &quot;v1&quot;' -d '{&quot;name&quot;:&quot;Ada&quot;}' https://api.example.com/users/42
+
+HTTP/2 409
+content-type: application/json
+{&quot;error&quot;:&quot;version conflict&quot;,&quot;current_version&quot;:&quot;v3&quot;,&quot;your_version&quot;:&quot;v1&quot;}</code></pre>
+    </section>
+
+    <section class="section">
+      <h2>Related status codes</h2>
+      <div class="related-grid">
+      <a href="/http/412" class="related-card">
+        <div class="related-code">412</div>
+        <div class="related-name">Precondition Failed</div>
+      </a>
+      <a href="/http/422" class="related-card">
+        <div class="related-code">422</div>
+        <div class="related-name">Unprocessable Content</div>
+      </a>
+      <a href="/http/423" class="related-card">
+        <div class="related-code">423</div>
+        <div class="related-name">Locked</div>
+      </a>
+      </div>
+    </section>
+
+    
+    <section class="section faqs">
+      <h2>Frequently Asked Questions</h2>
+      <details class="faq">
+        <summary>409 vs 412?</summary>
+        <div class="faq-answer">412 is specifically about precondition failure (If-Match, If-None-Match). 409 is the general state-conflict code, including unique-key collisions, foreign-key issues, and concurrent updates without explicit preconditions.</div>
+      </details>
+      <details class="faq">
+        <summary>Should I retry on 409?</summary>
+        <div class="faq-answer">Only with new data. Retrying the same request with the same conflicting state will get the same 409.</div>
+      </details>
+    </section>
+
+    <div class="meta-box">
+      <strong style="color:#C8C8C0">Defined in:</strong> RFC 9110 · <strong style="color:#C8C8C0">Class:</strong> <code>4xx Client Error</code>
+    </div>
+
+    <section class="section">
+      <h2>More references</h2>
+      <p>For a one-page reference of all HTTP status codes, see the <a href="/cheatsheets/http">HTTP cheat sheet</a>. For testing API responses, try the <a href="/tools/api">API Tester tool</a>. For inspecting responses on the command line, the <a href="/cheatsheets/curl">curl cheat sheet</a> covers the most common flags.</p>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/http">All Status Codes</a><span class="sep">|</span>
+      <a href="/cheatsheets/http">HTTP Cheat Sheet</a><span class="sep">|</span>
+      <a href="/cheatsheets/curl">Curl Cheat Sheet</a><span class="sep">|</span>
+      <a href="/tools/api">API Tester</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a>
+    </footer>
+  </div>
+</body>
+</html>
