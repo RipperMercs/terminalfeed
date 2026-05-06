@@ -293,6 +293,49 @@
   50%      { opacity: 1;   transform: scale(1.15); }
 }
 
+/* ── PROD-* hero variants ── mirror the live treatment + each polish ── */
+
+[data-variant^="prod-"] .hero {
+  border-color: color-mix(in oklab, var(--accent) 24%, transparent);
+  box-shadow: 0 0 4px 0 color-mix(in oklab, var(--accent) 24%, transparent);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+[data-variant^="prod-"] .hero:hover {
+  border-color: color-mix(in oklab, var(--accent) 60%, transparent);
+  box-shadow: 0 0 8px 0 color-mix(in oklab, var(--accent) 42%, transparent);
+}
+
+/* Hero brackets in prod-brackets / prod-full — reuse the existing
+   span elements (already in LabBtcTicker.tsx) instead of pseudo-
+   elements since we already have them rendered. */
+[data-variant="prod-brackets"] .bracket,
+[data-variant="prod-full"] .bracket {
+  opacity: 0.6;
+  width: 14px;
+  height: 14px;
+}
+[data-variant="prod-brackets"] .hero:hover .bracket,
+[data-variant="prod-full"] .hero:hover .bracket {
+  opacity: 1;
+  width: 18px;
+  height: 18px;
+}
+
+/* Header tint for prod-header / prod-full — apply to .headerRow */
+[data-variant="prod-header"] .headerRow,
+[data-variant="prod-full"] .headerRow {
+  margin-left: -8px;
+  padding: 6px 10px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent) 14%, transparent) 0%,
+    transparent 70%
+  );
+}
+[data-variant="prod-header"] .tag,
+[data-variant="prod-full"] .tag { display: inline; }
+
 @media (prefers-reduced-motion: reduce) {
   [data-variant="matrix"] .hero,
   [data-variant="command"] .bracket {

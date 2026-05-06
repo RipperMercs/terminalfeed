@@ -10,7 +10,11 @@ export type Variant =
   | 'glow'
   | 'matrix'
   | 'lcars'
-  | 'command';
+  | 'command'
+  | 'prod-brackets'
+  | 'prod-ticks'
+  | 'prod-header'
+  | 'prod-full';
 
 interface Props {
   title: string;

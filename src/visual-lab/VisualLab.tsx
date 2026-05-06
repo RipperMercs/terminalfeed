@@ -18,14 +18,18 @@ import panelStyles from './LabPanel.module.css';
 import styles from './VisualLab.module.css';
 
 const VARIANTS: { id: Variant; label: string; blurb: string }[] = [
-  { id: 'default',      label: 'DEFAULT',      blurb: 'current site look, flat border, small header' },
-  { id: 'bloomberg',    label: 'BLOOMBERG',    blurb: '4px category-colored left bar, [TAG] in header' },
-  { id: 'brackets',     label: 'BRACKETS',     blurb: 'no border, terminal L-shapes at corners' },
-  { id: 'header-strip', label: 'HEADER STRIP', blurb: '3px colored top stripe, larger header' },
-  { id: 'glow',         label: 'GLOW',         blurb: 'subtle outer glow in category color' },
-  { id: 'matrix',       label: 'MATRIX',       blurb: 'green-dominant, breathing border, scanline sweep' },
-  { id: 'lcars',        label: 'LCARS',        blurb: 'star trek pill header + segmented vertical bar' },
-  { id: 'command',      label: 'COMMAND',      blurb: 'animated brackets, pulsing border, ticking status counter' },
+  { id: 'default',       label: 'DEFAULT',       blurb: 'current site look, flat border, small header' },
+  { id: 'bloomberg',     label: 'BLOOMBERG',     blurb: '4px category-colored left bar, [TAG] in header' },
+  { id: 'brackets',      label: 'BRACKETS',      blurb: 'no border, terminal L-shapes at corners' },
+  { id: 'header-strip',  label: 'HEADER STRIP',  blurb: '3px colored top stripe, larger header' },
+  { id: 'glow',          label: 'GLOW',          blurb: 'subtle outer glow in category color' },
+  { id: 'matrix',        label: 'MATRIX',        blurb: 'green-dominant, breathing border, scanline sweep' },
+  { id: 'lcars',         label: 'LCARS',         blurb: 'star trek pill header + segmented vertical bar' },
+  { id: 'command',       label: 'COMMAND',       blurb: 'animated brackets, pulsing border, ticking status counter' },
+  { id: 'prod-brackets', label: 'PROD + BRACKETS', blurb: 'live look + 2 corner brackets via pseudo-elements (zero DOM cost)' },
+  { id: 'prod-ticks',    label: 'PROD + TICKS',  blurb: 'live look + 3-dot tick counter next to LIVE indicator' },
+  { id: 'prod-header',   label: 'PROD + HEADER', blurb: 'live look + faint per-category header tint, pushes color further' },
+  { id: 'prod-full',     label: 'PROD + ALL',    blurb: 'live look + brackets + ticks + header tint, all three at once' },
 ];
 
 const COMPARE_VARIANTS: Variant[] = ['matrix', 'lcars', 'command'];
