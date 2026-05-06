@@ -1,9 +1,11 @@
 # Product page redirects
 /clean /cleaner 301
 
-# SPA-mounted internal routes (no static file, served by index.html)
-# main.tsx pathname-routes these to alternate React roots.
-/visual-lab /index.html 200
+# SPA-mounted internal routes (no static file, served by SPA shell at /).
+# main.tsx pathname-routes these to alternate React roots. Target is the
+# clean root path, not /index.html, to avoid Cloudflare Pages HTML
+# normalization turning the 200 rewrite into a 308 redirect.
+/visual-lab / 200
 
 # Well-known URI aliases (RFC 5785) for AI agent discovery.
 # Agents that follow well-known conventions check these paths first.
