@@ -85,18 +85,39 @@
   max-width: 700px;
 }
 
-/* ── Variant switcher ── */
-.switcher {
+/* ── Controls row (switcher + compare toggle) ── */
+.controls {
   display: flex;
-  gap: 6px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   padding: 16px 22px 6px;
-  flex-wrap: wrap;
   max-width: 1400px;
   margin: 0 auto;
   position: sticky;
   top: 38px;
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 80%, transparent 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 85%, transparent 100%);
   z-index: 40;
+  flex-wrap: wrap;
+}
+
+.switcher {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.switcher[data-disabled="true"] .pill {
+  opacity: 0.45;
+}
+
+.modeToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .pill {
@@ -124,6 +145,12 @@
   background: rgba(74, 222, 128, 0.08);
   border-color: var(--green);
   color: var(--green);
+}
+
+.pillCompare {
+  background: rgba(239, 159, 39, 0.08);
+  border-color: var(--amber);
+  color: var(--amber);
 }
 
 .activeBlurb {
@@ -166,6 +193,59 @@
 }
 @media (max-width: 720px) {
   .grid { column-count: 1; }
+}
+
+/* Compact grid for compare-3 sections — shows fewer panels per section */
+.gridCompact {
+  column-count: 3;
+  column-gap: 12px;
+}
+@media (max-width: 1100px) {
+  .gridCompact { column-count: 2; }
+}
+@media (max-width: 720px) {
+  .gridCompact { column-count: 1; }
+}
+
+/* ── Compare-3 section ── */
+.compareSection {
+  margin-bottom: 36px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+}
+.compareSection:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.compareHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.compareLabel {
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2.5px;
+  background: rgba(239, 159, 39, 0.08);
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(239, 159, 39, 0.25);
+}
+
+.compareSep {
+  color: var(--text-dim);
+}
+
+.compareBlurb {
+  color: var(--text-mid);
+  font-size: 10px;
+  letter-spacing: 1px;
 }
 
 /* ── Footer ── */
