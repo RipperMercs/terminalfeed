@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSH Key Generator: Ed25519 & RSA Online Free | TerminalFeed</title>
+<meta name="description" content="Generate SSH keypairs in your browser. Ed25519 (recommended) or RSA 2048/4096. OpenSSH format ready to paste into authorized_keys, GitHub, GitLab, AWS. 100% client-side, nothing transmitted.">
+<meta name="keywords" content="ssh key generator, ssh-keygen online, ed25519 generator, rsa key generator, generate ssh key online, openssh key, github ssh key, deploy key generator">
+<link rel="canonical" href="https://terminalfeed.io/tools/ssh-key">
+<meta property="og:title" content="SSH Key Generator: Ed25519 & RSA | TerminalFeed">
+<meta property="og:description" content="Generate Ed25519 or RSA SSH keypairs in your browser. OpenSSH format. 100% client-side.">
+<meta property="og:url" content="https://terminalfeed.io/tools/ssh-key">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerminalFeed">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SSH Key Generator",
+  "url": "https://terminalfeed.io/tools/ssh-key",
+  "description": "Generate Ed25519 or RSA SSH keypairs in your browser. OpenSSH format. 100% client-side.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+    { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://terminalfeed.io/tools" },
+    { "@type": "ListItem", "position": 3, "name": "SSH Key Generator", "item": "https://terminalfeed.io/tools/ssh-key" }
+  ]
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+a { color: #5DCAA5; text-decoration: none; } a:hover { text-decoration: underline; }
+.back-link { align-self: flex-start; max-width: 960px; width: 100%; margin-bottom: 1.5rem; font-size: 0.85rem; color: #4E4D49; }
+.back-link a { color: #4E4D49; } .back-link a:hover { color: #5DCAA5; }
+.container { max-width: 960px; width: 100%; }
+.header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+.header h1 { font-size: 1.6rem; color: #D4D2CB; font-weight: 600; } .header h1 span { color: #5DCAA5; }
+.badge { background: rgba(93,202,165,0.1); color: #5DCAA5; font-size: 0.7rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(93,202,165,0.25); }
+.tagline { font-size: 0.82rem; color: #8A8880; margin-bottom: 2rem; line-height: 1.6; }
+.controls { background: #111114; border: 1px solid #1A1A22; border-radius: 6px; padding: 1.2rem; margin-bottom: 1rem; }
+.row { display: flex; gap: 1rem; margin-bottom: 0.9rem; flex-wrap: wrap; align-items: center; }
+.row:last-child { margin-bottom: 0; }
+.row label { font-size: 0.78rem; color: #4E4D49; min-width: 100px; }
+.row select, .row input[type="text"] {
+  background: #0A0A0C;
+  border: 1px solid #1A1A22;
+  color: #D4D2CB;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 150px;
+}
+.row select:focus, .row input:focus { outline: none; border-color: #5DCAA5; }
+.btn-primary {
+  background: rgba(93,202,165,0.18);
+  color: #5DCAA5;
+  border: 1px solid rgba(93,202,165,0.4);
+  padding: 0.6rem 1.4rem;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-primary:hover { background: rgba(93,202,165,0.28); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.status { font-size: 0.78rem; color: #8A8880; margin-top: 0.6rem; min-height: 1.2rem; }
+.status.error { color: #F87171; }
+.status.success { color: #4ADE80; }
+.output { display: none; }
+.output.show { display: block; }
+.field-block {
+  background: #111114;
+  border: 1px solid #1A1A22;
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+.field-label { font-size: 0.72rem; color: #5DCAA5; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; }
+.field-hint { font-size: 0.7rem; color: #4E4D49; text-transform: none; letter-spacing: 0; font-weight: normal; }
+.field-value {
+  background: #0A0A0C;
+  border: 1px solid #1A1A22;
+  border-radius: 4px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.78rem;
+  word-break: break-all;
+  white-space: pre-wrap;
+  color: #C8C8C0;
+  user-select: all;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.field-value.single { white-space: nowrap; overflow-x: auto; word-break: keep-all; }
+.field-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap; }
+.btn-mini {
+  background: rgba(93,202,165,0.10);
+  color: #5DCAA5;
+  border: 1px solid rgba(93,202,165,0.25);
+  padding: 0.35rem 0.8rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.btn-mini:hover { background: rgba(93,202,165,0.2); }
+.warn-box {
+  background: rgba(248,113,113,0.05);
+  border: 1px solid rgba(248,113,113,0.25);
+  color: #FCA5A5;
+  border-radius: 5px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+.warn-box strong { color: #F87171; }
+.fingerprint { font-size: 0.74rem; color: #8A8880; }
+.fingerprint code { background: #0A0A0C; padding: 0.1rem 0.4rem; border-radius: 3px; color: #4ADE80; font-size: 0.72rem; }
+.usage-box {
+  background: #111114;
+  border: 1px solid #1A1A22;
+  border-radius: 5px;
+  padding: 0.9rem 1rem;
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: #8A8880;
+}
+.usage-box code { background: #0A0A0C; padding: 0.1rem 0.4rem; border-radius: 3px; color: #5DCAA5; font-size: 0.72rem; }
+.usage-box .step { color: #C8C8C0; display: block; margin-top: 0.4rem; }
+footer { margin-top: auto; padding-top: 3rem; font-size: 0.75rem; color: #4E4D49; text-align: center; display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+.seo-content { margin-top: 48px; padding-top: 32px; border-top: 1px solid #1A1A22; color: #7A7A72; font-size: 13px; line-height: 1.7; }
+.seo-content h2 { color: #C8C8C0; font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+.seo-content h3 { color: #9A9A92; font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.seo-content p { margin-bottom: 12px; }
+.seo-content code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+.seo-content pre { background: #151518; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 12px; font-size: 12px; }
+.seo-content pre code { background: transparent; padding: 0; }
+.breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+.breadcrumbs a { color: #4E4D49; text-decoration: none; }
+.breadcrumbs a:hover { color: #5DCAA5; }
+.breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+</style>
+</head>
+<body data-page="tools-ssh-key">
+<div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/tools/">Tools</a><span class="bc-sep">&rsaquo;</span><span>SSH Key Generator</span>
+  </nav>
+  <div class="header">
+    <h1><span>&gt;_</span> SSH KEY</h1>
+    <span class="badge">&#9889; runs locally</span>
+  </div>
+  <p class="tagline">Generate Ed25519 or RSA SSH keypairs entirely in your browser. The private key never leaves this page. Output is OpenSSH format, ready for <code>~/.ssh/</code>, GitHub, GitLab, AWS, or any host that takes <code>authorized_keys</code>.</p>
+
+  <div class="controls">
+    <div class="row">
+      <label for="algo">Algorithm</label>
+      <select id="algo">
+        <option value="ed25519" selected>Ed25519 (recommended)</option>
+        <option value="rsa-3072">RSA 3072 bits</option>
+        <option value="rsa-4096">RSA 4096 bits</option>
+        <option value="rsa-2048">RSA 2048 bits</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="comment">Comment</label>
+      <input type="text" id="comment" placeholder="user@host" value="user@terminalfeed">
+    </div>
+    <div class="row">
+      <button class="btn-primary" id="btnGenerate">Generate Keypair</button>
+    </div>
+    <div class="status" id="status">Ready. Click Generate to create a keypair.</div>
+  </div>
+
+  <div class="output" id="output">
+    <div class="warn-box">
+      <strong>Save the private key now.</strong> When you reload this page, the key is gone. There is no copy on any server. Treat the private key like a password.
+    </div>
+
+    <div class="field-block">
+      <div class="field-label">Public key <span class="field-hint">paste this into GitHub, GitLab, authorized_keys</span></div>
+      <div class="field-value single" id="pubKeyOut">-</div>
+      <div class="field-buttons">
+        <button class="btn-mini" data-copy="pubKeyOut">Copy</button>
+        <button class="btn-mini" data-download="pubKeyOut" data-name="id_key.pub">Download .pub</button>
+      </div>
+    </div>
+
+    <div class="field-block">
+      <div class="field-label">Private key <span class="field-hint">save as ~/.ssh/id_ed25519 or id_rsa, chmod 600</span></div>
+      <div class="field-value" id="privKeyOut">-</div>
+      <div class="field-buttons">
+        <button class="btn-mini" data-copy="privKeyOut">Copy</button>
+        <button class="btn-mini" data-download="privKeyOut" data-name="id_key">Download private key</button>
+      </div>
+    </div>
+
+    <div class="field-block">
+      <div class="field-label">Fingerprint (SHA256)</div>
+      <div class="fingerprint"><code id="fpOut">-</code></div>
+      <div class="usage-box">
+        <strong style="color:#C8C8C0">After downloading, run:</strong>
+        <span class="step">$ <code>chmod 600 ~/.ssh/id_ed25519</code> &nbsp; (or whatever you named it)</span>
+        <span class="step">$ <code>ssh-keygen -y -f ~/.ssh/id_ed25519</code> &nbsp; (verifies the key parses cleanly)</span>
+        <span class="step">$ <code>ssh-add ~/.ssh/id_ed25519</code> &nbsp; (load into the agent)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="seo-content">
+    <h2>SSH Key Generator: Ed25519 vs RSA, OpenSSH Format, and Where to Use It</h2>
+
+    <h3>Which algorithm should I pick?</h3>
+    <p><strong>Ed25519 is the right answer for almost every use case in 2026.</strong> The keys are short (a single line of text), generation is fast, signing and verification are fast, and the underlying curve (Curve25519) was designed to avoid the implementation footguns that plague older algorithms. GitHub, GitLab, AWS, and basically every modern SSH server accept Ed25519. Pick this one unless you have a documented reason not to.</p>
+    <p><strong>RSA 3072 or 4096 is the right answer when you have to interoperate with legacy systems</strong> that pre-date Ed25519 support, or when a compliance regime explicitly mandates RSA. Generation is slower (you might wait a few seconds for 4096-bit keys), keys are much larger, and the security margin per byte is worse than Ed25519. RSA 2048 is included for old-system compatibility but should not be a new-key default in 2026.</p>
+
+    <h3>What "OpenSSH format" means</h3>
+    <p>SSH has a few historical key formats (PEM, PuTTY .ppk, OpenSSH legacy, OpenSSH v1). This generator outputs the modern <strong>OpenSSH v1 format</strong>, the same format <code>ssh-keygen</code> produces by default since OpenSSH 7.8. The private key starts with <code>-----BEGIN OPENSSH PRIVATE KEY-----</code> and the public key is the familiar single line: <code>ssh-ed25519 AAAA... user@host</code>.</p>
+    <p>This format is supported by every actively-maintained SSH client and server. PuTTY (Windows) needs you to convert to <code>.ppk</code> via PuTTYgen if that is your client.</p>
+
+    <h3>How to install the key</h3>
+    <p>Save the private key to <code>~/.ssh/id_ed25519</code> (or <code>id_rsa</code> for RSA). Save the public key to the same path with a <code>.pub</code> suffix. Then:</p>
+    <pre><code>chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub</code></pre>
+    <p>Permissions matter. The SSH client refuses to use a private key with permissions broader than 600.</p>
+    <p>To add the public key to a remote host's <code>authorized_keys</code>:</p>
+    <pre><code>ssh-copy-id -i ~/.ssh/id_ed25519.pub user@host</code></pre>
+    <p>For GitHub or GitLab: settings, SSH keys, paste the contents of the <code>.pub</code> file (the single line starting with <code>ssh-ed25519</code> or <code>ssh-rsa</code>).</p>
+
+    <h3>Verifying the key parses</h3>
+    <p>The fastest sanity check that a generated private key is valid OpenSSH format is:</p>
+    <pre><code>ssh-keygen -y -f ~/.ssh/id_ed25519</code></pre>
+    <p>This re-derives the public key from the private key. If it prints a public key matching the one this tool gave you, the file is valid. If it errors, the file is corrupted (in which case generate a fresh pair, do not try to repair).</p>
+
+    <h3>Should you put a passphrase on it?</h3>
+    <p>Yes, for any key you actually use. This tool generates keys without a passphrase because passphrase-protected keys require a key-derivation function (bcrypt-pbkdf) that is non-trivial in the browser. After generation, encrypt the key with a passphrase using:</p>
+    <pre><code>ssh-keygen -p -f ~/.ssh/id_ed25519</code></pre>
+    <p>It will prompt for a new passphrase and re-encrypt the file in place.</p>
+
+    <h3>Privacy and security</h3>
+    <p>This tool uses the Web Crypto API (<code>crypto.subtle.generateKey</code>) for key generation, the same primitive your browser uses for TLS and WebAuthn. Keys are generated <strong>entirely in your browser</strong>. Nothing is transmitted, stored, logged, or persisted. Closing this tab destroys the key permanently. You can verify this by opening your browser's network tab while using the tool: zero requests fire when you click Generate.</p>
+    <p>That said, browser-generated keys live in browser memory at some point during generation. If you are generating a high-stakes production key (a deploy key for a critical system, a CA root, etc.), the gold standard is still <code>ssh-keygen -t ed25519</code> on an air-gapped machine. For day-to-day developer keys, this tool is fine.</p>
+
+    <h3>Related tools</h3>
+    <p>Need a strong passphrase to encrypt this key with? Try the <a href="/tools/password">Password Generator</a>. Want to hash the public key for verification scripts? <a href="/tools/hash">Hash Generator</a>. Encoding key bytes for an API call? <a href="/tools/base64">Base64 Encoder</a>.</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/">Home</a><a href="/live">Live</a><a href="/tools/">Tools</a><a href="/agent">Agents</a><a href="/radio">Radio</a><a href="/wifi">WiFi</a><a href="/developers">API</a><a href="/blog">Blog</a><a href="/about">About</a><a href="/team">Team</a><a href="/features">Features</a>
+  <span class="sep">|</span>
+  <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  // --- byte helpers ---
+  function concatBytes(arrays) {
+    let total = 0;
+    for (const a of arrays) total += a.length;
+    const out = new Uint8Array(total);
+    let off = 0;
+    for (const a of arrays) { out.set(a, off); off += a.length; }
+    return out;
+  }
+  function u32be(n) {
+    const a = new Uint8Array(4);
+    a[0] = (n >>> 24) & 0xff;
+    a[1] = (n >>> 16) & 0xff;
+    a[2] = (n >>> 8) & 0xff;
+    a[3] = n & 0xff;
+    return a;
+  }
+  function sshString(bytes) {
+    if (typeof bytes === 'string') bytes = new TextEncoder().encode(bytes);
+    return concatBytes([u32be(bytes.length), bytes]);
+  }
+  function sshMpint(bytes) {
+    // Strip leading zero bytes (but keep one if all zero)
+    let i = 0;
+    while (i < bytes.length - 1 && bytes[i] === 0) i++;
+    let val = bytes.slice(i);
+    // If high bit set, prepend 0x00 to keep it positive
+    if (val[0] & 0x80) {
+      const padded = new Uint8Array(val.length + 1);
+      padded[0] = 0;
+      padded.set(val, 1);
+      val = padded;
+    }
+    return concatBytes([u32be(val.length), val]);
+  }
+  function bytesToBase64(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function base64ToBytes(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function base64UrlToBytes(b64u) {
+    let s = b64u.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    return base64ToBytes(s);
+  }
+  function wrap64(s, w) {
+    const out = [];
+    for (let i = 0; i < s.length; i += w) out.push(s.slice(i, i + w));
+    return out.join('\n');
+  }
+
+  // --- Ed25519 ---
+  async function genEd25519(comment) {
+    const kp = await window.crypto.subtle.generateKey(
+      { name: 'Ed25519' },
+      true,
+      ['sign', 'verify']
+    );
+    const rawPub = new Uint8Array(await window.crypto.subtle.exportKey('raw', kp.publicKey));
+    const pkcs8 = new Uint8Array(await window.crypto.subtle.exportKey('pkcs8', kp.privateKey));
+    // Ed25519 PKCS8 ends with the 32-byte seed.
+    const seed = pkcs8.slice(pkcs8.length - 32);
+
+    // Public key wire blob: ssh-ed25519 || pubkey
+    const pubBlob = concatBytes([sshString('ssh-ed25519'), sshString(rawPub)]);
+    const pubLine = 'ssh-ed25519 ' + bytesToBase64(pubBlob) + (comment ? ' ' + comment : '');
+
+    // Private key block (inner)
+    const checkint = window.crypto.getRandomValues(new Uint8Array(4));
+    const innerParts = [
+      checkint, checkint,
+      sshString('ssh-ed25519'),
+      sshString(rawPub),
+      sshString(concatBytes([seed, rawPub])),
+      sshString(comment || '')
+    ];
+    let inner = concatBytes(innerParts);
+    // Pad to multiple of 8 (cipher block size for "none"): 0x01, 0x02, 0x03, ...
+    let padCounter = 1;
+    while (inner.length % 8 !== 0) {
+      inner = concatBytes([inner, new Uint8Array([padCounter++])]);
+    }
+
+    const outer = concatBytes([
+      new TextEncoder().encode('openssh-key-v1\0'),
+      sshString('none'),
+      sshString('none'),
+      sshString(''),
+      u32be(1),
+      sshString(pubBlob),
+      sshString(inner)
+    ]);
+
+    const privPem = '-----BEGIN OPENSSH PRIVATE KEY-----\n'
+      + wrap64(bytesToBase64(outer), 70)
+      + '\n-----END OPENSSH PRIVATE KEY-----\n';
+
+    const fp = await fingerprint(pubBlob);
+    return { pubLine, privPem, fp, pubFileName: 'id_ed25519.pub', privFileName: 'id_ed25519' };
+  }
+
+  // --- RSA ---
+  async function genRSA(bits, comment) {
+    const kp = await window.crypto.subtle.generateKey(
+      {
+        name: 'RSASSA-PKCS1-v1_5',
+        modulusLength: bits,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+        hash: 'SHA-256'
+      },
+      true,
+      ['sign', 'verify']
+    );
+    const jwkPub = await window.crypto.subtle.exportKey('jwk', kp.publicKey);
+    const jwkPriv = await window.crypto.subtle.exportKey('jwk', kp.privateKey);
+
+    const n = base64UrlToBytes(jwkPub.n);
+    const e = base64UrlToBytes(jwkPub.e);
+    const d = base64UrlToBytes(jwkPriv.d);
+    const p = base64UrlToBytes(jwkPriv.p);
+    const q = base64UrlToBytes(jwkPriv.q);
+    const qi = base64UrlToBytes(jwkPriv.qi); // = iqmp in SSH
+
+    // Public key wire blob: ssh-rsa || mpint(e) || mpint(n)
+    const pubBlob = concatBytes([sshString('ssh-rsa'), sshMpint(e), sshMpint(n)]);
+    const pubLine = 'ssh-rsa ' + bytesToBase64(pubBlob) + (comment ? ' ' + comment : '');
+
+    // Private inner: checkint, checkint, "ssh-rsa", n, e, d, iqmp, p, q, comment, padding
+    const checkint = window.crypto.getRandomValues(new Uint8Array(4));
+    let inner = concatBytes([
+      checkint, checkint,
+      sshString('ssh-rsa'),
+      sshMpint(n),
+      sshMpint(e),
+      sshMpint(d),
+      sshMpint(qi),
+      sshMpint(p),
+      sshMpint(q),
+      sshString(comment || '')
+    ]);
+    let padCounter = 1;
+    while (inner.length % 8 !== 0) {
+      inner = concatBytes([inner, new Uint8Array([padCounter++])]);
+    }
+
+    const outer = concatBytes([
+      new TextEncoder().encode('openssh-key-v1\0'),
+      sshString('none'),
+      sshString('none'),
+      sshString(''),
+      u32be(1),
+      sshString(pubBlob),
+      sshString(inner)
+    ]);
+
+    const privPem = '-----BEGIN OPENSSH PRIVATE KEY-----\n'
+      + wrap64(bytesToBase64(outer), 70)
+      + '\n-----END OPENSSH PRIVATE KEY-----\n';
+
+    const fp = await fingerprint(pubBlob);
+    return { pubLine, privPem, fp, pubFileName: 'id_rsa.pub', privFileName: 'id_rsa' };
+  }
+
+  async function fingerprint(pubBlob) {
+    const hash = new Uint8Array(await window.crypto.subtle.digest('SHA-256', pubBlob));
+    // base64 without padding
+    return 'SHA256:' + bytesToBase64(hash).replace(/=+$/, '');
+  }
+
+  // --- UI ---
+  const algoSel = document.getElementById('algo');
+  const commentIn = document.getElementById('comment');
+  const btn = document.getElementById('btnGenerate');
+  const status = document.getElementById('status');
+  const output = document.getElementById('output');
+  const pubOut = document.getElementById('pubKeyOut');
+  const privOut = document.getElementById('privKeyOut');
+  const fpOut = document.getElementById('fpOut');
+
+  async function generate() {
+    btn.disabled = true;
+    output.classList.remove('show');
+    const algo = algoSel.value;
+    const comment = (commentIn.value || '').trim();
+    status.className = 'status';
+    status.textContent = algo.startsWith('rsa') ? 'Generating RSA key, this can take a few seconds.' : 'Generating Ed25519 key.';
+
+    try {
+      let result;
+      if (algo === 'ed25519') {
+        result = await genEd25519(comment);
+      } else if (algo === 'rsa-2048') {
+        result = await genRSA(2048, comment);
+      } else if (algo === 'rsa-3072') {
+        result = await genRSA(3072, comment);
+      } else if (algo === 'rsa-4096') {
+        result = await genRSA(4096, comment);
+      }
+      pubOut.textContent = result.pubLine;
+      privOut.textContent = result.privPem;
+      fpOut.textContent = result.fp;
+      // Set download names
+      document.querySelector('[data-download="pubKeyOut"]').dataset.name = result.pubFileName;
+      document.querySelector('[data-download="privKeyOut"]').dataset.name = result.privFileName;
+      output.classList.add('show');
+      status.className = 'status success';
+      status.textContent = 'Generated. Save the private key now (this page does not store it).';
+    } catch (err) {
+      status.className = 'status error';
+      const msg = (err && err.message) ? err.message : String(err);
+      if (algo === 'ed25519' && /not supported|unsupported|unknown algorithm/i.test(msg)) {
+        status.textContent = 'This browser does not support Ed25519 in WebCrypto. Try a recent Chrome, Firefox, or Safari, or pick RSA above.';
+      } else {
+        status.textContent = 'Generation failed: ' + msg;
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  btn.addEventListener('click', generate);
+
+  document.querySelectorAll('[data-copy]').forEach(b => {
+    b.addEventListener('click', function(){
+      const target = document.getElementById(this.dataset.copy);
+      if (!target) return;
+      navigator.clipboard.writeText(target.textContent).then(() => {
+        const orig = this.textContent;
+        this.textContent = 'Copied!';
+        setTimeout(() => { this.textContent = orig; }, 1500);
+      });
+    });
+  });
+
+  document.querySelectorAll('[data-download]').forEach(b => {
+    b.addEventListener('click', function(){
+      const target = document.getElementById(this.dataset.download);
+      if (!target) return;
+      const name = this.dataset.name || 'key.txt';
+      const blob = new Blob([target.textContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 200);
+    });
+  });
+})();
+</script>
+<script src="/i18n.js"></script>
+</body>
+</html>

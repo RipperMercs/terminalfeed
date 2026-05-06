@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curl Cheat Sheet: 80+ Examples for HTTP, APIs, Auth, Uploads | TerminalFeed</title>
+    <meta name="description" content="The curl cheat sheet developers actually use. 80+ commands covering HTTP methods, headers, auth, JSON bodies, file upload, cookies, retries, debugging, timing, and proxies. Searchable, printable, single-screen reference.">
+    <meta name="keywords" content="curl, curl cheat sheet, curl examples, curl HTTP, curl POST, curl JSON, curl auth, bearer token, curl headers, curl reference">
+    <meta property="og:title" content="Curl Cheat Sheet: 80+ Practical Examples | TerminalFeed">
+    <meta property="og:description" content="The curl cheat sheet developers actually use. HTTP methods, auth, JSON, uploads, cookies, retries, timing, proxies. Searchable single-screen reference.">
+    <meta property="og:image" content="/og-image.png">
+    <meta property="og:url" content="https://terminalfeed.io/cheatsheets/curl">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Curl Cheat Sheet: 80+ Practical Examples | TerminalFeed">
+    <meta name="twitter:description" content="The curl cheat sheet developers actually use. Searchable, printable reference.">
+    <link rel="canonical" href="https://terminalfeed.io/cheatsheets/curl">
+    <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 30px; border-bottom: 1px solid #1E1E24; padding-bottom: 20px; }
+        .breadcrumbs { font-size: 12px; color: #8A8880; margin-bottom: 16px; }
+        .breadcrumbs a { color: #5DCAA5; text-decoration: none; }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        .breadcrumbs .sep { margin: 0 8px; }
+        h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #8A8880; }
+        .search-box { margin-bottom: 30px; position: relative; }
+        .search-box input { width: 100%; background: #111114; border: 1px solid #1E1E24; color: #F0EDE6; padding: 12px 16px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+        .search-box input:focus { outline: none; border-color: #5DCAA5; }
+        .search-box input::placeholder { color: #4E4D49; }
+        .section { margin-bottom: 40px; }
+        .section-title { color: #4ADE80; font-size: 14px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .cmd-row { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #1A1A1E; align-items: baseline; }
+        .cmd-row:last-child { border-bottom: none; }
+        .cmd-code { flex-shrink: 0; background: #0D0D10; border: 1px solid #1A1A22; padding: 6px 12px; border-radius: 3px; font-size: 11px; color: #5DCAA5; white-space: nowrap; font-weight: 600; max-width: 60%; overflow-x: auto; }
+        .cmd-desc { font-size: 12px; color: #8A8880; flex-grow: 1; }
+        .recipe { background: #0D0D10; border: 1px solid #1A1A22; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; }
+        .recipe-title { font-size: 11px; color: #4ADE80; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .recipe-code { font-size: 11px; color: #5DCAA5; white-space: pre; overflow-x: auto; line-height: 1.6; }
+        .recipe-note { font-size: 11px; color: #8A8880; margin-top: 8px; line-height: 1.6; }
+        .hidden { display: none; }
+        footer { border-top: 1px solid #1E1E24; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #8A8880; text-align: center; }
+        footer a { color: #5DCAA5; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .sep { margin: 0 8px; color: #4E4D49; }
+        @media print {
+            .search-box { display: none; }
+            .section { page-break-inside: avoid; }
+        }
+        @media (max-width: 700px) {
+            .cmd-row { flex-direction: column; gap: 6px; }
+            .cmd-code { max-width: 100%; }
+        }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Curl Cheat Sheet: 80+ Practical Examples for HTTP, APIs, Auth, and Uploads",
+        "description": "The curl cheat sheet developers actually use. Covers HTTP methods, headers, authentication, JSON bodies, file upload, cookies, retries, debugging, timing, and proxies.",
+        "url": "https://terminalfeed.io/cheatsheets/curl",
+        "datePublished": "2026-05-05",
+        "dateModified": "2026-05-05",
+        "author": { "@type": "Person", "name": "TerminalFeed" },
+        "publisher": { "@type": "Organization", "name": "TerminalFeed", "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/og-image.png" } }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+            { "@type": "ListItem", "position": 2, "name": "Cheatsheets", "item": "https://terminalfeed.io/cheatsheets" },
+            { "@type": "ListItem", "position": 3, "name": "Curl", "item": "https://terminalfeed.io/cheatsheets/curl" }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="breadcrumbs">
+                <a href="/">Home</a>
+                <span class="sep">/</span>
+                <a href="/cheatsheets">Cheatsheets</a>
+                <span class="sep">/</span>
+                <span>Curl</span>
+            </div>
+            <h1>Curl Cheat Sheet</h1>
+            <p class="subtitle">80+ practical curl examples for HTTP requests, headers, authentication, JSON bodies, file upload, cookies, retries, timing, and the flags you forget at 2am</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search commands... (e.g., POST, json, auth, header, retry)">
+        </div>
+
+        <div class="section">
+            <div class="section-title">Basics</div>
+            <div class="cmd-row"><div class="cmd-code">curl URL</div><div class="cmd-desc">GET request, body printed to stdout</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -i URL</div><div class="cmd-desc">Include response headers in output</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -I URL</div><div class="cmd-desc">HEAD request, only show response headers</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -v URL</div><div class="cmd-desc">Verbose, show request and response headers</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -s URL</div><div class="cmd-desc">Silent mode, no progress meter or errors</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -sS URL</div><div class="cmd-desc">Silent but still show errors (most common combo)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --version</div><div class="cmd-desc">Show curl version and supported features</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --help all</div><div class="cmd-desc">Print every option (the kitchen sink)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">HTTP Methods</div>
+            <div class="cmd-row"><div class="cmd-code">curl -X POST URL</div><div class="cmd-desc">POST request (with no body)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -X PUT URL</div><div class="cmd-desc">PUT request</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -X PATCH URL</div><div class="cmd-desc">PATCH request</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -X DELETE URL</div><div class="cmd-desc">DELETE request</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -X OPTIONS URL</div><div class="cmd-desc">OPTIONS request (CORS preflight)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --get -d "q=foo" URL</div><div class="cmd-desc">GET with query string from -d data</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -d "x=1&amp;y=2" URL</div><div class="cmd-desc">POST form-encoded (-d implies -X POST)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Headers</div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Accept: application/json" URL</div><div class="cmd-desc">Set request header</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "X-Custom: value" -H "X-Other: 2" URL</div><div class="cmd-desc">Multiple headers, repeat -H</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "User-Agent: my-bot/1.0" URL</div><div class="cmd-desc">Override User-Agent header</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -A "my-bot/1.0" URL</div><div class="cmd-desc">Shortcut for User-Agent</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -e "https://referer.example" URL</div><div class="cmd-desc">Set Referer header</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Host: example.com" IP_URL</div><div class="cmd-desc">Override Host header (test SNI / virtual hosts)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "X-Foo;" URL</div><div class="cmd-desc">Send empty header (semicolon at end)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Accept-Encoding: gzip" --compressed URL</div><div class="cmd-desc">Auto-decompress gzip / br response</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Authentication</div>
+            <div class="cmd-row"><div class="cmd-code">curl -u user:pass URL</div><div class="cmd-desc">HTTP Basic auth</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -u user URL</div><div class="cmd-desc">Basic auth, prompt for password (more secure than inline)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Authorization: Bearer TOKEN" URL</div><div class="cmd-desc">Bearer token (OAuth2, JWT, API tokens)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Authorization: Token $(cat ~/.token)" URL</div><div class="cmd-desc">Read token from a file (do not paste secrets)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --digest -u user:pass URL</div><div class="cmd-desc">HTTP Digest auth</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --ntlm -u user:pass URL</div><div class="cmd-desc">NTLM auth (Windows / Active Directory)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --aws-sigv4 "aws:amz:us-east-1:s3" -u KEY:SECRET URL</div><div class="cmd-desc">AWS SigV4 signing (S3, etc.)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --netrc-file ~/.netrc URL</div><div class="cmd-desc">Read credentials from .netrc</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Request Body: JSON</div>
+            <div class="cmd-row"><div class="cmd-code">curl -H "Content-Type: application/json" -d '{"a":1}' URL</div><div class="cmd-desc">POST JSON body</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --json '{"a":1}' URL</div><div class="cmd-desc">Shortcut, sets Content-Type and Accept to JSON (curl 7.82+)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --json @body.json URL</div><div class="cmd-desc">JSON body from a file</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -d @body.json -H "Content-Type: application/json" URL</div><div class="cmd-desc">Same, classic syntax</div></div>
+            <div class="cmd-row"><div class="cmd-code">cat body.json | curl --json @- URL</div><div class="cmd-desc">JSON body from stdin (--json @- means read stdin)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -d '{"id":"'"$ID"'"}' URL</div><div class="cmd-desc">Inject shell variable into JSON (mind the quoting)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Request Body: Forms &amp; Files</div>
+            <div class="cmd-row"><div class="cmd-code">curl -d "name=Ada&amp;role=admin" URL</div><div class="cmd-desc">URL-encoded form (application/x-www-form-urlencoded)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --data-urlencode "q=hello world" URL</div><div class="cmd-desc">URL-encode a single field automatically</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -F "field=value" URL</div><div class="cmd-desc">Multipart form (-F implies POST and multipart/form-data)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -F "file=@photo.jpg" URL</div><div class="cmd-desc">Multipart file upload (the @ reads from disk)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -F "file=@photo.jpg;type=image/jpeg" URL</div><div class="cmd-desc">Multipart file with explicit MIME type</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -F "file=@-;filename=stdin.txt" URL</div><div class="cmd-desc">Multipart upload from stdin</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --data-binary @file.bin URL</div><div class="cmd-desc">Raw body, no encoding (use for binary uploads)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -T file.txt URL</div><div class="cmd-desc">PUT upload of a single file (--upload-file)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Cookies &amp; Sessions</div>
+            <div class="cmd-row"><div class="cmd-code">curl -b "session=abc123" URL</div><div class="cmd-desc">Send cookie with request</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -b cookies.txt URL</div><div class="cmd-desc">Read cookies from a Netscape-format file</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -c cookies.txt URL</div><div class="cmd-desc">Save cookies received from server</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -b cookies.txt -c cookies.txt URL</div><div class="cmd-desc">Read AND save (persistent session jar)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --cookie-jar /tmp/cj URL</div><div class="cmd-desc">Long form of -c</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Output: Saving &amp; Piping</div>
+            <div class="cmd-row"><div class="cmd-code">curl -o file.html URL</div><div class="cmd-desc">Save body to specific filename</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -O URL</div><div class="cmd-desc">Save with the URL's basename (e.g. index.html)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -OJ URL</div><div class="cmd-desc">Use Content-Disposition filename if given</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -D headers.txt URL</div><div class="cmd-desc">Save response headers to a file</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -w "%{http_code}\n" -o /dev/null -s URL</div><div class="cmd-desc">Print only the status code (great for scripts)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -s URL | jq .</div><div class="cmd-desc">Pretty-print JSON response with jq</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl URL &gt; file.bin</div><div class="cmd-desc">Redirect via shell (same as -o)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Redirects, Retries &amp; Timeouts</div>
+            <div class="cmd-row"><div class="cmd-code">curl -L URL</div><div class="cmd-desc">Follow 3xx redirects</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -L --max-redirs 5 URL</div><div class="cmd-desc">Follow up to 5 redirects (default: 50)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --retry 3 URL</div><div class="cmd-desc">Retry up to 3 times on transient errors</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --retry 3 --retry-delay 2 URL</div><div class="cmd-desc">Retry with 2s delay between attempts</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --retry 5 --retry-all-errors URL</div><div class="cmd-desc">Retry on any error (incl. non-transient)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --connect-timeout 5 URL</div><div class="cmd-desc">Time limit for the TCP connect phase</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --max-time 30 URL</div><div class="cmd-desc">Total time limit for the whole request</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --fail URL</div><div class="cmd-desc">Exit non-zero on HTTP error (4xx/5xx)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -fsSL URL | sh</div><div class="cmd-desc">Common installer pattern: fail-loud, silent, follow redirects</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">SSL / TLS</div>
+            <div class="cmd-row"><div class="cmd-code">curl -k URL</div><div class="cmd-desc">Insecure, skip cert verification (DEBUG ONLY)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --cacert ca.pem URL</div><div class="cmd-desc">Use a specific CA bundle for verification</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --cert client.pem --key client.key URL</div><div class="cmd-desc">Mutual TLS with client cert + key</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --tlsv1.3 URL</div><div class="cmd-desc">Force TLS 1.3 minimum</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --tls-max 1.2 URL</div><div class="cmd-desc">Limit to TLS 1.2 max (legacy testing)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --resolve example.com:443:1.2.3.4 URL</div><div class="cmd-desc">Pin DNS to a specific IP (test before flipping records)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Proxy</div>
+            <div class="cmd-row"><div class="cmd-code">curl -x http://proxy:8080 URL</div><div class="cmd-desc">Use HTTP proxy</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --socks5 host:1080 URL</div><div class="cmd-desc">Use SOCKS5 proxy</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -x http://user:pass@proxy:8080 URL</div><div class="cmd-desc">Authenticated proxy</div></div>
+            <div class="cmd-row"><div class="cmd-code">HTTPS_PROXY=http://proxy:8080 curl URL</div><div class="cmd-desc">Use the standard env var</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --noproxy "*" URL</div><div class="cmd-desc">Force direct, ignore env proxy settings</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">HTTP/2 &amp; HTTP/3</div>
+            <div class="cmd-row"><div class="cmd-code">curl --http2 URL</div><div class="cmd-desc">Force HTTP/2</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --http2-prior-knowledge URL</div><div class="cmd-desc">HTTP/2 cleartext, skip upgrade dance</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --http3 URL</div><div class="cmd-desc">Force HTTP/3 / QUIC (build dependent)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --http1.1 URL</div><div class="cmd-desc">Force HTTP/1.1 (debug fallback path)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Performance &amp; Timing</div>
+            <div class="cmd-row"><div class="cmd-code">curl -w "@curl-format.txt" -o /dev/null -s URL</div><div class="cmd-desc">Per-stage timing breakdown using a format file</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -w "%{time_total}\n" -o /dev/null -s URL</div><div class="cmd-desc">Total request time only</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -w "%{time_namelookup} %{time_connect} %{time_starttransfer}\n" URL</div><div class="cmd-desc">DNS / connect / TTFB triad</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --limit-rate 200K URL</div><div class="cmd-desc">Throttle bandwidth to 200 KB/s (testing slow clients)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --range 0-1023 URL</div><div class="cmd-desc">Range request, first 1024 bytes</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -C - -O URL</div><div class="cmd-desc">Resume an interrupted download</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Debug &amp; Inspect</div>
+            <div class="cmd-row"><div class="cmd-code">curl -v URL 2&gt;&amp;1 | grep '^&gt;'</div><div class="cmd-desc">Show only the request lines</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --trace-ascii trace.log URL</div><div class="cmd-desc">Full ASCII trace of bytes sent and received</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --trace - URL</div><div class="cmd-desc">Full hex+ASCII trace to stdout</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -v --trace-time URL</div><div class="cmd-desc">Verbose with timestamps on every line</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl --resolve api.example:443:127.0.0.1 -v URL</div><div class="cmd-desc">Pin DNS to localhost (test against a local mock)</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Useful Recipes</div>
+
+            <div class="recipe">
+                <div class="recipe-title">JSON POST with bearer token</div>
+                <div class="recipe-code">curl -sS -X POST https://api.example.com/v1/users \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"a@b.c","name":"Ada"}'</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Per-stage timing breakdown</div>
+                <div class="recipe-code">cat &gt; curl-format.txt &lt;&lt;'EOF'
+DNS:        %{time_namelookup}s
+Connect:    %{time_connect}s
+TLS:        %{time_appconnect}s
+TTFB:       %{time_starttransfer}s
+Total:      %{time_total}s
+EOF
+curl -w "@curl-format.txt" -o /dev/null -s https://example.com</div>
+                <div class="recipe-note">Drop this curl-format.txt into your home dir. The single most useful debugging tool for slow APIs.</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Test an API only by status code (CI-friendly)</div>
+                <div class="recipe-code">code=$(curl -o /dev/null -s -w "%{http_code}" https://api.example.com/health)
+[ "$code" = "200" ] || { echo "FAIL: $code"; exit 1; }</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Stream Server-Sent Events</div>
+                <div class="recipe-code">curl -N -H "Accept: text/event-stream" https://stream.example.com/events</div>
+                <div class="recipe-note">-N disables output buffering so events appear in real time.</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Multipart upload with extra fields</div>
+                <div class="recipe-code">curl -F "title=My Photo" \
+     -F "tags=cat,sunset" \
+     -F "image=@cat.jpg;type=image/jpeg" \
+     https://api.example.com/photos</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Resilient downloader (retries + resume)</div>
+                <div class="recipe-code">curl -fL --retry 5 --retry-delay 2 --retry-all-errors \
+     -C - -O https://files.example.com/big.iso</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Pretty-print and filter JSON with jq</div>
+                <div class="recipe-code">curl -sS https://terminalfeed.io/api/briefing | jq '.btc.price'</div>
+            </div>
+
+            <div class="recipe">
+                <div class="recipe-title">Convert curl to fetch / Python / axios</div>
+                <div class="recipe-code">Paste the curl into <a href="/tools/curl-to-fetch" style="color:#5DCAA5">/tools/curl-to-fetch</a></div>
+                <div class="recipe-note">Useful when porting an API call from a working curl into your codebase.</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Config: .curlrc</div>
+            <div class="cmd-row"><div class="cmd-code">~/.curlrc</div><div class="cmd-desc">Per-user defaults file (one option per line, no leading dashes)</div></div>
+            <div class="cmd-row"><div class="cmd-code">--silent --show-error</div><div class="cmd-desc">Common .curlrc default: -sS for every invocation</div></div>
+            <div class="cmd-row"><div class="cmd-code">--location</div><div class="cmd-desc">.curlrc default: follow redirects unless overridden</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -q URL</div><div class="cmd-desc">Disable .curlrc for this invocation (clean slate)</div></div>
+            <div class="cmd-row"><div class="cmd-code">curl -K config.txt URL</div><div class="cmd-desc">Load a specific config file</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Common Exit Codes</div>
+            <div class="cmd-row"><div class="cmd-code">0</div><div class="cmd-desc">Success</div></div>
+            <div class="cmd-row"><div class="cmd-code">3</div><div class="cmd-desc">Malformed URL</div></div>
+            <div class="cmd-row"><div class="cmd-code">6</div><div class="cmd-desc">Could not resolve host (DNS)</div></div>
+            <div class="cmd-row"><div class="cmd-code">7</div><div class="cmd-desc">Failed to connect (host up but port closed / refused)</div></div>
+            <div class="cmd-row"><div class="cmd-code">22</div><div class="cmd-desc">HTTP error and --fail was used (4xx/5xx)</div></div>
+            <div class="cmd-row"><div class="cmd-code">28</div><div class="cmd-desc">Operation timeout (--max-time / --connect-timeout)</div></div>
+            <div class="cmd-row"><div class="cmd-code">35</div><div class="cmd-desc">SSL connect error (handshake failed)</div></div>
+            <div class="cmd-row"><div class="cmd-code">52</div><div class="cmd-desc">Empty reply from server</div></div>
+            <div class="cmd-row"><div class="cmd-code">60</div><div class="cmd-desc">Peer cert cannot be verified (CA mismatch)</div></div>
+        </div>
+
+        <footer>
+            <a href="/">Home</a><span class="sep">|</span>
+            <a href="/cheatsheets">Cheatsheets</a><span class="sep">|</span>
+            <a href="/cheatsheets/bash">Bash</a><span class="sep">|</span>
+            <a href="/cheatsheets/http">HTTP</a><span class="sep">|</span>
+            <a href="/cheatsheets/jq">jq</a><span class="sep">|</span>
+            <a href="/tools/curl-to-fetch">Curl to Code</a><span class="sep">|</span>
+            <a href="/for-devs">Developer Hub</a><span class="sep">|</span>
+            <a href="/blog">Blog</a>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cmd-row, .recipe');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.classList.toggle('hidden', !text.includes(searchTerm));
+            });
+        });
+    </script>
+</body>
+</html>

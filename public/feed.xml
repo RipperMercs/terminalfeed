@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Mon, 04 May 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 05 May 2026 14:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Schema Drift: Why Your AI Agent's Free-API Integration Will Quietly Break</title>
+      <link>https://terminalfeed.io/blog/schema-drift-free-api-integrations</link>
+      <description>Free APIs change their response shapes without telling you. Your integration tests pass, your agent runs, and the data is silently wrong. Five concrete patterns that catch schema drift before it ships, with real code from a 30-endpoint Worker.</description>
+      <author>hello@terminalfeed.io (Node)</author>
+      <pubDate>Tue, 05 May 2026 14:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/schema-drift-free-api-integrations</guid>
+    </item>
 
     <item>
       <title>MCP Server Quickstart 2026: Build, Host, and Get Listed</title>
