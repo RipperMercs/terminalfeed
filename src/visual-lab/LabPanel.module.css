@@ -424,28 +424,41 @@
 
 /* ───────────────────────────────────────────────
    VARIANT H — COMMAND
-   The hybrid: Bloomberg [TAG] header + animated
-   corner brackets + slow scanline sweep + ticking
-   status counter. Closer to a flight deck readout.
+   Bloomberg [TAG] header + always-on per-category
+   glow (the "alive" feel) + animated corner brackets
+   + ticking status counter.
+   No moving scanline (it synced visually across
+   panels and felt mechanical). Pulse is desynced
+   per-panel via --anim-offset so each tile breathes
+   on its own timeline.
    ─────────────────────────────────────────────── */
 
 [data-variant="command"] .panel {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.012) 0%, transparent 12%),
     var(--bg-panel);
-  border-color: color-mix(in oklab, var(--accent) 18%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 22%, transparent);
+  /* Always-on category glow: visible at rest, never zero. The pulse
+     animation modulates ON TOP of this so the panel never goes "dark." */
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent) 8%, transparent),
+    0 0 16px -8px color-mix(in oklab, var(--accent) 45%, transparent);
   animation: commandPulse 4s ease-in-out infinite;
+  animation-delay: var(--anim-offset, 0s);
 }
 [data-variant="command"] .panel:hover {
-  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 60%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent) 22%, transparent),
+    0 0 26px -4px color-mix(in oklab, var(--accent) 70%, transparent);
 }
 [data-variant="command"] .header {
   background: linear-gradient(
     90deg,
-    color-mix(in oklab, var(--accent) 9%, transparent) 0%,
+    color-mix(in oklab, var(--accent) 11%, transparent) 0%,
     transparent 70%
   );
-  border-bottom: 1px solid color-mix(in oklab, var(--accent) 22%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 24%, transparent);
 }
 [data-variant="command"] .tag {
   display: inline;
@@ -456,19 +469,16 @@
   color: var(--text);
   letter-spacing: 1.5px;
 }
-[data-variant="command"] .scanline {
-  opacity: 1;
-  animation: scanSweep 8s linear infinite;
-}
 [data-variant="command"] .bracket {
   opacity: 0.7;
   width: 10px;
   height: 10px;
   animation: commandBracketSweep 4s ease-in-out infinite;
+  animation-delay: var(--anim-offset, 0s);
 }
-[data-variant="command"] .bracketTR { animation-delay: 1s; }
-[data-variant="command"] .bracketBR { animation-delay: 2s; }
-[data-variant="command"] .bracketBL { animation-delay: 3s; }
+[data-variant="command"] .bracketTR { animation-delay: calc(var(--anim-offset, 0s) + 1s); }
+[data-variant="command"] .bracketBR { animation-delay: calc(var(--anim-offset, 0s) + 2s); }
+[data-variant="command"] .bracketBL { animation-delay: calc(var(--anim-offset, 0s) + 3s); }
 [data-variant="command"] .panel:hover .bracket {
   width: 14px;
   height: 14px;
@@ -478,20 +488,21 @@
 }
 [data-variant="command"] .tickDot {
   animation: tickPulse 1.6s ease-in-out infinite;
+  animation-delay: var(--anim-offset, 0s);
 }
-[data-variant="command"] .tickDot:nth-child(2) { animation-delay: 0.4s; }
-[data-variant="command"] .tickDot:nth-child(3) { animation-delay: 0.8s; }
+[data-variant="command"] .tickDot:nth-child(2) { animation-delay: calc(var(--anim-offset, 0s) + 0.4s); }
+[data-variant="command"] .tickDot:nth-child(3) { animation-delay: calc(var(--anim-offset, 0s) + 0.8s); }
 
 @keyframes commandPulse {
   0%, 100% {
     box-shadow:
-      inset 0 0 0 1px color-mix(in oklab, var(--accent) 4%, transparent),
-      0 0 14px -8px color-mix(in oklab, var(--accent) 35%, transparent);
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 8%, transparent),
+      0 0 16px -8px color-mix(in oklab, var(--accent) 45%, transparent);
   }
   50% {
     box-shadow:
-      inset 0 0 0 1px color-mix(in oklab, var(--accent) 12%, transparent),
-      0 0 22px -6px color-mix(in oklab, var(--accent) 60%, transparent);
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 18%, transparent),
+      0 0 26px -5px color-mix(in oklab, var(--accent) 70%, transparent);
   }
 }
 
