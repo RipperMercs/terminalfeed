@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Embeddable Widgets: BTC Price, Fear &amp; Greed, Crypto Heatmap, HN, Earthquakes | TerminalFeed</title>
-<meta name="description" content="Free embeddable widgets for any website: live Bitcoin price ticker with sparkline, Fear &amp; Greed gauge, crypto heatmap, dev service status board, earthquake feed, Hacker News top stories, global market hours. Dark/light/terminal themes, multiple sizes, no signup, no tracking.">
+<title>Free Embeddable Widgets: BTC, Fear &amp; Greed, Heatmap, Weather, Predictions, HN | TerminalFeed</title>
+<meta name="description" content="10 free embeddable widgets for any website: live Bitcoin ticker with sparkline, Fear &amp; Greed gauge, crypto heatmap, briefing card, dev service status, earthquakes, Hacker News, market hours, Polymarket predictions, live weather. Dark/light/terminal themes, multiple sizes, no signup, no tracking.">
 <meta name="keywords" content="embed widget, bitcoin widget, btc price embed, fear greed widget, crypto heatmap, status page widget, free widgets, hacker news widget, earthquake widget, market hours widget">
 <link rel="canonical" href="https://terminalfeed.io/widgets">
 <meta property="og:title" content="Free Embeddable Widgets for Any Site | TerminalFeed">
@@ -124,7 +124,7 @@ footer.footer .sep{margin:0 6px;color:#2A2A30}
 
   <header class="hero">
     <h1><span class="prompt">›_</span> EMBEDDABLE WIDGETS</h1>
-    <p class="lede"><strong>Drop live data on any website.</strong> Seven free, polished widgets you can embed with one line of HTML: live Bitcoin price with sparkline, Fear &amp; Greed gauge with animated needle, crypto heatmap, dev service status board, real-time earthquake feed, Hacker News top stories, global market hours. Three themes, three sizes, optional URL params for customization. No signup, no tracking, no rate-limiting your visitors.</p>
+    <p class="lede"><strong>Drop live data on any website.</strong> Ten free, polished widgets you can embed with one line of HTML: live Bitcoin price with sparkline, Fear &amp; Greed gauge with animated needle, crypto heatmap, dev service status board, real-time earthquake feed, Hacker News top stories, global market hours, Polymarket predictions, live weather with animated icons, and a composite crypto briefing card. Three themes, three sizes, optional URL params for customization. No signup, no tracking, no rate-limiting your visitors.</p>
     <div class="meta">
       <span><strong>License:</strong> Free for any use, including commercial</span>
       <span><strong>Footprint:</strong> Single &lt;iframe&gt; tag, no JS required on your page</span>
@@ -222,6 +222,33 @@ var WIDGETS=[
     desc:'Live local clocks for NYSE, NASDAQ, LSE, XETRA, TSE, HKEX. Color-coded open/pre-market/post-market/closed status with timezone-aware logic.',
     tags:['MARKETS','GLOBAL','CLOCK'],
     sizes:{sm:[300,160],md:[400,200],lg:[560,260]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'predictions',
+    name:'Polymarket Predictions',
+    desc:'Top Polymarket prediction markets with YES odds, color-coded probability bars, and 24h volume. Updates every 2 minutes.',
+    tags:['PREDICTIONS','MARKETS','LIVE'],
+    sizes:{sm:[320,200],md:[440,280],lg:[560,400]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'weather',
+    name:'Live Weather',
+    desc:'Current temperature, conditions, wind speed, and direction with animated day/night-aware weather icons. Defaults to LA; pass &lat= and &lon= for any location, &unit=f for Fahrenheit.',
+    tags:['WEATHER','LOCAL','ANIMATED'],
+    sizes:{sm:[280,140],md:[380,180],lg:[480,240]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'briefing-card',
+    name:'Crypto Briefing Card',
+    desc:'A composite snapshot: BTC price, Fear &amp; Greed index with mini-gauge, top 24h mover (excluding stablecoins), plus a one-line market summary. The shape of the day in one card.',
+    tags:['CRYPTO','COMPOSITE','LIVE'],
+    sizes:{sm:[280,200],md:[360,260],lg:[460,340]},
     defaultSize:'md',
     themes:['dark','light','terminal'],
   },

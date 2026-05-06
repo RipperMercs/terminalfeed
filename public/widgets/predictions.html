@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polymarket Predictions Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable live Polymarket predictions widget. Top trading markets with YES/NO odds, 24h volume, color-coded probability bars. Dark/light/terminal themes. Free to embed.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/predictions">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:10px 14px;display:flex;flex-direction:column}
+.label-row{display:flex;justify-content:space-between;align-items:center;font-size:9px;letter-spacing:1.8px;opacity:0.55;text-transform:uppercase;margin-bottom:6px}
+.label-row .live{display:flex;align-items:center;gap:6px}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#A78BFA;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.list{flex:1;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
+.row{display:flex;flex-direction:column;gap:3px;padding:6px 8px;border-radius:3px;transition:background 0.15s;position:relative;overflow:hidden}
+body.theme-dark .row{background:#0D0D10;border:1px solid #1A1A22}
+body.theme-light .row{background:#FAFAFA;border:1px solid #E5E5E5}
+body.theme-terminal .row{background:#000000;border:1px solid #1E3A2A}
+
+.bar-bg{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#A78BFA20 0%,#A78BFA10 100%);pointer-events:none;transition:width 0.6s ease-out;z-index:0}
+.row.high .bar-bg{background:linear-gradient(90deg,#4ADE8025 0%,#4ADE8010 100%)}
+.row.low .bar-bg{background:linear-gradient(90deg,#F8717125 0%,#F8717110 100%)}
+
+.q-line{position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:1}
+.question{flex:1;min-width:0;font-size:11px;line-height:1.35;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.theme-dark .question{color:#F0EDE6}
+body.theme-light .question{color:#1A1A1E}
+body.theme-terminal .question{color:#5DCAA5}
+.odds{flex:0 0 auto;font-size:13px;font-weight:600;letter-spacing:-0.3px}
+.odds.high{color:#4ADE80}
+.odds.med{color:#A78BFA}
+.odds.low{color:#F87171}
+body.theme-light .odds.high{color:#16A34A}
+body.theme-light .odds.med{color:#7C3AED}
+body.theme-light .odds.low{color:#DC2626}
+
+.meta{position:relative;z-index:1;font-size:9px;opacity:0.55;display:flex;gap:8px;letter-spacing:0.3px}
+
+.empty{display:flex;align-items:center;justify-content:center;flex:1;font-size:11px;opacity:0.5}
+
+.footer{display:flex;justify-content:space-between;align-items:center;padding-top:5px;font-size:8px;opacity:0.4;letter-spacing:0.5px;border-top:1px solid;margin-top:5px}
+body.theme-dark .footer{border-color:#1E1E24}
+body.theme-light .footer{border-color:#E5E5E5}
+body.theme-terminal .footer{border-color:#1E3A2A}
+.footer a{color:inherit;text-decoration:none}
+
+body.size-sm .question{font-size:10px}
+body.size-sm .odds{font-size:11px}
+body.size-sm .meta{font-size:8px}
+body.size-sm .row{padding:4px 6px;gap:2px}
+
+body.size-lg .question{font-size:13px}
+body.size-lg .odds{font-size:15px}
+body.size-lg .meta{font-size:10px}
+body.size-lg .row{padding:8px 10px}
+
+@media (prefers-reduced-motion: reduce){.live-dot{animation:none}.bar-bg{transition:none}}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="label-row">
+    <span class="live"><span class="live-dot"></span>POLYMARKET · LIVE ODDS</span>
+    <span><a href="https://polymarket.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">polymarket.com</a></span>
+  </div>
+  <div class="list" id="list"><div class="empty">loading...</div></div>
+  <div class="footer">
+    <span id="updated">--</span>
+    <a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=predictions" target="_blank" rel="noopener">terminalfeed.io</a>
+  </div>
+</div>
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+
+  var listEl=document.getElementById('list');
+  var updatedEl=document.getElementById('updated');
+
+  function fmtVol(n){
+    if(n>=1e6)return '$'+(n/1e6).toFixed(1)+'M';
+    if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'K';
+    return '$'+Math.round(n);
+  }
+  function oddsClass(p){
+    if(p>=70)return 'high';
+    if(p<=30)return 'low';
+    return 'med';
+  }
+
+  function render(markets){
+    if(!markets||markets.length===0){
+      listEl.innerHTML='<div class="empty">No markets available</div>';
+      return;
+    }
+    listEl.innerHTML='';
+    var max=size==='sm'?4:size==='lg'?8:6;
+    markets.slice(0,max).forEach(function(m){
+      var p=parseInt(m.yes_percent||0,10);
+      var cls=oddsClass(p);
+      var row=document.createElement('div');
+      row.className='row '+cls;
+      row.innerHTML='<div class="bar-bg" style="width:'+p+'%"></div>'+
+                    '<div class="q-line">'+
+                      '<div class="question" title="'+(m.question||'').replace(/"/g,'&quot;')+'">'+(m.question||'Unknown question')+'</div>'+
+                      '<div class="odds '+cls+'">'+p+'%</div>'+
+                    '</div>'+
+                    '<div class="meta">'+
+                      '<span>YES</span>'+
+                      '<span>·</span>'+
+                      '<span>'+fmtVol(m.volume_usd||0)+' 24h vol</span>'+
+                    '</div>';
+      listEl.appendChild(row);
+    });
+    var d=new Date();
+    updatedEl.textContent='Updated '+d.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  }
+
+  function load(){
+    fetch('https://terminalfeed.io/api/predictions').then(function(r){return r.json()}).then(function(j){
+      render((j&&j.data)||[]);
+    }).catch(function(){listEl.innerHTML='<div class="empty">Unable to load</div>'});
+  }
+
+  var timer=null;
+  function start(){if(timer)return;timer=setInterval(load,120000)}
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stop();else{load();start();}
+  });
+
+  load();start();
+})();
+</script>
+</body>
+</html>
