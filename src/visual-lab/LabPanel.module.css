@@ -499,13 +499,123 @@
   50%      { opacity: 1; }
 }
 
+/* ───────────────────────────────────────────────
+   PROD-* VARIANTS
+   These mirror the LIVE dashboard treatment (sharp
+   neon edge, no animation) and layer on one piece
+   of optional polish at a time so we can evaluate
+   each addition isolated before shipping it.
+   The shared base is implemented via [data-variant^="prod-"].
+   ─────────────────────────────────────────────── */
+
+[data-variant^="prod-"] .panel {
+  background: var(--bg-panel);
+  border-color: color-mix(in oklab, var(--accent) 24%, transparent);
+  box-shadow: 0 0 3px 0 color-mix(in oklab, var(--accent) 22%, transparent);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+[data-variant^="prod-"] .panel:hover {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  box-shadow: 0 0 6px 0 color-mix(in oklab, var(--accent) 38%, transparent);
+}
+
+/* ── PROD + BRACKETS ──
+   2 corner brackets (top-left + top-right) using
+   pseudo-elements so production can adopt this
+   without touching DOM — matches the way the rollout
+   would be implemented in App.css. */
+
+[data-variant="prod-brackets"] .panel::before,
+[data-variant="prod-full"] .panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 1.5px solid var(--accent);
+  border-left: 1.5px solid var(--accent);
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 200ms ease, width 200ms ease, height 200ms ease;
+}
+[data-variant="prod-brackets"] .panel::after,
+[data-variant="prod-full"] .panel::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 1.5px solid var(--accent);
+  border-right: 1.5px solid var(--accent);
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 200ms ease, width 200ms ease, height 200ms ease;
+}
+[data-variant="prod-brackets"] .panel:hover::before,
+[data-variant="prod-brackets"] .panel:hover::after,
+[data-variant="prod-full"] .panel:hover::before,
+[data-variant="prod-full"] .panel:hover::after {
+  opacity: 1;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── PROD + TICKS ──
+   3-dot tick counter shows next to the LIVE
+   indicator. Subtle cascade animation (opacity-only,
+   GPU-cheap, desynced via --anim-offset). */
+
+[data-variant="prod-ticks"] .tickCounter,
+[data-variant="prod-full"] .tickCounter {
+  display: inline-flex;
+}
+[data-variant="prod-ticks"] .tickDot,
+[data-variant="prod-full"] .tickDot {
+  animation: tickPulse 1.6s ease-in-out infinite;
+  animation-delay: var(--anim-offset, 0s);
+}
+[data-variant="prod-ticks"] .tickDot:nth-child(2),
+[data-variant="prod-full"] .tickDot:nth-child(2) {
+  animation-delay: calc(var(--anim-offset, 0s) + 0.4s);
+}
+[data-variant="prod-ticks"] .tickDot:nth-child(3),
+[data-variant="prod-full"] .tickDot:nth-child(3) {
+  animation-delay: calc(var(--anim-offset, 0s) + 0.8s);
+}
+
+/* ── PROD + HEADER TINT ──
+   Faint per-category gradient on the header background
+   that pushes color further without adding chrome.
+   The body stays the same dark panel color. */
+
+[data-variant="prod-header"] .header,
+[data-variant="prod-full"] .header {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent) 14%, transparent) 0%,
+    color-mix(in oklab, var(--accent) 4%, transparent) 60%,
+    transparent 100%
+  );
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 22%, transparent);
+}
+[data-variant="prod-header"] .tag,
+[data-variant="prod-full"] .tag {
+  display: inline;
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ── Reduced motion: keep the look, kill the loops ── */
 @media (prefers-reduced-motion: reduce) {
   [data-variant="matrix"] .panel,
   [data-variant="matrix"] .scanline,
   [data-variant="matrix"] .bracket,
   [data-variant="command"] .bracket,
-  [data-variant="command"] .tickDot {
+  [data-variant="command"] .tickDot,
+  [data-variant="prod-ticks"] .tickDot,
+  [data-variant="prod-full"] .tickDot {
     animation: none !important;
   }
 }
