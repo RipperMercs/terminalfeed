@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Fear &amp; Greed Index Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable Crypto Fear &amp; Greed Index gauge with animated needle, color-coded zones, dark/light/terminal themes. Free, no signup.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/fear-greed">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
+
+.label-row{position:absolute;top:10px;left:14px;display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:1.8px;opacity:0.55;text-transform:uppercase}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.gauge-wrap{position:relative;width:80%;max-width:240px;aspect-ratio:2/1;display:flex;align-items:flex-end;justify-content:center;margin:6px 0}
+.gauge-svg{width:100%;height:auto;display:block;overflow:visible}
+.tick-arc{fill:none;stroke-width:14}
+.needle{transform-origin:50% 100%;transition:transform 1.4s cubic-bezier(0.34,1.56,0.64,1)}
+.needle-line{stroke-width:1.5}
+body.theme-dark .needle-line{stroke:#F0EDE6}
+body.theme-light .needle-line{stroke:#1A1A1E}
+body.theme-terminal .needle-line{stroke:#5DCAA5}
+.needle-pivot{r:5}
+body.theme-dark .needle-pivot{fill:#1E1E24;stroke:#F0EDE6;stroke-width:1.5}
+body.theme-light .needle-pivot{fill:#FFFFFF;stroke:#1A1A1E;stroke-width:1.5}
+body.theme-terminal .needle-pivot{fill:#0A0A0C;stroke:#5DCAA5;stroke-width:1.5}
+
+.value-display{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:-12px}
+.value{font-size:36px;font-weight:600;line-height:1;letter-spacing:-1px;transition:color 0.5s}
+body.theme-light .value{color:#1A1A1E}
+.classification{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.85;font-weight:500}
+
+.zones{position:absolute;bottom:8px;left:14px;right:14px;display:flex;justify-content:space-between;font-size:8px;opacity:0.45;letter-spacing:0.5px}
+
+.footer{position:absolute;bottom:5px;right:8px;font-size:8px;opacity:0.3;letter-spacing:0.5px}
+.footer a{color:inherit;text-decoration:none}
+
+/* Fear/Greed color palette */
+.zone-extreme-fear{color:#DC2626}
+.zone-fear{color:#F87171}
+.zone-neutral{color:#FACC15}
+.zone-greed{color:#4ADE80}
+.zone-extreme-greed{color:#16A34A}
+
+body.theme-light .zone-extreme-fear{color:#991B1B}
+body.theme-light .zone-fear{color:#DC2626}
+body.theme-light .zone-neutral{color:#CA8A04}
+body.theme-light .zone-greed{color:#16A34A}
+body.theme-light .zone-extreme-greed{color:#15803D}
+
+/* Size variants */
+body.size-sm .label-row{font-size:8px;top:6px;left:10px}
+body.size-sm .value{font-size:24px}
+body.size-sm .classification{font-size:9px}
+body.size-sm .zones{font-size:7px;bottom:5px}
+body.size-sm .gauge-wrap{max-width:160px}
+
+body.size-lg .label-row{font-size:10px;top:14px}
+body.size-lg .value{font-size:48px}
+body.size-lg .classification{font-size:13px}
+body.size-lg .zones{font-size:10px}
+body.size-lg .gauge-wrap{max-width:320px}
+
+@media (prefers-reduced-motion: reduce){
+  .live-dot{animation:none}
+  .needle{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="label-row"><span class="live-dot"></span>FEAR &amp; GREED</div>
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" viewBox="-110 -110 220 110" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <!-- Five zones: 0-20 extreme fear, 20-40 fear, 40-60 neutral, 60-80 greed, 80-100 extreme greed -->
+      <!-- Each zone is a 36-degree arc on a 100-radius semicircle (180deg total / 5 = 36) -->
+      <!-- Arc path: from angle 180+36*i to 180+36*(i+1) -->
+      <path class="tick-arc" stroke="#DC2626" d="M -100,0 A 100,100 0 0 1 -80.9,-58.78"/>
+      <path class="tick-arc" stroke="#F87171" d="M -80.9,-58.78 A 100,100 0 0 1 -30.9,-95.11"/>
+      <path class="tick-arc" stroke="#FACC15" d="M -30.9,-95.11 A 100,100 0 0 1 30.9,-95.11"/>
+      <path class="tick-arc" stroke="#4ADE80" d="M 30.9,-95.11 A 100,100 0 0 1 80.9,-58.78"/>
+      <path class="tick-arc" stroke="#16A34A" d="M 80.9,-58.78 A 100,100 0 0 1 100,0"/>
+      <!-- Tick marks at zone boundaries -->
+      <g opacity="0.3">
+        <line x1="-100" y1="0" x2="-90" y2="0" stroke="currentColor" stroke-width="1"/>
+        <line x1="100" y1="0" x2="90" y2="0" stroke="currentColor" stroke-width="1"/>
+      </g>
+      <!-- Needle (initially pointing down/zero, will animate to value) -->
+      <g class="needle" id="needle" transform="rotate(-90)">
+        <line class="needle-line" x1="0" y1="0" x2="0" y2="-86"/>
+        <circle class="needle-pivot" cx="0" cy="0" r="5"/>
+      </g>
+    </svg>
+  </div>
+  <div class="value-display">
+    <div class="value" id="value">--</div>
+    <div class="classification" id="classification">loading</div>
+  </div>
+  <div class="zones">
+    <span class="zone-extreme-fear">0</span>
+    <span class="zone-neutral">50</span>
+    <span class="zone-extreme-greed">100</span>
+  </div>
+  <div class="footer"><a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=fear-greed" target="_blank" rel="noopener">terminalfeed.io</a></div>
+</div>
+
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+
+  var valueEl=document.getElementById('value');
+  var classEl=document.getElementById('classification');
+  var needleEl=document.getElementById('needle');
+
+  function classify(v){
+    if(v<=24)return{label:'Extreme Fear',color:'#DC2626',cls:'zone-extreme-fear'};
+    if(v<=44)return{label:'Fear',color:'#F87171',cls:'zone-fear'};
+    if(v<=55)return{label:'Neutral',color:'#FACC15',cls:'zone-neutral'};
+    if(v<=74)return{label:'Greed',color:'#4ADE80',cls:'zone-greed'};
+    return{label:'Extreme Greed',color:'#16A34A',cls:'zone-extreme-greed'};
+  }
+
+  function setValue(v){
+    var num=parseInt(v,10);
+    if(isNaN(num))return;
+    valueEl.textContent=num;
+    var info=classify(num);
+    classEl.textContent=info.label;
+    classEl.style.color=info.color;
+    valueEl.style.color=info.color;
+    // Map 0..100 -> -90deg..90deg
+    var deg=-90+(num/100)*180;
+    needleEl.setAttribute('transform','rotate('+deg+')');
+  }
+
+  function load(){
+    fetch('https://terminalfeed.io/api/fear-greed').then(function(r){return r.json()}).then(function(d){
+      var data=d.data||d;
+      var v=data.value!==undefined?data.value:(data.fear_greed&&data.fear_greed.value);
+      if(v!==undefined && v!==null)setValue(v);
+    }).catch(function(){});
+  }
+
+  // Tab visibility throttle
+  var timer=null;
+  function start(){if(timer)return;timer=setInterval(load,300000)}  // 5min, the API itself is daily
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stop();else{load();start();}
+  });
+
+  load();start();
+})();
+</script>
+</body>
+</html>

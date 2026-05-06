@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitcoin Live Price Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable live Bitcoin price ticker with 24h sparkline, smooth animations, dark/light/terminal themes. Free, no signup, ~5 second update cadence.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/btc-ticker">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.spark{position:absolute;left:0;right:0;bottom:0;width:100%;height:48%;pointer-events:none;opacity:0.4}
+.spark path.area{fill:url(#sparkGradient)}
+.spark path.line{fill:none;stroke-width:1.5}
+body.theme-dark .spark path.line{stroke:#5DCAA5}
+body.theme-light .spark path.line{stroke:#0D9488}
+body.theme-terminal .spark path.line{stroke:#5DCAA5}
+
+.label-row{position:relative;display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:2px;opacity:0.55;margin-bottom:6px;text-transform:uppercase}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 2s ease infinite;box-shadow:0 0 6px #4ADE8050}
+body.theme-light .live-dot{background:#16A34A;box-shadow:0 0 6px #16A34A50}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.85)}}
+
+.value-row{position:relative;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.price{font-size:28px;font-weight:600;line-height:1;letter-spacing:-0.5px;transition:color 0.4s}
+.price.flash-up{color:#4ADE80 !important;animation:flashUp 0.6s ease}
+.price.flash-down{color:#F87171 !important;animation:flashDown 0.6s ease}
+@keyframes flashUp{0%{transform:translateY(0)}30%{transform:translateY(-3px)}100%{transform:translateY(0)}}
+@keyframes flashDown{0%{transform:translateY(0)}30%{transform:translateY(3px)}100%{transform:translateY(0)}}
+body.theme-dark .price{color:#F0EDE6}
+body.theme-light .price{color:#1A1A1E}
+body.theme-terminal .price{color:#5DCAA5;text-shadow:0 0 8px #5DCAA540}
+
+.change{font-size:13px;font-weight:500;padding:2px 6px;border-radius:3px;transition:all 0.3s}
+.change.up{color:#4ADE80;background:#4ADE8015}
+.change.down{color:#F87171;background:#F8717115}
+body.theme-light .change.up{color:#16A34A;background:#16A34A18}
+body.theme-light .change.down{color:#DC2626;background:#DC262618}
+
+.sub{font-size:10px;margin-top:8px;opacity:0.5;letter-spacing:0.5px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.sub .stat{display:flex;gap:4px}
+.sub .stat-label{opacity:0.7}
+
+.footer{position:absolute;bottom:5px;right:8px;font-size:8px;opacity:0.3;letter-spacing:0.5px}
+.footer a{color:inherit;text-decoration:none;transition:opacity 0.2s}
+.footer:hover{opacity:0.7}
+.footer .cursor{display:inline-block;width:4px;height:7px;background:currentColor;margin-right:3px;animation:blink 1.2s steps(2) infinite;vertical-align:middle;opacity:0.6}
+@keyframes blink{0%,100%{opacity:0.6}50%{opacity:0}}
+
+/* Size variants */
+body.size-sm .widget{padding:8px 12px}
+body.size-sm .label-row{font-size:9px;margin-bottom:3px;letter-spacing:1.5px}
+body.size-sm .price{font-size:18px}
+body.size-sm .change{font-size:10px;padding:1px 4px}
+body.size-sm .sub{display:none}
+body.size-sm .spark{height:60%;opacity:0.3}
+body.size-sm .footer{font-size:7px}
+
+body.size-lg .widget{padding:20px 26px}
+body.size-lg .label-row{font-size:11px;margin-bottom:8px}
+body.size-lg .price{font-size:38px}
+body.size-lg .change{font-size:15px;padding:3px 8px}
+body.size-lg .sub{font-size:11px;margin-top:12px}
+body.size-lg .spark{opacity:0.5}
+
+@media (prefers-reduced-motion: reduce){
+  .live-dot,.price.flash-up,.price.flash-down,.footer .cursor{animation:none}
+}
+</style>
+</head>
+<body>
+<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5DCAA5" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#5DCAA5" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path class="area" d=""/>
+  <path class="line" d=""/>
+</svg>
+
+<div class="widget">
+  <div class="label-row"><span class="live-dot"></span>BTC / USD</div>
+  <div class="value-row">
+    <div class="price" id="price">$0</div>
+    <div class="change" id="change">--</div>
+  </div>
+  <div class="sub">
+    <span class="stat"><span class="stat-label">24h Vol</span><span id="vol">--</span></span>
+    <span class="stat"><span class="stat-label">High</span><span id="hi">--</span></span>
+    <span class="stat"><span class="stat-label">Low</span><span id="lo">--</span></span>
+  </div>
+  <div class="footer"><span class="cursor"></span><a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=btc-ticker" target="_blank" rel="noopener">terminalfeed.io</a></div>
+</div>
+
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+
+  var lastPrice=null;
+  var priceEl=document.getElementById('price');
+  var changeEl=document.getElementById('change');
+  var volEl=document.getElementById('vol');
+  var hiEl=document.getElementById('hi');
+  var loEl=document.getElementById('lo');
+  var areaPath=document.querySelector('.spark .area');
+  var linePath=document.querySelector('.spark .line');
+
+  function fmtPrice(n){
+    if(n>=1000) return '$'+Math.round(n).toLocaleString('en-US');
+    return '$'+n.toFixed(2);
+  }
+  function fmtBig(n){
+    if(n>=1e9) return '$'+(n/1e9).toFixed(1)+'B';
+    if(n>=1e6) return '$'+(n/1e6).toFixed(0)+'M';
+    return '$'+Math.round(n).toLocaleString('en-US');
+  }
+  function fmtPriceShort(n){
+    if(n>=10000) return '$'+(n/1000).toFixed(1)+'K';
+    return '$'+Math.round(n).toLocaleString('en-US');
+  }
+
+  function flashPrice(direction){
+    priceEl.classList.remove('flash-up','flash-down');
+    void priceEl.offsetWidth;
+    priceEl.classList.add(direction>0?'flash-up':'flash-down');
+  }
+
+  function updatePrice(){
+    fetch('https://terminalfeed.io/api/btc-price').then(function(r){return r.json()}).then(function(d){
+      var data=d.data||d;
+      var p=data.price_usd||data.price;
+      if(!p)return;
+      if(lastPrice!==null && Math.abs(p-lastPrice)>0.01){
+        flashPrice(p-lastPrice);
+      }
+      priceEl.textContent=fmtPrice(p);
+      lastPrice=p;
+      var c=data.change_24h_percent;
+      if(c!==undefined && c!==null){
+        var v=parseFloat(c);
+        changeEl.textContent=(v>=0?'+':'')+v.toFixed(2)+'%';
+        changeEl.className='change '+(v>=0?'up':'down');
+      }
+      if(data.volume_24h)volEl.textContent=fmtBig(data.volume_24h);
+      if(data.high_24h)hiEl.textContent=fmtPriceShort(data.high_24h);
+      if(data.low_24h)loEl.textContent=fmtPriceShort(data.low_24h);
+    }).catch(function(){});
+  }
+
+  function drawSparkline(prices){
+    if(!prices||prices.length<2)return;
+    // Down-sample to ~48 points for rendering smoothness
+    var stride=Math.max(1,Math.floor(prices.length/48));
+    var sampled=[];
+    for(var i=0;i<prices.length;i+=stride)sampled.push(prices[i][1]);
+    if(sampled[sampled.length-1]!==prices[prices.length-1][1])sampled.push(prices[prices.length-1][1]);
+    var min=Math.min.apply(null,sampled);
+    var max=Math.max.apply(null,sampled);
+    var range=Math.max(0.0001,max-min);
+    var n=sampled.length;
+    var pts=[];
+    for(var j=0;j<n;j++){
+      var x=(j/(n-1))*100;
+      var y=30-((sampled[j]-min)/range)*28-1;
+      pts.push(x.toFixed(2)+','+y.toFixed(2));
+    }
+    var lineD='M '+pts.join(' L ');
+    var areaD=lineD+' L 100,30 L 0,30 Z';
+    linePath.setAttribute('d',lineD);
+    areaPath.setAttribute('d',areaD);
+    // Animated draw on first load
+    var pathLen=linePath.getTotalLength();
+    linePath.style.strokeDasharray=pathLen;
+    linePath.style.strokeDashoffset=pathLen;
+    linePath.getBoundingClientRect();
+    linePath.style.transition='stroke-dashoffset 1.2s ease-out';
+    linePath.style.strokeDashoffset='0';
+  }
+
+  function loadSparkline(){
+    fetch('https://terminalfeed.io/api/coingecko/btc-chart').then(function(r){return r.json()}).then(function(d){
+      drawSparkline(d.prices||[]);
+    }).catch(function(){});
+  }
+
+  // Tab visibility: pause polling when iframe is hidden to save bandwidth
+  var pollTimer=null;
+  function startPoll(){
+    if(pollTimer)return;
+    pollTimer=setInterval(updatePrice,5000);
+  }
+  function stopPoll(){
+    if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  }
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stopPoll();else{updatePrice();startPoll();}
+  });
+
+  updatePrice();
+  loadSparkline();
+  startPoll();
+  // Sparkline refresh once an hour to keep last 24h current
+  setInterval(loadSparkline,3600000);
+})();
+</script>
+</body>
+</html>

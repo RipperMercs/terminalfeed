@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hacker News Top Stories Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable Hacker News top stories ticker. Compact terminal-style list with score, comments, and source. Dark/light/terminal themes. Free to embed.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/hn-top">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:10px 14px;display:flex;flex-direction:column}
+.label-row{display:flex;justify-content:space-between;align-items:center;font-size:9px;letter-spacing:1.8px;opacity:0.55;text-transform:uppercase;margin-bottom:6px}
+.label-row .live{display:flex;align-items:center;gap:6px}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#F9A03F;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.list{flex:1;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
+.row{display:flex;align-items:flex-start;gap:8px;padding:5px 6px;border-radius:2px;transition:background 0.15s;text-decoration:none;color:inherit}
+body.theme-dark .row:hover{background:#111114}
+body.theme-light .row:hover{background:#F5F5F5}
+
+.rank{flex:0 0 auto;font-size:10px;font-weight:600;width:18px;text-align:right;opacity:0.45;line-height:1.4;padding-top:1px}
+.body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.title{font-size:11px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+body.theme-dark .title{color:#F0EDE6}
+body.theme-light .title{color:#1A1A1E}
+body.theme-terminal .title{color:#5DCAA5}
+
+.meta{font-size:9px;opacity:0.55;letter-spacing:0.3px;display:flex;gap:8px}
+.meta-tag{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.up{color:#F9A03F;font-weight:600}
+.cm{opacity:0.7}
+.host{opacity:0.6;font-style:italic}
+
+.empty{display:flex;align-items:center;justify-content:center;flex:1;font-size:11px;opacity:0.5}
+
+.footer{display:flex;justify-content:space-between;align-items:center;padding-top:5px;font-size:8px;opacity:0.4;letter-spacing:0.5px;border-top:1px solid;margin-top:5px}
+body.theme-dark .footer{border-color:#1E1E24}
+body.theme-light .footer{border-color:#E5E5E5}
+body.theme-terminal .footer{border-color:#1E3A2A}
+.footer a{color:inherit;text-decoration:none}
+
+body.size-sm .title{font-size:10px}
+body.size-sm .meta{font-size:8px;gap:6px}
+body.size-sm .row{padding:3px 4px}
+body.size-sm .rank{font-size:9px;width:14px}
+
+body.size-lg .title{font-size:13px}
+body.size-lg .meta{font-size:10px}
+body.size-lg .row{padding:7px 8px}
+body.size-lg .rank{font-size:11px;width:22px}
+
+@media (prefers-reduced-motion: reduce){.live-dot{animation:none}}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="label-row">
+    <span class="live"><span class="live-dot"></span>HACKER NEWS · TOP</span>
+    <span><a href="https://news.ycombinator.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">news.ycombinator.com</a></span>
+  </div>
+  <div class="list" id="list"><div class="empty">loading...</div></div>
+  <div class="footer">
+    <span id="updated">--</span>
+    <a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=hn-top" target="_blank" rel="noopener">terminalfeed.io</a>
+  </div>
+</div>
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+
+  var listEl=document.getElementById('list');
+  var updatedEl=document.getElementById('updated');
+
+  function hostOf(url){
+    if(!url)return '';
+    try{var u=new URL(url);return u.hostname.replace(/^www\./,'');}catch(e){return''}
+  }
+
+  function render(stories){
+    if(!stories||stories.length===0){
+      listEl.innerHTML='<div class="empty">No stories</div>';
+      return;
+    }
+    listEl.innerHTML='';
+    var max=size==='sm'?4:size==='lg'?8:6;
+    stories.slice(0,max).forEach(function(s,i){
+      var url=s.url||('https://news.ycombinator.com/item?id='+s.id);
+      var host=hostOf(s.url);
+      var row=document.createElement('a');
+      row.className='row';
+      row.href=url;
+      row.target='_blank';
+      row.rel='noopener';
+      row.innerHTML='<div class="rank">'+(i+1)+'</div>'+
+                    '<div class="body">'+
+                      '<div class="title" title="'+(s.title||'').replace(/"/g,'&quot;')+'">'+(s.title||'Untitled')+'</div>'+
+                      '<div class="meta">'+
+                        '<span class="meta-tag up">▲ '+(s.score||0)+'</span>'+
+                        '<span class="meta-tag cm">'+(s.descendants||0)+' comments</span>'+
+                        (host?'<span class="meta-tag host">'+host+'</span>':'')+
+                      '</div>'+
+                    '</div>';
+      listEl.appendChild(row);
+    });
+    var dt=new Date();
+    updatedEl.textContent='Updated '+dt.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  }
+
+  function load(){
+    fetch('https://terminalfeed.io/api/hackernews').then(function(r){return r.json()}).then(function(j){
+      render((j&&j.data)||[]);
+    }).catch(function(){listEl.innerHTML='<div class="empty">Unable to load</div>'});
+  }
+
+  var timer=null;
+  function start(){if(timer)return;timer=setInterval(load,120000)}
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stop();else{load();start();}
+  });
+
+  load();start();
+})();
+</script>
+</body>
+</html>

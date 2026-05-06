@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dev Service Status Board Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable live status board for GitHub, Cloudflare, OpenAI, Anthropic, Vercel, npm, and more. Compact dot indicators, dark/light themes. Free, no signup.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/status-board">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:10px 14px;display:flex;flex-direction:column}
+.label-row{display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:1.8px;opacity:0.55;text-transform:uppercase;margin-bottom:8px}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.list{flex:1;display:grid;grid-auto-rows:1fr;gap:1px;min-height:0;overflow:hidden}
+.row{display:flex;justify-content:space-between;align-items:center;padding:0 6px;font-size:11px;border-radius:2px;transition:background 0.15s}
+body.theme-dark .row:hover{background:#111114}
+body.theme-light .row:hover{background:#F5F5F5}
+
+.svc-name{display:flex;align-items:center;gap:8px;letter-spacing:0.3px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svc-status{font-size:9px;letter-spacing:0.5px;text-transform:uppercase;opacity:0.7;padding:2px 6px;border-radius:2px;font-weight:500}
+
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;box-shadow:0 0 4px transparent;transition:box-shadow 0.3s}
+.dot.none{background:#4ADE80;box-shadow:0 0 6px #4ADE8080}
+.dot.minor{background:#FACC15;box-shadow:0 0 6px #FACC1580}
+.dot.major{background:#F87171;box-shadow:0 0 6px #F8717180}
+.dot.critical{background:#DC2626;box-shadow:0 0 8px #DC2626A0;animation:critPulse 1.2s ease infinite}
+.dot.unknown{background:#52525B;opacity:0.6}
+@keyframes critPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+
+.svc-status.none{color:#4ADE80;background:#4ADE8015}
+.svc-status.minor{color:#FACC15;background:#FACC1518}
+.svc-status.major{color:#F87171;background:#F8717118}
+.svc-status.critical{color:#DC2626;background:#DC262620}
+.svc-status.unknown{color:#71717A;background:#71717A18}
+
+body.theme-light .svc-status.none{color:#16A34A;background:#16A34A15}
+body.theme-light .svc-status.minor{color:#CA8A04;background:#CA8A0418}
+body.theme-light .svc-status.major{color:#DC2626;background:#DC262618}
+
+.footer{display:flex;justify-content:space-between;align-items:center;padding-top:6px;font-size:8px;opacity:0.4;letter-spacing:0.5px;border-top:1px solid;margin-top:6px}
+body.theme-dark .footer{border-color:#1E1E24}
+body.theme-light .footer{border-color:#E5E5E5}
+body.theme-terminal .footer{border-color:#1E3A2A}
+.footer a{color:inherit;text-decoration:none}
+
+body.size-sm .row{font-size:10px;padding:0 4px}
+body.size-sm .svc-status{font-size:8px}
+body.size-sm .dot{width:6px;height:6px}
+
+body.size-lg .row{font-size:13px;padding:0 8px}
+body.size-lg .svc-status{font-size:10px}
+body.size-lg .dot{width:9px;height:9px}
+
+@media (prefers-reduced-motion: reduce){.live-dot,.dot.critical{animation:none}}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="label-row"><span class="live-dot"></span>SERVICE STATUS</div>
+  <div class="list" id="list"></div>
+  <div class="footer">
+    <span id="updated">--</span>
+    <a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=status-board" target="_blank" rel="noopener">terminalfeed.io</a>
+  </div>
+</div>
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+
+  // Optional ?services=GitHub,Cloudflare,OpenAI override; default uses all returned by API
+  var explicit=(qs.get('services')||'').split(',').map(function(s){return s.trim()}).filter(Boolean);
+  var listEl=document.getElementById('list');
+  var updatedEl=document.getElementById('updated');
+
+  function statusLabel(ind){
+    if(ind==='none')return'OK';
+    if(ind==='minor')return'MINOR';
+    if(ind==='major')return'MAJOR';
+    if(ind==='critical')return'CRITICAL';
+    return'?';
+  }
+
+  function render(items){
+    listEl.innerHTML='';
+    items.forEach(function(s){
+      var ind=s.indicator||'unknown';
+      var row=document.createElement('div');
+      row.className='row';
+      row.innerHTML='<div class="svc-name"><span class="dot '+ind+'"></span>'+s.name+'</div>'+
+                    '<span class="svc-status '+ind+'">'+statusLabel(ind)+'</span>';
+      listEl.appendChild(row);
+    });
+    var d=new Date();
+    updatedEl.textContent='Updated '+d.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  }
+
+  function load(){
+    fetch('https://terminalfeed.io/api/service-status').then(function(r){return r.json()}).then(function(j){
+      var data=(j&&j.data)||[];
+      if(explicit.length>0){
+        data=data.filter(function(s){return explicit.indexOf(s.name)!==-1});
+      }
+      // Sort: incidents first (critical, major, minor), then operational
+      var rank={critical:0,major:1,minor:2,none:3,unknown:4};
+      data.sort(function(a,b){
+        var ra=rank[a.indicator]!==undefined?rank[a.indicator]:5;
+        var rb=rank[b.indicator]!==undefined?rank[b.indicator]:5;
+        return ra-rb||a.name.localeCompare(b.name);
+      });
+      // Cap at sensible number based on size
+      var max=size==='sm'?6:size==='lg'?12:8;
+      render(data.slice(0,max));
+    }).catch(function(){
+      listEl.innerHTML='<div class="row"><div class="svc-name"><span class="dot unknown"></span>Unable to load</div></div>';
+    });
+  }
+
+  var timer=null;
+  function start(){if(timer)return;timer=setInterval(load,120000)}  // 2min
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stop();else{load();start();}
+  });
+
+  load();start();
+})();
+</script>
+</body>
+</html>
