@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { Component, type ReactNode } from 'react'
 import './index.css'
 import App from './App.tsx'
+import { VisualLab } from './visual-lab/VisualLab'
 
 // Error boundary: prevents white screen on crash
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -37,11 +38,16 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 // Remove static SEO content now that React is taking over
 document.getElementById('seo-content')?.remove();
 
+// Lightweight pathname routing — keeps the SPA simple while letting
+// us mount alternate roots (e.g. visual lab) at known URLs.
+const pathname = window.location.pathname.replace(/\/+$/, '');
+const Root = pathname === '/visual-lab' ? VisualLab : App;
+
 // No StrictMode: it double-mounts components which causes
 // duplicate WebSocket connections and race conditions
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>
-    <App />
+    <Root />
   </ErrorBoundary>
 )
 

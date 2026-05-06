@@ -1,0 +1,182 @@
+/* Visual Lab page layout */
+
+.lab {
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+/* ── Top bar (matches site style) ── */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brandIcon {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.brandName {
+  color: var(--green);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.brandDot {
+  color: var(--text-dim);
+}
+
+.labTag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--amber);
+  background: rgba(239, 159, 39, 0.08);
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid rgba(239, 159, 39, 0.25);
+}
+
+.backLink {
+  font-size: 10px;
+  color: var(--text-mid);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: color 160ms ease;
+}
+.backLink:hover {
+  color: var(--green);
+}
+
+/* ── Intro ── */
+.intro {
+  padding: 22px 22px 8px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.introTitle {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+}
+
+.introBody {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 700px;
+}
+
+/* ── Variant switcher ── */
+.switcher {
+  display: flex;
+  gap: 6px;
+  padding: 16px 22px 6px;
+  flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: sticky;
+  top: 38px;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 80%, transparent 100%);
+  z-index: 40;
+}
+
+.pill {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text-mid);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding: 7px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.pill:hover {
+  border-color: var(--border-glow);
+  color: var(--text);
+}
+
+.pillActive {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.activeBlurb {
+  padding: 0 22px 10px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-size: 10px;
+}
+
+.activeKey {
+  color: var(--green);
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.activeSep {
+  color: var(--text-dim);
+  margin: 0 8px;
+}
+
+.activeText {
+  color: var(--text-mid);
+}
+
+/* ── Main content ── */
+.main {
+  padding: 8px 22px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* CSS columns layout matches the production dashboard */
+.grid {
+  column-count: 3;
+  column-gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .grid { column-count: 2; }
+}
+@media (max-width: 720px) {
+  .grid { column-count: 1; }
+}
+
+/* ── Footer ── */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  max-width: 1400px;
+  margin: 0 auto;
+}
