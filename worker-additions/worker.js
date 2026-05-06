@@ -790,28 +790,57 @@ function sanitizeFields(arr, fields) {
 // Premium per-token caps live inside the premium handler (after the bearer
 // is known) — see handlePremium.
 
-async function checkRateLimit(env, bucket, key, limit, windowSec) {
+// _rlMemo caches the last-known KV count per slot key for a short TTL so a
+// burst of requests from the same IP within the same slot avoids re-paying
+// the KV read latency. Counter is bumped in memory between KV reads, so the
+// limit still trips correctly even when the read is skipped.
+var _rlMemo = new Map();
+var RL_MEMO_TTL_MS = 2000; // 2s lookaside; KV slot itself is windowSec long.
+
+async function checkRateLimit(env, bucket, key, limit, windowSec, ctx) {
   if (!env || !env.WEBHOOK_SUBS || !key || key === 'unknown') {
     return { allowed: true, remaining: limit, reset: windowSec, limit: limit };
   }
   var now = Math.floor(Date.now() / 1000);
   var slot = Math.floor(now / windowSec);
   var k = 'rl:' + bucket + ':' + key + ':' + slot;
+  var nowMs = Date.now();
+
+  // Lookaside cache: if we read this key recently, reuse the count.
+  // Bump-in-memory keeps the limit enforcement correct between KV reads.
+  var memo = _rlMemo.get(k);
   var current = 0;
-  try {
-    var raw = await env.WEBHOOK_SUBS.get(k);
-    current = raw ? parseInt(raw, 10) : 0;
-    if (isNaN(current) || current < 0) current = 0;
-  } catch (e) {}
+  if (memo && (nowMs - memo.at) < RL_MEMO_TTL_MS) {
+    current = memo.count;
+  } else {
+    try {
+      var raw = await env.WEBHOOK_SUBS.get(k);
+      current = raw ? parseInt(raw, 10) : 0;
+      if (isNaN(current) || current < 0) current = 0;
+    } catch (e) {}
+  }
+
   var reset = (slot + 1) * windowSec - now;
   if (current >= limit) {
+    // Refresh memo so we don't keep paying the KV read on rejected bursts.
+    _rlMemo.set(k, { count: current, at: nowMs });
     return { allowed: false, remaining: 0, reset: reset, limit: limit };
   }
-  // Best-effort increment. Race window is one read-modify-write per IP per
-  // colo per slot; within ~60s window TTL, double-counting is fine.
-  try {
-    await env.WEBHOOK_SUBS.put(k, String(current + 1), { expirationTtl: windowSec * 2 });
-  } catch (e) {}
+
+  // Bump the local memo immediately so subsequent in-flight requests see the
+  // incremented count without waiting for KV propagation.
+  _rlMemo.set(k, { count: current + 1, at: nowMs });
+
+  // Fire-and-forget the KV write so the response isn't blocked on it.
+  // ctx.waitUntil keeps the worker alive until the put resolves; without
+  // ctx (older callers) we still detach the promise but rely on the worker
+  // staying warm long enough — same race-window guarantee the original
+  // comment described.
+  var putPromise = env.WEBHOOK_SUBS.put(k, String(current + 1), { expirationTtl: windowSec * 2 }).catch(function() {});
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(putPromise);
+  }
+
   return { allowed: true, remaining: Math.max(0, limit - current - 1), reset: reset, limit: limit };
 }
 
@@ -8227,7 +8256,7 @@ async function handlePaymentHistory(request, env) {
 // IMPORTANT: In Cloudflare dashboard, set Worker type to "ES Module" (not "Service Worker")
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     var url = new URL(request.url);
 
     // Strip /api/ prefix and trailing slashes (computed early so preflight can
@@ -8253,16 +8282,16 @@ export default {
     var clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
     var rl = null;
     if (path.indexOf('admin/') === 0) {
-      rl = await checkRateLimit(env, 'adm', clientIp, 30, 60);
+      rl = await checkRateLimit(env, 'adm', clientIp, 30, 60, ctx);
     } else if (path === 'error') {
-      rl = await checkRateLimit(env, 'err', clientIp, 10, 60);
+      rl = await checkRateLimit(env, 'err', clientIp, 10, 60, ctx);
     } else if (path === 'btc-alert-check') {
       // Bearer-secret protected; cap is per-IP since secret is shared by one operator.
-      rl = await checkRateLimit(env, 'adm', clientIp, 5, 300);
+      rl = await checkRateLimit(env, 'adm', clientIp, 5, 300, ctx);
     } else if (path.indexOf('pro/') !== 0 && path.indexOf('payment/') !== 0) {
       // Free public endpoints. /api/pro/* and /api/payment/* are bearer-token rate
       // limited inside handlePremium / the proxy, where we have the token to key on.
-      rl = await checkRateLimit(env, 'pub', clientIp, 60, 60);
+      rl = await checkRateLimit(env, 'pub', clientIp, 60, 60, ctx);
     }
     if (rl && !rl.allowed) {
       return rateLimit429(rl);
