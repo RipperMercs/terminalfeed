@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>206 Partial Content: HTTP Status Code Meaning, Causes, and Fixes | TerminalFeed</title>
+  <meta name="description" content="The server is delivering only part of the resource, in response to a Range request from the client.">
+  <meta name="keywords" content="206 status code, http 206, 206 partial content, 206 meaning, 206 fix, http status code 206">
+  <link rel="canonical" href="https://terminalfeed.io/http/206">
+  <meta property="og:title" content="HTTP 206 Partial Content: Meaning, Causes, and Fixes">
+  <meta property="og:description" content="The server is delivering only part of the resource, in response to a Range request from the client.">
+  <meta property="og:url" content="https://terminalfeed.io/http/206">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"HTTP 206 Partial Content: Meaning, Causes, and Fixes","description":"The server is delivering only part of the resource, in response to a Range request from the client.","url":"https://terminalfeed.io/http/206","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/http/206","about":{"@type":"Thing","name":"HTTP 206"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"HTTP Status Codes","item":"https://terminalfeed.io/http"},{"@type":"ListItem","position":3,"name":"206 Partial Content","item":"https://terminalfeed.io/http/206"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I make my server support 206?","acceptedAnswer":{"@type":"Answer","text":"Most HTTP frameworks (Nginx, Apache, Express with the right middleware) support range requests on static files automatically. For dynamic content, you need to parse the Range header and seek into your data source."}},{"@type":"Question","name":"Can I parallelize a download with multiple 206 requests?","acceptedAnswer":{"@type":"Answer","text":"Yes. This is how aria2 and many cloud-storage clients speed up large downloads: split the file into N ranges, request each one concurrently, stitch the bytes back together."}},{"@type":"Question","name":"What about HEAD requests?","acceptedAnswer":{"@type":"Answer","text":"A HEAD response should include Accept-Ranges: bytes if the server supports range requests, so clients know they can use them."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 32px; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      color: #4ADE80;
+      border: 1px solid #4ADE8040;
+      background: #4ADE8010;
+    }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; font-weight: 600; }
+    .header h1 .num { color: #4ADE80; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; }
+
+    .section { margin-bottom: 36px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 14px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .section pre {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+    .section pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #C8C8C0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    .bullet-list { margin: 0 0 0 20px; }
+    .bullet-list li { font-size: 13px; color: #C8C8C0; margin-bottom: 8px; line-height: 1.7; }
+    .bullet-list li code { font-size: 11.5px; }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .related-card {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 14px;
+      text-decoration: none !important;
+      border-bottom: 1px solid #1A1A22 !important;
+      transition: border-color 0.15s;
+    }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-code { font-size: 18px; color: #5DCAA5; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 11px; color: #8A8880; }
+
+    .faqs h2 { color: #5DCAA5; }
+    .faq {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+    }
+    .faq summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: #F0EDE6;
+      font-weight: 500;
+      list-style: none;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+
+    .meta-box {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: #8A8880;
+      margin: 24px 0;
+    }
+    .meta-box code { font-size: 11px; color: #4ADE80; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      .header h1 { font-size: 22px; }
+      .section h2 { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/http">HTTP Status Codes</a><span class="sep">›</span><span>206 Partial Content</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">Success · 2xx</span>
+      <h1><span class="num">206</span> Partial Content</h1>
+      <p class="summary">The server is delivering only part of the resource, in response to a Range request from the client.</p>
+    </header>
+
+    <section class="section">
+      <h2>What 206 Partial Content means</h2>
+      <p>206 Partial Content is what makes resumable downloads and video seeking work. When a client sends <code>Range: bytes=1024-2047</code>, the server responds with 206 and just those bytes, plus a <code>Content-Range</code> header describing what was sent and the full size. Browsers use 206 for video scrubbing; download managers use it to resume interrupted transfers; cloud storage clients use it to parallelize large file downloads.</p>
+      <p><strong style="color:#F0EDE6">When servers should return it:</strong> Return 206 only in response to a Range request, and only when you can satisfy the range. If the range is invalid, return 416 Range Not Satisfiable.</p>
+    </section>
+
+    
+    
+    
+    <section class="section">
+      <h2>Example response</h2>
+      <pre><code>curl -i -H &quot;Range: bytes=0-1023&quot; https://example.com/video.mp4
+
+HTTP/2 206
+content-range: bytes 0-1023/5242880
+content-length: 1024
+[binary bytes]</code></pre>
+    </section>
+
+    <section class="section">
+      <h2>Related status codes</h2>
+      <div class="related-grid">
+      <a href="/http/200" class="related-card">
+        <div class="related-code">200</div>
+        <div class="related-name">OK</div>
+      </a>
+      <a href="/http/416" class="related-card">
+        <div class="related-code">416</div>
+        <div class="related-name">Range Not Satisfiable</div>
+      </a>
+      <a href="/http/304" class="related-card">
+        <div class="related-code">304</div>
+        <div class="related-name">Not Modified</div>
+      </a>
+      </div>
+    </section>
+
+    
+    <section class="section faqs">
+      <h2>Frequently Asked Questions</h2>
+      <details class="faq">
+        <summary>How do I make my server support 206?</summary>
+        <div class="faq-answer">Most HTTP frameworks (Nginx, Apache, Express with the right middleware) support range requests on static files automatically. For dynamic content, you need to parse the Range header and seek into your data source.</div>
+      </details>
+      <details class="faq">
+        <summary>Can I parallelize a download with multiple 206 requests?</summary>
+        <div class="faq-answer">Yes. This is how aria2 and many cloud-storage clients speed up large downloads: split the file into N ranges, request each one concurrently, stitch the bytes back together.</div>
+      </details>
+      <details class="faq">
+        <summary>What about HEAD requests?</summary>
+        <div class="faq-answer">A HEAD response should include Accept-Ranges: bytes if the server supports range requests, so clients know they can use them.</div>
+      </details>
+    </section>
+
+    <div class="meta-box">
+      <strong style="color:#C8C8C0">Defined in:</strong> RFC 9110 · <strong style="color:#C8C8C0">Class:</strong> <code>2xx Success</code>
+    </div>
+
+    <section class="section">
+      <h2>More references</h2>
+      <p>For a one-page reference of all HTTP status codes, see the <a href="/cheatsheets/http">HTTP cheat sheet</a>. For testing API responses, try the <a href="/tools/api">API Tester tool</a>. For inspecting responses on the command line, the <a href="/cheatsheets/curl">curl cheat sheet</a> covers the most common flags.</p>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/http">All Status Codes</a><span class="sep">|</span>
+      <a href="/cheatsheets/http">HTTP Cheat Sheet</a><span class="sep">|</span>
+      <a href="/cheatsheets/curl">Curl Cheat Sheet</a><span class="sep">|</span>
+      <a href="/tools/api">API Tester</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a>
+    </footer>
+  </div>
+</body>
+</html>

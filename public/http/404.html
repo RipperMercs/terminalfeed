@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 Not Found: HTTP Status Code Meaning, Causes, and Fixes | TerminalFeed</title>
+  <meta name="description" content="The server cannot find the requested resource.">
+  <meta name="keywords" content="404 status code, http 404, 404 not found, 404 meaning, 404 fix, http status code 404">
+  <link rel="canonical" href="https://terminalfeed.io/http/404">
+  <meta property="og:title" content="HTTP 404 Not Found: Meaning, Causes, and Fixes">
+  <meta property="og:description" content="The server cannot find the requested resource.">
+  <meta property="og:url" content="https://terminalfeed.io/http/404">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"HTTP 404 Not Found: Meaning, Causes, and Fixes","description":"The server cannot find the requested resource.","url":"https://terminalfeed.io/http/404","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/http/404","about":{"@type":"Thing","name":"HTTP 404"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"HTTP Status Codes","item":"https://terminalfeed.io/http"},{"@type":"ListItem","position":3,"name":"404 Not Found","item":"https://terminalfeed.io/http/404"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"404 vs 410?","acceptedAnswer":{"@type":"Answer","text":"404 means \"not here\" (might never have existed, might come back). 410 means \"permanently gone, do not look for it again\". 410 is rarely used; 404 is the catch-all."}},{"@type":"Question","name":"Should I return 404 or 403 for resources the user lacks permission to see?","acceptedAnswer":{"@type":"Answer","text":"Either is defensible. 404 leaks less (does not confirm the resource exists). 403 is more honest. Pick one and apply consistently."}},{"@type":"Question","name":"Why does Google sometimes show \"soft 404\"?","acceptedAnswer":{"@type":"Answer","text":"A soft 404 is a 200 response that looks like a 404 page (e.g. \"page not found\" content with a 200 status). Google penalizes soft 404s; always return a real 404 status for missing pages."}},{"@type":"Question","name":"Do 404s hurt SEO?","acceptedAnswer":{"@type":"Answer","text":"A few are fine and expected. Mass 404s on previously-indexed URLs hurt rankings. Use 301 to redirect to a relevant replacement when possible."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 32px; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      color: #F87171;
+      border: 1px solid #F8717140;
+      background: #F8717110;
+    }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; font-weight: 600; }
+    .header h1 .num { color: #F87171; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; }
+
+    .section { margin-bottom: 36px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 14px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .section pre {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+    .section pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #C8C8C0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    .bullet-list { margin: 0 0 0 20px; }
+    .bullet-list li { font-size: 13px; color: #C8C8C0; margin-bottom: 8px; line-height: 1.7; }
+    .bullet-list li code { font-size: 11.5px; }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .related-card {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 14px;
+      text-decoration: none !important;
+      border-bottom: 1px solid #1A1A22 !important;
+      transition: border-color 0.15s;
+    }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-code { font-size: 18px; color: #5DCAA5; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 11px; color: #8A8880; }
+
+    .faqs h2 { color: #5DCAA5; }
+    .faq {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+    }
+    .faq summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: #F0EDE6;
+      font-weight: 500;
+      list-style: none;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+
+    .meta-box {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: #8A8880;
+      margin: 24px 0;
+    }
+    .meta-box code { font-size: 11px; color: #F87171; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      .header h1 { font-size: 22px; }
+      .section h2 { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/http">HTTP Status Codes</a><span class="sep">›</span><span>404 Not Found</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">Client Error · 4xx</span>
+      <h1><span class="num">404</span> Not Found</h1>
+      <p class="summary">The server cannot find the requested resource.</p>
+    </header>
+
+    <section class="section">
+      <h2>What 404 Not Found means</h2>
+      <p>404 Not Found is the most famous status code on the web. The URL does not match any resource the server knows about. This can mean the resource was deleted, the URL is misspelled, the resource never existed, or (deliberately) the resource exists but the server is hiding it from this caller for security reasons. 404 makes no statement about whether the resource ever existed; for "this used to exist and is permanently gone", 410 Gone is more accurate.</p>
+      <p><strong style="color:#F0EDE6">When servers should return it:</strong> Return 404 when the requested resource does not exist at the given URL. Do not return 404 for permission failures (use 403) or for malformed requests (use 400).</p>
+    </section>
+
+    
+    <section class="section">
+      <h2>Common causes</h2>
+      <ul class="bullet-list">
+        <li>URL typo (most common cause in browsers)</li>
+        <li>Resource was deleted</li>
+        <li>Resource never existed</li>
+        <li>Wrong API version in the path (/v1 vs /v2)</li>
+        <li>Trailing slash mismatch on a strict server</li>
+        <li>Case sensitivity (some servers treat /Foo and /foo differently)</li>
+        <li>Resource is hidden from the current caller for security reasons</li>
+      </ul>
+    </section>
+    
+    <section class="section">
+      <h2>How to fix 404 Not Found</h2>
+      <ul class="bullet-list">
+        <li>Double-check the URL for typos</li>
+        <li>Verify the API version path component</li>
+        <li>Check the server logs for the exact request path received</li>
+        <li>Confirm the resource still exists (was it deleted?)</li>
+        <li>For static files, verify the file is in the build output and deployed</li>
+        <li>For dynamic routes, check the route definition matches the URL pattern</li>
+      </ul>
+    </section>
+    
+    <section class="section">
+      <h2>Example response</h2>
+      <pre><code>curl -i https://api.example.com/users/999999
+
+HTTP/2 404
+content-type: application/json
+{&quot;error&quot;:&quot;user not found&quot;,&quot;id&quot;:&quot;999999&quot;}</code></pre>
+    </section>
+
+    <section class="section">
+      <h2>Related status codes</h2>
+      <div class="related-grid">
+      <a href="/http/410" class="related-card">
+        <div class="related-code">410</div>
+        <div class="related-name">Gone</div>
+      </a>
+      <a href="/http/403" class="related-card">
+        <div class="related-code">403</div>
+        <div class="related-name">Forbidden</div>
+      </a>
+      <a href="/http/301" class="related-card">
+        <div class="related-code">301</div>
+        <div class="related-name">Moved Permanently</div>
+      </a>
+      </div>
+    </section>
+
+    
+    <section class="section faqs">
+      <h2>Frequently Asked Questions</h2>
+      <details class="faq">
+        <summary>404 vs 410?</summary>
+        <div class="faq-answer">404 means "not here" (might never have existed, might come back). 410 means "permanently gone, do not look for it again". 410 is rarely used; 404 is the catch-all.</div>
+      </details>
+      <details class="faq">
+        <summary>Should I return 404 or 403 for resources the user lacks permission to see?</summary>
+        <div class="faq-answer">Either is defensible. 404 leaks less (does not confirm the resource exists). 403 is more honest. Pick one and apply consistently.</div>
+      </details>
+      <details class="faq">
+        <summary>Why does Google sometimes show &quot;soft 404&quot;?</summary>
+        <div class="faq-answer">A soft 404 is a 200 response that looks like a 404 page (e.g. "page not found" content with a 200 status). Google penalizes soft 404s; always return a real 404 status for missing pages.</div>
+      </details>
+      <details class="faq">
+        <summary>Do 404s hurt SEO?</summary>
+        <div class="faq-answer">A few are fine and expected. Mass 404s on previously-indexed URLs hurt rankings. Use 301 to redirect to a relevant replacement when possible.</div>
+      </details>
+    </section>
+
+    <div class="meta-box">
+      <strong style="color:#C8C8C0">Defined in:</strong> RFC 9110 · <strong style="color:#C8C8C0">Class:</strong> <code>4xx Client Error</code>
+    </div>
+
+    <section class="section">
+      <h2>More references</h2>
+      <p>For a one-page reference of all HTTP status codes, see the <a href="/cheatsheets/http">HTTP cheat sheet</a>. For testing API responses, try the <a href="/tools/api">API Tester tool</a>. For inspecting responses on the command line, the <a href="/cheatsheets/curl">curl cheat sheet</a> covers the most common flags.</p>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/http">All Status Codes</a><span class="sep">|</span>
+      <a href="/cheatsheets/http">HTTP Cheat Sheet</a><span class="sep">|</span>
+      <a href="/cheatsheets/curl">Curl Cheat Sheet</a><span class="sep">|</span>
+      <a href="/tools/api">API Tester</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a>
+    </footer>
+  </div>
+</body>
+</html>

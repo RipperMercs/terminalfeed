@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>301 Moved Permanently: HTTP Status Code Meaning, Causes, and Fixes | TerminalFeed</title>
+  <meta name="description" content="The resource has permanently moved to a new URL given in the Location header.">
+  <meta name="keywords" content="301 status code, http 301, 301 moved permanently, 301 meaning, 301 fix, http status code 301">
+  <link rel="canonical" href="https://terminalfeed.io/http/301">
+  <meta property="og:title" content="HTTP 301 Moved Permanently: Meaning, Causes, and Fixes">
+  <meta property="og:description" content="The resource has permanently moved to a new URL given in the Location header.">
+  <meta property="og:url" content="https://terminalfeed.io/http/301">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"HTTP 301 Moved Permanently: Meaning, Causes, and Fixes","description":"The resource has permanently moved to a new URL given in the Location header.","url":"https://terminalfeed.io/http/301","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/http/301","about":{"@type":"Thing","name":"HTTP 301"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"HTTP Status Codes","item":"https://terminalfeed.io/http"},{"@type":"ListItem","position":3,"name":"301 Moved Permanently","item":"https://terminalfeed.io/http/301"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does 301 transfer SEO ranking?","acceptedAnswer":{"@type":"Answer","text":"Yes. Google has confirmed 301 redirects pass the full ranking signal (or near-full) to the new URL. 302 does not."}},{"@type":"Question","name":"Can I change a 301 later?","acceptedAnswer":{"@type":"Answer","text":"In theory yes, but browsers and proxies cache 301 aggressively. Users with the old redirect cached will keep going to the new URL until the cache expires (or they clear it). For non-permanent moves, use 302 or 307."}},{"@type":"Question","name":"301 vs 308?","acceptedAnswer":{"@type":"Answer","text":"301 historically allows the client to change POST to GET on redirect. 308 forbids method change. For modern APIs, 308 is usually safer."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 32px; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      color: #FACC15;
+      border: 1px solid #FACC1540;
+      background: #FACC1510;
+    }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 8px; font-weight: 600; }
+    .header h1 .num { color: #FACC15; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; }
+
+    .section { margin-bottom: 36px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 14px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .section pre {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      overflow-x: auto;
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+    .section pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #C8C8C0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    .bullet-list { margin: 0 0 0 20px; }
+    .bullet-list li { font-size: 13px; color: #C8C8C0; margin-bottom: 8px; line-height: 1.7; }
+    .bullet-list li code { font-size: 11.5px; }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .related-card {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 14px;
+      text-decoration: none !important;
+      border-bottom: 1px solid #1A1A22 !important;
+      transition: border-color 0.15s;
+    }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-code { font-size: 18px; color: #5DCAA5; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 11px; color: #8A8880; }
+
+    .faqs h2 { color: #5DCAA5; }
+    .faq {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+    }
+    .faq summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: #F0EDE6;
+      font-weight: 500;
+      list-style: none;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+
+    .meta-box {
+      background: #0D0D10;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: #8A8880;
+      margin: 24px 0;
+    }
+    .meta-box code { font-size: 11px; color: #FACC15; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      .header h1 { font-size: 22px; }
+      .section h2 { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/http">HTTP Status Codes</a><span class="sep">›</span><span>301 Moved Permanently</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">Redirection · 3xx</span>
+      <h1><span class="num">301</span> Moved Permanently</h1>
+      <p class="summary">The resource has permanently moved to a new URL given in the Location header.</p>
+    </header>
+
+    <section class="section">
+      <h2>What 301 Moved Permanently means</h2>
+      <p>301 Moved Permanently is the redirect that tells search engines and clients "this URL is dead, use the new one forever". Browsers update bookmarks. Search engines transfer most of the SEO ranking signal to the new URL. CDN edges and HTTP caches cache the redirect aggressively. Use 301 only when you are confident the change is permanent; if there is any chance of moving back, use 302 or 307 instead.</p>
+      <p><strong style="color:#F0EDE6">When servers should return it:</strong> Return 301 when a URL has permanently changed. Common cases: domain migration, restructuring URL paths, switching from www to apex (or vice versa), HTTP-to-HTTPS upgrades.</p>
+    </section>
+
+    
+    
+    
+    <section class="section">
+      <h2>Example response</h2>
+      <pre><code>curl -i https://old.example.com/page
+
+HTTP/2 301
+location: https://new.example.com/page
+cache-control: public, max-age=31536000</code></pre>
+    </section>
+
+    <section class="section">
+      <h2>Related status codes</h2>
+      <div class="related-grid">
+      <a href="/http/302" class="related-card">
+        <div class="related-code">302</div>
+        <div class="related-name">Found</div>
+      </a>
+      <a href="/http/307" class="related-card">
+        <div class="related-code">307</div>
+        <div class="related-name">Temporary Redirect</div>
+      </a>
+      <a href="/http/308" class="related-card">
+        <div class="related-code">308</div>
+        <div class="related-name">Permanent Redirect</div>
+      </a>
+      </div>
+    </section>
+
+    
+    <section class="section faqs">
+      <h2>Frequently Asked Questions</h2>
+      <details class="faq">
+        <summary>Does 301 transfer SEO ranking?</summary>
+        <div class="faq-answer">Yes. Google has confirmed 301 redirects pass the full ranking signal (or near-full) to the new URL. 302 does not.</div>
+      </details>
+      <details class="faq">
+        <summary>Can I change a 301 later?</summary>
+        <div class="faq-answer">In theory yes, but browsers and proxies cache 301 aggressively. Users with the old redirect cached will keep going to the new URL until the cache expires (or they clear it). For non-permanent moves, use 302 or 307.</div>
+      </details>
+      <details class="faq">
+        <summary>301 vs 308?</summary>
+        <div class="faq-answer">301 historically allows the client to change POST to GET on redirect. 308 forbids method change. For modern APIs, 308 is usually safer.</div>
+      </details>
+    </section>
+
+    <div class="meta-box">
+      <strong style="color:#C8C8C0">Defined in:</strong> RFC 9110 · <strong style="color:#C8C8C0">Class:</strong> <code>3xx Redirection</code>
+    </div>
+
+    <section class="section">
+      <h2>More references</h2>
+      <p>For a one-page reference of all HTTP status codes, see the <a href="/cheatsheets/http">HTTP cheat sheet</a>. For testing API responses, try the <a href="/tools/api">API Tester tool</a>. For inspecting responses on the command line, the <a href="/cheatsheets/curl">curl cheat sheet</a> covers the most common flags.</p>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/http">All Status Codes</a><span class="sep">|</span>
+      <a href="/cheatsheets/http">HTTP Cheat Sheet</a><span class="sep">|</span>
+      <a href="/cheatsheets/curl">Curl Cheat Sheet</a><span class="sep">|</span>
+      <a href="/tools/api">API Tester</a><span class="sep">|</span>
+      <a href="/blog">Blog</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTTP Status Codes: Complete Reference with Causes, Fixes, and Examples | TerminalFeed</title>
+  <meta name="description" content="Every HTTP status code explained on its own page. Search by number or keyword. Each page has the meaning, common causes, fixes for error codes, real curl examples, and FAQ. 49 codes covered.">
+  <meta name="keywords" content="http status codes, http response codes, http error codes, status code reference, 404, 500, 403, 401, 429, 502, 503, 504">
+  <link rel="canonical" href="https://terminalfeed.io/http">
+  <meta property="og:title" content="HTTP Status Codes: Complete Reference">
+  <meta property="og:description" content="Every HTTP status code explained on its own page. 49 codes with meanings, causes, fixes, and examples.">
+  <meta property="og:url" content="https://terminalfeed.io/http">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"HTTP Status Codes: Complete Reference","description":"Every HTTP status code explained on its own page. 49 codes with meanings, causes, fixes, and examples.","url":"https://terminalfeed.io/http","publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"HTTP Status Codes","item":"https://terminalfeed.io/http"}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+      line-height: 1.7;
+      padding: 24px 16px 64px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 32px; }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 10px; font-weight: 600; }
+    .header h1 span { color: #5DCAA5; }
+    .header p { font-size: 13.5px; color: #A8A6A0; max-width: 750px; line-height: 1.7; }
+
+    .search-box { margin-bottom: 32px; }
+    .search-box input {
+      width: 100%;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      color: #F0EDE6;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 13px;
+    }
+    .search-box input:focus { outline: none; border-color: #5DCAA5; }
+    .search-box input::placeholder { color: #4E4D49; }
+
+    .group { margin-bottom: 48px; }
+    .group h2 { font-size: 18px; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+    .group-desc { font-size: 12px; color: #8A8880; margin-bottom: 18px; }
+
+    .code-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .code-card {
+      background: #111114;
+      border: 1px solid #1A1A22;
+      border-radius: 5px;
+      padding: 14px 16px;
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+      display: block;
+    }
+    .code-card:hover { border-color: #5DCAA5; background: #14141A; }
+    .card-num { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .card-name { font-size: 13px; color: #F0EDE6; margin-bottom: 6px; }
+    .card-summary { font-size: 11px; color: #8A8880; line-height: 1.6; }
+    .hidden { display: none; }
+
+    .meta-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: #8A8880;
+    }
+    .meta-row strong { color: #5DCAA5; font-weight: 600; }
+
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><span>HTTP Status Codes</span>
+    </nav>
+
+    <header class="header">
+      <h1><span>›_</span> HTTP STATUS CODES</h1>
+      <p>Every HTTP status code on its own page. Each entry covers what the code means, when servers should return it, common causes (for errors), how to fix them, a real curl example, related codes, and a small FAQ. 49 codes documented. Search by number or keyword.</p>
+      <div class="meta-row">
+        <span><strong>Source of truth:</strong> RFC 9110 + extension RFCs</span>
+        <span><strong>One-page version:</strong> <a href="/cheatsheets/http" style="color:#5DCAA5;text-decoration:none">cheat sheet</a></span>
+        <span><strong>Curl reference:</strong> <a href="/cheatsheets/curl" style="color:#5DCAA5;text-decoration:none">cheat sheet</a></span>
+      </div>
+    </header>
+
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Search by number or keyword (e.g. 404, rate limit, gateway, redirect)">
+    </div>
+
+    <section class="group">
+      <h2 style="color:#60A5FA">1xx Informational</h2>
+      <p class="group-desc">Request received and processing continues</p>
+      <div class="code-grid">
+        <a href="/http/100" class="code-card" data-search="100 continue the server has received the request headers and the client should proceed to send the request body.">
+          <div class="card-num" style="color:#60A5FA">100</div>
+          <div class="card-name">Continue</div>
+          <div class="card-summary">The server has received the request headers and the client should proceed to send the request body.</div>
+        </a>
+        <a href="/http/101" class="code-card" data-search="101 switching protocols the server is switching protocols as requested by the client, typically upgrading from http/1.1 to websocket.">
+          <div class="card-num" style="color:#60A5FA">101</div>
+          <div class="card-name">Switching Protocols</div>
+          <div class="card-summary">The server is switching protocols as requested by the client, typically upgrading from HTTP/1.1 to WebSocket.</div>
+        </a>
+        <a href="/http/103" class="code-card" data-search="103 early hints the server hints at resources the client can preload while the final response is still being prepared.">
+          <div class="card-num" style="color:#60A5FA">103</div>
+          <div class="card-name">Early Hints</div>
+          <div class="card-summary">The server hints at resources the client can preload while the final response is still being prepared.</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 style="color:#4ADE80">2xx Success</h2>
+      <p class="group-desc">Request was successfully received, understood, and accepted</p>
+      <div class="code-grid">
+        <a href="/http/200" class="code-card" data-search="200 ok the request succeeded. the response body contains whatever the request was for.">
+          <div class="card-num" style="color:#4ADE80">200</div>
+          <div class="card-name">OK</div>
+          <div class="card-summary">The request succeeded. The response body contains whatever the request was for.</div>
+        </a>
+        <a href="/http/201" class="code-card" data-search="201 created the request succeeded and a new resource was created as a result.">
+          <div class="card-num" style="color:#4ADE80">201</div>
+          <div class="card-name">Created</div>
+          <div class="card-summary">The request succeeded and a new resource was created as a result.</div>
+        </a>
+        <a href="/http/202" class="code-card" data-search="202 accepted the request has been accepted for processing but has not yet completed.">
+          <div class="card-num" style="color:#4ADE80">202</div>
+          <div class="card-name">Accepted</div>
+          <div class="card-summary">The request has been accepted for processing but has not yet completed.</div>
+        </a>
+        <a href="/http/204" class="code-card" data-search="204 no content the request succeeded and there is intentionally no response body.">
+          <div class="card-num" style="color:#4ADE80">204</div>
+          <div class="card-name">No Content</div>
+          <div class="card-summary">The request succeeded and there is intentionally no response body.</div>
+        </a>
+        <a href="/http/206" class="code-card" data-search="206 partial content the server is delivering only part of the resource, in response to a range request from the client.">
+          <div class="card-num" style="color:#4ADE80">206</div>
+          <div class="card-name">Partial Content</div>
+          <div class="card-summary">The server is delivering only part of the resource, in response to a Range request from the client.</div>
+        </a>
+        <a href="/http/207" class="code-card" data-search="207 multi-status the response contains a result for multiple sub-operations, each with its own status.">
+          <div class="card-num" style="color:#4ADE80">207</div>
+          <div class="card-name">Multi-Status</div>
+          <div class="card-summary">The response contains a result for multiple sub-operations, each with its own status.</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 style="color:#FACC15">3xx Redirection</h2>
+      <p class="group-desc">Further action must be taken to complete the request</p>
+      <div class="code-grid">
+        <a href="/http/301" class="code-card" data-search="301 moved permanently the resource has permanently moved to a new url given in the location header.">
+          <div class="card-num" style="color:#FACC15">301</div>
+          <div class="card-name">Moved Permanently</div>
+          <div class="card-summary">The resource has permanently moved to a new URL given in the Location header.</div>
+        </a>
+        <a href="/http/302" class="code-card" data-search="302 found the resource is temporarily at a different url. use the new url for this request only.">
+          <div class="card-num" style="color:#FACC15">302</div>
+          <div class="card-name">Found</div>
+          <div class="card-summary">The resource is temporarily at a different URL. Use the new URL for this request only.</div>
+        </a>
+        <a href="/http/303" class="code-card" data-search="303 see other the response to your request can be found at a different url, and you should fetch it with get.">
+          <div class="card-num" style="color:#FACC15">303</div>
+          <div class="card-name">See Other</div>
+          <div class="card-summary">The response to your request can be found at a different URL, and you should fetch it with GET.</div>
+        </a>
+        <a href="/http/304" class="code-card" data-search="304 not modified the cached version of the resource is still valid; no body is sent.">
+          <div class="card-num" style="color:#FACC15">304</div>
+          <div class="card-name">Not Modified</div>
+          <div class="card-summary">The cached version of the resource is still valid; no body is sent.</div>
+        </a>
+        <a href="/http/307" class="code-card" data-search="307 temporary redirect the resource is temporarily at a different url. use the same http method to access it.">
+          <div class="card-num" style="color:#FACC15">307</div>
+          <div class="card-name">Temporary Redirect</div>
+          <div class="card-summary">The resource is temporarily at a different URL. Use the same HTTP method to access it.</div>
+        </a>
+        <a href="/http/308" class="code-card" data-search="308 permanent redirect the resource has permanently moved and the same http method must be used at the new url.">
+          <div class="card-num" style="color:#FACC15">308</div>
+          <div class="card-name">Permanent Redirect</div>
+          <div class="card-summary">The resource has permanently moved and the same HTTP method must be used at the new URL.</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 style="color:#F87171">4xx Client Error</h2>
+      <p class="group-desc">The request contains bad syntax or cannot be fulfilled</p>
+      <div class="code-grid">
+        <a href="/http/400" class="code-card" data-search="400 bad request the server cannot process the request because the client sent something invalid.">
+          <div class="card-num" style="color:#F87171">400</div>
+          <div class="card-name">Bad Request</div>
+          <div class="card-summary">The server cannot process the request because the client sent something invalid.</div>
+        </a>
+        <a href="/http/401" class="code-card" data-search="401 unauthorized the request requires authentication that was not provided or was invalid.">
+          <div class="card-num" style="color:#F87171">401</div>
+          <div class="card-name">Unauthorized</div>
+          <div class="card-summary">The request requires authentication that was not provided or was invalid.</div>
+        </a>
+        <a href="/http/402" class="code-card" data-search="402 payment required reserved for future use; in practice, used by some apis to signal the caller has run out of credits.">
+          <div class="card-num" style="color:#F87171">402</div>
+          <div class="card-name">Payment Required</div>
+          <div class="card-summary">Reserved for future use; in practice, used by some APIs to signal the caller has run out of credits.</div>
+        </a>
+        <a href="/http/403" class="code-card" data-search="403 forbidden the server understood the request and knows who you are, but refuses to authorize it.">
+          <div class="card-num" style="color:#F87171">403</div>
+          <div class="card-name">Forbidden</div>
+          <div class="card-summary">The server understood the request and knows who you are, but refuses to authorize it.</div>
+        </a>
+        <a href="/http/404" class="code-card" data-search="404 not found the server cannot find the requested resource.">
+          <div class="card-num" style="color:#F87171">404</div>
+          <div class="card-name">Not Found</div>
+          <div class="card-summary">The server cannot find the requested resource.</div>
+        </a>
+        <a href="/http/405" class="code-card" data-search="405 method not allowed the http method is not supported for this resource.">
+          <div class="card-num" style="color:#F87171">405</div>
+          <div class="card-name">Method Not Allowed</div>
+          <div class="card-summary">The HTTP method is not supported for this resource.</div>
+        </a>
+        <a href="/http/406" class="code-card" data-search="406 not acceptable the server cannot produce a response matching the client's accept headers.">
+          <div class="card-num" style="color:#F87171">406</div>
+          <div class="card-name">Not Acceptable</div>
+          <div class="card-summary">The server cannot produce a response matching the client's Accept headers.</div>
+        </a>
+        <a href="/http/408" class="code-card" data-search="408 request timeout the server gave up waiting for the client to finish sending the request.">
+          <div class="card-num" style="color:#F87171">408</div>
+          <div class="card-name">Request Timeout</div>
+          <div class="card-summary">The server gave up waiting for the client to finish sending the request.</div>
+        </a>
+        <a href="/http/409" class="code-card" data-search="409 conflict the request conflicts with the current state of the resource.">
+          <div class="card-num" style="color:#F87171">409</div>
+          <div class="card-name">Conflict</div>
+          <div class="card-summary">The request conflicts with the current state of the resource.</div>
+        </a>
+        <a href="/http/410" class="code-card" data-search="410 gone the resource is permanently gone and will not return.">
+          <div class="card-num" style="color:#F87171">410</div>
+          <div class="card-name">Gone</div>
+          <div class="card-summary">The resource is permanently gone and will not return.</div>
+        </a>
+        <a href="/http/411" class="code-card" data-search="411 length required the request lacks a content-length header that the server requires.">
+          <div class="card-num" style="color:#F87171">411</div>
+          <div class="card-name">Length Required</div>
+          <div class="card-summary">The request lacks a Content-Length header that the server requires.</div>
+        </a>
+        <a href="/http/412" class="code-card" data-search="412 precondition failed a precondition header on the request did not match the server's state.">
+          <div class="card-num" style="color:#F87171">412</div>
+          <div class="card-name">Precondition Failed</div>
+          <div class="card-summary">A precondition header on the request did not match the server's state.</div>
+        </a>
+        <a href="/http/413" class="code-card" data-search="413 content too large the request body exceeds the server's size limit.">
+          <div class="card-num" style="color:#F87171">413</div>
+          <div class="card-name">Content Too Large</div>
+          <div class="card-summary">The request body exceeds the server's size limit.</div>
+        </a>
+        <a href="/http/414" class="code-card" data-search="414 uri too long the url is longer than the server is willing to interpret.">
+          <div class="card-num" style="color:#F87171">414</div>
+          <div class="card-name">URI Too Long</div>
+          <div class="card-summary">The URL is longer than the server is willing to interpret.</div>
+        </a>
+        <a href="/http/415" class="code-card" data-search="415 unsupported media type the server cannot parse the content-type of the request body.">
+          <div class="card-num" style="color:#F87171">415</div>
+          <div class="card-name">Unsupported Media Type</div>
+          <div class="card-summary">The server cannot parse the Content-Type of the request body.</div>
+        </a>
+        <a href="/http/416" class="code-card" data-search="416 range not satisfiable the requested byte range is outside the resource's actual size.">
+          <div class="card-num" style="color:#F87171">416</div>
+          <div class="card-name">Range Not Satisfiable</div>
+          <div class="card-summary">The requested byte range is outside the resource's actual size.</div>
+        </a>
+        <a href="/http/418" class="code-card" data-search="418 i'm a teapot the server is a teapot and refuses to brew coffee.">
+          <div class="card-num" style="color:#F87171">418</div>
+          <div class="card-name">I'm a Teapot</div>
+          <div class="card-summary">The server is a teapot and refuses to brew coffee.</div>
+        </a>
+        <a href="/http/422" class="code-card" data-search="422 unprocessable content the request is well-formed but contains semantically invalid data.">
+          <div class="card-num" style="color:#F87171">422</div>
+          <div class="card-name">Unprocessable Content</div>
+          <div class="card-summary">The request is well-formed but contains semantically invalid data.</div>
+        </a>
+        <a href="/http/423" class="code-card" data-search="423 locked the resource is locked and cannot be modified right now.">
+          <div class="card-num" style="color:#F87171">423</div>
+          <div class="card-name">Locked</div>
+          <div class="card-summary">The resource is locked and cannot be modified right now.</div>
+        </a>
+        <a href="/http/425" class="code-card" data-search="425 too early the server is unwilling to risk processing a request that might be replayed.">
+          <div class="card-num" style="color:#F87171">425</div>
+          <div class="card-name">Too Early</div>
+          <div class="card-summary">The server is unwilling to risk processing a request that might be replayed.</div>
+        </a>
+        <a href="/http/426" class="code-card" data-search="426 upgrade required the client must upgrade to a different protocol to continue.">
+          <div class="card-num" style="color:#F87171">426</div>
+          <div class="card-name">Upgrade Required</div>
+          <div class="card-summary">The client must upgrade to a different protocol to continue.</div>
+        </a>
+        <a href="/http/428" class="code-card" data-search="428 precondition required the server requires the request to be conditional.">
+          <div class="card-num" style="color:#F87171">428</div>
+          <div class="card-name">Precondition Required</div>
+          <div class="card-summary">The server requires the request to be conditional.</div>
+        </a>
+        <a href="/http/429" class="code-card" data-search="429 too many requests the client has sent too many requests in too short a time and is being rate-limited.">
+          <div class="card-num" style="color:#F87171">429</div>
+          <div class="card-name">Too Many Requests</div>
+          <div class="card-summary">The client has sent too many requests in too short a time and is being rate-limited.</div>
+        </a>
+        <a href="/http/431" class="code-card" data-search="431 request header fields too large the request headers, in total or individually, exceed the server's limit.">
+          <div class="card-num" style="color:#F87171">431</div>
+          <div class="card-name">Request Header Fields Too Large</div>
+          <div class="card-summary">The request headers, in total or individually, exceed the server's limit.</div>
+        </a>
+        <a href="/http/451" class="code-card" data-search="451 unavailable for legal reasons the resource is blocked due to a legal demand.">
+          <div class="card-num" style="color:#F87171">451</div>
+          <div class="card-name">Unavailable For Legal Reasons</div>
+          <div class="card-summary">The resource is blocked due to a legal demand.</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 style="color:#F87171">5xx Server Error</h2>
+      <p class="group-desc">The server failed to fulfill an apparently valid request</p>
+      <div class="code-grid">
+        <a href="/http/500" class="code-card" data-search="500 internal server error the server hit an unhandled error while processing the request.">
+          <div class="card-num" style="color:#F87171">500</div>
+          <div class="card-name">Internal Server Error</div>
+          <div class="card-summary">The server hit an unhandled error while processing the request.</div>
+        </a>
+        <a href="/http/501" class="code-card" data-search="501 not implemented the server does not support the request method or feature.">
+          <div class="card-num" style="color:#F87171">501</div>
+          <div class="card-name">Not Implemented</div>
+          <div class="card-summary">The server does not support the request method or feature.</div>
+        </a>
+        <a href="/http/502" class="code-card" data-search="502 bad gateway a gateway or proxy got an invalid response from an upstream server.">
+          <div class="card-num" style="color:#F87171">502</div>
+          <div class="card-name">Bad Gateway</div>
+          <div class="card-summary">A gateway or proxy got an invalid response from an upstream server.</div>
+        </a>
+        <a href="/http/503" class="code-card" data-search="503 service unavailable the server is temporarily unable to handle the request, usually due to overload or maintenance.">
+          <div class="card-num" style="color:#F87171">503</div>
+          <div class="card-name">Service Unavailable</div>
+          <div class="card-summary">The server is temporarily unable to handle the request, usually due to overload or maintenance.</div>
+        </a>
+        <a href="/http/504" class="code-card" data-search="504 gateway timeout a gateway or proxy did not receive a response from an upstream server in time.">
+          <div class="card-num" style="color:#F87171">504</div>
+          <div class="card-name">Gateway Timeout</div>
+          <div class="card-summary">A gateway or proxy did not receive a response from an upstream server in time.</div>
+        </a>
+        <a href="/http/505" class="code-card" data-search="505 http version not supported the http version used in the request is not supported by the server.">
+          <div class="card-num" style="color:#F87171">505</div>
+          <div class="card-name">HTTP Version Not Supported</div>
+          <div class="card-summary">The HTTP version used in the request is not supported by the server.</div>
+        </a>
+        <a href="/http/507" class="code-card" data-search="507 insufficient storage the server cannot store the data needed to complete the request.">
+          <div class="card-num" style="color:#F87171">507</div>
+          <div class="card-name">Insufficient Storage</div>
+          <div class="card-summary">The server cannot store the data needed to complete the request.</div>
+        </a>
+        <a href="/http/508" class="code-card" data-search="508 loop detected the server detected an infinite loop while processing the request.">
+          <div class="card-num" style="color:#F87171">508</div>
+          <div class="card-name">Loop Detected</div>
+          <div class="card-summary">The server detected an infinite loop while processing the request.</div>
+        </a>
+        <a href="/http/511" class="code-card" data-search="511 network authentication required the client must authenticate to the network (captive portal) before accessing the resource.">
+          <div class="card-num" style="color:#F87171">511</div>
+          <div class="card-name">Network Authentication Required</div>
+          <div class="card-summary">The client must authenticate to the network (captive portal) before accessing the resource.</div>
+        </a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/cheatsheets/http">HTTP Cheat Sheet</a><span class="sep">|</span>
+      <a href="/cheatsheets/curl">Curl Cheat Sheet</a><span class="sep">|</span>
+      <a href="/tools/api">API Tester</a><span class="sep">|</span>
+      <a href="/for-devs">Developer Hub</a><span class="sep">|</span>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+  <script>
+    document.getElementById('search').addEventListener('input', function(e) {
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll('.code-card').forEach(card => {
+        card.classList.toggle('hidden', q && !card.dataset.search.includes(q));
+      });
+      document.querySelectorAll('.group').forEach(g => {
+        const visible = g.querySelectorAll('.code-card:not(.hidden)').length;
+        g.style.display = visible ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
