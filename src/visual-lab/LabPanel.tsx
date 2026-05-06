@@ -2,7 +2,15 @@ import type { ReactNode } from 'react';
 import { CATEGORY_COLOR, CATEGORY_LABEL, type Category } from './labData';
 import styles from './LabPanel.module.css';
 
-export type Variant = 'default' | 'bloomberg' | 'brackets' | 'header-strip' | 'glow';
+export type Variant =
+  | 'default'
+  | 'bloomberg'
+  | 'brackets'
+  | 'header-strip'
+  | 'glow'
+  | 'matrix'
+  | 'lcars'
+  | 'command';
 
 interface Props {
   title: string;
@@ -26,20 +34,37 @@ export function LabPanel({ title, category, status = 'live', children }: Props) 
       {/* Header strip variant: thin colored bar above the header */}
       <div className={styles.topStrip} aria-hidden />
 
+      {/* Scanline overlay (matrix + command variants) */}
+      <div className={styles.scanline} aria-hidden />
+
       {/* Corner brackets variant: 4 L-shapes positioned at corners */}
       <span className={`${styles.bracket} ${styles.bracketTL}`} aria-hidden />
       <span className={`${styles.bracket} ${styles.bracketTR}`} aria-hidden />
       <span className={`${styles.bracket} ${styles.bracketBL}`} aria-hidden />
       <span className={`${styles.bracket} ${styles.bracketBR}`} aria-hidden />
 
+      {/* LCARS-style segmented vertical bar (lcars variant only) */}
+      <div className={styles.lcarsBar} aria-hidden>
+        <span className={styles.lcarsSeg} />
+        <span className={styles.lcarsSeg} />
+        <span className={styles.lcarsSeg} />
+        <span className={styles.lcarsSeg} />
+      </div>
+
       <div className={styles.header}>
         <span className={styles.titleWrap}>
+          <span className={styles.lcarsPill} aria-hidden />
           <span className={styles.tag}>[{tag}]</span>
           <span className={styles.title}>{title}</span>
         </span>
         <span className={`${styles.status} ${styles[status]}`}>
           <span className={styles.dot} />
           {status}
+          <span className={styles.tickCounter} aria-hidden>
+            <span className={styles.tickDot} />
+            <span className={styles.tickDot} />
+            <span className={styles.tickDot} />
+          </span>
         </span>
       </div>
 

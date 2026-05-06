@@ -23,6 +23,9 @@ const VARIANTS: { id: Variant; label: string; blurb: string }[] = [
   { id: 'brackets',     label: 'BRACKETS',     blurb: 'no border, terminal L-shapes at corners' },
   { id: 'header-strip', label: 'HEADER STRIP', blurb: '3px colored top stripe, larger header' },
   { id: 'glow',         label: 'GLOW',         blurb: 'subtle outer glow in category color' },
+  { id: 'matrix',       label: 'MATRIX',       blurb: 'green-dominant, breathing border, scanline sweep' },
+  { id: 'lcars',        label: 'LCARS',        blurb: 'star trek pill header + segmented vertical bar' },
+  { id: 'command',      label: 'COMMAND',      blurb: 'animated brackets, pulsing border, ticking status counter' },
 ];
 
 export function VisualLab() {
