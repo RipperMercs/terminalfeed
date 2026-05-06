@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Market Hours Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable global stock exchange clock. Live local time and open/closed status for NYSE, LSE, Tokyo, Hong Kong, Frankfurt, Sydney. Dark/light themes. Free to embed.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/market-hours">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:10px 12px;display:flex;flex-direction:column}
+.label-row{display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:1.8px;opacity:0.55;text-transform:uppercase;margin-bottom:6px}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.grid{flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;min-height:0}
+.cell{display:flex;flex-direction:column;justify-content:center;padding:8px 10px;border-radius:4px;border:1px solid;transition:all 0.2s;position:relative;overflow:hidden}
+body.theme-dark .cell{border-color:#1E1E24;background:#0D0D10}
+body.theme-light .cell{border-color:#E5E5E5;background:#FAFAFA}
+body.theme-terminal .cell{border-color:#1E3A2A;background:#000000}
+
+.cell.open::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#4ADE80;box-shadow:0 0 8px #4ADE8060}
+.cell.pre::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#FACC15}
+.cell.post::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#F9A03F}
+.cell.closed{opacity:0.45}
+.cell.closed::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#52525B}
+
+.exchange{font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;margin-bottom:2px}
+.time{font-size:18px;font-weight:600;line-height:1;letter-spacing:-0.5px;font-variant-numeric:tabular-nums}
+body.theme-dark .time{color:#F0EDE6}
+body.theme-light .time{color:#1A1A1E}
+body.theme-terminal .time{color:#5DCAA5}
+.status-row{display:flex;justify-content:space-between;align-items:center;margin-top:3px;gap:6px}
+.city{font-size:9px;opacity:0.5;letter-spacing:0.3px}
+.status{font-size:8px;font-weight:600;letter-spacing:1px;padding:1px 5px;border-radius:2px;text-transform:uppercase}
+.status.open{color:#4ADE80;background:#4ADE8015}
+.status.pre{color:#FACC15;background:#FACC1518}
+.status.post{color:#F9A03F;background:#F9A03F18}
+.status.closed{color:#71717A;background:#71717A18}
+
+.footer{display:flex;justify-content:space-between;align-items:center;padding-top:5px;font-size:8px;opacity:0.4;letter-spacing:0.5px;border-top:1px solid;margin-top:5px}
+body.theme-dark .footer{border-color:#1E1E24}
+body.theme-light .footer{border-color:#E5E5E5}
+body.theme-terminal .footer{border-color:#1E3A2A}
+.footer a{color:inherit;text-decoration:none}
+
+body.size-sm .grid{gap:4px}
+body.size-sm .cell{padding:5px 8px}
+body.size-sm .time{font-size:14px}
+body.size-sm .exchange{font-size:8px}
+body.size-sm .city{font-size:8px}
+body.size-sm .status{font-size:7px}
+
+body.size-lg .grid{grid-template-columns:repeat(3,1fr);gap:8px}
+body.size-lg .cell{padding:12px 14px}
+body.size-lg .time{font-size:24px}
+body.size-lg .exchange{font-size:11px}
+body.size-lg .city{font-size:10px}
+
+@media (prefers-reduced-motion: reduce){.live-dot{animation:none}}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="label-row"><span class="live-dot"></span>GLOBAL MARKET HOURS</div>
+  <div class="grid" id="grid"></div>
+  <div class="footer">
+    <span id="updated">UTC --:--</span>
+    <a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=market-hours" target="_blank" rel="noopener">terminalfeed.io</a>
+  </div>
+</div>
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+
+  // Major global exchanges with their TZ identifier and regular trading hours (24h, local).
+  // Pre-market and post-market windows are widely used in the US; for non-US bourses
+  // we just use regular hours.
+  var EXCHANGES=[
+    {code:'NYSE',  city:'New York',    tz:'America/New_York',   open:9.5, close:16,  pre:[4,9.5], post:[16,20], days:[1,2,3,4,5]},
+    {code:'NASDAQ',city:'New York',    tz:'America/New_York',   open:9.5, close:16,  pre:[4,9.5], post:[16,20], days:[1,2,3,4,5]},
+    {code:'LSE',   city:'London',      tz:'Europe/London',      open:8,   close:16.5,                          days:[1,2,3,4,5]},
+    {code:'XETRA', city:'Frankfurt',   tz:'Europe/Berlin',      open:9,   close:17.5,                          days:[1,2,3,4,5]},
+    {code:'TSE',   city:'Tokyo',       tz:'Asia/Tokyo',         open:9,   close:15,                            days:[1,2,3,4,5]},
+    {code:'HKEX',  city:'Hong Kong',   tz:'Asia/Hong_Kong',     open:9.5, close:16,                            days:[1,2,3,4,5]},
+  ];
+
+  var grid=document.getElementById('grid');
+  var updatedEl=document.getElementById('updated');
+
+  function getLocalDate(tz){
+    var s=new Date().toLocaleString('en-US',{timeZone:tz,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',weekday:'short'});
+    // Parse locale string back into pieces
+    var parts=s.split(', ');
+    var weekday=parts[0];  // 'Mon', 'Tue', etc.
+    var datePart=parts[1]; // 'MM/DD/YYYY'
+    var timePart=parts[2]; // 'HH:mm:ss'
+    var dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+    var t=timePart.split(':');
+    var hour=parseInt(t[0],10);
+    var min=parseInt(t[1],10);
+    return {
+      day:dayMap[weekday],
+      hour:hour,
+      min:min,
+      decimal:hour+min/60,
+      hhmm:t[0]+':'+t[1],
+    };
+  }
+
+  function statusFor(ex){
+    var d=getLocalDate(ex.tz);
+    if(ex.days.indexOf(d.day)===-1)return{kind:'closed',label:'Closed'};
+    var h=d.decimal;
+    if(h>=ex.open && h<ex.close)return{kind:'open',label:'Open'};
+    if(ex.pre && h>=ex.pre[0] && h<ex.pre[1])return{kind:'pre',label:'Pre-mkt'};
+    if(ex.post && h>=ex.post[0] && h<ex.post[1])return{kind:'post',label:'Post-mkt'};
+    return{kind:'closed',label:'Closed'};
+  }
+
+  function render(){
+    grid.innerHTML='';
+    var max=size==='sm'?4:size==='lg'?6:6;
+    EXCHANGES.slice(0,max).forEach(function(ex){
+      var d=getLocalDate(ex.tz);
+      var st=statusFor(ex);
+      var cell=document.createElement('div');
+      cell.className='cell '+st.kind;
+      cell.innerHTML='<div class="exchange">'+ex.code+'</div>'+
+                     '<div class="time">'+d.hhmm+'</div>'+
+                     '<div class="status-row">'+
+                       '<span class="city">'+ex.city+'</span>'+
+                       '<span class="status '+st.kind+'">'+st.label+'</span>'+
+                     '</div>';
+      grid.appendChild(cell);
+    });
+    var u=new Date();
+    updatedEl.textContent='UTC '+u.toUTCString().slice(17,22);
+  }
+
+  render();
+  // Update every second so clocks tick
+  setInterval(render,1000);
+})();
+</script>
+</body>
+</html>

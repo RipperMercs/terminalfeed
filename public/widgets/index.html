@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Embeddable Widgets: BTC Price, Fear &amp; Greed, Crypto Heatmap, HN, Earthquakes | TerminalFeed</title>
+<meta name="description" content="Free embeddable widgets for any website: live Bitcoin price ticker with sparkline, Fear &amp; Greed gauge, crypto heatmap, dev service status board, earthquake feed, Hacker News top stories, global market hours. Dark/light/terminal themes, multiple sizes, no signup, no tracking.">
+<meta name="keywords" content="embed widget, bitcoin widget, btc price embed, fear greed widget, crypto heatmap, status page widget, free widgets, hacker news widget, earthquake widget, market hours widget">
+<link rel="canonical" href="https://terminalfeed.io/widgets">
+<meta property="og:title" content="Free Embeddable Widgets for Any Site | TerminalFeed">
+<meta property="og:description" content="Live Bitcoin price, Fear &amp; Greed gauge, crypto heatmap, dev service status, earthquake feed, HN top stories, market hours. Free, no signup, dark/light themes, copy-paste embed code.">
+<meta property="og:url" content="https://terminalfeed.io/widgets">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://terminalfeed.io/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Free Embeddable Widgets",
+  "description": "Free embeddable data widgets for any website. Live Bitcoin price, Fear & Greed, crypto heatmap, status board, earthquakes, Hacker News, market hours.",
+  "url": "https://terminalfeed.io/widgets",
+  "publisher": {
+    "@type": "Organization",
+    "name": "TerminalFeed",
+    "logo": {"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BreadcrumbList",
+  "itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},
+    {"@type":"ListItem","position":2,"name":"Widgets","item":"https://terminalfeed.io/widgets"}
+  ]
+}
+</script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0A0C;color:#D4D2CB;font-family:'JetBrains Mono','SF Mono','Fira Code',Consolas,monospace;line-height:1.7;padding:24px 16px 80px;min-height:100vh}
+.container{max-width:1100px;margin:0 auto}
+.breadcrumbs{font-size:11px;color:#4E4D49;margin-bottom:18px}
+.breadcrumbs a{color:#4E4D49;text-decoration:none}
+.breadcrumbs a:hover{color:#5DCAA5}
+.breadcrumbs .sep{margin:0 6px;color:#2A2A30}
+
+.hero{border-bottom:1px solid #1E1E24;padding-bottom:32px;margin-bottom:36px}
+.hero h1{font-size:32px;color:#F0EDE6;margin-bottom:12px;font-weight:600;letter-spacing:-0.5px}
+.hero h1 .prompt{color:#5DCAA5}
+.hero .lede{font-size:14px;color:#A8A6A0;max-width:760px;line-height:1.7}
+.hero .lede strong{color:#F0EDE6;font-weight:600}
+.hero .meta{display:flex;gap:24px;margin-top:18px;flex-wrap:wrap;font-size:11px;color:#8A8880}
+.hero .meta strong{color:#5DCAA5;font-weight:600}
+.hero .meta a{color:inherit;text-decoration:none;border-bottom:1px dotted #4E4D49}
+.hero .meta a:hover{color:#5DCAA5;border-bottom-color:#5DCAA5}
+
+.feature-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:48px;padding:14px 0;border-top:1px solid #1A1A22;border-bottom:1px solid #1A1A22}
+.feat{display:flex;flex-direction:column;gap:4px}
+.feat-icon{font-size:14px;color:#5DCAA5;letter-spacing:1px}
+.feat-title{font-size:12px;color:#F0EDE6;font-weight:600;letter-spacing:0.3px}
+.feat-desc{font-size:11px;color:#8A8880;line-height:1.6}
+
+.widget-card{background:#0D0D10;border:1px solid #1A1A22;border-radius:8px;padding:24px;margin-bottom:24px;transition:border-color 0.2s}
+.widget-card:hover{border-color:#2A2A30}
+
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.card-title-block{flex:1;min-width:200px}
+.card-name{font-size:18px;color:#F0EDE6;font-weight:600;margin-bottom:4px;letter-spacing:-0.2px}
+.card-name .accent{color:#5DCAA5;margin-right:6px}
+.card-desc{font-size:12.5px;color:#8A8880;line-height:1.6}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:9px;letter-spacing:1.5px;color:#5DCAA5;border:1px solid #5DCAA530;background:#5DCAA510;padding:2px 7px;border-radius:3px;text-transform:uppercase}
+.tag.muted{color:#71717A;border-color:#3A3A44;background:#3A3A4410}
+
+.preview-area{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+@media (max-width:840px){.preview-area{grid-template-columns:1fr}}
+
+.preview-frame-wrap{background:#000;border:1px solid #1E1E24;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:14px;min-height:240px;position:relative}
+.preview-frame-wrap.light{background:#F5F5F5;border-color:#D4D4D8}
+.preview-frame{border:0;display:block;border-radius:4px;background:transparent;transition:width 0.3s,height 0.3s}
+.preview-empty{font-size:11px;color:#52525B;letter-spacing:1px;text-transform:uppercase}
+
+.controls{display:flex;flex-direction:column;gap:14px}
+.control-group{display:flex;flex-direction:column;gap:6px}
+.control-label{font-size:10px;color:#8A8880;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.button-row{display:flex;gap:6px;flex-wrap:wrap}
+.opt-btn{background:#111114;border:1px solid #2A2A30;color:#A8A6A0;padding:6px 12px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px}
+.opt-btn:hover{border-color:#5DCAA5;color:#5DCAA5}
+.opt-btn.active{background:#5DCAA518;border-color:#5DCAA5;color:#5DCAA5;font-weight:600}
+
+.embed-block{display:flex;flex-direction:column;gap:6px}
+.embed-textarea{width:100%;min-height:80px;background:#0A0A0C;border:1px solid #2A2A30;border-radius:4px;color:#D4D2CB;padding:10px 12px;font-family:inherit;font-size:11px;line-height:1.7;resize:vertical;letter-spacing:0.2px}
+.embed-textarea:focus{outline:none;border-color:#5DCAA5}
+.embed-actions{display:flex;gap:8px}
+.btn-primary{background:#5DCAA5;color:#0A0A0C;border:none;padding:8px 18px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all 0.15s;flex:1}
+.btn-primary:hover{background:#4ADE80}
+.btn-primary.copied{background:#4ADE80;color:#0A0A0C}
+.btn-secondary{background:transparent;color:#8A8880;border:1px solid #2A2A30;padding:8px 12px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;letter-spacing:0.3px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn-secondary:hover{border-color:#5DCAA5;color:#5DCAA5}
+
+.api-callout{background:#0D0D10;border:1px solid #1E1E24;border-radius:8px;padding:24px;margin-top:48px}
+.api-callout h2{font-size:16px;color:#5DCAA5;margin-bottom:8px;letter-spacing:0.5px}
+.api-callout p{font-size:13px;color:#A8A6A0;margin-bottom:14px;line-height:1.7}
+.api-callout p:last-child{margin-bottom:0}
+.api-callout a{color:#5DCAA5;text-decoration:none;border-bottom:1px solid #5DCAA530}
+.api-callout a:hover{border-bottom-color:#5DCAA5}
+.api-callout code{background:#0A0A0C;border:1px solid #1E1E24;padding:2px 6px;border-radius:3px;font-size:11.5px;color:#5DCAA5}
+
+footer.footer{margin-top:60px;text-align:center;padding:24px 0;font-size:11px;color:#4E4D49;border-top:1px solid #1A1A22}
+footer.footer a{color:#4E4D49;text-decoration:none}
+footer.footer a:hover{color:#5DCAA5}
+footer.footer .sep{margin:0 6px;color:#2A2A30}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="sep">›</span><span>Widgets</span>
+  </nav>
+
+  <header class="hero">
+    <h1><span class="prompt">›_</span> EMBEDDABLE WIDGETS</h1>
+    <p class="lede"><strong>Drop live data on any website.</strong> Seven free, polished widgets you can embed with one line of HTML: live Bitcoin price with sparkline, Fear &amp; Greed gauge with animated needle, crypto heatmap, dev service status board, real-time earthquake feed, Hacker News top stories, global market hours. Three themes, three sizes, optional URL params for customization. No signup, no tracking, no rate-limiting your visitors.</p>
+    <div class="meta">
+      <span><strong>License:</strong> Free for any use, including commercial</span>
+      <span><strong>Footprint:</strong> Single &lt;iframe&gt; tag, no JS required on your page</span>
+      <span><strong>Data:</strong> Live from <a href="/api">terminalfeed.io/api</a></span>
+    </div>
+  </header>
+
+  <section class="feature-row">
+    <div class="feat"><div class="feat-icon">›_</div><div class="feat-title">Single iframe</div><div class="feat-desc">No external JS, no CSS conflicts, no tracking pixels.</div></div>
+    <div class="feat"><div class="feat-icon">⚡</div><div class="feat-title">Live data</div><div class="feat-desc">Auto-refresh on cadence appropriate to each feed.</div></div>
+    <div class="feat"><div class="feat-icon">🌗</div><div class="feat-title">Three themes</div><div class="feat-desc">Dark, light, terminal. Match any site palette.</div></div>
+    <div class="feat"><div class="feat-icon">▤</div><div class="feat-title">Three sizes</div><div class="feat-desc">SM, MD, LG. Or set custom width/height on the iframe.</div></div>
+    <div class="feat"><div class="feat-icon">⏸</div><div class="feat-title">Tab-aware</div><div class="feat-desc">Polling pauses when your page is hidden.</div></div>
+    <div class="feat"><div class="feat-icon">∅</div><div class="feat-title">Zero signup</div><div class="feat-desc">No API key, no domain registration, no quotas.</div></div>
+  </section>
+
+  <div id="widget-cards"></div>
+
+  <div class="api-callout">
+    <h2>Want to build your own?</h2>
+    <p>Every widget pulls from a public TerminalFeed API endpoint. The full catalog is at <a href="/api">/api</a>, with LLM-ready tool definitions at <a href="/api/llm-tools">/api/llm-tools</a> and an MCP server at <a href="/api/mcp">/api/mcp</a> for AI agents. Most data feeds (BTC price, fear &amp; greed, crypto markets, status, earthquakes, HN, weather, predictions) are <strong>free</strong> with no signup.</p>
+    <p>Hand-crafted dashboards or trading bots can use the same APIs the widgets do. For aggregated, normalized, paid endpoints (correlations, whale watch, exchange flows, deep crypto profiles), see <a href="/for-devs/api">/for-devs/api</a>. Bug reports and widget requests welcome at <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a>.</p>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/api">API Catalog</a><span class="sep">|</span>
+    <a href="/for-devs">Developer Hub</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/glossary">Glossary</a><span class="sep">|</span>
+    <a href="/about">About</a>
+  </footer>
+</div>
+
+<script>
+// Each widget has its slug, name, description, sizes (with default), themes, and tags.
+var WIDGETS=[
+  {
+    slug:'btc-ticker',
+    name:'BTC Live Ticker',
+    desc:'Real-time Bitcoin price with 24h sparkline, smooth digit animations, and color flash on price changes. Updates every 5 seconds.',
+    tags:['CRYPTO','LIVE','SPARKLINE'],
+    sizes:{sm:[240,72],md:[340,108],lg:[480,140]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'fear-greed',
+    name:'Fear &amp; Greed Gauge',
+    desc:'The Crypto Fear &amp; Greed Index as an animated semicircle gauge. Color-coded zones from extreme fear (red) to extreme greed (green). Needle animates smoothly to value on load.',
+    tags:['CRYPTO','SENTIMENT','GAUGE'],
+    sizes:{sm:[240,170],md:[320,220],lg:[420,290]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'crypto-heatmap',
+    name:'Crypto Heatmap',
+    desc:'Top crypto coins as colored tiles, sized by market cap, colored by 24h % change. Deep red to deep green gradient. Hover for details.',
+    tags:['CRYPTO','MARKETS','VISUAL'],
+    sizes:{sm:[300,200],md:[420,300],lg:[560,400]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'status-board',
+    name:'Dev Service Status',
+    desc:'Live status of GitHub, Cloudflare, OpenAI, Anthropic, Vercel, npm, Stripe, Discord, and more. Compact dot indicators with severity ranking. Updates every 2 minutes.',
+    tags:['DEV','OPS','LIVE'],
+    sizes:{sm:[280,200],md:[360,280],lg:[440,360]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'earthquakes',
+    name:'Live Earthquake Feed',
+    desc:'Latest seismic events from USGS with magnitude, location, depth, and time-since. Color-coded by severity. Updates every 60 seconds.',
+    tags:['DATA','LIVE','UNIQUE'],
+    sizes:{sm:[300,200],md:[400,260],lg:[520,360]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'hn-top',
+    name:'Hacker News Top',
+    desc:'Top 6 Hacker News stories with score, comment count, and source. Click-through opens story in new tab. Updates every 2 minutes.',
+    tags:['DEV','NEWS','HN'],
+    sizes:{sm:[340,200],md:[440,280],lg:[560,400]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+  {
+    slug:'market-hours',
+    name:'Global Market Hours',
+    desc:'Live local clocks for NYSE, NASDAQ, LSE, XETRA, TSE, HKEX. Color-coded open/pre-market/post-market/closed status with timezone-aware logic.',
+    tags:['MARKETS','GLOBAL','CLOCK'],
+    sizes:{sm:[300,160],md:[400,200],lg:[560,260]},
+    defaultSize:'md',
+    themes:['dark','light','terminal'],
+  },
+];
+
+var cardsContainer=document.getElementById('widget-cards');
+
+WIDGETS.forEach(function(w,i){
+  var card=document.createElement('section');
+  card.className='widget-card';
+  card.id='w-'+w.slug;
+  var defaultDim=w.sizes[w.defaultSize];
+
+  card.innerHTML=
+    '<div class="card-header">'+
+      '<div class="card-title-block">'+
+        '<div class="card-name"><span class="accent">'+(i+1).toString().padStart(2,'0')+'</span>'+w.name+'</div>'+
+        '<div class="card-desc">'+w.desc+'</div>'+
+        '<div class="card-tags">'+w.tags.map(function(t){return '<span class="tag">'+t+'</span>'}).join('')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="preview-area">'+
+      '<div class="preview-frame-wrap" id="frame-'+w.slug+'">'+
+        '<iframe class="preview-frame" id="iframe-'+w.slug+'" src="/widgets/'+w.slug+'?theme=dark&size='+w.defaultSize+'" '+
+          'width="'+defaultDim[0]+'" height="'+defaultDim[1]+'" loading="lazy" frameborder="0" '+
+          'title="'+w.name.replace(/&amp;/g,'and')+' preview"></iframe>'+
+      '</div>'+
+      '<div class="controls">'+
+        '<div class="control-group">'+
+          '<div class="control-label">Theme</div>'+
+          '<div class="button-row" data-axis="theme" data-slug="'+w.slug+'">'+
+            w.themes.map(function(t,idx){return '<button class="opt-btn'+(idx===0?' active':'')+'" data-val="'+t+'">'+t+'</button>'}).join('')+
+          '</div>'+
+        '</div>'+
+        '<div class="control-group">'+
+          '<div class="control-label">Size</div>'+
+          '<div class="button-row" data-axis="size" data-slug="'+w.slug+'">'+
+            Object.keys(w.sizes).map(function(s){return '<button class="opt-btn'+(s===w.defaultSize?' active':'')+'" data-val="'+s+'">'+s.toUpperCase()+'</button>'}).join('')+
+          '</div>'+
+        '</div>'+
+        '<div class="embed-block">'+
+          '<div class="control-label">Embed code</div>'+
+          '<textarea class="embed-textarea" id="embed-'+w.slug+'" readonly></textarea>'+
+          '<div class="embed-actions">'+
+            '<button class="btn-primary" id="copy-'+w.slug+'">Copy embed</button>'+
+            '<a class="btn-secondary" href="/widgets/'+w.slug+'" target="_blank" rel="noopener">Open standalone</a>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  cardsContainer.appendChild(card);
+
+  // Wire up controls
+  var state={theme:'dark',size:w.defaultSize};
+  var iframe=card.querySelector('#iframe-'+w.slug);
+  var frameWrap=card.querySelector('#frame-'+w.slug);
+  var embedTa=card.querySelector('#embed-'+w.slug);
+  var copyBtn=card.querySelector('#copy-'+w.slug);
+
+  function refresh(){
+    var dims=w.sizes[state.size];
+    iframe.src='/widgets/'+w.slug+'?theme='+state.theme+'&size='+state.size;
+    iframe.width=dims[0];
+    iframe.height=dims[1];
+    frameWrap.classList.toggle('light',state.theme==='light');
+    var embed='<iframe src="https://terminalfeed.io/widgets/'+w.slug+'?theme='+state.theme+'&size='+state.size+'" '+
+      'width="'+dims[0]+'" height="'+dims[1]+'" frameborder="0" loading="lazy" '+
+      'style="border:0;border-radius:6px" title="'+w.name.replace(/&amp;/g,'and').replace(/"/g,'&quot;')+'"></iframe>';
+    embedTa.value=embed;
+  }
+
+  card.querySelectorAll('.button-row').forEach(function(row){
+    var axis=row.dataset.axis;
+    row.querySelectorAll('.opt-btn').forEach(function(b){
+      b.addEventListener('click',function(){
+        row.querySelectorAll('.opt-btn').forEach(function(x){x.classList.remove('active')});
+        b.classList.add('active');
+        state[axis]=b.dataset.val;
+        refresh();
+      });
+    });
+  });
+
+  copyBtn.addEventListener('click',function(){
+    embedTa.select();
+    navigator.clipboard.writeText(embedTa.value).then(function(){
+      copyBtn.textContent='Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(function(){copyBtn.textContent='Copy embed';copyBtn.classList.remove('copied')},1500);
+    }).catch(function(){
+      // Fallback: leave selection so user can ctrl+c
+    });
+  });
+
+  refresh();
+});
+</script>
+</body>
+</html>

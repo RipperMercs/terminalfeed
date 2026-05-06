@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Market Heatmap Widget | TerminalFeed</title>
+<meta name="description" content="Embeddable crypto market heatmap. Top coins as colored tiles by 24h % change. Live data, hover for details, dark/light themes. Free, no signup.">
+<link rel="canonical" href="https://terminalfeed.io/widgets/crypto-heatmap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace}
+body{transition:background 0.3s}
+body.theme-dark{background:#0A0A0C;color:#D4D2CB}
+body.theme-light{background:#FFFFFF;color:#1A1A1E}
+body.theme-terminal{background:#000000;color:#5DCAA5}
+
+.widget{position:relative;width:100%;height:100%;padding:8px;display:flex;flex-direction:column}
+.label-row{display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:1.8px;opacity:0.55;text-transform:uppercase;padding:2px 6px 6px}
+.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#4ADE80;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.heatmap{flex:1;display:grid;gap:2px;grid-template-columns:repeat(5,1fr);grid-auto-rows:1fr;min-height:0;padding:0 2px 2px}
+.tile{position:relative;border-radius:3px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:4px;text-align:center;cursor:default;transition:transform 0.15s,filter 0.15s;overflow:hidden;min-height:0}
+.tile:hover{transform:scale(1.05);z-index:5}
+body.theme-dark .tile{color:#F0EDE6}
+body.theme-light .tile{color:#FFFFFF}
+.tile-symbol{font-size:11px;font-weight:600;letter-spacing:0.5px;line-height:1;margin-bottom:2px}
+.tile-change{font-size:9px;font-weight:500;line-height:1;opacity:0.95}
+
+.footer{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 0;font-size:8px;opacity:0.4;letter-spacing:0.5px}
+.footer a{color:inherit;text-decoration:none}
+.legend{display:flex;align-items:center;gap:4px}
+.legend-bar{width:60px;height:4px;border-radius:2px;background:linear-gradient(to right,#DC2626,#F87171,#71717A,#4ADE80,#16A34A)}
+
+/* Size variants */
+body.size-sm .heatmap{grid-template-columns:repeat(4,1fr)}
+body.size-sm .tile-symbol{font-size:9px}
+body.size-sm .tile-change{font-size:7px}
+body.size-sm .label-row{font-size:7px;padding:1px 4px 3px}
+
+body.size-lg .heatmap{grid-template-columns:repeat(6,1fr);gap:3px}
+body.size-lg .tile-symbol{font-size:13px;margin-bottom:3px}
+body.size-lg .tile-change{font-size:11px}
+body.size-lg .label-row{font-size:10px}
+
+@media (prefers-reduced-motion: reduce){.live-dot{animation:none}.tile:hover{transform:none}}
+</style>
+</head>
+<body>
+<div class="widget">
+  <div class="label-row"><span class="live-dot"></span>CRYPTO HEATMAP · 24H</div>
+  <div class="heatmap" id="heatmap"></div>
+  <div class="footer">
+    <span class="legend"><span>−10%</span><span class="legend-bar"></span><span>+10%</span></span>
+    <a href="https://terminalfeed.io?utm_source=widget&amp;utm_medium=heatmap" target="_blank" rel="noopener">terminalfeed.io</a>
+  </div>
+</div>
+<script>
+(function(){
+  var qs=new URLSearchParams(location.search);
+  var theme=qs.get('theme')||'dark';
+  var size=qs.get('size')||'md';
+  var count=parseInt(qs.get('count')||'',10);
+  if(['dark','light','terminal'].indexOf(theme)===-1)theme='dark';
+  if(['sm','md','lg'].indexOf(size)===-1)size='md';
+  document.body.className='theme-'+theme+' size-'+size;
+  if(isNaN(count)||count<5)count=size==='sm'?16:size==='lg'?30:20;
+
+  var heatmap=document.getElementById('heatmap');
+
+  // Color stops at -10% and +10% (capped). Hue interpolation through neutral gray at 0%.
+  function colorFor(pct){
+    var clamped=Math.max(-10,Math.min(10,pct));
+    if(clamped<0){
+      var t=Math.abs(clamped)/10;  // 0..1, deeper red as t->1
+      // Light red (#F87171) -> deep red (#7F1D1D)
+      var r=Math.round(248-(248-127)*t);
+      var g=Math.round(113-(113-29)*t);
+      var b=Math.round(113-(113-29)*t);
+      return 'rgb('+r+','+g+','+b+')';
+    }else{
+      var u=clamped/10;
+      // Light green (#86EFAC) -> deep green (#14532D)
+      var r2=Math.round(134-(134-20)*u);
+      var g2=Math.round(239-(239-83)*u);
+      var b2=Math.round(172-(172-45)*u);
+      return 'rgb('+r2+','+g2+','+b2+')';
+    }
+  }
+
+  function render(coins){
+    heatmap.innerHTML='';
+    coins.forEach(function(c){
+      var tile=document.createElement('div');
+      tile.className='tile';
+      var ch=parseFloat(c.price_change_percentage_24h||0);
+      tile.style.background=colorFor(ch);
+      tile.innerHTML='<div class="tile-symbol">'+(c.symbol||'').toUpperCase()+'</div>'+
+                     '<div class="tile-change">'+(ch>=0?'+':'')+ch.toFixed(2)+'%</div>';
+      tile.title=c.name+' · $'+(c.current_price||0).toLocaleString('en-US',{maximumFractionDigits:c.current_price<1?6:2})+' · '+(ch>=0?'+':'')+ch.toFixed(2)+'%';
+      heatmap.appendChild(tile);
+    });
+  }
+
+  function load(){
+    fetch('https://terminalfeed.io/api/coingecko/markets').then(function(r){return r.json()}).then(function(j){
+      var data=(j&&j.data)||[];
+      // Filter out tiny coins for cleaner visual
+      var filtered=data.filter(function(c){return (c.current_price||0)>0 && c.symbol;}).slice(0,count);
+      render(filtered);
+    }).catch(function(){});
+  }
+
+  var timer=null;
+  function start(){if(timer)return;timer=setInterval(load,60000)}
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stop();else{load();start();}
+  });
+
+  load();start();
+})();
+</script>
+</body>
+</html>
