@@ -490,8 +490,8 @@
 [data-variant="command"] .tickDot:nth-child(3) { animation-delay: calc(var(--anim-offset, 0s) + 0.8s); }
 
 @keyframes commandBracketSweep {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.15); }
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.05); }
 }
 
 @keyframes tickPulse {
