@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitcoin (BTC) Live Price, Market Cap, Use Cases | TerminalFeed</title>
+  <meta name="description" content="The first decentralized cryptocurrency, running on a proof-of-work blockchain since January 2009. The reference asset for the entire crypto market.">
+  <meta name="keywords" content="btc price, btc live, bitcoin price, btc market cap, btc usd, btc chart, what is btc, btc explained">
+  <link rel="canonical" href="https://terminalfeed.io/crypto/btc">
+  <meta property="og:title" content="Bitcoin (BTC) Live Price + What It Is">
+  <meta property="og:description" content="The first decentralized cryptocurrency, running on a proof-of-work blockchain since January 2009. The reference asset for the entire crypto market.">
+  <meta property="og:url" content="https://terminalfeed.io/crypto/btc">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Bitcoin (BTC): Live Price, Market Cap, and Use Cases","description":"The first decentralized cryptocurrency, running on a proof-of-work blockchain since January 2009. The reference asset for the entire crypto market.","url":"https://terminalfeed.io/crypto/btc","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/crypto/btc","about":{"@type":"Thing","name":"Bitcoin"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Crypto","item":"https://terminalfeed.io/crypto"},{"@type":"ListItem","position":3,"name":"Bitcoin (BTC)","item":"https://terminalfeed.io/crypto/btc"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Who created Bitcoin?","acceptedAnswer":{"@type":"Answer","text":"Bitcoin was created by an anonymous person or group writing under the name Satoshi Nakamoto. The identity has never been publicly confirmed. Satoshi disappeared from public communication in 2010-2011."}},{"@type":"Question","name":"How many bitcoins exist?","acceptedAnswer":{"@type":"Answer","text":"Bitcoin has a hard cap of 21 million coins. As of 2026, around 19.7 million have been mined; the rest will be released gradually until approximately the year 2140."}},{"@type":"Question","name":"Is Bitcoin a good store of value?","acceptedAnswer":{"@type":"Answer","text":"Bitcoin has appreciated dramatically since launch but remains highly volatile on shorter timeframes. As a long-duration store of value, its case rests on its fixed supply and decentralized issuance. Whether that holds up over decades is genuinely uncertain."}},{"@type":"Question","name":"How is Bitcoin different from other cryptocurrencies?","acceptedAnswer":{"@type":"Answer","text":"Bitcoin has the longest track record, the largest network effect, the highest hashrate, and the strongest decentralization claim. It is also intentionally less programmable than alternatives like Ethereum."}},{"@type":"Question","name":"Can Bitcoin transactions be reversed?","acceptedAnswer":{"@type":"Answer","text":"No. Once a transaction is confirmed in a block and buried under several more blocks, reversing it would require attacking the network with majority hashrate. Lost or stolen Bitcoin cannot be recovered through any administrative process."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono','SF Mono','Fira Code',Consolas,monospace; line-height: 1.7; padding: 24px 16px 64px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 28px; }
+    .badge { display: inline-block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; margin-bottom: 14px; color: #5DCAA5; border: 1px solid #5DCAA540; background: #5DCAA510; }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 6px; font-weight: 600; }
+    .header h1 .ticker { color: #5DCAA5; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; margin-top: 8px; }
+    .live-stats { background: #111114; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px 18px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
+    .stat-label { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 18px; color: #F0EDE6; font-weight: 600; }
+    .stat-value.up { color: #4ADE80; }
+    .stat-value.down { color: #F87171; }
+    .stat-value.muted { color: #4E4D49; }
+    .live-note { font-size: 10px; color: #4E4D49; margin-top: -8px; margin-bottom: 28px; text-align: right; }
+    .section { margin-bottom: 30px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 12px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code { background: #111114; border: 1px solid #1A1A22; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; background: #0D0D10; border: 1px solid #1A1A22; border-radius: 6px; padding: 14px 18px; margin-bottom: 28px; }
+    .meta-grid .ml { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .meta-grid .mv { font-size: 12px; color: #C8C8C0; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .related-card { background: #111114; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 14px; text-decoration: none !important; border-bottom: 1px solid #1A1A22 !important; transition: border-color 0.15s; }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-ticker { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 12px; color: #F0EDE6; margin-bottom: 2px; }
+    .related-cat { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; }
+    .faq { background: #0D0D10; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 16px; margin-bottom: 8px; }
+    .faq summary { cursor: pointer; font-size: 13px; color: #F0EDE6; font-weight: 500; list-style: none; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+    @media (max-width: 600px) { .header h1 { font-size: 22px; } .section h2 { font-size: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/crypto">Crypto</a><span class="sep">›</span><span>BTC</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">L1</span>
+      <h1>Bitcoin <span class="ticker">BTC</span></h1>
+      <p class="summary">The first decentralized cryptocurrency, running on a proof-of-work blockchain since January 2009. The reference asset for the entire crypto market.</p>
+    </header>
+
+    <div class="live-stats">
+      <div><div class="stat-label">Price</div><div class="stat-value muted" id="price">loading...</div></div>
+      <div><div class="stat-label">24h Change</div><div class="stat-value muted" id="change24h">--</div></div>
+      <div><div class="stat-label">Market Cap</div><div class="stat-value muted" id="mcap">--</div></div>
+      <div><div class="stat-label">24h Volume</div><div class="stat-value muted" id="vol">--</div></div>
+    </div>
+    <p class="live-note">Live data via <a href="/api/coingecko/markets" style="color:#4E4D49">/api/coingecko/markets</a> · Updated every page load</p>
+
+    <div class="meta-grid">
+      <div><div class="ml">Founded</div><div class="mv">2009</div></div>
+      <div><div class="ml">Founder</div><div class="mv">Satoshi Nakamoto (pseudonym)</div></div>
+      <div><div class="ml">Consensus</div><div class="mv">Proof-of-Work</div></div>
+      <div><div class="ml">Max Supply</div><div class="mv">21,000,000</div></div>
+    </div>
+
+    <section class="section">
+      <h2>What BTC is</h2>
+      <p>Bitcoin is the first and most established cryptocurrency, designed to be a peer-to-peer electronic cash system that operates without a central authority. It was introduced in October 2008 by an anonymous person or group writing under the name Satoshi Nakamoto, who published a whitepaper proposing a system where transactions are verified by a distributed network of nodes using cryptographic proof. The Bitcoin network went live on January 3, 2009 with the mining of the genesis block, which contained the now-famous text "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks".<br><br>Today, Bitcoin functions primarily as a store of value, often called "digital gold" because of its fixed 21 million supply, decentralized nature, and resistance to inflation through monetary policy. While it can be used for payments, the network's intentionally limited throughput (around 7 transactions per second) means most economic activity happens on Layer 2 networks like the <a href="/glossary/lightning-network">Lightning Network</a> or wrapped representations on smart-contract platforms.</p>
+    </section>
+
+    <section class="section">
+      <h2>How it works</h2>
+      <p>Bitcoin uses a proof-of-work consensus mechanism: miners compete to solve a computationally expensive cryptographic puzzle (SHA-256 double hashing) for the right to add the next block of transactions. The miner who finds a valid solution first broadcasts the block, the rest of the network verifies it, and the miner receives the block reward (currently 3.125 BTC per block, which halves every 210,000 blocks per the <a href="/glossary/halving">halving</a> schedule).<br><br>New blocks are added approximately every 10 minutes, and the protocol automatically adjusts mining difficulty every 2,016 blocks to maintain that target. Once a block is buried under several confirmations (typically 6 for high-value transactions), reversing it would require an attacker to control more than 50% of the network's total <a href="/glossary/hashrate">hashrate</a>, which is currently impractical given the network's ~700+ exahash/s of compute. Wallets track ownership using <a href="/glossary/utxo">UTXOs</a> (Unspent Transaction Outputs) rather than account balances.</p>
+    </section>
+
+    <section class="section">
+      <h2>Use cases</h2>
+      <p>The dominant use case in 2026 is store of value: holding BTC as a long-duration savings asset, often as a hedge against fiat currency debasement and as portfolio diversification. Spot Bitcoin <a href="/glossary/bitcoin-etf">ETFs</a> launched in 2024 made institutional allocation straightforward, and they now hold significant fraction of circulating supply. Secondary use cases: international remittances (especially via Lightning), settlement-layer collateral for DeFi (via wrapped BTC on Ethereum and L2s), and a small but growing merchant payments segment particularly outside the US.</p>
+    </section>
+
+    <section class="section">
+      <h2>Tradeoffs and criticism</h2>
+      <p>Critics point to Bitcoin's energy consumption (network electricity use rivals small countries), its limited base-layer throughput, the persistent volatility that makes day-to-day pricing impractical, and the lack of native programmability. Supporters argue these are deliberate tradeoffs: high energy use is what makes the network attack-resistant, simplicity is what makes the rules predictable for decades, and price volatility is the natural state of an asset that is still being adopted globally.</p>
+    </section>
+
+    <section class="section">
+      <h2>Where to track BTC</h2>
+      <p>Read more in the <a href="/blog/bitcoin-mempool">Bitcoin Mempool</a> article, the <a href="/blog/bitcoin-80k-sentiment-disconnect">2026 Bitcoin sentiment analysis</a>, or check live data at <a href="/api/btc-price">/api/btc-price</a>.</p>
+    </section>
+
+    <section class="section">
+      <h2>Related coins</h2>
+      <div class="related-grid">
+      <a href="/crypto/eth" class="related-card">
+        <div class="related-ticker" style="color:#5DCAA5">ETH</div>
+        <div class="related-name">Ethereum</div>
+        <div class="related-cat">L1</div>
+      </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Frequently asked questions</h2>
+      <details class="faq"><summary>Who created Bitcoin?</summary><div class="faq-answer">Bitcoin was created by an anonymous person or group writing under the name Satoshi Nakamoto. The identity has never been publicly confirmed. Satoshi disappeared from public communication in 2010-2011.</div></details>
+      <details class="faq"><summary>How many bitcoins exist?</summary><div class="faq-answer">Bitcoin has a hard cap of 21 million coins. As of 2026, around 19.7 million have been mined; the rest will be released gradually until approximately the year 2140.</div></details>
+      <details class="faq"><summary>Is Bitcoin a good store of value?</summary><div class="faq-answer">Bitcoin has appreciated dramatically since launch but remains highly volatile on shorter timeframes. As a long-duration store of value, its case rests on its fixed supply and decentralized issuance. Whether that holds up over decades is genuinely uncertain.</div></details>
+      <details class="faq"><summary>How is Bitcoin different from other cryptocurrencies?</summary><div class="faq-answer">Bitcoin has the longest track record, the largest network effect, the highest hashrate, and the strongest decentralization claim. It is also intentionally less programmable than alternatives like Ethereum.</div></details>
+      <details class="faq"><summary>Can Bitcoin transactions be reversed?</summary><div class="faq-answer">No. Once a transaction is confirmed in a block and buried under several more blocks, reversing it would require attacking the network with majority hashrate. Lost or stolen Bitcoin cannot be recovered through any administrative process.</div></details>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/crypto">All Coins</a><span class="sep">|</span>
+      <a href="/api/crypto-movers">Live Markets</a><span class="sep">|</span>
+      <a href="/api/btc-price">BTC Price API</a><span class="sep">|</span>
+      <a href="/glossary">Glossary</a><span class="sep">|</span>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+
+  <script>
+  (function() {
+    var sym = 'btc';
+    fetch('/api/coingecko/markets').then(function(r) { return r.json(); }).then(function(j) {
+      var data = (j && j.data) || [];
+      var coin = data.find(function(c) { return c.symbol === sym || c.id === sym; });
+      if (!coin) return;
+      var fmtPrice = function(n) {
+        if (n >= 1000) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+        if (n >= 1) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 2});
+        if (n >= 0.01) return '$' + n.toFixed(4);
+        return '$' + n.toFixed(8);
+      };
+      var fmtBig = function(n) {
+        if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+        return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+      };
+      var pe = document.getElementById('price');
+      pe.textContent = fmtPrice(coin.current_price);
+      pe.classList.remove('muted');
+      var ce = document.getElementById('change24h');
+      var ch = coin.price_change_percentage_24h || 0;
+      ce.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%';
+      ce.classList.remove('muted');
+      ce.classList.add(ch >= 0 ? 'up' : 'down');
+      var me = document.getElementById('mcap');
+      me.textContent = coin.market_cap ? fmtBig(coin.market_cap) : '--';
+      me.classList.remove('muted');
+      var ve = document.getElementById('vol');
+      ve.textContent = coin.total_volume ? fmtBig(coin.total_volume) : '--';
+      ve.classList.remove('muted');
+    }).catch(function() {});
+  })();
+  </script>
+</body>
+</html>

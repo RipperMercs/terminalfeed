@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uniswap (UNI) Live Price, Market Cap, Use Cases | TerminalFeed</title>
+  <meta name="description" content="The governance token of Uniswap, the largest decentralized exchange on Ethereum and the original AMM that defined DeFi.">
+  <meta name="keywords" content="uni price, uni live, uniswap price, uni market cap, uni usd, uni chart, what is uni, uni explained">
+  <link rel="canonical" href="https://terminalfeed.io/crypto/uni">
+  <meta property="og:title" content="Uniswap (UNI) Live Price + What It Is">
+  <meta property="og:description" content="The governance token of Uniswap, the largest decentralized exchange on Ethereum and the original AMM that defined DeFi.">
+  <meta property="og:url" content="https://terminalfeed.io/crypto/uni">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Uniswap (UNI): Live Price, Market Cap, and Use Cases","description":"The governance token of Uniswap, the largest decentralized exchange on Ethereum and the original AMM that defined DeFi.","url":"https://terminalfeed.io/crypto/uni","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/crypto/uni","about":{"@type":"Thing","name":"Uniswap"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Crypto","item":"https://terminalfeed.io/crypto"},{"@type":"ListItem","position":3,"name":"Uniswap (UNI)","item":"https://terminalfeed.io/crypto/uni"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How is Uniswap different from a centralized exchange?","acceptedAnswer":{"@type":"Answer","text":"Uniswap is a smart contract anyone can interact with directly. There is no order book, no account, no KYC, no listing process. Trades execute against liquidity pools at formula-determined prices."}},{"@type":"Question","name":"What is impermanent loss?","acceptedAnswer":{"@type":"Answer","text":"Impermanent loss is the gap between holding two tokens directly and depositing them as Uniswap liquidity, when the token prices diverge. The LP's share of the pool gets rebalanced toward the falling asset, locking in less upside than just holding."}},{"@type":"Question","name":"Does UNI generate income?","acceptedAnswer":{"@type":"Answer","text":"Historically no, though the \"fee switch\" governance mechanism allows UNI holders to vote on whether a portion of pool fees should be routed to the UNI treasury or stakers. This has been activated in limited form."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono','SF Mono','Fira Code',Consolas,monospace; line-height: 1.7; padding: 24px 16px 64px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 28px; }
+    .badge { display: inline-block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; margin-bottom: 14px; color: #A78BFA; border: 1px solid #A78BFA40; background: #A78BFA10; }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 6px; font-weight: 600; }
+    .header h1 .ticker { color: #A78BFA; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; margin-top: 8px; }
+    .live-stats { background: #111114; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px 18px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
+    .stat-label { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 18px; color: #F0EDE6; font-weight: 600; }
+    .stat-value.up { color: #4ADE80; }
+    .stat-value.down { color: #F87171; }
+    .stat-value.muted { color: #4E4D49; }
+    .live-note { font-size: 10px; color: #4E4D49; margin-top: -8px; margin-bottom: 28px; text-align: right; }
+    .section { margin-bottom: 30px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 12px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code { background: #111114; border: 1px solid #1A1A22; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; background: #0D0D10; border: 1px solid #1A1A22; border-radius: 6px; padding: 14px 18px; margin-bottom: 28px; }
+    .meta-grid .ml { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .meta-grid .mv { font-size: 12px; color: #C8C8C0; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .related-card { background: #111114; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 14px; text-decoration: none !important; border-bottom: 1px solid #1A1A22 !important; transition: border-color 0.15s; }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-ticker { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 12px; color: #F0EDE6; margin-bottom: 2px; }
+    .related-cat { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; }
+    .faq { background: #0D0D10; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 16px; margin-bottom: 8px; }
+    .faq summary { cursor: pointer; font-size: 13px; color: #F0EDE6; font-weight: 500; list-style: none; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+    @media (max-width: 600px) { .header h1 { font-size: 22px; } .section h2 { font-size: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/crypto">Crypto</a><span class="sep">›</span><span>UNI</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">DeFi</span>
+      <h1>Uniswap <span class="ticker">UNI</span></h1>
+      <p class="summary">The governance token of Uniswap, the largest decentralized exchange on Ethereum and the original AMM that defined DeFi.</p>
+    </header>
+
+    <div class="live-stats">
+      <div><div class="stat-label">Price</div><div class="stat-value muted" id="price">loading...</div></div>
+      <div><div class="stat-label">24h Change</div><div class="stat-value muted" id="change24h">--</div></div>
+      <div><div class="stat-label">Market Cap</div><div class="stat-value muted" id="mcap">--</div></div>
+      <div><div class="stat-label">24h Volume</div><div class="stat-value muted" id="vol">--</div></div>
+    </div>
+    <p class="live-note">Live data via <a href="/api/coingecko/markets" style="color:#4E4D49">/api/coingecko/markets</a> · Updated every page load</p>
+
+    <div class="meta-grid">
+      <div><div class="ml">Founded</div><div class="mv">2018</div></div>
+      <div><div class="ml">Founder</div><div class="mv">Hayden Adams</div></div>
+      <div><div class="ml">Consensus</div><div class="mv">Token on Ethereum and many L2s</div></div>
+      <div><div class="ml">Max Supply</div><div class="mv">1,000,000,000</div></div>
+    </div>
+
+    <section class="section">
+      <h2>What UNI is</h2>
+      <p>Uniswap is the largest decentralized exchange on Ethereum and the canonical implementation of the <a href="/glossary/amm">automated market maker</a> model. It was launched in 2018 by Hayden Adams, inspired by ideas Vitalik Buterin had written about. Uniswap V2 (2020) introduced the simple constant-product formula that remains the reference design for AMMs everywhere. UNI is the governance token, distributed via a 2020 airdrop that gave 400 UNI to every wallet that had used the protocol.</p>
+    </section>
+
+    <section class="section">
+      <h2>How it works</h2>
+      <p>Uniswap V2 used a single constant-product formula <code>x * y = k</code> for all pools. Uniswap V3 (2021) introduced concentrated liquidity, where LPs deposit into specific price ranges for higher capital efficiency. Uniswap V4 (2024-2025) adds "hooks" — programmable extensions that let pool creators add custom logic for fees, dynamic curves, oracles, and more. UNI holders vote on protocol upgrades, fee structure, and treasury allocations.</p>
+    </section>
+
+    <section class="section">
+      <h2>Use cases</h2>
+      <p>Trading: Uniswap is where most ERC-20 tokens get their first market. <a href="/glossary/liquidity-pool">Liquidity provision</a>: anyone can deposit tokens and earn trading fees. Permissionless market creation: any token pair can have a Uniswap market without listing fees or approvals. The protocol is deployed on Ethereum and most major L2s, with multi-chain governance executed via cross-chain messaging.</p>
+    </section>
+
+    <section class="section">
+      <h2>Tradeoffs and criticism</h2>
+      <p>LPs face <a href="/glossary/slippage">impermanent loss</a> when token prices diverge significantly from when they deposited. The constant-product formula is capital-inefficient for stablecoin pairs (Curve handles those better). Uniswap's "fee switch" — sending a fraction of trading fees to UNI holders — was debated for years and has been activated in limited form via governance.</p>
+    </section>
+
+    <section class="section">
+      <h2>Where to track UNI</h2>
+      <p>See <a href="/glossary/amm">AMM</a>, <a href="/glossary/liquidity-pool">liquidity pool</a>, and <a href="/glossary/slippage">slippage</a> for foundational concepts.</p>
+    </section>
+
+    <section class="section">
+      <h2>Related coins</h2>
+      <div class="related-grid">
+      <a href="/crypto/link" class="related-card">
+        <div class="related-ticker" style="color:#A78BFA">LINK</div>
+        <div class="related-name">Chainlink</div>
+        <div class="related-cat">DeFi</div>
+      </a>
+      <a href="/crypto/aave" class="related-card">
+        <div class="related-ticker" style="color:#A78BFA">AAVE</div>
+        <div class="related-name">Aave</div>
+        <div class="related-cat">DeFi</div>
+      </a>
+      <a href="/crypto/mkr" class="related-card">
+        <div class="related-ticker" style="color:#A78BFA">MKR</div>
+        <div class="related-name">Maker</div>
+        <div class="related-cat">DeFi</div>
+      </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Frequently asked questions</h2>
+      <details class="faq"><summary>How is Uniswap different from a centralized exchange?</summary><div class="faq-answer">Uniswap is a smart contract anyone can interact with directly. There is no order book, no account, no KYC, no listing process. Trades execute against liquidity pools at formula-determined prices.</div></details>
+      <details class="faq"><summary>What is impermanent loss?</summary><div class="faq-answer">Impermanent loss is the gap between holding two tokens directly and depositing them as Uniswap liquidity, when the token prices diverge. The LP's share of the pool gets rebalanced toward the falling asset, locking in less upside than just holding.</div></details>
+      <details class="faq"><summary>Does UNI generate income?</summary><div class="faq-answer">Historically no, though the &quot;fee switch&quot; governance mechanism allows UNI holders to vote on whether a portion of pool fees should be routed to the UNI treasury or stakers. This has been activated in limited form.</div></details>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/crypto">All Coins</a><span class="sep">|</span>
+      <a href="/api/crypto-movers">Live Markets</a><span class="sep">|</span>
+      <a href="/api/btc-price">BTC Price API</a><span class="sep">|</span>
+      <a href="/glossary">Glossary</a><span class="sep">|</span>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+
+  <script>
+  (function() {
+    var sym = 'uni';
+    fetch('/api/coingecko/markets').then(function(r) { return r.json(); }).then(function(j) {
+      var data = (j && j.data) || [];
+      var coin = data.find(function(c) { return c.symbol === sym || c.id === sym; });
+      if (!coin) return;
+      var fmtPrice = function(n) {
+        if (n >= 1000) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+        if (n >= 1) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 2});
+        if (n >= 0.01) return '$' + n.toFixed(4);
+        return '$' + n.toFixed(8);
+      };
+      var fmtBig = function(n) {
+        if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+        return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+      };
+      var pe = document.getElementById('price');
+      pe.textContent = fmtPrice(coin.current_price);
+      pe.classList.remove('muted');
+      var ce = document.getElementById('change24h');
+      var ch = coin.price_change_percentage_24h || 0;
+      ce.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%';
+      ce.classList.remove('muted');
+      ce.classList.add(ch >= 0 ? 'up' : 'down');
+      var me = document.getElementById('mcap');
+      me.textContent = coin.market_cap ? fmtBig(coin.market_cap) : '--';
+      me.classList.remove('muted');
+      var ve = document.getElementById('vol');
+      ve.textContent = coin.total_volume ? fmtBig(coin.total_volume) : '--';
+      ve.classList.remove('muted');
+    }).catch(function() {});
+  })();
+  </script>
+</body>
+</html>
