@@ -620,9 +620,14 @@
 }
 
 /* ── Panel — terminal window style ── */
+/* Per-panel category accent color. The COMMAND chrome below uses
+   var(--panel-accent) to tint the border + glow per panel. Default
+   is teal; specific panels override via [data-panel-id] selectors
+   further down. Ported from /visual-lab COMMAND variant 2026-05-06. */
 .panel {
+  --panel-accent: #5DCAA5;
   background: var(--bg-panel);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in oklab, var(--panel-accent) 24%, transparent);
   border-radius: 4px;
   padding: 12px 14px;
   height: auto;
@@ -630,12 +635,99 @@
   overflow: hidden;
   break-inside: avoid;
   margin-bottom: 4px;
-  transition: border-color 0.15s ease;
+  /* Sharp 1px colored edge + tight 3px halo. No animation: box-shadow
+     animations force repaints and felt laggy in the lab. The static
+     glow plus per-panel color is what carries the "alive" feeling. */
+  box-shadow: 0 0 3px 0 color-mix(in oklab, var(--panel-accent) 22%, transparent);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .panel:hover {
-  border-color: var(--border-glow);
+  border-color: color-mix(in oklab, var(--panel-accent) 55%, transparent);
+  box-shadow: 0 0 6px 0 color-mix(in oklab, var(--panel-accent) 38%, transparent);
 }
+
+/* ── Per-panel category accent map ──
+   Colors mirror the visual lab's CATEGORY_COLOR. Panels not listed
+   inherit the default teal --panel-accent above. */
+
+/* Bitcoin → gold */
+.panel[data-panel-id="bitcoin"],
+.panel[data-panel-id="btc-network"]       { --panel-accent: #F9CB42; }
+
+/* Crypto/DeFi → amber */
+.panel[data-panel-id="crypto"],
+.panel[data-panel-id="gas"],
+.panel[data-panel-id="solana-network"],
+.panel[data-panel-id="funding-rates"]     { --panel-accent: #EF9F27; }
+
+/* Markets / forex → green */
+.panel[data-panel-id="markets"],
+.panel[data-panel-id="market-hours"],
+.panel[data-panel-id="forex"]             { --panel-accent: #4ADE80; }
+
+/* News / editorial / community → cyan */
+.panel[data-panel-id="news"],
+.panel[data-panel-id="tech-news"],
+.panel[data-panel-id="reddit"],
+.panel[data-panel-id="the-wire"],
+.panel[data-panel-id="hn-community"],
+.panel[data-panel-id="wikipedia"],
+.panel[data-panel-id="wiki-live"],
+.panel[data-panel-id="producthunt"],
+.panel[data-panel-id="books"],
+.panel[data-panel-id="daily-learn"],
+.panel[data-panel-id="podcasts"]          { --panel-accent: #4FD1C5; }
+
+/* Dev tooling → green */
+.panel[data-panel-id="github"],
+.panel[data-panel-id="gh-events"],
+.panel[data-panel-id="stackoverflow"],
+.panel[data-panel-id="harnesses"]         { --panel-accent: #4ADE80; }
+
+/* AI surfaces → purple */
+.panel[data-panel-id="ai-hub"],
+.panel[data-panel-id="ai-leaderboard"],
+.panel[data-panel-id="huggingface"],
+.panel[data-panel-id="claude-status"]     { --panel-accent: #A78BFA; }
+
+/* Geo / hazards → blue */
+.panel[data-panel-id="seismic"],
+.panel[data-panel-id="seismic-timeline"],
+.panel[data-panel-id="disasters"],
+.panel[data-panel-id="wildfires"],
+.panel[data-panel-id="volcanoes"]         { --panel-accent: #60A5FA; }
+
+/* Weather / atmosphere → teal */
+.panel[data-panel-id="weather"],
+.panel[data-panel-id="severe-weather"],
+.panel[data-panel-id="air-quality"],
+.panel[data-panel-id="space-weather"]     { --panel-accent: #5DCAA5; }
+
+/* Space / launches / sky → purple */
+.panel[data-panel-id="launches"],
+.panel[data-panel-id="flight-radar"],
+.panel[data-panel-id="uap"]               { --panel-accent: #A78BFA; }
+
+/* Predictions / markets-of-belief → amber */
+.panel[data-panel-id="predictions"],
+.panel[data-panel-id="tcg-market"]        { --panel-accent: #EF9F27; }
+
+/* Status surfaces → blue (neutral, informational) */
+.panel[data-panel-id="status-wall"],
+.panel[data-panel-id="dev-status"],
+.panel[data-panel-id="cloud-status"],
+.panel[data-panel-id="live-now"]          { --panel-accent: #60A5FA; }
+
+/* Security / exposure → red */
+.panel[data-panel-id="shodan"]            { --panel-accent: #F87171; }
+
+/* Premium / sponsor slots → gold */
+.panel[data-panel-id="sponsor-slot"],
+.panel[data-panel-id="premium-api"]       { --panel-accent: #F9CB42; }
+
+/* Gaming → green */
+.panel[data-panel-id="steam"]             { --panel-accent: #4ADE80; }
 
 /* spanCol classes — no longer used with column layout */
 .spanCol2, .spanCol3 { /* no-op in column layout */ }
