@@ -1,0 +1,49 @@
+import type { ReactNode } from 'react';
+import { CATEGORY_COLOR, CATEGORY_LABEL, type Category } from './labData';
+import styles from './LabPanel.module.css';
+
+export type Variant = 'default' | 'bloomberg' | 'brackets' | 'header-strip' | 'glow';
+
+interface Props {
+  title: string;
+  category: Category;
+  status?: 'live' | 'polling' | 'offline';
+  children: ReactNode;
+}
+
+// Variant is read off the closest [data-variant] ancestor (the lab page sets it).
+// That way one click on the variant switcher restyles every panel at once.
+export function LabPanel({ title, category, status = 'live', children }: Props) {
+  const accent = CATEGORY_COLOR[category];
+  const tag = CATEGORY_LABEL[category];
+
+  return (
+    <div
+      className={styles.panel}
+      data-category={category}
+      style={{ '--accent': accent } as React.CSSProperties}
+    >
+      {/* Header strip variant: thin colored bar above the header */}
+      <div className={styles.topStrip} aria-hidden />
+
+      {/* Corner brackets variant: 4 L-shapes positioned at corners */}
+      <span className={`${styles.bracket} ${styles.bracketTL}`} aria-hidden />
+      <span className={`${styles.bracket} ${styles.bracketTR}`} aria-hidden />
+      <span className={`${styles.bracket} ${styles.bracketBL}`} aria-hidden />
+      <span className={`${styles.bracket} ${styles.bracketBR}`} aria-hidden />
+
+      <div className={styles.header}>
+        <span className={styles.titleWrap}>
+          <span className={styles.tag}>[{tag}]</span>
+          <span className={styles.title}>{title}</span>
+        </span>
+        <span className={`${styles.status} ${styles[status]}`}>
+          <span className={styles.dot} />
+          {status}
+        </span>
+      </div>
+
+      <div className={styles.body}>{children}</div>
+    </div>
+  );
+}
