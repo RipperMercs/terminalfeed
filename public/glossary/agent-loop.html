@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Agent Loop? - TerminalFeed Glossary</title>
+  <meta name="description" content="The core control flow of an AI agent: observe, decide, act, repeat until the task is done or a stop condition is hit.">
+  <meta property="og:title" content="What is Agent Loop? - TerminalFeed Glossary">
+  <meta property="og:description" content="The core control flow of an AI agent: observe, decide, act, repeat until the task is done or a stop condition is hit.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/agent-loop">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/agent-loop">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Agent Loop","description":"The core control flow of an AI agent: observe, decide, act, repeat until the task is done or a stop condition is hit.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/agent-loop"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Agent Loop","item":"https://terminalfeed.io/glossary/agent-loop"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Agent Loop</span>
+    </nav>
+
+    <h1>Agent Loop</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>The agent loop is the basic structure every autonomous AI agent runs: read current state, decide next action (often a tool call), execute the action, observe the result, decide whether the task is complete. Loop until done or until a stop condition (max iterations, time budget, error threshold) trips. The simplicity is the point: complex agent behavior emerges from a tight inner loop with good tool definitions and a capable model.</p>
+
+    <h2>How it works</h2>
+    <p>A typical loop iteration: (1) construct a prompt from the system prompt + conversation history + tool results so far; (2) send to the LLM with available <a href="/glossary/tool-use">tools</a>; (3) parse the response, either a final answer or a tool call; (4) if a tool call, execute it and append the result to the history; (5) check stop conditions (final answer, iteration cap, error); (6) loop or return.<br><br>Frameworks like LangGraph, OpenAI's Agents SDK, and Anthropic's <a href="/blog/mcp-server-quickstart-2026">MCP-based agents</a> all implement this loop with varying levels of abstraction. The key engineering decisions: what tools to expose, how to structure the system prompt, what counts as "done", and how to handle errors and retries.</p>
+
+    <h2>Why it matters</h2>
+    <p>Agent loops are how language models become persistent actors. Without a loop, an LLM can only respond to one prompt. With a loop, it can complete multi-hour tasks, browse the web, edit code, and chain dozens of tool calls. Quality of the loop (and its bounding conditions) determines whether the agent is useful or runs amok.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The TerminalFeed <a href="/api/pro/world-deltas">world-deltas endpoint</a> is designed specifically for agent loops: agents poll it with a "since" timestamp and receive only new events, perfect for the observe step of the loop.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/ai-agent">Ai Agent</a></li>
+        <li><a href="/glossary/tool-use">Tool Use</a></li>
+        <li><a href="/glossary/function-calling">Function Calling</a></li>
+        <li><a href="/glossary/react-pattern">React Pattern</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>

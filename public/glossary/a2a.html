@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Agent-to-Agent Protocol (A2A)? - TerminalFeed Glossary</title>
+  <meta name="description" content="A protocol for autonomous AI agents to discover, authenticate, and exchange tasks with each other across vendor boundaries.">
+  <meta property="og:title" content="What is Agent-to-Agent Protocol (A2A)? - TerminalFeed Glossary">
+  <meta property="og:description" content="A protocol for autonomous AI agents to discover, authenticate, and exchange tasks with each other across vendor boundaries.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/a2a">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/a2a">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Agent-to-Agent Protocol (A2A)","description":"A protocol for autonomous AI agents to discover, authenticate, and exchange tasks with each other across vendor boundaries.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/a2a"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Agent-to-Agent Protocol (A2A)","item":"https://terminalfeed.io/glossary/a2a"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Agent-to-Agent Protocol (A2A)</span>
+    </nav>
+
+    <h1>Agent-to-Agent Protocol (A2A)</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>Agent-to-Agent (A2A) is a protocol for AI agents to talk directly to other AI agents without a human in the middle. Where <a href="/glossary/mcp">MCP</a> standardizes agent-to-tool communication, A2A standardizes agent-to-agent. An agent built on Anthropic's stack can delegate a subtask to an agent built on OpenAI's stack, or to a third-party specialist agent (legal review, data extraction, scheduling), and get a structured response back. A2A defines task envelopes, capability advertisements, authentication, and async handoff.</p>
+
+    <h2>How it works</h2>
+    <p>Each A2A-compatible agent publishes an "agent card" at a well-known URL (similar to <code>.well-known/openid-configuration</code>). The card lists the agent's name, capabilities, supported task types, authentication method, and pricing if applicable. A calling agent fetches the card, decides whether to delegate, sends a task envelope (input data + expected output schema + deadline), and either polls for completion or accepts a webhook callback. Tasks can include attachments, structured data, or chained subtasks.<br><br>Authentication typically uses bearer tokens minted by the calling agent's principal (often the human user, sometimes another agent). Payment, if needed, runs over the same channel: the receiving agent reports a price, the calling agent commits funds (often in USDC or native crypto), and the work proceeds.</p>
+
+    <h2>Why it matters</h2>
+    <p>As agents do more work, the bottleneck shifts from "can one agent do this" to "can many agents collaborate without humans gluing them together". A2A is the protocol layer that makes multi-agent workflows tractable, the same way HTTP made the web tractable. It is early but moving fast.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed and <a href="/glossary/llms-txt">/llms.txt</a> are designed to be discoverable by autonomous agents. The premium credit system lets agents pay other agents directly when they need data. See the <a href="/blog/how-ai-agents-pay-terminalfeed">payment flow walkthrough</a>.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/ai-agent">Ai Agent</a></li>
+        <li><a href="/glossary/mcp">Mcp</a></li>
+        <li><a href="/glossary/function-calling">Function Calling</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>

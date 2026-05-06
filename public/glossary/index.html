@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tech Glossary - TerminalFeed</title>
-  <meta name="description" content="A plain-language glossary of crypto, development, networking, security, AI, and market terms. 50 definitions written for builders and traders.">
+  <meta name="description" content="A plain-language glossary of AI, crypto, development, networking, security, and market terms. 100+ definitions written for builders, agents, and traders, covering everything from MCP and RAG to rollups and DDoS.">
   <meta property="og:title" content="Tech Glossary - TerminalFeed">
-  <meta property="og:description" content="A plain-language glossary of crypto, development, networking, security, AI, and market terms.">
+  <meta property="og:description" content="100+ plain-language definitions for AI agents, crypto, dev, networking, security, and markets. From MCP and RAG to rollups, ETags, and zero-trust.">
   <meta property="og:url" content="https://terminalfeed.io/glossary">
   <meta property="og:image" content="https://terminalfeed.io/og-image.png">
   <meta property="og:type" content="website">
@@ -136,7 +136,7 @@
 
     <div class="header">
       <h1>>_ TECH GLOSSARY</h1>
-      <p>Plain-language definitions for crypto, development, networking, security, AI, and market terms. 50 terms and growing.</p>
+      <p>Plain-language definitions for AI agents, crypto, development, networking, security, and market terms. 100+ terms across 6 categories, from MCP and RAG to rollups, ETags, and zero-trust. Search by name or browse by category.</p>
     </div>
 
     <input type="text" class="search-box" id="glossary-search" placeholder="> search terms..." aria-label="Search glossary terms">
@@ -165,6 +165,18 @@
           <li class="term-item" data-term="cold-storage"><a class="term-name" href="/glossary/cold-storage">Cold Storage</a><span class="term-desc">Keeping cryptocurrency private keys completely offline to protect against hacking.</span></li>
           <li class="term-item" data-term="smart-contract"><a class="term-name" href="/glossary/smart-contract">Smart Contract</a><span class="term-desc">Self-executing code deployed on a blockchain that runs automatically when conditions are met.</span></li>
           <li class="term-item" data-term="whale"><a class="term-name" href="/glossary/whale">Whale</a><span class="term-desc">An individual or entity holding a large enough amount of cryptocurrency to move market prices.</span></li>
+          <li class="term-item" data-term="layer-2"><a class="term-name" href="/glossary/layer-2">Layer 2 (L2)</a><span class="term-desc">A blockchain built on top of another (typically Ethereum) that handles transactions off the main chain to scale throughput and cut fees.</span></li>
+          <li class="term-item" data-term="rollup"><a class="term-name" href="/glossary/rollup">Rollup</a><span class="term-desc">A Layer 2 design that bundles many transactions and posts a compressed summary plus proof back to Layer 1.</span></li>
+          <li class="term-item" data-term="optimistic-rollup"><a class="term-name" href="/glossary/optimistic-rollup">Optimistic Rollup</a><span class="term-desc">A rollup that assumes batches are valid and uses a 7-day fraud-proof window to catch invalid state.</span></li>
+          <li class="term-item" data-term="zk-rollup"><a class="term-name" href="/glossary/zk-rollup">ZK Rollup</a><span class="term-desc">A rollup that posts a cryptographic validity proof with every batch, eliminating the optimistic-rollup challenge window.</span></li>
+          <li class="term-item" data-term="crypto-bridge"><a class="term-name" href="/glossary/crypto-bridge">Crypto Bridge</a><span class="term-desc">A protocol that moves assets between blockchains by locking on one side and minting an equivalent on the other.</span></li>
+          <li class="term-item" data-term="blockchain-oracle"><a class="term-name" href="/glossary/blockchain-oracle">Blockchain Oracle</a><span class="term-desc">A service that posts off-chain data on-chain so smart contracts can react to real-world events.</span></li>
+          <li class="term-item" data-term="staking"><a class="term-name" href="/glossary/staking">Staking</a><span class="term-desc">Locking up cryptocurrency to participate in proof-of-stake consensus or earn protocol rewards.</span></li>
+          <li class="term-item" data-term="validator"><a class="term-name" href="/glossary/validator">Validator</a><span class="term-desc">A node operator on a proof-of-stake blockchain that proposes and attests to blocks for staking rewards.</span></li>
+          <li class="term-item" data-term="liquidity-pool"><a class="term-name" href="/glossary/liquidity-pool">Liquidity Pool</a><span class="term-desc">A smart contract holding two tokens that traders can swap between, with prices set by a formula.</span></li>
+          <li class="term-item" data-term="amm"><a class="term-name" href="/glossary/amm">Automated Market Maker</a><span class="term-desc">An exchange that uses a liquidity pool and a pricing formula instead of an order book.</span></li>
+          <li class="term-item" data-term="slippage"><a class="term-name" href="/glossary/slippage">Slippage</a><span class="term-desc">The difference between an expected trade price and the actual execution price, especially on AMMs.</span></li>
+          <li class="term-item" data-term="seed-phrase"><a class="term-name" href="/glossary/seed-phrase">Seed Phrase</a><span class="term-desc">A 12 or 24-word mnemonic that encodes a wallet's master key and grants full control of the funds.</span></li>
         </ul>
       </div>
 
@@ -186,6 +198,16 @@
           <li class="term-item" data-term="cors"><a class="term-name" href="/glossary/cors">CORS</a><span class="term-desc">Cross-Origin Resource Sharing: a browser security mechanism controlling which domains can access an API.</span></li>
           <li class="term-item" data-term="websocket"><a class="term-name" href="/glossary/websocket">WebSocket</a><span class="term-desc">A protocol that enables persistent two-way communication between a browser and a server.</span></li>
           <li class="term-item" data-term="api-rate-limiting"><a class="term-name" href="/glossary/api-rate-limiting">API Rate Limiting</a><span class="term-desc">Throttling the number of API requests a client can make within a given time window.</span></li>
+          <li class="term-item" data-term="webassembly"><a class="term-name" href="/glossary/webassembly">WebAssembly (Wasm)</a><span class="term-desc">A binary instruction format that runs in browsers and servers at near-native speed, supporting many languages.</span></li>
+          <li class="term-item" data-term="edge-computing"><a class="term-name" href="/glossary/edge-computing">Edge Computing</a><span class="term-desc">Running application code at points of presence close to users instead of in a centralized data center.</span></li>
+          <li class="term-item" data-term="serverless"><a class="term-name" href="/glossary/serverless">Serverless</a><span class="term-desc">A cloud model where you write functions and the provider handles all server provisioning, scaling, and lifecycle.</span></li>
+          <li class="term-item" data-term="kubernetes"><a class="term-name" href="/glossary/kubernetes">Kubernetes (k8s)</a><span class="term-desc">An open-source platform for orchestrating containerized applications across clusters of machines.</span></li>
+          <li class="term-item" data-term="webhook"><a class="term-name" href="/glossary/webhook">Webhook</a><span class="term-desc">An HTTP callback where one service POSTs an event to a URL hosted by another, the inverse of polling.</span></li>
+          <li class="term-item" data-term="grpc"><a class="term-name" href="/glossary/grpc">gRPC</a><span class="term-desc">A high-performance RPC framework using HTTP/2 and Protocol Buffers for typed services and binary serialization.</span></li>
+          <li class="term-item" data-term="semver"><a class="term-name" href="/glossary/semver">Semantic Versioning (SemVer)</a><span class="term-desc">A versioning scheme where MAJOR.MINOR.PATCH numbers signal breaking changes, features, and fixes.</span></li>
+          <li class="term-item" data-term="idempotent"><a class="term-name" href="/glossary/idempotent">Idempotent</a><span class="term-desc">An operation that produces the same result no matter how many times it is performed, critical for safe retries.</span></li>
+          <li class="term-item" data-term="etag"><a class="term-name" href="/glossary/etag">ETag</a><span class="term-desc">An HTTP header that uniquely identifies a resource version, used for conditional requests and cache validation.</span></li>
+          <li class="term-item" data-term="monorepo"><a class="term-name" href="/glossary/monorepo">Monorepo</a><span class="term-desc">A single repository holding multiple projects, services, or packages with shared tooling and dependencies.</span></li>
         </ul>
       </div>
 
@@ -208,6 +230,11 @@
           <li class="term-item" data-term="phishing"><a class="term-name" href="/glossary/phishing">Phishing</a><span class="term-desc">A social engineering attack that tricks people into revealing passwords, keys, or sensitive data.</span></li>
           <li class="term-item" data-term="zero-day"><a class="term-name" href="/glossary/zero-day">Zero-Day</a><span class="term-desc">A software vulnerability that is exploited before the vendor knows about it or has released a patch.</span></li>
           <li class="term-item" data-term="csrf"><a class="term-name" href="/glossary/csrf">CSRF</a><span class="term-desc">Cross-Site Request Forgery: an attack that tricks a user's browser into making unwanted requests.</span></li>
+          <li class="term-item" data-term="xss"><a class="term-name" href="/glossary/xss">Cross-Site Scripting (XSS)</a><span class="term-desc">A vulnerability where attacker-supplied scripts run in another user's browser with the privileges of the targeted site.</span></li>
+          <li class="term-item" data-term="sql-injection"><a class="term-name" href="/glossary/sql-injection">SQL Injection</a><span class="term-desc">A vulnerability where untrusted input becomes part of a SQL query, letting attackers read or modify the database.</span></li>
+          <li class="term-item" data-term="ddos"><a class="term-name" href="/glossary/ddos">DDoS Attack</a><span class="term-desc">A Distributed Denial of Service attack that floods a target from many sources to make it unavailable to real users.</span></li>
+          <li class="term-item" data-term="mtls"><a class="term-name" href="/glossary/mtls">Mutual TLS (mTLS)</a><span class="term-desc">TLS where both client and server present and verify certificates, used for service-to-service authentication.</span></li>
+          <li class="term-item" data-term="zero-trust"><a class="term-name" href="/glossary/zero-trust">Zero Trust</a><span class="term-desc">A security model where every request is authenticated and authorized regardless of network location.</span></li>
         </ul>
       </div>
 
@@ -219,6 +246,26 @@
           <li class="term-item" data-term="embeddings"><a class="term-name" href="/glossary/embeddings">Embeddings</a><span class="term-desc">Numerical vector representations of text, images, or data that capture semantic meaning for AI models.</span></li>
           <li class="term-item" data-term="llms-txt"><a class="term-name" href="/glossary/llms-txt">llms.txt</a><span class="term-desc">A standardized file that websites publish to help AI agents discover and understand their content and APIs.</span></li>
           <li class="term-item" data-term="prompt-engineering"><a class="term-name" href="/glossary/prompt-engineering">Prompt Engineering</a><span class="term-desc">The practice of crafting inputs to large language models to get more accurate, useful outputs.</span></li>
+          <li class="term-item" data-term="mcp"><a class="term-name" href="/glossary/mcp">Model Context Protocol (MCP)</a><span class="term-desc">An open standard for AI agents to discover and call tools, data sources, and prompts from any compatible server.</span></li>
+          <li class="term-item" data-term="a2a"><a class="term-name" href="/glossary/a2a">Agent-to-Agent (A2A)</a><span class="term-desc">A protocol for autonomous agents to delegate tasks to each other across vendor boundaries.</span></li>
+          <li class="term-item" data-term="function-calling"><a class="term-name" href="/glossary/function-calling">Function Calling</a><span class="term-desc">A model capability to output structured JSON conforming to developer-defined function signatures, used to invoke external tools.</span></li>
+          <li class="term-item" data-term="tool-use"><a class="term-name" href="/glossary/tool-use">Tool Use</a><span class="term-desc">The umbrella term for an LLM invoking external functions, APIs, or systems to extend its capabilities beyond text.</span></li>
+          <li class="term-item" data-term="rag"><a class="term-name" href="/glossary/rag">Retrieval-Augmented Generation (RAG)</a><span class="term-desc">Grounding LLM responses by retrieving relevant documents from a knowledge base and including them in the prompt.</span></li>
+          <li class="term-item" data-term="vector-database"><a class="term-name" href="/glossary/vector-database">Vector Database</a><span class="term-desc">A database optimized for storing and similarity-searching high-dimensional vectors, the backbone of semantic search and RAG.</span></li>
+          <li class="term-item" data-term="context-window"><a class="term-name" href="/glossary/context-window">Context Window</a><span class="term-desc">The maximum number of tokens a language model can process at once, including prompt, history, and response.</span></li>
+          <li class="term-item" data-term="prompt-injection"><a class="term-name" href="/glossary/prompt-injection">Prompt Injection</a><span class="term-desc">Attacks where untrusted input causes a language model to ignore instructions and follow attacker-supplied directives instead.</span></li>
+          <li class="term-item" data-term="token"><a class="term-name" href="/glossary/token">Token (LLM)</a><span class="term-desc">The atomic subword unit a language model uses to read and generate text, roughly 0.75 English words per token.</span></li>
+          <li class="term-item" data-term="inference"><a class="term-name" href="/glossary/inference">Inference</a><span class="term-desc">The act of running a trained model to produce predictions, as opposed to training it.</span></li>
+          <li class="term-item" data-term="fine-tuning"><a class="term-name" href="/glossary/fine-tuning">Fine-Tuning</a><span class="term-desc">Training a pre-existing language model on new data to specialize behavior for a specific domain or task.</span></li>
+          <li class="term-item" data-term="chain-of-thought"><a class="term-name" href="/glossary/chain-of-thought">Chain-of-Thought (CoT)</a><span class="term-desc">A prompting technique that asks language models to reason step-by-step before answering, dramatically improving accuracy.</span></li>
+          <li class="term-item" data-term="agent-loop"><a class="term-name" href="/glossary/agent-loop">Agent Loop</a><span class="term-desc">The core control flow of an AI agent: observe, decide, act, repeat until done or a stop condition fires.</span></li>
+          <li class="term-item" data-term="react-pattern"><a class="term-name" href="/glossary/react-pattern">ReAct (Reason + Act)</a><span class="term-desc">An agent design pattern that interleaves reasoning steps with actions for better multi-step planning.</span></li>
+          <li class="term-item" data-term="hallucination"><a class="term-name" href="/glossary/hallucination">Hallucination (LLM)</a><span class="term-desc">When a language model confidently outputs incorrect or fabricated information, often presented as fact.</span></li>
+          <li class="term-item" data-term="zero-shot"><a class="term-name" href="/glossary/zero-shot">Zero-Shot Learning</a><span class="term-desc">A model performing a task with only a description, no examples, in the prompt.</span></li>
+          <li class="term-item" data-term="few-shot"><a class="term-name" href="/glossary/few-shot">Few-Shot Learning</a><span class="term-desc">Including a small number of input/output examples in the prompt to demonstrate the desired task format and style.</span></li>
+          <li class="term-item" data-term="ai-alignment"><a class="term-name" href="/glossary/ai-alignment">AI Alignment</a><span class="term-desc">The technical and research effort to make AI systems behave according to human intentions, especially as they grow more capable.</span></li>
+          <li class="term-item" data-term="mixture-of-experts"><a class="term-name" href="/glossary/mixture-of-experts">Mixture of Experts (MoE)</a><span class="term-desc">A neural architecture where only a fraction of parameters activate per input, enabling huge models at modest inference cost.</span></li>
+          <li class="term-item" data-term="context-caching"><a class="term-name" href="/glossary/context-caching">Context Caching</a><span class="term-desc">A pricing feature where repeated prompt prefixes are stored on the inference server, cutting cost and latency.</span></li>
         </ul>
       </div>
 
@@ -230,6 +277,9 @@
           <li class="term-item" data-term="fed-funds-rate"><a class="term-name" href="/glossary/fed-funds-rate">Fed Funds Rate</a><span class="term-desc">The interest rate at which US banks lend reserves to each other overnight, set by the Federal Reserve.</span></li>
           <li class="term-item" data-term="cpi"><a class="term-name" href="/glossary/cpi">CPI</a><span class="term-desc">Consumer Price Index: a measure of the average change in prices paid by consumers for goods and services.</span></li>
           <li class="term-item" data-term="treasury-yield"><a class="term-name" href="/glossary/treasury-yield">Treasury Yield</a><span class="term-desc">The return earned on US government debt securities, used as a benchmark for interest rates globally.</span></li>
+          <li class="term-item" data-term="order-book"><a class="term-name" href="/glossary/order-book">Order Book</a><span class="term-desc">The list of all open buy and sell orders for an asset, organized by price and size, used to match trades.</span></li>
+          <li class="term-item" data-term="volatility"><a class="term-name" href="/glossary/volatility">Volatility</a><span class="term-desc">A measure of how much an asset's price varies over a time window, the key input to risk management.</span></li>
+          <li class="term-item" data-term="market-cap"><a class="term-name" href="/glossary/market-cap">Market Capitalization</a><span class="term-desc">The total value of an asset's circulating supply, calculated as price multiplied by quantity outstanding.</span></li>
         </ul>
       </div>
 
