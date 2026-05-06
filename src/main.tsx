@@ -38,7 +38,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 // Remove static SEO content now that React is taking over
 document.getElementById('seo-content')?.remove();
 
-// Lightweight pathname routing — keeps the SPA simple while letting
+// Lightweight pathname routing keeps the SPA simple while letting
 // us mount alternate roots (e.g. visual lab) at known URLs.
 const pathname = window.location.pathname.replace(/\/+$/, '');
 const Root = pathname === '/visual-lab' ? VisualLab : App;
