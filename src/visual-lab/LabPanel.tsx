@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { CATEGORY_COLOR, CATEGORY_LABEL, type Category } from './labData';
 import styles from './LabPanel.module.css';
 
@@ -25,11 +25,19 @@ export function LabPanel({ title, category, status = 'live', children }: Props) 
   const accent = CATEGORY_COLOR[category];
   const tag = CATEGORY_LABEL[category];
 
+  // Per-panel random animation offset (negative delay means the keyframe
+  // timeline starts mid-cycle). This breaks the visual sync where every
+  // panel's pulse fires in lockstep at mount. Stable across re-renders.
+  const [animOffset] = useState(() => -Math.random() * 4);
+
   return (
     <div
       className={styles.panel}
       data-category={category}
-      style={{ '--accent': accent } as React.CSSProperties}
+      style={{
+        '--accent': accent,
+        '--anim-offset': `${animOffset}s`,
+      } as React.CSSProperties}
     >
       {/* Header strip variant: thin colored bar above the header */}
       <div className={styles.topStrip} aria-hidden />
