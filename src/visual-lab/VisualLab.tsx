@@ -18,7 +18,7 @@ import panelStyles from './LabPanel.module.css';
 import styles from './VisualLab.module.css';
 
 const VARIANTS: { id: Variant; label: string; blurb: string }[] = [
-  { id: 'default',      label: 'DEFAULT',      blurb: 'current site look — flat border, small header' },
+  { id: 'default',      label: 'DEFAULT',      blurb: 'current site look, flat border, small header' },
   { id: 'bloomberg',    label: 'BLOOMBERG',    blurb: '4px category-colored left bar, [TAG] in header' },
   { id: 'brackets',     label: 'BRACKETS',     blurb: 'no border, terminal L-shapes at corners' },
   { id: 'header-strip', label: 'HEADER STRIP', blurb: '3px colored top stripe, larger header' },
