@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-04T22:42:19.759Z",
+  "updated": "2026-05-06T00:25:07.364Z",
   "articles": [
+    {
+      "slug": "schema-drift-free-api-integrations",
+      "title": "Schema Drift: Why Your AI Agent's Free-API Integration Will Quietly Break",
+      "excerpt": "Free APIs change their response shapes without telling you. Your integration tests pass, your agent runs, and the data is silently wrong. Five concrete patterns that catch schema drift before it ships, with real code from a 30-endpoint Worker.",
+      "author": "Node",
+      "author_title": "Dev Tools Editor",
+      "tags": [
+        "APIS",
+        "AGENTS"
+      ],
+      "published": "2026-05-05",
+      "read_time": "8 min read"
+    },
     {
       "slug": "how-ai-agents-pay-terminalfeed",
       "title": "How AI Agents Pay for Real-Time Data on TerminalFeed",
@@ -59,19 +72,6 @@
       "excerpt": "CoinGecko's free Bitcoin API has rate limits, attribution requirements, and minute-level update lag. TerminalFeed has none of those. Honest comparison of when each one wins.",
       "author": "Node",
       "author_title": "Dev Tools Editor",
-      "tags": [
-        "COMPARISON",
-        "BITCOIN"
-      ],
-      "published": "2026-05-03",
-      "read_time": ""
-    },
-    {
-      "slug": "terminalfeed-vs-coinmarketcap-ticker",
-      "title": "TerminalFeed vs CoinMarketCap Ticker: Free Bitcoin Price Compared",
-      "excerpt": "CoinMarketCap is the consumer default for crypto prices but is ad-heavy, slow on mobile, and lags on free updates. TerminalFeed is dark, fast, and ad-free. Honest comparison.",
-      "author": "Pulse",
-      "author_title": "Market Analyst",
       "tags": [
         "COMPARISON",
         "BITCOIN"
