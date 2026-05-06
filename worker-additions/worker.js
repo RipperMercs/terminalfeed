@@ -4822,6 +4822,11 @@ async function aftaListNoChargeDates(env) {
 // webhook commit, MCP tool dispatch). New AFTA-shaped traffic goes through
 // these two helpers. Same X-Internal-Auth secret as validateAndCharge.
 
+// Returns { ok, sufficient, credits_remaining, reservation_id } on success.
+// reservation_id (added 2026-05-05) is the atomic-reserve handle returned by
+// TF after it pre-debits the balance. It MUST be threaded into the matching
+// commit call to either consume the reservation (charge) or restore it
+// (no-charge). Reservations expire after 5 minutes server-side.
 async function aftaValidateOnly(env, token, cost) {
   if (!env || !env.TENSORFEED_AUTH_URL || !env.SHARED_INTERNAL_SECRET) {
     return { ok: false, reason: 'billing_unavailable' };
@@ -4854,7 +4859,12 @@ async function aftaValidateOnly(env, token, cost) {
   }
 }
 
-async function aftaCommitInternal(env, token, cost, endpoint, noChargeReason) {
+// reservationId (optional, added 2026-05-05) is the handle returned from
+// aftaValidateOnly. When present, TF consumes the reservation atomically
+// (charge: no-op since validate already debited; no-charge: restore the
+// debit). When absent, TF falls back to the legacy race-y decrement-on-commit
+// path. Always pass it through when handlePremium drives the call.
+async function aftaCommitInternal(env, token, cost, endpoint, noChargeReason, reservationId) {
   if (!env || !env.TENSORFEED_AUTH_URL || !env.SHARED_INTERNAL_SECRET) {
     return { ok: false, reason: 'billing_unavailable' };
   }
@@ -4865,6 +4875,7 @@ async function aftaCommitInternal(env, token, cost, endpoint, noChargeReason) {
       endpoint: endpoint,
       no_charge_reason: noChargeReason || null,
     };
+    if (reservationId) body.reservation_id = reservationId;
     var res = await fetchWithTimeout(
       env.TENSORFEED_AUTH_URL + '/api/internal/commit',
       {
@@ -4945,7 +4956,7 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
   // (with the TerminalFeed endpoint path so the network view is correct)
   // and we ALSO write a local copy so /api/payment/no-charge-stats works
   // without a round-trip.
-  var commit = await aftaCommitInternal(env, token, cost, 'tf:' + endpoint, noChargeReason);
+  var commit = await aftaCommitInternal(env, token, cost, 'tf:' + endpoint, noChargeReason, paymentCtx.reservationId);
   var creditsCharged;
   var creditsRemaining;
   if (commit.ok) {
@@ -4955,6 +4966,26 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
     // The commit handshake failed AFTER the handler ran. Treat as
     // no-charge so the agent is not billed for an event we cannot
     // commit cleanly. Mirrors TF's stance in commitPayment.
+    if (commit.reason === 'reservation_not_found') {
+      // Reservation expired (>5min handler) or already consumed. The agent
+      // already received their response; the credit was debited at validate
+      // and is now a soft loss in our favor. Log so we can see it.
+      console.warn('AFTA reservation expired or double-committed', {
+        token_short: aftaTokenShort(token),
+        cost: cost,
+        endpoint: endpoint,
+        reservation_id: paymentCtx.reservationId,
+      });
+    } else if (commit.reason === 'reservation_mismatch') {
+      // Indicates a bug in TerminalFeed: the cost or token sent to commit
+      // differs from what we reserved. Investigate.
+      console.error('AFTA reservation_mismatch', {
+        token_short: aftaTokenShort(token),
+        cost: cost,
+        endpoint: endpoint,
+        reservation_id: paymentCtx.reservationId,
+      });
+    }
     noChargeReason = noChargeReason || 'circuit_breaker';
     creditsCharged = 0;
     creditsRemaining = paymentCtx.currentBalance;
@@ -5028,7 +5059,7 @@ async function aftaPremiumValidationFailure(errorBody, paymentCtx, request, env)
   var cost = paymentCtx.cost;
   var token = paymentCtx.token;
 
-  var commit = await aftaCommitInternal(env, token, cost, 'tf:' + endpoint, 'schema_validation_failure');
+  var commit = await aftaCommitInternal(env, token, cost, 'tf:' + endpoint, 'schema_validation_failure', paymentCtx.reservationId);
   var creditsRemaining = (commit.ok && typeof commit.balance_after === 'number') ? commit.balance_after : paymentCtx.currentBalance;
   await aftaLogNoChargeEvent(env, 'schema_validation_failure', endpoint, cost, token);
 
@@ -5439,6 +5470,7 @@ async function handlePremium(request, env, url, endpointPath, costCredits, fetch
     cost: costCredits,
     endpoint: endpointPath,
     currentBalance: typeof validation.credits_remaining === 'number' ? validation.credits_remaining : 0,
+    reservationId: typeof validation.reservation_id === 'string' ? validation.reservation_id : null,
   };
 
   var handlerResult;
@@ -8239,6 +8271,68 @@ export default {
   },
 };
 
+// Map common bot probe paths and obvious typos to a suggested real endpoint.
+// Returns { suggested, why } or null. Patterns operate on the post-strip
+// `path` (no leading "/api/") so they match what dispatchRoute sees.
+//
+// Why this exists: live traffic showed thousands of daily requests for paths
+// like `/api/v2/status.json` (Atlassian Statuspage convention) and
+// `/apis/site/v2/sports/...` (ESPN). These are autonomous agents probing
+// well-known API path conventions hoping for a free relay. A 404 with a
+// `did_you_mean` field turns wasted traffic into a helpful redirect for
+// agent developers reading their error logs.
+function smartNotFound(path) {
+  // Patterns are checked in order; first match wins. Keep specific
+  // patterns above generic ones.
+  var probeHints = [
+    // Atlassian Statuspage scanners (status.json, v2/status.json, etc.)
+    { match: /(^|\/)v?\d?\/?status\.json$/i, suggested: 'service-status', why: 'Cross-provider status (GitHub, Cloudflare, OpenAI, etc.) is at /api/service-status.' },
+    // ESPN exact path lands here as `s/site/v2/sports/...` after the /api strip
+    { match: /^s\/site\/v\d\/sports/i, suggested: 'sports-summary', why: 'Sports scores aggregated across leagues are at /api/sports-summary.' },
+    // Binance exact path: v3/ticker, v3/ticker/24hr
+    { match: /^v\d\/ticker(\/24hr)?(\/|$)/i, suggested: 'btc-price', why: 'Bitcoin price (Binance with CoinCap fallback) is at /api/btc-price. For more crypto, /api/crypto-movers.' },
+    // CoinMarketCap-style paths we do not relay
+    { match: /coinmarketcap|^cmc\//i, suggested: 'crypto-movers', why: 'Top crypto by 24h change is at /api/crypto-movers.' },
+    // Generic crypto signal words
+    { match: /^bitcoin$|^btc$|^bitcoin\//i, suggested: 'btc-price', why: 'Bitcoin price is at /api/btc-price.' },
+    { match: /^ethereum$|^eth$|^ether$/i, suggested: 'gas', why: 'Ethereum gas prices are at /api/gas. For ETH movement, /api/crypto-movers.' },
+    { match: /^crypto$|^coins$|^market$|^markets$/i, suggested: 'crypto-movers', why: 'Top crypto markets are at /api/crypto-movers.' },
+    { match: /\bticker\b|\bprice\b/i, suggested: 'btc-price', why: 'Bitcoin price is at /api/btc-price; broader crypto at /api/crypto-movers.' },
+    // Sports
+    { match: /\b(scoreboard|sports|mlb|nba|nfl|nhl|soccer|premier)\b/i, suggested: 'sports-summary', why: 'Cross-league sports scores are at /api/sports-summary.' },
+    // News / HN
+    { match: /\b(news|hackernews|hn|tech-news|top-stories)\b/i, suggested: 'hackernews', why: 'Top Hacker News stories are at /api/hackernews. /api/rss for the blog feed.' },
+    { match: /^feed$|^rss$/i, suggested: 'rss', why: 'TerminalFeed blog RSS feed is at /api/rss.' },
+    // Status / health
+    { match: /\b(status|health|uptime|incident)\b/i, suggested: 'service-status', why: 'Service status across major providers is at /api/service-status. Worker health is at /api/health.' },
+    // Predictions / Polymarket
+    { match: /\b(prediction|polymarket|odds)\b/i, suggested: 'predictions', why: 'Polymarket odds are at /api/predictions.' },
+    // Earthquakes / disasters
+    { match: /\b(earthquake|seismic|usgs)\b/i, suggested: 'earthquake', why: 'Recent earthquakes (USGS) are at /api/earthquake.' },
+    { match: /\b(disaster|gdacs|emergency)\b/i, suggested: 'disaster-alerts', why: 'Global disaster alerts are at /api/disaster-alerts.' },
+    // Weather
+    { match: /\b(weather|forecast|temperature)\b/i, suggested: 'weather', why: 'Weather (Open-Meteo) is at /api/weather?lat=&lon=.' },
+    { match: /\b(air-quality|aqi|pollution)\b/i, suggested: 'air-quality', why: 'Air quality (US AQI + pollutants) is at /api/air-quality.' },
+    // Stocks / macro
+    { match: /\b(stock|stocks|equity|nasdaq|nyse)\b/i, suggested: 'stocks', why: 'Top US stocks (Finnhub) are at /api/stocks.' },
+    { match: /\b(forex|fx|currency|exchange-rate)\b/i, suggested: 'forex', why: 'Currency rates (Frankfurter) are at /api/forex.' },
+    { match: /\b(fred|cpi|unemployment|fed-funds|economic)\b/i, suggested: 'economic-data', why: 'FRED economic series are at /api/economic-data.' },
+    // Fear & Greed
+    { match: /\b(fear|greed|sentiment)\b/i, suggested: 'fear-greed', why: 'The Crypto Fear & Greed Index is at /api/fear-greed.' },
+    // Discovery / catalog
+    { match: /\b(briefing|snapshot|world|context)\b/i, suggested: 'briefing', why: 'A one-call world snapshot is at /api/briefing.' },
+    { match: /\b(catalog|directory|endpoints|tools|capabilities)\b/i, suggested: '', why: 'See the full API directory at /api or LLM-formatted tool defs at /api/llm-tools.' },
+  ];
+
+  for (var i = 0; i < probeHints.length; i++) {
+    var h = probeHints[i];
+    if (h.match.test(path)) {
+      return { suggested: h.suggested, why: h.why };
+    }
+  }
+  return null;
+}
+
 async function dispatchRoute(request, env, url, path) {
   // (route table moved here so the fetch() entry point can wrap the response
   // with rate-limit headers / breakers / etc. without touching every case.)
@@ -8363,7 +8457,25 @@ async function dispatchRoute(request, env, url, path) {
       case 'receipt/verify':                return await handleReceiptVerify(request);
       case 'meta':                           return await handleApiMeta(request, env);
 
-      default:
-        return jsonResponse({ error: 'Not found', path: '/api/' + path }, 404);
+      default: {
+        var hint = smartNotFound(path);
+        var body = {
+          error: 'Not found',
+          path: '/api/' + path,
+          catalog: 'https://terminalfeed.io/api',
+          docs: 'https://terminalfeed.io/developers',
+          llm_tools: 'https://terminalfeed.io/api/llm-tools',
+        };
+        if (hint && hint.suggested) {
+          body.did_you_mean = '/api/' + hint.suggested;
+          body.message = hint.why;
+        } else if (hint) {
+          // Hint matched but no specific endpoint (e.g. "catalog" type queries).
+          body.message = hint.why;
+        } else {
+          body.message = "This endpoint doesn't exist on TerminalFeed. See `catalog` for the full directory or `llm_tools` for ready-to-use tool definitions.";
+        }
+        return jsonResponse(body, 404);
+      }
     }
 }
