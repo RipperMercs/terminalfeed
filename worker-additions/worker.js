@@ -39,6 +39,13 @@ var _traffic = {
   cold_start_at: null,  // lazy-initialized on first request (Date in module scope returns epoch on Cloudflare)
   total_requests: 0,
   by_endpoint: {},
+  // Per-endpoint outcome breakdown, populated after dispatchRoute resolves.
+  // Shape: { '/api/sports-summary': { '200': 1234, '504': 12 }, ... }
+  by_endpoint_status: {},
+  // Cumulative ms per endpoint, divided by by_endpoint count for avg latency.
+  by_endpoint_duration_ms: {},
+  // Cumulative count of slow events (>5s) per endpoint, plus most recent details.
+  slow_events: {},
   by_user_agent_family: {},
   by_auth: { with_bearer: 0, no_bearer: 0 },
   mcp_methods: {},
@@ -108,6 +115,49 @@ function _recordTrafficHit(env, path, hasBearer, ua) {
         indexes: ['/api/' + path],
       });
     } catch (e) {}
+  }
+}
+
+// Records the outcome of a request after dispatchRoute resolves: status code,
+// total duration in ms, and a slow-event breadcrumb if the request took >5s.
+// Called from the outer fetch handler so we capture everything, not just the
+// happy path.
+//
+// Use case: identify which endpoints generate 504s or are consistently slow.
+// Surface in /api/admin/agent-traffic and write slow events to the
+// AGENT_ANALYTICS Analytics Engine dataset for SQL-queryable history.
+var SLOW_EVENT_THRESHOLD_MS = 5000;
+function _recordTrafficOutcome(env, path, status, durationMs) {
+  var fullPath = '/api/' + path;
+  var statusKey = String(status || 0);
+
+  // Per-endpoint status code distribution.
+  var bucket = _traffic.by_endpoint_status[fullPath];
+  if (!bucket) { bucket = {}; _traffic.by_endpoint_status[fullPath] = bucket; }
+  bucket[statusKey] = (bucket[statusKey] || 0) + 1;
+
+  // Cumulative duration for avg latency calc later.
+  _traffic.by_endpoint_duration_ms[fullPath] =
+    (_traffic.by_endpoint_duration_ms[fullPath] || 0) + (durationMs || 0);
+
+  // Slow-event breadcrumb: count + most-recent ms + when.
+  if (durationMs >= SLOW_EVENT_THRESHOLD_MS) {
+    var slow = _traffic.slow_events[fullPath];
+    if (!slow) { slow = { count: 0, last_ms: 0, last_status: 0, last_at: null }; _traffic.slow_events[fullPath] = slow; }
+    slow.count += 1;
+    slow.last_ms = durationMs;
+    slow.last_status = status;
+    slow.last_at = new Date().toISOString();
+    // Push to Analytics Engine for SQL-queryable history.
+    if (env && env.AGENT_ANALYTICS) {
+      try {
+        env.AGENT_ANALYTICS.writeDataPoint({
+          blobs: ['slow', fullPath, statusKey],
+          doubles: [durationMs],
+          indexes: ['slow_endpoint'],
+        });
+      } catch (e) {}
+    }
   }
 }
 
@@ -188,12 +238,27 @@ async function handleAdminAgentTraffic(request, env) {
     entries.slice(0, n || 20).forEach(function(e) { out[e[0]] = e[1]; });
     return out;
   }
+  // For the top 30 endpoints, attach status code distribution and avg latency.
+  // Skip endpoints with zero outcome records (paths that errored before dispatch).
+  var topEndpoints = top(_traffic.by_endpoint, 30);
+  var statusByTopEndpoint = {};
+  var avgLatencyByTopEndpoint = {};
+  Object.keys(topEndpoints).forEach(function(ep) {
+    statusByTopEndpoint[ep] = _traffic.by_endpoint_status[ep] || {};
+    var hits = _traffic.by_endpoint[ep] || 0;
+    var sumMs = _traffic.by_endpoint_duration_ms[ep] || 0;
+    avgLatencyByTopEndpoint[ep] = hits > 0 ? Math.round(sumMs / hits) : 0;
+  });
+
   return adminJsonResponse({
     cold_start_at: _traffic.cold_start_at,
     snapshot_at: new Date().toISOString(),
     uptime_seconds: Math.floor((Date.now() - workerStartTime) / 1000),
     total_requests_since_cold_start: _traffic.total_requests,
-    by_endpoint: top(_traffic.by_endpoint, 30),
+    by_endpoint: topEndpoints,
+    by_endpoint_status: statusByTopEndpoint,
+    by_endpoint_avg_latency_ms: avgLatencyByTopEndpoint,
+    slow_events: _traffic.slow_events,
     by_user_agent_family: top(_traffic.by_user_agent_family, 25),
     by_auth: _traffic.by_auth,
     mcp_methods: top(_traffic.mcp_methods, 10),
@@ -211,6 +276,8 @@ async function handleAdminAgentTraffic(request, env) {
     notes: {
       reset_behavior: 'Counters reset on Worker cold start. Cloudflare Workers stay warm under continuous traffic; cold start usually after several minutes idle. For long-horizon analysis, query the AGENT_ANALYTICS dataset via Cloudflare SQL API.',
       analytics_query: 'SELECT blob1 as path, blob2 as ua_family, sum(double1) as hits FROM agent_traffic WHERE timestamp > now() - INTERVAL \'1\' DAY GROUP BY 1, 2 ORDER BY 3 DESC',
+      slow_endpoint_query: 'SELECT blob2 as path, blob3 as status, count() as count, avg(double1) as avg_ms FROM agent_traffic WHERE blob1 = \'slow\' AND timestamp > now() - INTERVAL \'1\' DAY GROUP BY 1, 2 ORDER BY 3 DESC',
+      slow_threshold_ms: SLOW_EVENT_THRESHOLD_MS,
     },
   }, 200, request);
 }
@@ -8236,7 +8303,10 @@ export default {
 
     // Count every request for ai-stats
     hitCounter++;
+    var t0 = Date.now();
     var resp = await dispatchRoute(request, env, url, path);
+    var duration = Date.now() - t0;
+    _recordTrafficOutcome(env, path, resp.status, duration);
     if (rl) resp = withRateLimitHeaders(resp, rl);
     return resp;
   },
