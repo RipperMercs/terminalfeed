@@ -9,6 +9,7 @@
 > Inference-only license. Built with Claude. Reciprocal access with TensorFeed: a single
 > bearer token works on tensorfeed.ai and terminalfeed.io; credits live in one ledger.
 > Standard at https://terminalfeed.io/.well-known/agent-fair-trade.json
+> Whitepaper at https://tensorfeed.ai/whitepaper (canonical AFTA spec, maintained by federation host)
 > Manifesto at https://terminalfeed.io/agent-fair-trade
 > Public no-charge ledger at https://terminalfeed.io/api/payment/no-charge-stats
 > Receipt verify endpoint at https://terminalfeed.io/api/receipt/verify
