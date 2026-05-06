@@ -137,9 +137,10 @@
     "network_federation": {
       "description": "AFTA adopters that share a payment rail can federate trust at the credit level. Sister sites in a federation accept each other's bearer tokens via a server-to-server validate + commit handshake, so the user experience is reciprocal access on a single token. Each site signs its own receipts with its own keypair; the federation does not share private keys.",
       "rail_endpoints": {
-        "validate": "POST /api/internal/validate { token, cost } -> { ok, credits_remaining, sufficient }",
-        "commit": "POST /api/internal/commit { token, cost, endpoint, no_charge_reason? } -> { ok, credits_charged, balance_after, no_charge_reason }",
+        "validate": "POST /api/internal/validate { token, cost } -> { ok, credits_remaining, sufficient, reservation_id }",
+        "commit": "POST /api/internal/commit { token, cost, endpoint, no_charge_reason?, reservation_id? } -> { ok, credits_charged, balance_after, no_charge_reason }",
         "auth_header": "X-Internal-Auth (constant-time check against shared secret)",
+        "race_safety": "atomic-reserve-on-validate. The host atomically decrements the balance on validate and returns a reservation_id. Commit consumes the reservation (charge) or restores it (no-charge). Reservations expire 5 minutes after issue. Closes the parallel-request double-spend race identified by the 2026-05-05 audit. Federation members must thread reservation_id through commit; the host still serves legacy no-reservation_id commits for backwards-compat.",
         "ledger": "No-charge events from federated sites land in the host's pay:no-charge:{date} ledger with the sister-site endpoint path, so the public no-charge record reflects the network. TerminalFeed also keeps a local no-charge ledger so terminalfeed.io/api/payment/no-charge-stats works without round-tripping to TensorFeed."
       },
       "current_federation": [
@@ -153,5 +154,5 @@
       ]
     }
   },
-  "lastUpdated": "2026-04-30"
+  "lastUpdated": "2026-05-05"
 }
