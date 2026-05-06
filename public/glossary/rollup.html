@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Rollup? - TerminalFeed Glossary</title>
+  <meta name="description" content="A Layer 2 scaling solution that bundles many transactions off-chain and posts a compressed summary back to the Layer 1.">
+  <meta property="og:title" content="What is Rollup? - TerminalFeed Glossary">
+  <meta property="og:description" content="A Layer 2 scaling solution that bundles many transactions off-chain and posts a compressed summary back to the Layer 1.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/rollup">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/rollup">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Rollup","description":"A Layer 2 scaling solution that bundles many transactions off-chain and posts a compressed summary back to the Layer 1.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/rollup"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Rollup","item":"https://terminalfeed.io/glossary/rollup"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Rollup</span>
+    </nav>
+
+    <h1>Rollup</h1>
+    <div class="category-label">CRYPTOCURRENCY</div>
+
+    <h2>Quick Definition</h2>
+    <p>A rollup is a <a href="/glossary/layer-2">Layer 2</a> blockchain that processes transactions off the main chain and periodically posts a batch with a proof of correctness back to L1. The L1 verifies the proof (or accepts it under a fraud-proof window) and stores the compressed result. Users get L2 speed and cost; L1 stores enough data to reconstruct L2 state if the L2 sequencer disappears.</p>
+
+    <h2>How it works</h2>
+    <p>Rollups split into two main types based on how they prove correctness: <a href="/glossary/optimistic-rollup">optimistic rollups</a> assume transactions are valid by default and let anyone submit a fraud proof during a 7-day challenge window; <a href="/glossary/zk-rollup">ZK rollups</a> include a cryptographic validity proof with each batch, eliminating the challenge window. ZK rollups are mathematically more elegant; optimistic rollups are easier to build.<br><br>All major Ethereum rollups follow this pattern. Differences are in proof system, sequencer design, data availability layer, and EVM compatibility.</p>
+
+    <h2>Why it matters</h2>
+    <p>Rollups are the dominant scaling path for Ethereum. By 2026, the majority of Ethereum-network transactions happen on rollups, not on L1 itself. Understanding the difference between optimistic and ZK is necessary for working in DeFi, NFTs, or anything on-chain.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>Base (the L2 TerminalFeed uses for USDC payments) is an Optimism-style optimistic rollup. The <a href="/api/pro/exchange-flows">exchange-flows premium endpoint</a> tracks flows on both L1 and L2.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/layer-2">Layer 2</a></li>
+        <li><a href="/glossary/optimistic-rollup">Optimistic Rollup</a></li>
+        <li><a href="/glossary/zk-rollup">Zk Rollup</a></li>
+        <li><a href="/glossary/blockchain">Blockchain</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>

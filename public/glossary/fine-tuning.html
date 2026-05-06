@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Fine-Tuning? - TerminalFeed Glossary</title>
+  <meta name="description" content="Training a pre-existing language model on new data to specialize its behavior for a specific domain or task.">
+  <meta property="og:title" content="What is Fine-Tuning? - TerminalFeed Glossary">
+  <meta property="og:description" content="Training a pre-existing language model on new data to specialize its behavior for a specific domain or task.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/fine-tuning">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/fine-tuning">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Fine-Tuning","description":"Training a pre-existing language model on new data to specialize its behavior for a specific domain or task.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/fine-tuning"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Fine-Tuning","item":"https://terminalfeed.io/glossary/fine-tuning"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Fine-Tuning</span>
+    </nav>
+
+    <h1>Fine-Tuning</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>Fine-tuning takes a pre-trained base model and continues training it on a smaller, task-specific dataset. The result is a model that retains the broad knowledge of the base but is biased toward the patterns in the fine-tuning data. Common use cases: matching a brand voice, specializing in a domain (legal, medical), improving structured output formatting, and reducing prompt length by encoding behavior into weights.</p>
+
+    <h2>How it works</h2>
+    <p>Modern fine-tuning rarely updates all model weights (full fine-tuning), since that requires a massive GPU budget. Instead, parameter-efficient methods like LoRA (Low-Rank Adaptation) train a small adapter on top of frozen base weights. A LoRA adapter for a 7B model might be just 50MB and trainable on a single consumer GPU.<br><br>The pipeline: collect 100-10,000 high-quality examples in the target format, format them as input/output pairs, train for a few epochs, evaluate against a held-out set, deploy. Quality of examples matters far more than quantity. A handful of careful examples usually beats thousands of mediocre ones.</p>
+
+    <h2>Why it matters</h2>
+    <p>Fine-tuning lets you bake behavior into a model that would otherwise require long prompts every time. For high-volume use cases (customer support, document processing), fine-tuning a smaller model often beats prompting a larger one on cost and latency. For frontier capability, base-model prompting still wins.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p><a href="/glossary/rag">RAG</a> and fine-tuning are complementary, not competing. The <a href="/blog/free-apis-2026">Free APIs article</a> covers when to reach for which.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/inference">Inference</a></li>
+        <li><a href="/glossary/large-language-model">Large Language Model</a></li>
+        <li><a href="/glossary/token">Token</a></li>
+        <li><a href="/glossary/rag">Rag</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>

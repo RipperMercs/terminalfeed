@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Mutual TLS (mTLS)? - TerminalFeed Glossary</title>
+  <meta name="description" content="TLS where both client and server present and verify certificates, used for service-to-service authentication and zero-trust networks.">
+  <meta property="og:title" content="What is Mutual TLS (mTLS)? - TerminalFeed Glossary">
+  <meta property="og:description" content="TLS where both client and server present and verify certificates, used for service-to-service authentication and zero-trust networks.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/mtls">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/mtls">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Mutual TLS (mTLS)","description":"TLS where both client and server present and verify certificates, used for service-to-service authentication and zero-trust networks.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/mtls"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Mutual TLS (mTLS)","item":"https://terminalfeed.io/glossary/mtls"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Mutual TLS (mTLS)</span>
+    </nav>
+
+    <h1>Mutual TLS (mTLS)</h1>
+    <div class="category-label">SECURITY</div>
+
+    <h2>Quick Definition</h2>
+    <p>Mutual TLS (mTLS) extends standard TLS by requiring the client to present a certificate that the server validates, in addition to the server presenting its certificate. Both ends prove their identity cryptographically. mTLS is the standard for service-to-service authentication in modern microservice architectures and is foundational to <a href="/glossary/zero-trust">zero-trust networks</a>.</p>
+
+    <h2>How it works</h2>
+    <p>In standard TLS, only the server has a certificate (signed by a CA the client trusts). The client trusts the server, but the server trusts only the credentials sent over the encrypted channel. In mTLS, the server is configured to require a client certificate. The client presents one signed by a CA the server trusts, and the server validates it during the handshake. If validation fails, the connection drops.<br><br>Operational complexity: managing client certificates, rotating them, revoking compromised ones. Service meshes (Istio, Linkerd) automate this, issuing short-lived certificates to every workload via SPIFFE identities. For HTTP APIs, mTLS replaces or supplements API keys, with much stronger guarantees.</p>
+
+    <h2>Why it matters</h2>
+    <p>mTLS gives you cryptographic identity for every machine in the system. Combined with policy controls, it enforces "service A can talk to service B but not C" at the network level. For high-trust environments (financial services, government, healthcare), mTLS is increasingly required.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The <a href="/cheatsheets/curl">curl cheat sheet</a> includes flags for testing mTLS endpoints with client certificates.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/ssl-tls">Ssl Tls</a></li>
+        <li><a href="/glossary/zero-trust">Zero Trust</a></li>
+        <li><a href="/glossary/encryption">Encryption</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>

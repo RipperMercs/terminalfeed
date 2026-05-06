@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Retrieval-Augmented Generation (RAG)? - TerminalFeed Glossary</title>
+  <meta name="description" content="A pattern that grounds language model responses by retrieving relevant documents from a knowledge base and including them in the prompt.">
+  <meta property="og:title" content="What is Retrieval-Augmented Generation (RAG)? - TerminalFeed Glossary">
+  <meta property="og:description" content="A pattern that grounds language model responses by retrieving relevant documents from a knowledge base and including them in the prompt.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/rag">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/rag">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Retrieval-Augmented Generation (RAG)","description":"A pattern that grounds language model responses by retrieving relevant documents from a knowledge base and including them in the prompt.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/rag"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Retrieval-Augmented Generation (RAG)","item":"https://terminalfeed.io/glossary/rag"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Retrieval-Augmented Generation (RAG)</span>
+    </nav>
+
+    <h1>Retrieval-Augmented Generation (RAG)</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>Retrieval-Augmented Generation (RAG) is the pattern that combines a language model with a retrieval system. Before the model answers a question, an external search step finds relevant documents (using <a href="/glossary/embeddings">embeddings</a> for semantic similarity, or keyword search, or both), and those documents are injected into the prompt as context. The model then generates an answer grounded in the retrieved content rather than relying solely on what it learned during training.</p>
+
+    <h2>How it works</h2>
+    <p>A typical RAG pipeline has three stages: (1) Indexing, where documents are chunked, embedded, and stored in a <a href="/glossary/vector-database">vector database</a>; (2) Retrieval, where a query is embedded and used to find the top-K most similar chunks; (3) Generation, where the retrieved chunks are concatenated with the query and sent to the LLM. The output usually includes citations back to the source documents.<br><br>Quality depends heavily on chunking strategy (size, overlap, semantic vs fixed), embedding model choice, and reranking. Hybrid retrieval (combining dense embedding similarity with sparse BM25 keyword search) typically beats either alone.</p>
+
+    <h2>Why it matters</h2>
+    <p>RAG solved two huge problems with LLMs: outdated training data (the model is frozen at its training cutoff) and <a href="/glossary/hallucination">hallucination</a> (the model making things up). With RAG, the model has access to current, verifiable information for every query. Most production AI applications use some form of RAG.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>TerminalFeed's premium <a href="/api/pro/agent-context">agent-context endpoint</a> is essentially a one-call RAG primitive: it returns a curated, citation-rich snapshot of the current world (markets, news, sentiment) in a format ready to drop into a system prompt.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/embeddings">Embeddings</a></li>
+        <li><a href="/glossary/vector-database">Vector Database</a></li>
+        <li><a href="/glossary/large-language-model">Large Language Model</a></li>
+        <li><a href="/glossary/context-window">Context Window</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>

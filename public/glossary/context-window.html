@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Context Window? - TerminalFeed Glossary</title>
+  <meta name="description" content="The maximum number of tokens a language model can process at once, including system prompt, conversation history, retrieved data, and the response.">
+  <meta property="og:title" content="What is Context Window? - TerminalFeed Glossary">
+  <meta property="og:description" content="The maximum number of tokens a language model can process at once, including system prompt, conversation history, retrieved data, and the response.">
+  <meta property="og:url" content="https://terminalfeed.io/glossary/context-window">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/glossary/context-window">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"DefinedTerm","name":"Context Window","description":"The maximum number of tokens a language model can process at once, including system prompt, conversation history, retrieved data, and the response.","inDefinedTermSet":{"@type":"DefinedTermSet","name":"TerminalFeed Tech Glossary","url":"https://terminalfeed.io/glossary"},"url":"https://terminalfeed.io/glossary/context-window"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Glossary","item":"https://terminalfeed.io/glossary"},{"@type":"ListItem","position":3,"name":"Context Window","item":"https://terminalfeed.io/glossary/context-window"}]}</script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 760px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    h1 { font-size: 22px; color: #F0EDE6; font-weight: 600; margin-bottom: 6px; }
+    .category-label { font-size: 10px; color: #5DCAA5; letter-spacing: 1.5px; margin-bottom: 24px; }
+    h2 { font-size: 15px; color: #4ADE80; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
+    p { font-size: 13px; line-height: 1.8; margin-bottom: 16px; color: #D4D2CB; }
+    a { color: #5DCAA5; text-decoration: none; }
+    a:hover { border-bottom: 1px solid #5DCAA5; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 13px; margin-bottom: 8px; color: #D4D2CB; }
+    code { background: #151518; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #4ADE80; }
+    .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E1E24; }
+    .related h2 { margin-top: 0; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    @media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/glossary">Glossary</a><span class="bc-sep">&rsaquo;</span><span>Context Window</span>
+    </nav>
+
+    <h1>Context Window</h1>
+    <div class="category-label">AI & MACHINE LEARNING</div>
+
+    <h2>Quick Definition</h2>
+    <p>The context window is the total number of <a href="/glossary/token">tokens</a> a language model can hold in attention at any given moment. It is the hard upper bound on how much text the model can read in a single request. Modern frontier models have context windows ranging from 8K (older or smaller models) to 1M+ tokens (Claude with extended context, Gemini 1.5 Pro, GPT-4.1). Everything counts: the system prompt, the user's message, prior conversation turns, retrieved documents, tool definitions, and the response itself.</p>
+
+    <h2>How it works</h2>
+    <p>Tokens are subword units the model uses internally. Roughly: 1 token ≈ 0.75 English words. A 128K context window holds about 96,000 words, or 200 pages of text. The model's compute and memory cost grows roughly quadratically with context length, which is why long-context models are more expensive per request.<br><br>When the input exceeds the context window, the application must truncate, summarize, or use <a href="/glossary/rag">RAG</a> to inject only the most relevant subset. Most agent frameworks include automatic context management that keeps recent messages and a rolling summary of older ones.</p>
+
+    <h2>Why it matters</h2>
+    <p>Context window size determines what kinds of tasks an LLM can do in a single shot. Small windows force aggressive summarization and lose nuance. Large windows let you drop entire codebases, books, or transcripts into a prompt. The 1M-token threshold (achieved 2024-2025) makes whole-document analysis tractable in one call.</p>
+
+    <h2>Where you'll see this on TerminalFeed</h2>
+    <p>The <a href="/blog/ai-agents-explained">AI Agents article</a> on the TerminalFeed blog covers how agents manage context as conversations grow longer than any single context window.</p>
+
+    <div class="related">
+      <h2>Related terms</h2>
+      <ul>
+        <li><a href="/glossary/token">Token</a></li>
+        <li><a href="/glossary/large-language-model">Large Language Model</a></li>
+        <li><a href="/glossary/rag">Rag</a></li>
+        <li><a href="/glossary/embeddings">Embeddings</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a><span class="sep">|</span>
+    <a href="/live">Live</a><span class="sep">|</span>
+    <a href="/tools/">Tools</a><span class="sep">|</span>
+    <a href="/agent">Agents</a><span class="sep">|</span>
+    <a href="/radio">Radio</a><span class="sep">|</span>
+    <a href="/wifi">WiFi</a><span class="sep">|</span>
+    <a href="/blog">Blog</a><span class="sep">|</span>
+    <a href="/developers">API</a><span class="sep">|</span>
+    <a href="/about">About</a><span class="sep">|</span>
+    <a href="/team">Team</a><span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>
