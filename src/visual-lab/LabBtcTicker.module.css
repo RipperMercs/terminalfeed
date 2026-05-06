@@ -217,6 +217,89 @@
     0 0 36px -4px color-mix(in oklab, var(--accent) 75%, transparent);
 }
 
+/* ── MATRIX ── */
+[data-variant="matrix"] .hero {
+  background:
+    linear-gradient(180deg, rgba(74, 222, 128, 0.03) 0%, transparent 70%),
+    var(--bg-panel);
+  border-color: color-mix(in oklab, #4ADE80 22%, transparent);
+  animation: heroMatrixBreathe 5s ease-in-out infinite;
+}
+[data-variant="matrix"] .price {
+  text-shadow: 0 0 14px color-mix(in oklab, var(--accent) 40%, transparent);
+}
+[data-variant="matrix"] .label {
+  color: #4ADE80;
+}
+[data-variant="matrix"] .bracket {
+  opacity: 0.6;
+  border-color: #4ADE80 !important;
+}
+
+@keyframes heroMatrixBreathe {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.08), 0 0 14px -8px rgba(74, 222, 128, 0.3); }
+  50%      { box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.18), 0 0 26px -6px rgba(74, 222, 128, 0.5); }
+}
+
+/* ── LCARS ── */
+[data-variant="lcars"] .hero {
+  border: none;
+  border-radius: 18px 4px 4px 18px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent) 12%, var(--bg-panel)) 0%,
+    var(--bg-panel) 30%
+  );
+  padding-left: 28px;
+}
+[data-variant="lcars"] .label {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── COMMAND ── */
+[data-variant="command"] .hero {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.012) 0%, transparent 12%),
+    var(--bg-panel);
+  border-color: color-mix(in oklab, var(--accent) 18%, transparent);
+  animation: heroCommandPulse 4s ease-in-out infinite;
+}
+[data-variant="command"] .price {
+  text-shadow: 0 0 12px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+[data-variant="command"] .bracket {
+  opacity: 0.7;
+  width: 16px;
+  height: 16px;
+  animation: heroCommandBracketSweep 4s ease-in-out infinite;
+}
+[data-variant="command"] .bracketTR { animation-delay: 1s; }
+[data-variant="command"] .bracketBR { animation-delay: 2s; }
+[data-variant="command"] .bracketBL { animation-delay: 3s; }
+[data-variant="command"] .label {
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+
+@keyframes heroCommandPulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 5%, transparent), 0 0 18px -8px color-mix(in oklab, var(--accent) 35%, transparent); }
+  50%      { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 14%, transparent), 0 0 28px -6px color-mix(in oklab, var(--accent) 60%, transparent); }
+}
+
+@keyframes heroCommandBracketSweep {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-variant="matrix"] .hero,
+  [data-variant="command"] .hero,
+  [data-variant="command"] .bracket {
+    animation: none !important;
+  }
+}
+
 @media (max-width: 720px) {
   .hero {
     grid-template-columns: 1fr;

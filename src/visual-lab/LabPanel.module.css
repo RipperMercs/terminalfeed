@@ -250,6 +250,274 @@
   transform: translateY(-1px);
 }
 
+/* ── Shared elements that activate per-variant ── */
+
+.scanline {
+  position: absolute;
+  top: 0; left: -30%;
+  width: 30%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--accent) 14%, transparent) 50%,
+    transparent 100%
+  );
+  z-index: 0;
+}
+
+.lcarsBar {
+  position: absolute;
+  top: 36px;
+  bottom: 8px;
+  left: 0;
+  width: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+  z-index: 2;
+}
+.lcarsSeg {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  opacity: 0.7;
+}
+.lcarsSeg:nth-child(2) { opacity: 0.45; }
+.lcarsSeg:nth-child(3) { opacity: 0.85; }
+.lcarsSeg:nth-child(4) { opacity: 0.3; }
+
+.lcarsPill {
+  display: none;
+  width: 18px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 7px 0 0 7px;
+  margin-right: 8px;
+  align-self: center;
+}
+
+.tickCounter {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+.tickDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.3;
+}
+
+/* ───────────────────────────────────────────────
+   VARIANT F — MATRIX
+   Green-dominant, breathing border, slow horizontal
+   scanline sweep across the panel. Title glows.
+   Hover ramps the glow + speeds the sweep.
+   ─────────────────────────────────────────────── */
+
+[data-variant="matrix"] .panel {
+  background:
+    linear-gradient(180deg, rgba(74, 222, 128, 0.025) 0%, transparent 70%),
+    var(--bg-panel);
+  border-color: color-mix(in oklab, var(--green) 22%, transparent);
+  animation: matrixBreathe 5s ease-in-out infinite;
+}
+[data-variant="matrix"] .panel:hover {
+  border-color: color-mix(in oklab, var(--green) 55%, transparent);
+}
+[data-variant="matrix"] .header {
+  background: linear-gradient(
+    90deg,
+    rgba(74, 222, 128, 0.04) 0%,
+    transparent 60%
+  );
+  border-bottom: 1px solid color-mix(in oklab, var(--green) 18%, transparent);
+}
+[data-variant="matrix"] .title {
+  color: var(--green);
+  text-shadow: 0 0 8px color-mix(in oklab, var(--green) 40%, transparent);
+}
+[data-variant="matrix"] .scanline {
+  opacity: 1;
+  animation: scanSweep 6s linear infinite;
+}
+[data-variant="matrix"] .bracket {
+  opacity: 0.5;
+  border-color: var(--green) !important;
+  animation: matrixBracketPulse 3s ease-in-out infinite;
+}
+[data-variant="matrix"] .panel:hover .scanline {
+  animation-duration: 2.5s;
+}
+
+@keyframes matrixBreathe {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--green) 8%, transparent),
+      0 0 12px -6px color-mix(in oklab, var(--green) 30%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--green) 18%, transparent),
+      0 0 22px -4px color-mix(in oklab, var(--green) 50%, transparent);
+  }
+}
+
+@keyframes scanSweep {
+  0%   { left: -30%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: 130%; opacity: 0; }
+}
+
+@keyframes matrixBracketPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.85; }
+}
+
+/* ───────────────────────────────────────────────
+   VARIANT G — LCARS
+   Star Trek TNG/Voyager flight-deck. Asymmetric
+   rounded pill in header, segmented vertical
+   accent bar on the left, saturated category color.
+   ─────────────────────────────────────────────── */
+
+[data-variant="lcars"] .panel {
+  background: var(--bg-panel);
+  border: none;
+  border-radius: 14px 4px 4px 14px;
+  padding-left: 14px;
+  position: relative;
+}
+[data-variant="lcars"] .panel:hover {
+  background: rgba(20, 20, 26, 0.95);
+}
+[data-variant="lcars"] .lcarsBar {
+  display: flex;
+}
+[data-variant="lcars"] .lcarsPill {
+  display: inline-block;
+}
+[data-variant="lcars"] .header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: transparent;
+  padding-left: 4px;
+}
+[data-variant="lcars"] .tag {
+  display: inline;
+  color: var(--accent);
+  font-weight: 700;
+}
+[data-variant="lcars"] .title {
+  color: var(--text);
+  letter-spacing: 1.5px;
+}
+[data-variant="lcars"] .body {
+  padding-left: 16px;
+}
+
+/* ───────────────────────────────────────────────
+   VARIANT H — COMMAND
+   The hybrid: Bloomberg [TAG] header + animated
+   corner brackets + slow scanline sweep + ticking
+   status counter. Closer to a flight deck readout.
+   ─────────────────────────────────────────────── */
+
+[data-variant="command"] .panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.012) 0%, transparent 12%),
+    var(--bg-panel);
+  border-color: color-mix(in oklab, var(--accent) 18%, transparent);
+  animation: commandPulse 4s ease-in-out infinite;
+}
+[data-variant="command"] .panel:hover {
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+}
+[data-variant="command"] .header {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent) 9%, transparent) 0%,
+    transparent 70%
+  );
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 22%, transparent);
+}
+[data-variant="command"] .tag {
+  display: inline;
+  color: var(--accent);
+  font-weight: 600;
+}
+[data-variant="command"] .title {
+  color: var(--text);
+  letter-spacing: 1.5px;
+}
+[data-variant="command"] .scanline {
+  opacity: 1;
+  animation: scanSweep 8s linear infinite;
+}
+[data-variant="command"] .bracket {
+  opacity: 0.7;
+  width: 10px;
+  height: 10px;
+  animation: commandBracketSweep 4s ease-in-out infinite;
+}
+[data-variant="command"] .bracketTR { animation-delay: 1s; }
+[data-variant="command"] .bracketBR { animation-delay: 2s; }
+[data-variant="command"] .bracketBL { animation-delay: 3s; }
+[data-variant="command"] .panel:hover .bracket {
+  width: 14px;
+  height: 14px;
+}
+[data-variant="command"] .tickCounter {
+  display: inline-flex;
+}
+[data-variant="command"] .tickDot {
+  animation: tickPulse 1.6s ease-in-out infinite;
+}
+[data-variant="command"] .tickDot:nth-child(2) { animation-delay: 0.4s; }
+[data-variant="command"] .tickDot:nth-child(3) { animation-delay: 0.8s; }
+
+@keyframes commandPulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 4%, transparent),
+      0 0 14px -8px color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 12%, transparent),
+      0 0 22px -6px color-mix(in oklab, var(--accent) 60%, transparent);
+  }
+}
+
+@keyframes commandBracketSweep {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+@keyframes tickPulse {
+  0%, 100% { opacity: 0.2; }
+  50%      { opacity: 1; }
+}
+
+/* ── Reduced motion: keep the look, kill the loops ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-variant="matrix"] .panel,
+  [data-variant="matrix"] .scanline,
+  [data-variant="matrix"] .bracket,
+  [data-variant="command"] .panel,
+  [data-variant="command"] .scanline,
+  [data-variant="command"] .bracket,
+  [data-variant="command"] .tickDot {
+    animation: none !important;
+  }
+}
+
 /* ── Internal helpers shared by panels ── */
 .row {
   display: flex;
