@@ -1,6 +1,10 @@
 # Product page redirects
 /clean /cleaner 301
 
+# SPA-mounted internal routes (no static file, served by index.html)
+# main.tsx pathname-routes these to alternate React roots.
+/visual-lab /index.html 200
+
 # Well-known URI aliases (RFC 5785) for AI agent discovery.
 # Agents that follow well-known conventions check these paths first.
 /.well-known/openapi.json /openapi.json 200
