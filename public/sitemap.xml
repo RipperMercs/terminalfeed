@@ -782,5 +782,35 @@
   <url><loc>https://terminalfeed.io/glossary/order-book</loc><lastmod>2026-05-05</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://terminalfeed.io/glossary/volatility</loc><lastmod>2026-05-05</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://terminalfeed.io/glossary/market-cap</loc><lastmod>2026-05-05</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://terminalfeed.io/crypto</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/btc</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/eth</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/usdt</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/usdc</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/sol</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/xrp</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/bnb</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/ada</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/avax</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/dot</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/atom</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/near</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/apt</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/sui</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/arb</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/op</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/pol</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/link</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/uni</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/aave</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/mkr</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/dai</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/tao</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/render</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/fil</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/xmr</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/inj</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/tia</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://terminalfeed.io/crypto/sei</loc><lastmod>2026-05-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
 
 </urlset>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tether (USDT) Live Price, Market Cap, Use Cases | TerminalFeed</title>
+  <meta name="description" content="The largest US-dollar-pegged stablecoin by circulating supply, used for trading, settlement, and dollar access in markets without USD banking.">
+  <meta name="keywords" content="usdt price, usdt live, tether price, usdt market cap, usdt usd, usdt chart, what is usdt, usdt explained">
+  <link rel="canonical" href="https://terminalfeed.io/crypto/usdt">
+  <meta property="og:title" content="Tether (USDT) Live Price + What It Is">
+  <meta property="og:description" content="The largest US-dollar-pegged stablecoin by circulating supply, used for trading, settlement, and dollar access in markets without USD banking.">
+  <meta property="og:url" content="https://terminalfeed.io/crypto/usdt">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Tether (USDT): Live Price, Market Cap, and Use Cases","description":"The largest US-dollar-pegged stablecoin by circulating supply, used for trading, settlement, and dollar access in markets without USD banking.","url":"https://terminalfeed.io/crypto/usdt","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/crypto/usdt","about":{"@type":"Thing","name":"Tether"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Crypto","item":"https://terminalfeed.io/crypto"},{"@type":"ListItem","position":3,"name":"Tether (USDT)","item":"https://terminalfeed.io/crypto/usdt"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is USDT actually backed 1:1 by US dollars?","acceptedAnswer":{"@type":"Answer","text":"USDT is backed by a reserve portfolio that Tether Limited reports includes cash, US Treasuries, money-market funds, and other assets totaling approximately the circulating supply. The exact composition is published in periodic attestations."}},{"@type":"Question","name":"Can USDT lose its peg?","acceptedAnswer":{"@type":"Answer","text":"Yes, briefly. USDT has occasionally traded a few cents below $1 during market stress events (like the May 2022 Terra collapse) before arbitrageurs restored the peg. A persistent unpeg has not occurred, but is not impossible."}},{"@type":"Question","name":"Is USDT issued only on Ethereum?","acceptedAnswer":{"@type":"Answer","text":"No. USDT is issued natively on multiple blockchains including Ethereum, Tron, Solana, and others. Each chain has its own USDT contract; the total minted supply is managed by Tether Limited across all chains."}},{"@type":"Question","name":"How is USDT different from USDC?","acceptedAnswer":{"@type":"Answer","text":"Both are USD-pegged stablecoins. USDT is issued by Tether Limited and has the largest supply. USDC is issued by Circle, has more conservative reserve management (cash and short-term Treasuries only), and is favored by institutions seeking US-regulated counterparties."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono','SF Mono','Fira Code',Consolas,monospace; line-height: 1.7; padding: 24px 16px 64px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 28px; }
+    .badge { display: inline-block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; margin-bottom: 14px; color: #4ADE80; border: 1px solid #4ADE8040; background: #4ADE8010; }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 6px; font-weight: 600; }
+    .header h1 .ticker { color: #4ADE80; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; margin-top: 8px; }
+    .live-stats { background: #111114; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px 18px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
+    .stat-label { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 18px; color: #F0EDE6; font-weight: 600; }
+    .stat-value.up { color: #4ADE80; }
+    .stat-value.down { color: #F87171; }
+    .stat-value.muted { color: #4E4D49; }
+    .live-note { font-size: 10px; color: #4E4D49; margin-top: -8px; margin-bottom: 28px; text-align: right; }
+    .section { margin-bottom: 30px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 12px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code { background: #111114; border: 1px solid #1A1A22; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; background: #0D0D10; border: 1px solid #1A1A22; border-radius: 6px; padding: 14px 18px; margin-bottom: 28px; }
+    .meta-grid .ml { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .meta-grid .mv { font-size: 12px; color: #C8C8C0; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .related-card { background: #111114; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 14px; text-decoration: none !important; border-bottom: 1px solid #1A1A22 !important; transition: border-color 0.15s; }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-ticker { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 12px; color: #F0EDE6; margin-bottom: 2px; }
+    .related-cat { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; }
+    .faq { background: #0D0D10; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 16px; margin-bottom: 8px; }
+    .faq summary { cursor: pointer; font-size: 13px; color: #F0EDE6; font-weight: 500; list-style: none; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+    @media (max-width: 600px) { .header h1 { font-size: 22px; } .section h2 { font-size: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/crypto">Crypto</a><span class="sep">›</span><span>USDT</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">Stablecoin</span>
+      <h1>Tether <span class="ticker">USDT</span></h1>
+      <p class="summary">The largest US-dollar-pegged stablecoin by circulating supply, used for trading, settlement, and dollar access in markets without USD banking.</p>
+    </header>
+
+    <div class="live-stats">
+      <div><div class="stat-label">Price</div><div class="stat-value muted" id="price">loading...</div></div>
+      <div><div class="stat-label">24h Change</div><div class="stat-value muted" id="change24h">--</div></div>
+      <div><div class="stat-label">Market Cap</div><div class="stat-value muted" id="mcap">--</div></div>
+      <div><div class="stat-label">24h Volume</div><div class="stat-value muted" id="vol">--</div></div>
+    </div>
+    <p class="live-note">Live data via <a href="/api/coingecko/markets" style="color:#4E4D49">/api/coingecko/markets</a> · Updated every page load</p>
+
+    <div class="meta-grid">
+      <div><div class="ml">Founded</div><div class="mv">2014</div></div>
+      <div><div class="ml">Founder</div><div class="mv">Tether Limited (issuer)</div></div>
+      <div><div class="ml">Consensus</div><div class="mv">Issued on multiple chains</div></div>
+      <div><div class="ml">Max Supply</div><div class="mv">Variable; backed by reserves</div></div>
+    </div>
+
+    <section class="section">
+      <h2>What USDT is</h2>
+      <p>Tether (USDT) is a <a href="/glossary/stablecoin">stablecoin</a> issued by Tether Limited that aims to maintain a 1:1 peg with the US dollar. It is the largest stablecoin in circulation, with significant share of total stablecoin supply. USDT is issued natively on multiple blockchains including Ethereum, Tron, Solana, and others, with each issuance backed by reserves held by Tether Limited. The reserves consist of cash, US Treasuries, money-market funds, and other assets disclosed in regular attestations.<br><br>USDT's primary role is as a unit of account and trading pair on cryptocurrency exchanges. Most crypto trading volume is denominated in USDT rather than fiat USD because it can move on-chain in seconds rather than waiting for bank settlement. In markets where USD banking is restricted or unavailable (parts of Asia, South America, Africa), USDT functions as a practical replacement for USD bank accounts.</p>
+    </section>
+
+    <section class="section">
+      <h2>How it works</h2>
+      <p>Tether maintains the peg through issuance and redemption: authorized counterparties can mint new USDT by depositing USD, and redeem USDT for USD by burning tokens. In secondary markets (exchanges and DeFi), the price floats but tends to stay within a few basis points of $1.00 because arbitrageurs profit from any divergence. Tether publishes quarterly reserve attestations conducted by accounting firms; reserve composition is published in summary form.<br><br>USDT exists as separate token contracts on each chain it's issued on, with Tether Limited responsible for ensuring the total minted supply matches the total reserves backing all chains combined. Cross-chain bridges allow holders to move USDT between chains, though the canonical issuance always traces back to Tether Limited's mint authority.</p>
+    </section>
+
+    <section class="section">
+      <h2>Use cases</h2>
+      <p>USDT dominates as the primary trading pair on most centralized crypto exchanges. It is used as a settlement currency between exchanges and OTC desks, as collateral in DeFi lending markets (especially on Ethereum and Tron), as a remittance rail in regions with weak banking infrastructure, and as the dollar-equivalent leg of perpetual futures positions. For users in countries with capital controls or unstable currencies, holding USDT is often the most accessible way to maintain dollar-denominated savings.</p>
+    </section>
+
+    <section class="section">
+      <h2>Tradeoffs and criticism</h2>
+      <p>Tether has faced ongoing scrutiny over the composition and verification of its reserves, regulatory questions about the issuer, and concentration risk in the broader crypto market. The 2022 collapse of TerraUSD (an algorithmic stablecoin) reminded markets that not all "stable" coins are actually stable; while USDT is collateral-backed and structurally different, the event prompted regulators in multiple jurisdictions to require stricter disclosures from stablecoin issuers. Holders should understand they trust Tether Limited as the issuer and are exposed to reserve quality, regulatory action, and counterparty risk.</p>
+    </section>
+
+    <section class="section">
+      <h2>Where to track USDT</h2>
+      <p>See the <a href="/glossary/stablecoin">stablecoin</a> glossary entry for the broader category. The <a href="/api/pro/stablecoin-flows">premium stablecoin-flows endpoint</a> tracks issuance and redemption flows across the major stablecoins including USDT.</p>
+    </section>
+
+    <section class="section">
+      <h2>Related coins</h2>
+      <div class="related-grid">
+      <a href="/crypto/usdc" class="related-card">
+        <div class="related-ticker" style="color:#4ADE80">USDC</div>
+        <div class="related-name">USD Coin</div>
+        <div class="related-cat">Stablecoin</div>
+      </a>
+      <a href="/crypto/dai" class="related-card">
+        <div class="related-ticker" style="color:#4ADE80">DAI</div>
+        <div class="related-name">Dai</div>
+        <div class="related-cat">Stablecoin</div>
+      </a>
+      <a href="/crypto/eth" class="related-card">
+        <div class="related-ticker" style="color:#5DCAA5">ETH</div>
+        <div class="related-name">Ethereum</div>
+        <div class="related-cat">L1</div>
+      </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Frequently asked questions</h2>
+      <details class="faq"><summary>Is USDT actually backed 1:1 by US dollars?</summary><div class="faq-answer">USDT is backed by a reserve portfolio that Tether Limited reports includes cash, US Treasuries, money-market funds, and other assets totaling approximately the circulating supply. The exact composition is published in periodic attestations.</div></details>
+      <details class="faq"><summary>Can USDT lose its peg?</summary><div class="faq-answer">Yes, briefly. USDT has occasionally traded a few cents below $1 during market stress events (like the May 2022 Terra collapse) before arbitrageurs restored the peg. A persistent unpeg has not occurred, but is not impossible.</div></details>
+      <details class="faq"><summary>Is USDT issued only on Ethereum?</summary><div class="faq-answer">No. USDT is issued natively on multiple blockchains including Ethereum, Tron, Solana, and others. Each chain has its own USDT contract; the total minted supply is managed by Tether Limited across all chains.</div></details>
+      <details class="faq"><summary>How is USDT different from USDC?</summary><div class="faq-answer">Both are USD-pegged stablecoins. USDT is issued by Tether Limited and has the largest supply. USDC is issued by Circle, has more conservative reserve management (cash and short-term Treasuries only), and is favored by institutions seeking US-regulated counterparties.</div></details>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/crypto">All Coins</a><span class="sep">|</span>
+      <a href="/api/crypto-movers">Live Markets</a><span class="sep">|</span>
+      <a href="/api/btc-price">BTC Price API</a><span class="sep">|</span>
+      <a href="/glossary">Glossary</a><span class="sep">|</span>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+
+  <script>
+  (function() {
+    var sym = 'usdt';
+    fetch('/api/coingecko/markets').then(function(r) { return r.json(); }).then(function(j) {
+      var data = (j && j.data) || [];
+      var coin = data.find(function(c) { return c.symbol === sym || c.id === sym; });
+      if (!coin) return;
+      var fmtPrice = function(n) {
+        if (n >= 1000) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+        if (n >= 1) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 2});
+        if (n >= 0.01) return '$' + n.toFixed(4);
+        return '$' + n.toFixed(8);
+      };
+      var fmtBig = function(n) {
+        if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+        return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+      };
+      var pe = document.getElementById('price');
+      pe.textContent = fmtPrice(coin.current_price);
+      pe.classList.remove('muted');
+      var ce = document.getElementById('change24h');
+      var ch = coin.price_change_percentage_24h || 0;
+      ce.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%';
+      ce.classList.remove('muted');
+      ce.classList.add(ch >= 0 ? 'up' : 'down');
+      var me = document.getElementById('mcap');
+      me.textContent = coin.market_cap ? fmtBig(coin.market_cap) : '--';
+      me.classList.remove('muted');
+      var ve = document.getElementById('vol');
+      ve.textContent = coin.total_volume ? fmtBig(coin.total_volume) : '--';
+      ve.classList.remove('muted');
+    }).catch(function() {});
+  })();
+  </script>
+</body>
+</html>

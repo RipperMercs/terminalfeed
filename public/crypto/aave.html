@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aave (AAVE) Live Price, Market Cap, Use Cases | TerminalFeed</title>
+  <meta name="description" content="A leading decentralized lending protocol where users deposit collateral to borrow assets, with floating interest rates set by utilization curves.">
+  <meta name="keywords" content="aave price, aave live, aave price, aave market cap, aave usd, aave chart, what is aave, aave explained">
+  <link rel="canonical" href="https://terminalfeed.io/crypto/aave">
+  <meta property="og:title" content="Aave (AAVE) Live Price + What It Is">
+  <meta property="og:description" content="A leading decentralized lending protocol where users deposit collateral to borrow assets, with floating interest rates set by utilization curves.">
+  <meta property="og:url" content="https://terminalfeed.io/crypto/aave">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="/feed.xml">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Aave (AAVE): Live Price, Market Cap, and Use Cases","description":"A leading decentralized lending protocol where users deposit collateral to borrow assets, with floating interest rates set by utilization curves.","url":"https://terminalfeed.io/crypto/aave","datePublished":"2026-05-05","dateModified":"2026-05-05","author":{"@type":"Organization","name":"TerminalFeed"},"publisher":{"@type":"Organization","name":"TerminalFeed","logo":{"@type":"ImageObject","url":"https://terminalfeed.io/logo.png"}},"mainEntityOfPage":"https://terminalfeed.io/crypto/aave","about":{"@type":"Thing","name":"Aave"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://terminalfeed.io/"},{"@type":"ListItem","position":2,"name":"Crypto","item":"https://terminalfeed.io/crypto"},{"@type":"ListItem","position":3,"name":"Aave (AAVE)","item":"https://terminalfeed.io/crypto/aave"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the difference between depositing and lending?","acceptedAnswer":{"@type":"Answer","text":"In Aave, depositing IS lending: when you deposit USDC, you receive aUSDC tokens that earn interest. Other users can borrow that USDC by posting collateral."}},{"@type":"Question","name":"What happens if my position gets liquidated?","acceptedAnswer":{"@type":"Answer","text":"A liquidator repays a portion of your debt and receives the equivalent collateral plus a discount (typically 5-10%). You keep the remaining collateral but lose the liquidation premium."}},{"@type":"Question","name":"What are flash loans?","acceptedAnswer":{"@type":"Answer","text":"Flash loans are uncollateralized loans that must be borrowed and repaid in a single transaction. They are useful for arbitrage, collateral swaps, and refinancing without needing capital upfront. They are also the source of many DeFi exploits."}}]}</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0C; color: #D4D2CB; font-family: 'JetBrains Mono','SF Mono','Fira Code',Consolas,monospace; line-height: 1.7; padding: 24px 16px 64px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 18px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .sep { margin: 0 6px; color: #2A2A30; }
+    .header { border-bottom: 1px solid #1E1E24; padding-bottom: 24px; margin-bottom: 28px; }
+    .badge { display: inline-block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; margin-bottom: 14px; color: #A78BFA; border: 1px solid #A78BFA40; background: #A78BFA10; }
+    .header h1 { font-size: 28px; color: #F0EDE6; margin-bottom: 6px; font-weight: 600; }
+    .header h1 .ticker { color: #A78BFA; }
+    .summary { font-size: 14px; color: #A8A6A0; line-height: 1.7; margin-top: 8px; }
+    .live-stats { background: #111114; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px 18px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
+    .stat-label { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 18px; color: #F0EDE6; font-weight: 600; }
+    .stat-value.up { color: #4ADE80; }
+    .stat-value.down { color: #F87171; }
+    .stat-value.muted { color: #4E4D49; }
+    .live-note { font-size: 10px; color: #4E4D49; margin-top: -8px; margin-bottom: 28px; text-align: right; }
+    .section { margin-bottom: 30px; }
+    .section h2 { font-size: 16px; color: #4ADE80; margin-bottom: 12px; letter-spacing: 0.3px; font-weight: 600; }
+    .section p { font-size: 13.5px; color: #C8C8C0; margin-bottom: 14px; line-height: 1.8; }
+    .section a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .section a:hover { border-bottom-color: #5DCAA5; }
+    .section code { background: #111114; border: 1px solid #1A1A22; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5; }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; background: #0D0D10; border: 1px solid #1A1A22; border-radius: 6px; padding: 14px 18px; margin-bottom: 28px; }
+    .meta-grid .ml { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+    .meta-grid .mv { font-size: 12px; color: #C8C8C0; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .related-card { background: #111114; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 14px; text-decoration: none !important; border-bottom: 1px solid #1A1A22 !important; transition: border-color 0.15s; }
+    .related-card:hover { border-color: #5DCAA5 !important; border-bottom-color: #5DCAA5 !important; }
+    .related-ticker { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+    .related-name { font-size: 12px; color: #F0EDE6; margin-bottom: 2px; }
+    .related-cat { font-size: 10px; color: #4E4D49; letter-spacing: 1px; text-transform: uppercase; }
+    .faq { background: #0D0D10; border: 1px solid #1A1A22; border-radius: 5px; padding: 12px 16px; margin-bottom: 8px; }
+    .faq summary { cursor: pointer; font-size: 13px; color: #F0EDE6; font-weight: 500; list-style: none; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before { content: '› '; color: #5DCAA5; margin-right: 4px; }
+    .faq[open] summary::before { content: '⌄ '; }
+    .faq-answer { font-size: 12.5px; color: #A8A6A0; padding-top: 10px; line-height: 1.7; }
+    footer.footer { margin-top: 48px; text-align: center; padding: 24px 0; font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22; }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    footer.footer .sep { margin: 0 6px; color: #2A2A30; }
+    @media (max-width: 600px) { .header h1 { font-size: 22px; } .section h2 { font-size: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="sep">›</span><a href="/crypto">Crypto</a><span class="sep">›</span><span>AAVE</span>
+    </nav>
+
+    <header class="header">
+      <span class="badge">DeFi</span>
+      <h1>Aave <span class="ticker">AAVE</span></h1>
+      <p class="summary">A leading decentralized lending protocol where users deposit collateral to borrow assets, with floating interest rates set by utilization curves.</p>
+    </header>
+
+    <div class="live-stats">
+      <div><div class="stat-label">Price</div><div class="stat-value muted" id="price">loading...</div></div>
+      <div><div class="stat-label">24h Change</div><div class="stat-value muted" id="change24h">--</div></div>
+      <div><div class="stat-label">Market Cap</div><div class="stat-value muted" id="mcap">--</div></div>
+      <div><div class="stat-label">24h Volume</div><div class="stat-value muted" id="vol">--</div></div>
+    </div>
+    <p class="live-note">Live data via <a href="/api/coingecko/markets" style="color:#4E4D49">/api/coingecko/markets</a> · Updated every page load</p>
+
+    <div class="meta-grid">
+      <div><div class="ml">Founded</div><div class="mv">2017</div></div>
+      <div><div class="ml">Founder</div><div class="mv">Stani Kulechov</div></div>
+      <div><div class="ml">Consensus</div><div class="mv">Token on Ethereum and many L2s</div></div>
+      <div><div class="ml">Max Supply</div><div class="mv">16,000,000</div></div>
+    </div>
+
+    <section class="section">
+      <h2>What AAVE is</h2>
+      <p>Aave is a decentralized lending protocol that lets users deposit crypto as collateral to borrow other assets. It launched in 2020 (originally as ETHLend in 2017 before rebranding) and has grown into one of the largest DeFi protocols by total value locked. Lenders earn interest on deposits; borrowers pay variable interest rates determined by pool utilization. AAVE is the governance token of the Aave DAO.</p>
+    </section>
+
+    <section class="section">
+      <h2>How it works</h2>
+      <p>Each Aave market accepts a list of supported assets. Users deposit and receive aTokens that auto-rebase to reflect accumulated interest. Borrowing requires posting collateral worth more than the borrowed amount (typical loan-to-value: 50-80%). If collateral value falls below a threshold, positions can be liquidated by anyone in exchange for a discount on the collateral. Interest rates float based on utilization: higher demand for borrowing pushes rates up, attracting more lenders.</p>
+    </section>
+
+    <section class="section">
+      <h2>Use cases</h2>
+      <p>The dominant use case is leveraged trading and shorting: borrow stablecoins against ETH to buy more ETH (long leverage), or borrow ETH against stablecoins to short ETH. Other uses: yield farming (deposit a stablecoin earning yield, borrow another stablecoin and lend it elsewhere), institutional cash management, and flash loans (instant uncollateralized loans that must be repaid in the same transaction). Aave runs on Ethereum and most major L2s, with cross-chain functionality via CCIP and proprietary infrastructure.</p>
+    </section>
+
+    <section class="section">
+      <h2>Tradeoffs and criticism</h2>
+      <p>Liquidation risk is the main user-facing risk: if collateral value drops while you have an open loan, your position can be liquidated, costing you a portion of the collateral. Smart contract risk applies to all DeFi. Interest rates can spike during demand surges, sometimes making positions unprofitable. AAVE governance has historically navigated complex risk parameters across many markets.</p>
+    </section>
+
+    <section class="section">
+      <h2>Where to track AAVE</h2>
+      <p>See <a href="/glossary/defi">DeFi</a> for the category context. <a href="/api/pro/defi-tvl">DeFi TVL premium endpoint</a> tracks Aave alongside other protocols.</p>
+    </section>
+
+    <section class="section">
+      <h2>Related coins</h2>
+      <div class="related-grid">
+      <a href="/crypto/mkr" class="related-card">
+        <div class="related-ticker" style="color:#A78BFA">MKR</div>
+        <div class="related-name">Maker</div>
+        <div class="related-cat">DeFi</div>
+      </a>
+      <a href="/crypto/uni" class="related-card">
+        <div class="related-ticker" style="color:#A78BFA">UNI</div>
+        <div class="related-name">Uniswap</div>
+        <div class="related-cat">DeFi</div>
+      </a>
+      <a href="/crypto/usdc" class="related-card">
+        <div class="related-ticker" style="color:#4ADE80">USDC</div>
+        <div class="related-name">USD Coin</div>
+        <div class="related-cat">Stablecoin</div>
+      </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Frequently asked questions</h2>
+      <details class="faq"><summary>What is the difference between depositing and lending?</summary><div class="faq-answer">In Aave, depositing IS lending: when you deposit USDC, you receive aUSDC tokens that earn interest. Other users can borrow that USDC by posting collateral.</div></details>
+      <details class="faq"><summary>What happens if my position gets liquidated?</summary><div class="faq-answer">A liquidator repays a portion of your debt and receives the equivalent collateral plus a discount (typically 5-10%). You keep the remaining collateral but lose the liquidation premium.</div></details>
+      <details class="faq"><summary>What are flash loans?</summary><div class="faq-answer">Flash loans are uncollateralized loans that must be borrowed and repaid in a single transaction. They are useful for arbitrage, collateral swaps, and refinancing without needing capital upfront. They are also the source of many DeFi exploits.</div></details>
+    </section>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">|</span>
+      <a href="/crypto">All Coins</a><span class="sep">|</span>
+      <a href="/api/crypto-movers">Live Markets</a><span class="sep">|</span>
+      <a href="/api/btc-price">BTC Price API</a><span class="sep">|</span>
+      <a href="/glossary">Glossary</a><span class="sep">|</span>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+
+  <script>
+  (function() {
+    var sym = 'aave';
+    fetch('/api/coingecko/markets').then(function(r) { return r.json(); }).then(function(j) {
+      var data = (j && j.data) || [];
+      var coin = data.find(function(c) { return c.symbol === sym || c.id === sym; });
+      if (!coin) return;
+      var fmtPrice = function(n) {
+        if (n >= 1000) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+        if (n >= 1) return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 2});
+        if (n >= 0.01) return '$' + n.toFixed(4);
+        return '$' + n.toFixed(8);
+      };
+      var fmtBig = function(n) {
+        if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+        return '$' + n.toLocaleString('en-US', {maximumFractionDigits: 0});
+      };
+      var pe = document.getElementById('price');
+      pe.textContent = fmtPrice(coin.current_price);
+      pe.classList.remove('muted');
+      var ce = document.getElementById('change24h');
+      var ch = coin.price_change_percentage_24h || 0;
+      ce.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%';
+      ce.classList.remove('muted');
+      ce.classList.add(ch >= 0 ? 'up' : 'down');
+      var me = document.getElementById('mcap');
+      me.textContent = coin.market_cap ? fmtBig(coin.market_cap) : '--';
+      me.classList.remove('muted');
+      var ve = document.getElementById('vol');
+      ve.textContent = coin.total_volume ? fmtBig(coin.total_volume) : '--';
+      ve.classList.remove('muted');
+    }).catch(function() {});
+  })();
+  </script>
+</body>
+</html>
