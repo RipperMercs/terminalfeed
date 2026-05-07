@@ -1718,8 +1718,15 @@ async function handleSpaceWeather() {
         attribution: 'NOAA Space Weather Prediction Center',
       },
     };
-    setCache(KEY, result);
-    return jsonResponse(result, 200, 300);
+    // Only cache when we got something usable from upstream. Without this guard
+    // a single SWPC timeout poisons the cache with all-null data for 5 minutes,
+    // leaving the panel blank until the cache expires.
+    var hasUsefulData = currentKp != null
+      || currentWind != null
+      || maxXrayFlux != null
+      || alerts.length > 0;
+    if (hasUsefulData) setCache(KEY, result);
+    return jsonResponse(result, 200, hasUsefulData ? 300 : 30);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale, 200, 60);
