@@ -2495,6 +2495,13 @@
 .wikiSparkWrap {
   width: 90px;
   height: 24px;
+  flex-shrink: 0;
+  /* The Sparkline primitive's SVG uses overflow:visible so the
+     latest-tip dot can render at the viewBox edge. With certain
+     data shapes (sharp V's, tall ranges) the polyline draws past
+     its 24px box and bleeds into the panel header. Containing it
+     here keeps the rest of the Sparkline contract intact. */
+  overflow: hidden;
 }
 
 
