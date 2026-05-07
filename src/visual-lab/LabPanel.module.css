@@ -607,6 +607,141 @@
   font-weight: 600;
 }
 
+/* ───────────────────────────────────────────────
+   VARIANT — HOLOGRAM
+   Iridescent border: a conic-gradient cycling through
+   hues at low opacity overlays the static neon edge.
+   The category accent is still the dominant color but
+   gets a subtle prismatic shimmer on top.
+   ─────────────────────────────────────────────── */
+
+[data-variant="hologram"] .panel {
+  border-color: color-mix(in oklab, var(--accent) 28%, transparent);
+  box-shadow: 0 0 4px 0 color-mix(in oklab, var(--accent) 22%, transparent);
+  position: relative;
+  isolation: isolate;
+}
+[data-variant="hologram"] .panel::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in oklab, var(--accent) 80%, #ff00ff) 0%,
+    color-mix(in oklab, var(--accent) 80%, #00ffff) 33%,
+    color-mix(in oklab, var(--accent) 80%, #ffff00) 66%,
+    color-mix(in oklab, var(--accent) 80%, #ff00ff) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: 0.35;
+  animation: hologramSpin 12s linear infinite;
+  z-index: 1;
+}
+[data-variant="hologram"] .panel:hover::after {
+  opacity: 0.7;
+  animation-duration: 6s;
+}
+
+@keyframes hologramSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ───────────────────────────────────────────────
+   VARIANT — RADAR
+   Single bright arc rotating slowly around the border.
+   Like a radar dish sweep, in the panel's category color.
+   ─────────────────────────────────────────────── */
+
+[data-variant="radar"] .panel {
+  border-color: color-mix(in oklab, var(--accent) 18%, transparent);
+  box-shadow: 0 0 3px 0 color-mix(in oklab, var(--accent) 18%, transparent);
+  position: relative;
+  isolation: isolate;
+}
+[data-variant="radar"] .panel::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 70%,
+    var(--accent) 92%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: 0.85;
+  animation: radarSweep 8s linear infinite;
+  animation-delay: var(--anim-offset, 0s);
+  z-index: 1;
+}
+[data-variant="radar"] .panel:hover::after {
+  animation-duration: 4s;
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ───────────────────────────────────────────────
+   VARIANT — GRID
+   Subtle dot grid background pattern. No animation.
+   Adds texture/depth without competing with content.
+   Pairs the dot pattern with the standard neon edge.
+   ─────────────────────────────────────────────── */
+
+[data-variant="grid"] .panel {
+  border-color: color-mix(in oklab, var(--accent) 26%, transparent);
+  box-shadow: 0 0 3px 0 color-mix(in oklab, var(--accent) 22%, transparent);
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in oklab, var(--accent) 22%, transparent) 0.5px,
+      transparent 1.5px
+    ) 0 0 / 12px 12px,
+    var(--bg-panel);
+}
+[data-variant="grid"] .panel:hover {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  box-shadow: 0 0 6px 0 color-mix(in oklab, var(--accent) 38%, transparent);
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in oklab, var(--accent) 32%, transparent) 0.5px,
+      transparent 1.5px
+    ) 0 0 / 12px 12px,
+    var(--bg-panel);
+}
+[data-variant="grid"] .header {
+  background: rgba(13, 13, 15, 0.85);
+  position: relative;
+  z-index: 1;
+}
+[data-variant="grid"] .body {
+  background: linear-gradient(
+    180deg,
+    rgba(13, 13, 15, 0.5) 0%,
+    rgba(13, 13, 15, 0.85) 30%,
+    rgba(13, 13, 15, 0.95) 100%
+  );
+  position: relative;
+  z-index: 1;
+}
+
 /* ── Reduced motion: keep the look, kill the loops ── */
 @media (prefers-reduced-motion: reduce) {
   [data-variant="matrix"] .panel,
@@ -615,7 +750,9 @@
   [data-variant="command"] .bracket,
   [data-variant="command"] .tickDot,
   [data-variant="prod-ticks"] .tickDot,
-  [data-variant="prod-full"] .tickDot {
+  [data-variant="prod-full"] .tickDot,
+  [data-variant="hologram"] .panel::after,
+  [data-variant="radar"] .panel::after {
     animation: none !important;
   }
 }

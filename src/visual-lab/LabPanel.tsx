@@ -14,7 +14,10 @@ export type Variant =
   | 'prod-brackets'
   | 'prod-ticks'
   | 'prod-header'
-  | 'prod-full';
+  | 'prod-full'
+  | 'hologram'
+  | 'radar'
+  | 'grid';
 
 interface Props {
   title: string;
