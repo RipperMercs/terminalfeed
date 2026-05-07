@@ -653,7 +653,14 @@
 
 /* Bitcoin → gold */
 .panel[data-panel-id="bitcoin"],
-.panel[data-panel-id="btc-network"]       { --panel-accent: #F9CB42; }
+.panel[data-panel-id="btc-network"],
+.panel[data-panel-id="sec-filings"]       { --panel-accent: #F9CB42; }
+
+/* Treasury yields → green (matches markets/forex) */
+.panel[data-panel-id="treasury-yields"]   { --panel-accent: #4ADE80; }
+
+/* NASA EONET → purple (matches space/AI surfaces) */
+.panel[data-panel-id="eonet"]             { --panel-accent: #A78BFA; }
 
 /* Crypto/DeFi → amber */
 .panel[data-panel-id="crypto"],

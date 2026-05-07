@@ -83,6 +83,9 @@ import { useSpaceWeather } from './hooks/useSpaceWeather';
 import { useWildfires } from './hooks/useWildfires';
 import { useSevereWeather } from './hooks/useSevereWeather';
 import { useFundingRates } from './hooks/useFundingRates';
+import { useSecFilings } from './hooks/useSecFilings';
+import { useTreasuryYields } from './hooks/useTreasuryYields';
+import { useEonet } from './hooks/useEonet';
 import { useAirQuality } from './hooks/useAirQuality';
 import { useShodan } from './hooks/useShodan';
 import { useVolcanoes } from './hooks/useVolcanoes';
@@ -192,6 +195,9 @@ function App() {
   const airQuality = useAirQuality();
   const shodan = useShodan();
   const volcanoes = useVolcanoes();
+  const secFilings = useSecFilings();
+  const treasuryYields = useTreasuryYields();
+  const eonet = useEonet();
 
   // Safety nets: if these panels never get data within their window, hide
   // them rather than wedge the viewer on a placeholder. Resets if data
@@ -341,6 +347,9 @@ function App() {
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
     if (fundingRates && fundingRates.top.length > 0) panelHealth.reportData('funding-rates');
+    if (secFilings && secFilings.length > 0) panelHealth.reportData('sec-filings');
+    if (treasuryYields && treasuryYields.curve.y10 != null) panelHealth.reportData('treasury-yields');
+    if (eonet && eonet.totalOpen > 0) panelHealth.reportData('eonet');
   });
 
   // Bump a key whenever a new block lands so the mempool queue replays its entry animation
@@ -1569,6 +1578,117 @@ function App() {
               ))}
             </div>
             <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>smithsonian gvp · weekly</div>
+          </div>
+        )}
+      </>);
+    })(),
+    'sec-filings': (() => {
+      const filings = secFilings ?? [];
+      return (<>
+        <PanelHead panelId="sec-filings" isStale={panelHealth.isStale('sec-filings')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">SEC Filings</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>EDGAR 8-K</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>90s</span>
+        </PanelHead>
+        {!secFilings && <LoadingOrHide label="loading edgar..." />}
+        {secFilings && filings.length === 0 && <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '4px 0' }}>no recent filings</div>}
+        {secFilings && filings.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {filings.slice(0, 12).map((f, i) => (
+              <a key={`${f.cik}-${f.accession ?? i}`} href={f.url} target="_blank" rel="noopener noreferrer" className="newsRow">
+                <span style={{ fontSize: 9, color: 'var(--gold)', fontWeight: 700, minWidth: 28, flexShrink: 0 }}>{f.formType}</span>
+                <span className="newsTitle">{f.company}</span>
+                <span className="newsMeta">{f.filedAt ? timeAgo(Math.floor(new Date(f.filedAt).getTime() / 1000)) : ''}</span>
+              </a>
+            ))}
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>sec edgar · public domain</div>
+          </div>
+        )}
+      </>);
+    })(),
+    'treasury-yields': (() => {
+      const c = treasuryYields?.curve;
+      const d = treasuryYields?.deltasBps ?? {};
+      const inverted = treasuryYields?.inverted2_10;
+      const spread = treasuryYields?.spread2_10Bps;
+      const fmtPct = (v: number | null | undefined) => v == null ? '–' : `${v.toFixed(2)}%`;
+      const fmtBps = (v: number | null | undefined) => {
+        if (v == null) return '';
+        const bps = Math.round(v * 100);
+        if (bps === 0) return '·';
+        const color = bps > 0 ? 'var(--green)' : 'var(--red)';
+        return <span style={{ color, fontSize: 9 }}>{bps > 0 ? '+' : ''}{bps}bp</span>;
+      };
+      const tenor = (label: string, val: number | null | undefined, deltaVal: number | null | undefined) => (
+        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+          <span style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: 1 }}>{label}</span>
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 12, color: 'var(--text)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{fmtPct(val)}</span>
+            <span style={{ minWidth: 36, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtBps(deltaVal)}</span>
+          </span>
+        </div>
+      );
+      return (<>
+        <PanelHead panelId="treasury-yields" isStale={panelHealth.isStale('treasury-yields')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Treasury Yields</span><span className="panelTag" style={{ color: 'var(--green)', background: 'rgba(74,222,128,0.1)' }}>USD CURVE</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{treasuryYields?.recordDate || 'daily'}</span>
+        </PanelHead>
+        {!treasuryYields && <LoadingOrHide label="loading treasury..." />}
+        {treasuryYields && c && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {tenor('3M',  c.m3,  d.m3)}
+            {tenor('2Y',  c.y2,  d.y2)}
+            {tenor('5Y',  c.y5,  d.y5)}
+            {tenor('10Y', c.y10, d.y10)}
+            {tenor('30Y', c.y30, d.y30)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6, padding: '4px 6px', background: inverted ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.06)', border: `1px solid ${inverted ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.2)'}`, borderRadius: 3 }}>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>2-10 spread</span>
+              <span style={{ fontSize: 11, color: inverted ? 'var(--red)' : 'var(--green)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                {spread != null ? `${spread > 0 ? '+' : ''}${spread}bp` : '–'}
+                {inverted && <span style={{ marginLeft: 6, fontSize: 9 }}>INVERTED</span>}
+              </span>
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>treasury direct · public domain</div>
+          </div>
+        )}
+      </>);
+    })(),
+    'eonet': (() => {
+      const total = eonet?.totalOpen ?? 0;
+      const cats = eonet?.categories ?? [];
+      const events = eonet?.recent ?? [];
+      return (<>
+        <PanelHead panelId="eonet" isStale={panelHealth.isStale('eonet')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Earth Events</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>NASA EONET</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>5m</span>
+        </PanelHead>
+        {!eonet && <LoadingOrHide label="loading eonet..." />}
+        {eonet && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: total > 100 ? 'var(--red)' : total > 30 ? 'var(--amber)' : 'var(--green)', fontVariantNumeric: 'tabular-nums' }}>{total}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase' }}>active events · 30d</span>
+            </div>
+            {cats.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {cats.slice(0, 6).map(c => (
+                  <span key={c.id} style={{ fontSize: 10, color: 'var(--text)', background: '#15151a', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: 3 }}>
+                    <span style={{ marginRight: 4 }}>{c.glyph}</span>
+                    {c.title} <span style={{ color: 'var(--purple)', fontWeight: 600, marginLeft: 2 }}>{c.count}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 9, color: 'var(--text-dim)' }}>
+              <div style={{ letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>most recent</div>
+              {events.slice(0, 5).map((e) => (
+                <a key={e.id} href={e.link ?? '#'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ paddingTop: 3, paddingBottom: 3 }}>
+                  <span style={{ fontSize: 12, minWidth: 16, flexShrink: 0 }}>{e.glyph}</span>
+                  <span className="newsTitle">{e.title}</span>
+                  <span className="newsMeta">{e.date ? timeAgo(Math.floor(new Date(e.date).getTime() / 1000)) : ''}</span>
+                </a>
+              ))}
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>nasa eonet · open data</div>
           </div>
         )}
       </>);
