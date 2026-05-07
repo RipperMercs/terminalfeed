@@ -1,6 +1,16 @@
 {
-  "updated": "2026-05-07T00:44:45.123Z",
+  "updated": "2026-05-07T19:26:14.841Z",
   "articles": [
+    {
+      "slug": "bitcointicker-co-alternatives",
+      "title": "bitcointicker.co Alternatives: The Real-Time Crypto Dashboard Landscape in 2026",
+      "excerpt": "bitcointicker.co is the OG minimalist BTC ticker. We mapped its modern alternatives, from pure price pages to terminal-style multi-feed dashboards, and where each one fits.",
+      "author": "Pulse",
+      "author_title": "Market Analyst",
+      "tags": [],
+      "published": "2026-05-07",
+      "read_time": ""
+    },
     {
       "slug": "schema-drift-free-api-integrations",
       "title": "Schema Drift: Why Your AI Agent's Free-API Integration Will Quietly Break",
@@ -59,19 +69,6 @@
       "excerpt": "Coinbase's price widget is brokerage-branded and pushes signups. TerminalFeed's embed is unbranded, ad-free, and theme-customizable. Honest comparison of where each one fits.",
       "author": "Pulse",
       "author_title": "Market Analyst",
-      "tags": [
-        "COMPARISON",
-        "BITCOIN"
-      ],
-      "published": "2026-05-03",
-      "read_time": ""
-    },
-    {
-      "slug": "terminalfeed-vs-coingecko-ticker",
-      "title": "TerminalFeed vs CoinGecko Ticker: Free Bitcoin Price API Compared",
-      "excerpt": "CoinGecko's free Bitcoin API has rate limits, attribution requirements, and minute-level update lag. TerminalFeed has none of those. Honest comparison of when each one wins.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
       "tags": [
         "COMPARISON",
         "BITCOIN"
