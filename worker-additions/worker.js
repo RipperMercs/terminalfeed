@@ -3053,6 +3053,242 @@ async function handleXkcd() {
 }
 
 
+// =============================================================================
+// /api/sec-filings : SEC EDGAR recent 8-K material event filings
+// =============================================================================
+// Source: SEC EDGAR Atom feed of current filings. Public domain US gov data,
+// commercial use OK. SEC requires a descriptive User-Agent with a contact
+// email per their fair-access policy.
+// Cache 90s. Atom XML parsed via regex (structure is stable and well-bounded).
+
+async function handleSecFilings() {
+  var KEY = 'sec-filings';
+  var cached = getCached(KEY, 90000);
+  if (cached) return jsonResponse(cached, 200, 90);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&output=atom&count=40',
+      { headers: { 'User-Agent': 'TerminalFeed.io hello@terminalfeed.io', 'Accept': 'application/atom+xml' } }
+    );
+    if (!res.ok) throw new Error('sec ' + res.status);
+    var xml = await res.text();
+    var entries = [];
+    var entryRe = /<entry>([\s\S]*?)<\/entry>/g;
+    var match;
+    var count = 0;
+    while ((match = entryRe.exec(xml)) !== null && count < 20) {
+      var block = match[1];
+      var titleMatch = /<title>([^<]+)<\/title>/.exec(block);
+      var linkMatch = /<link[^>]+href="([^"]+)"/.exec(block);
+      var updatedMatch = /<updated>([^<]+)<\/updated>/.exec(block);
+      var idMatch = /<id>[^<]*accession-number=([\d-]+)/.exec(block);
+      if (!titleMatch || !linkMatch || !updatedMatch) continue;
+      // Title format: "8-K - COMPANY NAME (CIK#######) (Filer)"
+      var rawTitle = titleMatch[1];
+      var titleParts = /^([\w-]+)\s*-\s*(.+?)\s*\(CIK(\d+)\)/.exec(rawTitle);
+      if (!titleParts) continue;
+      entries.push({
+        form_type: titleParts[1],
+        company: sanitizeForLLM(titleParts[2].trim()),
+        cik: titleParts[3],
+        accession: idMatch ? idMatch[1] : null,
+        url: linkMatch[1].replace(/&amp;/g, '&'),
+        filed_at: updatedMatch[1],
+      });
+      count++;
+    }
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'sec-filings',
+      updated_at: new Date().toISOString(),
+      data: entries,
+      attribution: 'U.S. Securities and Exchange Commission EDGAR (public domain)',
+    };
+    if (entries.length > 0) setCache(KEY, data);
+    return jsonResponse(data, 200, entries.length > 0 ? 90 : 30);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({ data: [], error: 'sec_unavailable' }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/treasury-yields : US Treasury Daily Par Yield Curve Rates
+// =============================================================================
+// Source: Treasury Direct FiscalData API. Public domain, no key required.
+// Returns the most recent published curve (publishes daily after market close).
+// Cache 30 min — these update once per business day.
+
+async function handleTreasuryYields() {
+  var KEY = 'treasury-yields';
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  try {
+    var url = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/daily_treasury_yield_curve_rates'
+            + '?sort=-record_date&page[size]=2&fields=record_date,bc_1month,bc_3month,bc_6month,bc_1year,bc_2year,bc_3year,bc_5year,bc_7year,bc_10year,bc_20year,bc_30year';
+    var res = await fetchWithTimeout(url, {}, 8000);
+    if (!res.ok) throw new Error('treasury ' + res.status);
+    var json = await res.json();
+    var rows = (json && json.data) || [];
+    if (rows.length === 0) throw new Error('treasury-empty');
+    var latest = rows[0];
+    var prev = rows[1] || null;
+
+    function n(v) { var f = parseFloat(v); return Number.isFinite(f) ? f : null; }
+    function delta(curr, prev) {
+      var c = n(curr), p = n(prev);
+      if (c == null || p == null) return null;
+      return parseFloat((c - p).toFixed(3));
+    }
+
+    var curve = {
+      m1:  n(latest.bc_1month),
+      m3:  n(latest.bc_3month),
+      m6:  n(latest.bc_6month),
+      y1:  n(latest.bc_1year),
+      y2:  n(latest.bc_2year),
+      y3:  n(latest.bc_3year),
+      y5:  n(latest.bc_5year),
+      y7:  n(latest.bc_7year),
+      y10: n(latest.bc_10year),
+      y20: n(latest.bc_20year),
+      y30: n(latest.bc_30year),
+    };
+    var deltas = prev ? {
+      m1:  delta(latest.bc_1month, prev.bc_1month),
+      m3:  delta(latest.bc_3month, prev.bc_3month),
+      m6:  delta(latest.bc_6month, prev.bc_6month),
+      y1:  delta(latest.bc_1year,  prev.bc_1year),
+      y2:  delta(latest.bc_2year,  prev.bc_2year),
+      y3:  delta(latest.bc_3year,  prev.bc_3year),
+      y5:  delta(latest.bc_5year,  prev.bc_5year),
+      y7:  delta(latest.bc_7year,  prev.bc_7year),
+      y10: delta(latest.bc_10year, prev.bc_10year),
+      y20: delta(latest.bc_20year, prev.bc_20year),
+      y30: delta(latest.bc_30year, prev.bc_30year),
+    } : {};
+
+    // Curve inversion check: 2Y > 10Y is the classic recession signal
+    var inverted_2_10 = (curve.y2 != null && curve.y10 != null) ? curve.y2 > curve.y10 : null;
+    var spread_2_10_bps = (curve.y2 != null && curve.y10 != null) ? Math.round((curve.y10 - curve.y2) * 100) : null;
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'treasury-yields',
+      updated_at: new Date().toISOString(),
+      data: {
+        record_date: latest.record_date,
+        curve: curve,
+        deltas_bps: deltas, // change from previous trading day (in pct points, positive=rising)
+        inverted_2_10: inverted_2_10,
+        spread_2_10_bps: spread_2_10_bps,
+        attribution: 'U.S. Treasury Direct FiscalData (public domain)',
+      },
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({ data: { curve: {}, error: 'treasury_unavailable' } }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/eonet : NASA EONET active natural event tracker
+// =============================================================================
+// Source: NASA EONET v3. Free, no key required. Aggregates wildfires, storms,
+// volcanic activity, sea/lake ice, etc. into a unified event feed worldwide.
+// Cache 5 min.
+
+var EONET_CATEGORY_GLYPH = {
+  wildfires:    '🔥',
+  severeStorms: '⛈️',
+  volcanoes:    '🌋',
+  seaLakeIce:   '🧊',
+  earthquakes:  '🌐',
+  floods:       '🌊',
+  landslides:   '⛰️',
+  drought:      '☀️',
+  dustHaze:     '🌫️',
+  snow:         '❄️',
+  tempExtremes: '🌡️',
+  manmade:      '⚠️',
+  waterColor:   '🟢',
+};
+
+async function handleEonet() {
+  var KEY = 'eonet';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=80&days=30',
+      {}, 10000
+    );
+    if (!res.ok) throw new Error('eonet ' + res.status);
+    var json = await res.json();
+    var raw = (json && json.events) || [];
+
+    var byCategory = {};
+    var events = [];
+    for (var i = 0; i < raw.length; i++) {
+      var ev = raw[i];
+      var catId = (ev.categories && ev.categories[0]) ? ev.categories[0].id : 'other';
+      var catTitle = (ev.categories && ev.categories[0]) ? ev.categories[0].title : 'Other';
+      byCategory[catId] = byCategory[catId] || { id: catId, title: catTitle, glyph: EONET_CATEGORY_GLYPH[catId] || '•', count: 0 };
+      byCategory[catId].count += 1;
+
+      // Use the most recent geometry for location/date
+      var geo = (ev.geometry && ev.geometry.length > 0) ? ev.geometry[ev.geometry.length - 1] : null;
+      var coords = geo && geo.coordinates;
+      events.push({
+        id: ev.id,
+        title: sanitizeForLLM(ev.title || ''),
+        category_id: catId,
+        category_title: catTitle,
+        glyph: EONET_CATEGORY_GLYPH[catId] || '•',
+        date: geo ? geo.date : null,
+        // Coords from EONET are [lon, lat]. Some events use polygons; flatten to first point.
+        lon: Array.isArray(coords) ? (Array.isArray(coords[0]) ? coords[0][0] : coords[0]) : null,
+        lat: Array.isArray(coords) ? (Array.isArray(coords[0]) ? coords[0][1] : coords[1]) : null,
+        link: ev.link || (ev.sources && ev.sources[0] ? ev.sources[0].url : null),
+      });
+    }
+
+    // Sort categories by count desc, recent events by date desc
+    var categories = Object.values(byCategory).sort(function(a, b) { return b.count - a.count; });
+    events.sort(function(a, b) {
+      var ta = a.date ? new Date(a.date).getTime() : 0;
+      var tb = b.date ? new Date(b.date).getTime() : 0;
+      return tb - ta;
+    });
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'eonet',
+      updated_at: new Date().toISOString(),
+      data: {
+        total_open: raw.length,
+        categories: categories,
+        recent: events.slice(0, 30),
+        attribution: 'NASA EONET (Earth Observatory Natural Event Tracker)',
+      },
+    };
+    if (raw.length > 0) setCache(KEY, data);
+    return jsonResponse(data, 200, raw.length > 0 ? 300 : 30);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({ data: { total_open: 0, categories: [], recent: [], error: 'eonet_unavailable' } }, 200, 60);
+  }
+}
+
+
 // GET /api/ai-stats
 function handleAiStats() {
   hitCounter++;
@@ -8487,6 +8723,9 @@ async function dispatchRoute(request, env, url, path) {
       case 'space-weather':  return await handleSpaceWeather();
       case 'wildfires':      return await handleWildfires(env);
       case 'severe-weather': return await handleSevereWeather();
+      case 'sec-filings':    return await handleSecFilings();
+      case 'treasury-yields': return await handleTreasuryYields();
+      case 'eonet':          return await handleEonet();
       case 'funding-rates':  return await handleFundingRates();
       case 'solana-network': return await handleSolanaNetwork();
       case 'hn-topstories':  return await handleHnTopStories(url);
