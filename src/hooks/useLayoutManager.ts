@@ -64,6 +64,9 @@ export const ALL_PANELS = [
   { id: 'premium-api', label: 'Premium API', defaultSpan: 1 },
   { id: 'severe-weather', label: 'Severe Weather', defaultSpan: 1 },
   { id: 'funding-rates', label: 'Funding Rates', defaultSpan: 1 },
+  { id: 'sec-filings', label: 'SEC Filings', defaultSpan: 1 },
+  { id: 'treasury-yields', label: 'Treasury Yields', defaultSpan: 1 },
+  { id: 'eonet', label: 'NASA EONET', defaultSpan: 1 },
   { id: 'bluesky', label: 'Bluesky', defaultSpan: 1 },
   { id: 'internet-pulse', label: 'Internet Pulse', defaultSpan: 1 },
   { id: 'nasa-apod', label: 'NASA Photo', defaultSpan: 1 },
@@ -86,7 +89,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '46'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '47'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
