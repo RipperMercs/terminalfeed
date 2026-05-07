@@ -30,6 +30,9 @@ const VARIANTS: { id: Variant; label: string; blurb: string }[] = [
   { id: 'prod-ticks',    label: 'PROD + TICKS',  blurb: 'live look + 3-dot tick counter next to LIVE indicator' },
   { id: 'prod-header',   label: 'PROD + HEADER', blurb: 'live look + faint per-category header tint, pushes color further' },
   { id: 'prod-full',     label: 'PROD + ALL',    blurb: 'live look + brackets + ticks + header tint, all three at once' },
+  { id: 'hologram',      label: 'HOLOGRAM',      blurb: 'iridescent border with slow conic hue shift, category accent dominant' },
+  { id: 'radar',         label: 'RADAR',         blurb: 'single bright arc rotating around the border like a radar sweep' },
+  { id: 'grid',          label: 'GRID',          blurb: 'subtle category-tinted dot grid background, no motion' },
 ];
 
 const COMPARE_VARIANTS: Variant[] = ['matrix', 'lcars', 'command'];
