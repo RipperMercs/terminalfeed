@@ -337,6 +337,10 @@ function App() {
     if (airQuality?.snapshot?.usAqi != null) panelHealth.reportData('air-quality');
     if (shodan && shodan.targets.length > 0) panelHealth.reportData('shodan');
     if (volcanoes && volcanoes.items.length > 0) panelHealth.reportData('volcanoes');
+    if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
+    if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
+    if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
+    if (fundingRates && fundingRates.top.length > 0) panelHealth.reportData('funding-rates');
   });
 
   // Bump a key whenever a new block lands so the mempool queue replays its entry animation
