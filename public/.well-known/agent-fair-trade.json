@@ -83,6 +83,8 @@
           "network": "eip155:8453",
           "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "asset_symbol": "USDC",
+          "extra": { "name": "USD Coin", "version": "2" },
+          "extra_note": "EIP-712 domain hint for the canonical Coinbase x402 V2 surface. Native USDC on Base mainnet (Circle's 0x833589...) reports name() = \"USD Coin\". The Coinbase spec example showing name: \"USDC\" is the Sepolia value; signing with that on mainnet produces a different EIP-712 domain hash and the contract rejects with FiatTokenV2: invalid signature.",
           "header": "X-Payment-Tx",
           "value": "Federated through tensorfeed.ai's credit ledger via the /api/internal/validate plus /api/internal/commit rail. A bearer token minted from a Base USDC payment on TensorFeed works on TerminalFeed."
         }
@@ -154,5 +156,5 @@
       ]
     }
   },
-  "lastUpdated": "2026-05-05"
+  "lastUpdated": "2026-05-08"
 }
