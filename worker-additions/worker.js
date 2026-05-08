@@ -592,7 +592,7 @@ function applyCorsHeaders(headers, request, mode) {
   if (origin) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, DELETE';
-    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Idempotency-Key, X-Payment-Tx';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Idempotency-Key, X-Payment-Tx, X-PAYMENT';
     headers['Access-Control-Expose-Headers'] = CORS_EXPOSE_HEADERS;
     if (mode !== 'public') headers['Vary'] = 'Origin';
   } else {
@@ -629,12 +629,13 @@ const CORS_EXPOSE_HEADERS = [
   'X-Idempotency-Replay',
   'X-TerminalFeed-Pricing',
   'Link',
+  'PAYMENT-RESPONSE',
 ].join(', ');
 
 const CORS_HEADERS = Object.assign({}, SECURITY_HEADERS, {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, DELETE',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Payment-Tx',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Payment-Tx, X-PAYMENT',
   'Access-Control-Expose-Headers': CORS_EXPOSE_HEADERS,
   'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
   'Link': LINK_HEADER,
@@ -647,7 +648,7 @@ function jsonResponse(data, status, cacheSeconds) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, DELETE',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Payment-Tx',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Payment-Tx, X-PAYMENT',
     'Access-Control-Expose-Headers': CORS_EXPOSE_HEADERS,
     'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
     'Link': LINK_HEADER,
@@ -3966,11 +3967,28 @@ async function handleSubscribeResume(request, env, subId) {
     }, validation.credits_remaining, 200, request);
   }
 
-  // If balance < one cycle, return 402 with topup link
+  // If balance < one cycle, return 402 with topup link.
+  // Canonical x402 V2 envelope so AgentCore-style agents can read the gap.
   if (typeof validation.credits_remaining === 'number' && validation.credits_remaining < WEBHOOK_FIRE_COST_CREDITS) {
     return premiumJsonResponse({
+      x402Version: 2,
       ok: false,
       error: 'insufficient_credits',
+      resource: {
+        url: request.url,
+        description: 'TerminalFeed premium webhook subscription resume. Requires balance to cover one cycle.',
+        mimeType: 'application/json',
+      },
+      accepts: [{
+        scheme: 'exact',
+        network: 'eip155:8453',
+        amount: String(WEBHOOK_FIRE_COST_CREDITS * 20000),
+        asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        payTo: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1',
+        maxTimeoutSeconds: 60,
+        extra: { name: 'USD Coin', version: '2' },
+      }],
+      extensions: {},
       balance_remaining: validation.credits_remaining,
       credits_per_cycle: WEBHOOK_FIRE_COST_CREDITS,
       buy_url: 'https://terminalfeed.io/api/payment/buy-credits',
@@ -5606,10 +5624,37 @@ function premiumJsonResponse(data, creditsRemaining, status, request) {
   return new Response(JSON.stringify(data), { status: status, headers: headers });
 }
 
-function json402(reason, signupPath, request) {
+// Canonical Coinbase x402 V2 402 response shape, AWS Bedrock AgentCore-compatible.
+// EIP-712 domain `name` for native USDC on Base mainnet is "USD Coin" (verified
+// via eth_call name() on 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913). The
+// Coinbase spec example shows "USDC" but that is the Sepolia value; signing
+// with the wrong name produces a different domain hash and the contract
+// rejects with FiatTokenV2: invalid signature.
+function json402(reason, signupPath, request, costCredits) {
+  var cost = (typeof costCredits === 'number' && costCredits > 0) ? costCredits : 1;
+  // 1 credit = $0.02 = 20000 atomic micro-USDC (USDC has 6 decimals).
+  var atomicAmount = String(cost * 20000);
+  var resourceUrl = (request && request.url) || 'https://terminalfeed.io/api/pro/';
   return premiumJsonResponse(
     {
+      x402Version: 2,
       error: reason || 'payment_required',
+      resource: {
+        url: resourceUrl,
+        description: 'TerminalFeed Premium API endpoint. USDC on Base mainnet, AFTA-certified, federated credit ledger with TensorFeed.',
+        mimeType: 'application/json',
+      },
+      accepts: [{
+        scheme: 'exact',
+        network: 'eip155:8453',
+        amount: atomicAmount,
+        asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        payTo: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1',
+        maxTimeoutSeconds: 60,
+        extra: { name: 'USD Coin', version: '2' },
+      }],
+      extensions: {},
+      // Legacy fields kept for back-compat with existing TerminalFeed clients.
       signup: 'https://terminalfeed.io' + (signupPath || '/developers/agent-payments'),
       pricing: { '$1_usd': '50_credits' },
     },
