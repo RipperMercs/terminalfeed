@@ -1725,6 +1725,46 @@
         "security": []
       }
     },
+    "/api/climate/earthquakes": {
+      "get": {
+        "tags": ["free"],
+        "summary": "USGS pre-built earthquake summary feed (parameterized)",
+        "description": "USGS Earthquake Hazards Program summary feeds. Selectable magnitude bucket (significant, 4.5, 2.5, 1.0, all) crossed with period (hour, day, week, month). 20 selectable feeds. Returns a flattened list (id, magnitude, place, time ISO 8601, depth_km, lat, lon, tsunami, USGS detail URL). Cache TTL scales with feed window (60s for hour up to 900s for month). US Government public domain (17 USC §105). Mirrors TensorFeed's same-named endpoint for federation parity.",
+        "parameters": [
+          { "name": "magnitude", "in": "query", "required": false, "schema": { "type": "string", "enum": ["significant", "4.5", "2.5", "1.0", "all"] }, "description": "Magnitude bucket. Default 2.5." },
+          { "name": "period", "in": "query", "required": false, "schema": { "type": "string", "enum": ["hour", "day", "week", "month"] }, "description": "Period bucket. Default day." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Earthquake feed for the selected bucket",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/climate/weather-alerts": {
+      "get": {
+        "tags": ["free"],
+        "summary": "NWS active alerts (parameterized, US-only)",
+        "description": "Active National Weather Service alerts from api.weather.gov, filterable by 2-letter US state code, exact NWS event name, severity, urgency, and status. Returns id, event, severity, urgency, certainty, headline, description, areaDesc, sent/effective/expires/ends, sender_name, web URL. 60-second cache. NWS-required User-Agent header sent on every fetch. US Government public domain (17 USC §105). Mirrors TensorFeed's same-named endpoint for federation parity.",
+        "parameters": [
+          { "name": "area", "in": "query", "required": false, "schema": { "type": "string" }, "description": "2-letter US state code, e.g. CA, NY." },
+          { "name": "event", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Exact NWS event name, e.g. \"Tornado Warning\", \"Heat Advisory\"." },
+          { "name": "severity", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Extreme", "Severe", "Moderate", "Minor", "Unknown"] }, "description": "Alert severity." },
+          { "name": "urgency", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Immediate", "Expected", "Future", "Past", "Unknown"] }, "description": "Alert urgency." },
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Actual", "Exercise", "System", "Test", "Draft"] }, "description": "Alert status." },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 100 }, "description": "Max alerts (1-100). Default 50." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered active alerts",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/funding-rates": {
       "get": {
         "tags": ["free"],

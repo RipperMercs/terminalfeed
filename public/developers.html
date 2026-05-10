@@ -136,6 +136,8 @@
     <tr><td>/api/wildfires</td><td>NASA FIRMS top 25 active fire detections (North America 24h, sorted by FRP)</td><td>10m</td></tr>
     <tr><td>/api/severe-weather</td><td>NWS active US alerts (top 15 by severity: tornado, flood, hurricane, winter)</td><td>60s</td></tr>
     <tr><td>/api/funding-rates</td><td>Top 20 perp funding rates across Binance, Bybit, dYdX, Hyperliquid</td><td>60s</td></tr>
+    <tr><td>/api/climate/earthquakes</td><td>USGS pre-built summary feeds, parameterized: <span class="inline-code">?magnitude=(significant|4.5|2.5|1.0|all)</span> <span class="inline-code">?period=(hour|day|week|month)</span>. Public domain.</td><td>60s..15m</td></tr>
+    <tr><td>/api/climate/weather-alerts</td><td>NWS active alerts, filterable by <span class="inline-code">?area=</span> (2-letter state) <span class="inline-code">?event=</span> <span class="inline-code">?severity=</span> <span class="inline-code">?urgency=</span> <span class="inline-code">?status=</span> <span class="inline-code">?limit=</span>. US-only. Public domain.</td><td>60s</td></tr>
   </table>
 
   <h2>Endpoint Details</h2>

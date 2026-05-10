@@ -906,6 +906,7 @@ function handleIndex() {
       '/api/hf-trending', '/api/solana-network',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
+      '/api/climate/earthquakes', '/api/climate/weather-alerts',
       '/api/llm-tools',
     ],
     premium: {
@@ -1974,6 +1975,210 @@ async function handleSevereWeather() {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale, 200, 30);
     return jsonResponse({ data: { top: [], total_active: 0, error: 'upstream_unavailable' } });
+  }
+}
+
+// =============================================================================
+// /api/climate/earthquakes : USGS pre-built summary feeds, parameterized
+// =============================================================================
+// Source: USGS Earthquake Hazards Program. Public domain (US Government,
+// 17 USC §105). Mirrors TensorFeed's same-named endpoint for federation parity
+// while the existing /api/earthquake stays as the dashboard panel feed.
+//
+// Query params:
+//   magnitude  one of: significant, 4.5, 2.5, 1.0, all   (default 2.5)
+//   period     one of: hour, day, week, month            (default day)
+// 20 selectable feeds total. Cache TTL scales with the feed window.
+
+var USGS_MAG_BUCKETS    = ['significant', '4.5', '2.5', '1.0', 'all'];
+var USGS_PERIOD_BUCKETS = ['hour', 'day', 'week', 'month'];
+var USGS_TTL_MS_BY_PERIOD = { hour: 60000, day: 120000, week: 300000, month: 900000 };
+
+async function handleClimateEarthquakes(parsedUrl) {
+  var mag = (parsedUrl.searchParams.get('magnitude') || '2.5').toLowerCase();
+  var period = (parsedUrl.searchParams.get('period') || 'day').toLowerCase();
+  if (USGS_MAG_BUCKETS.indexOf(mag) < 0) mag = '2.5';
+  if (USGS_PERIOD_BUCKETS.indexOf(period) < 0) period = 'day';
+
+  var KEY = 'climate-earthquakes-' + mag + '-' + period;
+  var ttlMs = USGS_TTL_MS_BY_PERIOD[period] || 120000;
+  var ttlSec = Math.floor(ttlMs / 1000);
+  var cached = getCached(KEY, ttlMs);
+  if (cached) return jsonResponse(cached, 200, ttlSec);
+
+  try {
+    var feedUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/' + mag + '_' + period + '.geojson';
+    var res = await fetchWithTimeout(feedUrl);
+    if (!res.ok) throw new Error('usgs ' + res.status);
+    var d = await res.json();
+    var features = Array.isArray(d.features) ? d.features : [];
+    var quakes = features.map(function(f) {
+      var prop = f.properties || {};
+      var coords = (f.geometry && Array.isArray(f.geometry.coordinates)) ? f.geometry.coordinates : [];
+      return {
+        id: f.id || null,
+        magnitude: prop.mag != null ? prop.mag : null,
+        place: sanitizeForLLM(prop.place || ''),
+        time: prop.time ? new Date(prop.time).toISOString() : null,
+        depth_km: coords[2] != null ? coords[2] : null,
+        lat: coords[1] != null ? coords[1] : null,
+        lon: coords[0] != null ? coords[0] : null,
+        tsunami: prop.tsunami === 1,
+        url: prop.url || null,
+      };
+    });
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'climate/earthquakes',
+      updated_at: new Date().toISOString(),
+      data: {
+        magnitude: mag,
+        period: period,
+        count: quakes.length,
+        earthquakes: quakes,
+        attribution: 'United States Geological Survey (earthquake.usgs.gov). US Government public domain (17 USC §105).',
+      },
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, ttlSec);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'climate/earthquakes',
+      updated_at: new Date().toISOString(),
+      data: {
+        magnitude: mag,
+        period: period,
+        count: 0,
+        earthquakes: [],
+        error: 'upstream_unavailable',
+        attribution: 'United States Geological Survey (earthquake.usgs.gov). US Government public domain (17 USC §105).',
+      },
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/climate/weather-alerts : NWS active alerts, parameterized
+// =============================================================================
+// Source: api.weather.gov. Public domain (US Government, 17 USC §105).
+// Mirrors TensorFeed's same-named endpoint for federation parity. The existing
+// /api/severe-weather stays as the dashboard panel feed (top 15 ranked).
+//
+// Query params (all optional):
+//   area       2-letter US state code, e.g. CA, NY
+//   event      exact NWS event name, e.g. "Tornado Warning"
+//   severity   Extreme | Severe | Moderate | Minor | Unknown
+//   urgency    Immediate | Expected | Future | Past | Unknown
+//   status     Actual | Exercise | System | Test | Draft
+//   limit      1..100 (default 50)
+
+var NWS_SEVERITY_VALUES = ['Extreme', 'Severe', 'Moderate', 'Minor', 'Unknown'];
+var NWS_URGENCY_VALUES  = ['Immediate', 'Expected', 'Future', 'Past', 'Unknown'];
+var NWS_STATUS_VALUES   = ['Actual', 'Exercise', 'System', 'Test', 'Draft'];
+
+async function handleClimateWeatherAlerts(parsedUrl) {
+  var sp = parsedUrl.searchParams;
+  var area = (sp.get('area') || '').toUpperCase().slice(0, 2);
+  var event = (sp.get('event') || '').slice(0, 80);
+  var severity = sp.get('severity') || '';
+  var urgency = sp.get('urgency') || '';
+  var status = sp.get('status') || '';
+  var limit = parseInt(sp.get('limit') || '50', 10);
+  if (!isFinite(limit) || limit < 1) limit = 50;
+  if (limit > 100) limit = 100;
+
+  if (severity && NWS_SEVERITY_VALUES.indexOf(severity) < 0) severity = '';
+  if (urgency  && NWS_URGENCY_VALUES.indexOf(urgency)  < 0) urgency  = '';
+  if (status   && NWS_STATUS_VALUES.indexOf(status)    < 0) status   = '';
+  if (area && !/^[A-Z]{2}$/.test(area)) area = '';
+
+  var qs = [];
+  if (area)     qs.push('area=' + area);
+  if (event)    qs.push('event=' + encodeURIComponent(event));
+  if (severity) qs.push('severity=' + severity);
+  if (urgency)  qs.push('urgency=' + urgency);
+  if (status)   qs.push('status=' + status);
+  qs.push('limit=' + limit);
+
+  var KEY = 'climate-weather-alerts-' + area + '-' + event + '-' + severity + '-' + urgency + '-' + status + '-' + limit;
+  var cached = getCached(KEY, 60000);
+  if (cached) return jsonResponse(cached, 200, 60);
+
+  try {
+    var u = 'https://api.weather.gov/alerts/active?' + qs.join('&');
+    var res = await fetchWithTimeout(u, {
+      headers: {
+        'User-Agent': 'terminalfeed.io (hello@terminalfeed.io) data-aggregator/1.0',
+        'Accept': 'application/geo+json',
+      },
+    }, 8000);
+    if (!res.ok) throw new Error('nws ' + res.status);
+    var json = await res.json();
+    var features = Array.isArray(json.features) ? json.features : [];
+    var alerts = features.map(function(f) {
+      var prop = f.properties || {};
+      return {
+        id: prop.id || f.id || null,
+        event: prop.event || null,
+        severity: prop.severity || null,
+        urgency: prop.urgency || null,
+        certainty: prop.certainty || null,
+        headline: sanitizeForLLM(prop.headline || ''),
+        description: sanitizeForLLM(prop.description || ''),
+        area_desc: prop.areaDesc || null,
+        sent: prop.sent || null,
+        effective: prop.effective || null,
+        expires: prop.expires || null,
+        ends: prop.ends || null,
+        sender_name: prop.senderName || null,
+        web: prop.web || prop['@id'] || null,
+      };
+    });
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'climate/weather-alerts',
+      updated_at: new Date().toISOString(),
+      data: {
+        filters: {
+          area: area || null,
+          event: event || null,
+          severity: severity || null,
+          urgency: urgency || null,
+          status: status || null,
+          limit: limit,
+        },
+        count: alerts.length,
+        alerts: alerts,
+        attribution: 'National Weather Service (api.weather.gov). US Government public domain (17 USC §105).',
+      },
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 60);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'climate/weather-alerts',
+      updated_at: new Date().toISOString(),
+      data: {
+        filters: {
+          area: area || null,
+          event: event || null,
+          severity: severity || null,
+          urgency: urgency || null,
+          status: status || null,
+          limit: limit,
+        },
+        count: 0,
+        alerts: [],
+        error: 'upstream_unavailable',
+        attribution: 'National Weather Service (api.weather.gov). US Government public domain (17 USC §105).',
+      },
+    }, 200, 30);
   }
 }
 
@@ -4202,6 +4407,8 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_crypto_movers':       path = '/api/crypto-movers'; break;
     case 'tf_predictions':         path = '/api/predictions'; break;
     case 'tf_earthquakes':         path = '/api/earthquake'; break;
+    case 'tf_climate_earthquakes': path = '/api/climate/earthquakes'; break;
+    case 'tf_climate_weather_alerts': path = '/api/climate/weather-alerts'; break;
     case 'tf_service_status':      path = '/api/service-status'; break;
     case 'tf_economic_data':       path = '/api/economic-data'; break;
     case 'tf_forex':               path = '/api/forex'; break;
@@ -4266,6 +4473,8 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_crypto_movers':       return await handleCryptoMovers();
     case 'tf_predictions':         return await handlePredictions();
     case 'tf_earthquakes':         return await handleEarthquake();
+    case 'tf_climate_earthquakes':    return await handleClimateEarthquakes(url);
+    case 'tf_climate_weather_alerts': return await handleClimateWeatherAlerts(url);
     case 'tf_service_status':      return await handleServiceStatus();
     case 'tf_economic_data':       return await handleEconomicData(env);
     case 'tf_forex':               return await handleForex();
@@ -4487,6 +4696,36 @@ const LLM_TOOL_DEFINITIONS = [
     auth: 'none',
     tier: 'free',
     parameters: {}
+  },
+  {
+    name: 'tf_climate_earthquakes',
+    short_description: 'Parameterized USGS earthquake feed (magnitude x period).',
+    description: 'Fetches USGS pre-built summary feeds with selectable magnitude bucket (significant, 4.5, 2.5, 1.0, all) and period (hour, day, week, month). Returns flattened list (id, magnitude, place, time ISO 8601, depth_km, lat, lon, tsunami flag, USGS detail URL). Cache TTL scales with feed window (60s for hour, up to 900s for month). US Government public domain. Use when the agent needs more granular control than tf_earthquakes.',
+    url: 'https://terminalfeed.io/api/climate/earthquakes',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {
+      magnitude: { type: 'string', description: 'Magnitude bucket: significant, 4.5, 2.5, 1.0, all. Default 2.5.' },
+      period:    { type: 'string', description: 'Period bucket: hour, day, week, month. Default day.' }
+    }
+  },
+  {
+    name: 'tf_climate_weather_alerts',
+    short_description: 'NWS active US severe-weather alerts, parameterized.',
+    description: 'Fetches active alerts from api.weather.gov filtered by area (2-letter state code), exact NWS event name, severity, urgency, and status. Returns id, event, severity, urgency, certainty, headline, description, areaDesc, sent/effective/expires/ends, sender_name, web URL. 60s cache. US Government public domain. US-only coverage. Use for situational awareness on active weather hazards.',
+    url: 'https://terminalfeed.io/api/climate/weather-alerts',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {
+      area:     { type: 'string', description: '2-letter US state code, e.g. CA, NY. Optional.' },
+      event:    { type: 'string', description: 'Exact NWS event name, e.g. "Tornado Warning", "Heat Advisory". Optional.' },
+      severity: { type: 'string', description: 'Extreme | Severe | Moderate | Minor | Unknown. Optional.' },
+      urgency:  { type: 'string', description: 'Immediate | Expected | Future | Past | Unknown. Optional.' },
+      status:   { type: 'string', description: 'Actual | Exercise | System | Test | Draft. Optional.' },
+      limit:    { type: 'number', description: '1..100, default 50.' }
+    }
   },
   {
     name: 'tf_service_status',
@@ -8768,6 +9007,8 @@ async function dispatchRoute(request, env, url, path) {
       case 'space-weather':  return await handleSpaceWeather();
       case 'wildfires':      return await handleWildfires(env);
       case 'severe-weather': return await handleSevereWeather();
+      case 'climate/earthquakes':    return await handleClimateEarthquakes(url);
+      case 'climate/weather-alerts': return await handleClimateWeatherAlerts(url);
       case 'sec-filings':    return await handleSecFilings();
       case 'treasury-yields': return await handleTreasuryYields();
       case 'eonet':          return await handleEonet();
