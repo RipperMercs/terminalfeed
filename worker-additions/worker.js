@@ -969,8 +969,8 @@ async function handleBtcPrice() {
 // GET /api/stocks
 async function handleStocks(env, url) {
   var DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'AMD', 'NFLX', 'CRM',
-    'COIN', 'INTC', 'PYPL', 'SQ', 'SHOP', 'UBER', 'PLTR', 'SNOW', 'NET', 'CRWD',
-    'MSTR', 'RIOT', 'MARA', 'HOOD', 'SOFI'];
+    'COIN', 'CRCL', 'INTC', 'PYPL', 'SQ', 'SHOP', 'UBER', 'PLTR', 'SNOW', 'NET',
+    'CRWD', 'MSTR', 'RIOT', 'MARA', 'HOOD', 'SOFI'];
 
   var requested = null;
   if (url && url.searchParams) {
@@ -5761,6 +5761,253 @@ async function handleNoChargeStatsDates(request, env) {
   return jsonResponse({ ok: true, dates: dates }, 200, 60);
 }
 
+// === AFTA Certification self-check ===
+// Read-only scorecard for any publisher claiming AFTA compliance.
+// Fetches /.well-known/x402.json + /.well-known/agent-fair-trade.json
+// + the receipt-key JWK and validates the canonical shape. Mirrors
+// TensorFeed's /api/afta-certify/check so the federation is symmetric:
+// either member can certify a third-party publisher.
+
+var AFTA_CERTIFY_FETCH_TIMEOUT_MS = 8000;
+
+async function _aftaCertifyFetch(url) {
+  try {
+    var res = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json', 'User-Agent': 'terminalfeed-afta-certifier/1.0' },
+    }, AFTA_CERTIFY_FETCH_TIMEOUT_MS);
+    if (!res.ok) return { ok: false, status: res.status, error: 'HTTP ' + res.status };
+    var ct = res.headers.get('content-type') || '';
+    if (ct.indexOf('json') === -1) {
+      return { ok: false, status: res.status, error: 'non-JSON content-type: ' + ct };
+    }
+    var data = await res.json();
+    return { ok: true, data: data, status: res.status };
+  } catch (e) {
+    return { ok: false, error: (e && e.message) || String(e) };
+  }
+}
+
+function _aftaCertifyNormalizeDomain(input) {
+  if (!input) return null;
+  var trimmed = String(input).trim().toLowerCase();
+  if (!trimmed) return null;
+  var stripped = trimmed.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(stripped)) return null;
+  return stripped;
+}
+
+async function aftaCertifyDomain(domain) {
+  var normalized = _aftaCertifyNormalizeDomain(domain);
+  if (!normalized) {
+    return {
+      ok: false,
+      domain: domain,
+      checked_at: new Date().toISOString(),
+      checks: [],
+      score: 0,
+      max: 0,
+      verdict: 'not-yet-eligible',
+      afta_certified: false,
+      next_step: 'Provide a valid hostname (e.g. example.com or api.example.com).',
+      applied_to_directory: false,
+    };
+  }
+
+  var base = 'https://' + normalized;
+  var x402Url = base + '/.well-known/x402.json';
+  var aftaUrl = base + '/.well-known/agent-fair-trade.json';
+  var receiptKeyCandidates = [
+    base + '/.well-known/terminalfeed-receipt-key.json',
+    base + '/.well-known/tensorfeed-receipt-key.json',
+    base + '/.well-known/afta-receipt-key.json',
+    base + '/.well-known/agent-fair-trade-key.json',
+  ];
+
+  var checks = [];
+
+  // Check 1: /.well-known/x402.json exists and parses
+  var x402 = await _aftaCertifyFetch(x402Url);
+  checks.push({
+    id: 'wellknown_x402',
+    name: 'Publishes /.well-known/x402.json',
+    passed: x402.ok,
+    details: x402.ok
+      ? 'Fetched and parsed ' + x402Url + '.'
+      : 'Could not fetch ' + x402Url + ': ' + x402.error + '.',
+    fixUrl: 'https://github.com/coinbase/x402/blob/main/specs/x402-specification-v2.md',
+  });
+
+  // Check 2: x402Version is 2 (canonical Coinbase x402 V2)
+  var x402Data = (x402.data && typeof x402.data === 'object') ? x402.data : {};
+  var isV2 = x402.ok && x402Data.x402Version === 2;
+  checks.push({
+    id: 'x402_version_2',
+    name: 'x402Version is 2 (canonical Coinbase x402 V2)',
+    passed: isV2,
+    details: isV2
+      ? 'Manifest declares x402Version: 2.'
+      : 'Manifest is missing x402Version: 2 (found: ' + JSON.stringify(x402Data.x402Version) + ').',
+    fixUrl: 'https://github.com/coinbase/x402/blob/main/specs/x402-specification-v2.md',
+  });
+
+  // Check 3: at least one paid item declared with valid accepts shape
+  var items = Array.isArray(x402Data.items) ? x402Data.items : [];
+  var itemsWithAccepts = items.filter(function(it) {
+    return it && Array.isArray(it.accepts) && it.accepts.length > 0;
+  });
+  checks.push({
+    id: 'has_paid_items',
+    name: 'Has at least one paid item with an accepts[] block',
+    passed: itemsWithAccepts.length > 0,
+    details: itemsWithAccepts.length > 0
+      ? 'Found ' + itemsWithAccepts.length + ' paid item(s) with accepts entries.'
+      : 'No items with a non-empty accepts[] array. Each paid endpoint must declare its scheme/network/amount/asset/payTo.',
+  });
+
+  // Check 4: every accepts entry has the per-network domain hint (extra.name + extra.version)
+  var allHaveExtra = itemsWithAccepts.length > 0;
+  var badItem = null;
+  for (var i = 0; i < itemsWithAccepts.length; i++) {
+    var it = itemsWithAccepts[i];
+    var accepts = it.accepts;
+    for (var j = 0; j < accepts.length; j++) {
+      var a = accepts[j];
+      var extra = a && a.extra;
+      if (!extra || typeof extra.name !== 'string' || typeof extra.version !== 'string') {
+        allHaveExtra = false;
+        badItem = String(it.resource || it.id || 'unknown');
+        break;
+      }
+    }
+    if (!allHaveExtra) break;
+  }
+  checks.push({
+    id: 'extra_domain_hint',
+    name: 'All accepts entries declare extra.name + extra.version (EIP-712 domain hint)',
+    passed: allHaveExtra,
+    details: allHaveExtra
+      ? 'Every accepts entry includes extra.name and extra.version.'
+      : 'Item ' + (badItem || '(?)') + ' is missing extra.name or extra.version. Reminder: Base mainnet uses name="USD Coin"; Base Sepolia uses name="USDC".',
+    fixUrl: 'https://terminalfeed.io/developers/agent-payments',
+  });
+
+  // Check 5: /.well-known/agent-fair-trade.json with no-charge guarantees + signed-receipts
+  var afta = await _aftaCertifyFetch(aftaUrl);
+  var aftaData = (afta.data && typeof afta.data === 'object') ? afta.data : {};
+  var guarantees = Array.isArray(aftaData.no_charge_guarantees) ? aftaData.no_charge_guarantees : null;
+  var receiptsField = aftaData.receipts || aftaData.signed_receipts;
+  var hasReceiptDecl = receiptsField != null && typeof receiptsField === 'object' && (
+    receiptsField.signed === true ||
+    typeof receiptsField.algorithm === 'string' ||
+    typeof receiptsField.public_key_url === 'string'
+  );
+  var aftaPassed = afta.ok && guarantees != null && guarantees.length > 0 && hasReceiptDecl;
+  var aftaDetails;
+  if (!afta.ok) aftaDetails = 'Could not fetch ' + aftaUrl + ': ' + afta.error + '.';
+  else if (!guarantees) aftaDetails = 'AFTA manifest is present but missing no_charge_guarantees array.';
+  else if (!hasReceiptDecl) aftaDetails = 'AFTA manifest is missing the receipts declaration (object with signed/algorithm/public_key_url).';
+  else aftaDetails = 'AFTA manifest declares ' + guarantees.length + ' no-charge guarantee(s) and a signed-receipts policy.';
+  checks.push({
+    id: 'wellknown_afta',
+    name: 'Publishes /.well-known/agent-fair-trade.json with no-charge guarantees and signed-receipt declaration',
+    passed: aftaPassed,
+    details: aftaDetails,
+    fixUrl: 'https://terminalfeed.io/agent-fair-trade',
+  });
+
+  // Check 6: published receipt public key at one of the common .well-known locations
+  var receiptKeyOk = false;
+  var receiptKeyUrl = null;
+  for (var k = 0; k < receiptKeyCandidates.length; k++) {
+    var r = await _aftaCertifyFetch(receiptKeyCandidates[k]);
+    if (r.ok && r.data && typeof r.data === 'object') {
+      var d = r.data;
+      if (typeof d.kty === 'string' || typeof d.publicKey === 'string' || typeof d.x === 'string') {
+        receiptKeyOk = true;
+        receiptKeyUrl = receiptKeyCandidates[k];
+        break;
+      }
+    }
+  }
+  checks.push({
+    id: 'receipt_key_published',
+    name: 'Publishes a receipt-signing public key at /.well-known/',
+    passed: receiptKeyOk,
+    details: receiptKeyOk
+      ? 'Found a public key JWK at ' + receiptKeyUrl + '.'
+      : 'No public key found at any of: ' + receiptKeyCandidates.join(', ') + '. Publishers should expose a JWK so agents can verify response receipts.',
+    fixUrl: 'https://terminalfeed.io/agent-fair-trade#receipts',
+  });
+
+  // Federation detection: AFTA manifest may declare federation membership
+  var federationParent = null;
+  if (afta.ok && afta.data && typeof afta.data === 'object') {
+    var adoption = (aftaData.adoption && typeof aftaData.adoption === 'object') ? aftaData.adoption : {};
+    var fed = (adoption.network_federation && typeof adoption.network_federation === 'object') ? adoption.network_federation : {};
+    var current = Array.isArray(fed.current_federation) ? fed.current_federation : [];
+    for (var f = 0; f < current.length; f++) {
+      var item = current[f];
+      var host = typeof item.host === 'string' ? item.host : null;
+      var members = Array.isArray(item.members) ? item.members.map(String) : [];
+      if (host && members.indexOf(normalized) !== -1 && host !== normalized) {
+        federationParent = host;
+        break;
+      }
+    }
+  }
+
+  var score = checks.filter(function(c) { return c.passed; }).length;
+  var max = checks.length;
+  var verdict;
+  if (score === max) verdict = 'certified-eligible';
+  else if (score >= max - 1) verdict = 'almost-eligible';
+  else verdict = 'not-yet-eligible';
+
+  var eligible = verdict === 'certified-eligible';
+  var nextStep;
+  if (eligible) {
+    nextStep = 'All AFTA checks pass. Email hello@terminalfeed.io with subject "AFTA Certification: ' + normalized + '" and your payTo wallet address to begin the listing review.';
+  } else if (federationParent) {
+    nextStep = normalized + ' appears to be a federation member of ' + federationParent + ' per its agent-fair-trade.json. Federation members typically delegate the x402 manifest to the federation host and will not pass the manifest checks above on their own surface. For certification, email hello@terminalfeed.io with the federation host listed.';
+  } else {
+    nextStep = (max - score) + ' check(s) need work. Fix the failing items above and re-run /api/afta-certify/check?domain=' + normalized + '. Re-checks are free and idempotent.';
+  }
+
+  var result = {
+    ok: true,
+    domain: normalized,
+    checked_at: new Date().toISOString(),
+    checks: checks,
+    score: score,
+    max: max,
+    verdict: verdict,
+    afta_certified: false,
+    next_step: nextStep,
+    applied_to_directory: false,
+  };
+  if (federationParent) result.federation_parent = federationParent;
+  return result;
+}
+
+async function handleAftaCertifyCheck(request, env, url) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  var domain = url.searchParams.get('domain') || '';
+  if (!domain) {
+    return jsonResponse({
+      ok: false,
+      error: 'domain_required',
+      message: 'Pass ?domain=example.com to certify a publisher against the AFTA spec.',
+      example: 'https://terminalfeed.io/api/afta-certify/check?domain=terminalfeed.io',
+    }, 400);
+  }
+  var clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+  var rl = await checkRateLimit(env, 'cert', clientIp, 10, 60);
+  if (!rl.allowed) return rateLimit429(rl);
+  var result = await aftaCertifyDomain(domain);
+  return jsonResponse(result, 200, 60);
+}
+
 async function handleApiMeta(request, env) {
   if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
   return jsonResponse({
@@ -8778,6 +9025,29 @@ async function handlePaymentHistory(request, env) {
   return proxyToTensorFeed(request, env, '/api/payment/history');
 }
 
+// Per-token daily spend cap. Credit ledger lives on TensorFeed (the
+// federation host), so this is a thin pass-through. GET reads the
+// current cap + today's spend + remaining + reset_at; POST sets a new
+// cap (body: { daily_cap: number | null }; send null or 0 to clear).
+// Authenticated by the bearer token itself; no credit cost.
+async function handleSpendCap(request, env) {
+  if (request.method !== 'GET' && request.method !== 'POST') {
+    return jsonResponse({ error: 'method_not_allowed', allowed: ['GET', 'POST'] }, 405);
+  }
+  _recordPaymentEvent('spend_cap');
+  return proxyToTensorFeed(request, env, '/api/payment/spend-cap');
+}
+
+// Self-service token revocation. Burns the caller's bearer immediately
+// on the TensorFeed credit ledger. Use this if a token is suspected to
+// be leaked. Mirrors /api/admin/burn-token but authenticated by the
+// token itself.
+async function handleRevoke(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ error: 'POST only' }, 405);
+  _recordPaymentEvent('revoke');
+  return proxyToTensorFeed(request, env, '/api/payment/revoke');
+}
+
 
 // --- Main Export (ES Module format) ---
 // IMPORTANT: In Cloudflare dashboard, set Worker type to "ES Module" (not "Service Worker")
@@ -9080,12 +9350,15 @@ async function dispatchRoute(request, env, url, path) {
       case 'payment/confirm':    return await handleConfirmPayment(request, env);
       case 'payment/balance':    return await handleBalance(request, env);
       case 'payment/history':    return await handlePaymentHistory(request, env);
+      case 'payment/spend-cap':  return await handleSpendCap(request, env);
+      case 'payment/revoke':     return await handleRevoke(request, env);
 
       // Agent Fair-Trade Agreement (AFTA): public ledger of no-charge events,
       // free Ed25519 receipt verification, and the canonical site meta surface.
       case 'payment/no-charge-stats':       return await handleNoChargeStats(request, env, url);
       case 'payment/no-charge-stats/dates': return await handleNoChargeStatsDates(request, env);
       case 'receipt/verify':                return await handleReceiptVerify(request);
+      case 'afta-certify/check':            return await handleAftaCertifyCheck(request, env, url);
       case 'meta':                           return await handleApiMeta(request, env);
 
       default: {

@@ -26,6 +26,7 @@ const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: 'TSLA', name: 'Tesla' },
   { symbol: 'AMD', name: 'AMD' },
   { symbol: 'COIN', name: 'Coinbase' },
+  { symbol: 'CRCL', name: 'Circle' },
   { symbol: 'PLTR', name: 'Palantir' },
   { symbol: 'MSTR', name: 'MicroStrategy' },
   { symbol: 'SMCI', name: 'Super Micro' },
@@ -65,8 +66,13 @@ export function useSimStocks(customSymbols: string[] = []) {
 
   const [stocks, setStocks] = useState<StockItem[]>(() => {
     const cached = getCache<StockItem[]>('stock_prices');
-    if (cached) return cached.data;
+    const cachedBySymbol: Record<string, StockItem> = {};
+    if (cached) {
+      for (const c of cached.data) cachedBySymbol[c.symbol] = c;
+    }
     return SYMBOLS.map((s) => {
+      const c = cachedBySymbol[s.symbol];
+      if (c) return c;
       const fb = STATIC_FALLBACKS.stocks.find((f) => f.symbol === s.symbol);
       return fb ? { ...fb } : { ...s, price: 0, change: 0 };
     });
@@ -100,14 +106,17 @@ export function useSimStocks(customSymbols: string[] = []) {
         }
 
         setStocks((prev) => {
-          const next = prev.map((s) => {
-            const q = quoteMap[s.symbol];
-            if (!q) return s;
+          const prevBySymbol: Record<string, StockItem> = {};
+          for (const p of prev) prevBySymbol[p.symbol] = p;
+          const next = SYMBOLS.map((sym) => {
+            const existing = prevBySymbol[sym.symbol] ?? { ...sym, price: 0, change: 0 };
+            const q = quoteMap[sym.symbol];
+            if (!q) return existing;
             const prevClose = q.prev_close ?? 0;
             const change = prevClose > 0
               ? ((q.price - prevClose) / prevClose) * 100
               : q.change_percent ?? 0;
-            return { ...s, price: q.price, change };
+            return { ...existing, price: q.price, change };
           });
           setCache('stock_prices', next, 'worker');
           return next;
