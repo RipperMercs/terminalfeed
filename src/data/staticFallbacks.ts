@@ -39,6 +39,7 @@ export const STATIC_FALLBACKS = {
     { symbol: 'GOOGL', name: 'Google', price: 158, change: 0.7 },
     { symbol: 'AMD', name: 'AMD', price: 95, change: 1.5 },
     { symbol: 'COIN', name: 'Coinbase', price: 198, change: 3.2 },
+    { symbol: 'CRCL', name: 'Circle', price: 195, change: 2.4 },
     { symbol: 'PLTR', name: 'Palantir', price: 85, change: 1.4 },
   ],
   fear_greed: {
