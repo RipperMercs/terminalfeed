@@ -9049,6 +9049,223 @@ async function handleRevoke(request, env) {
 }
 
 
+// --- Honeypot + IOC export (federation parity with TensorFeed) ---
+//
+// Mirrors the TensorFeed Worker's honeypot module so TF + TerminalFeed
+// produce IOC feeds with identical envelope shapes. Downstream consumers
+// can ingest either feed with the same parser. See
+// _studio/TERMINALFEED_SECURITY_PARITY_SPEC.md for the design.
+//
+// Note: TerminalFeed had a basic honeypot (6 paths, Analytics Engine
+// logging, returns 200). We KEEP the Analytics Engine logging and EXTEND
+// the path coverage + add KV-indexed structured records that power the
+// public /api/security/iocs.json export. The response status is changed
+// from 200 to 404 to match TF's behavior — making honeypot paths
+// indistinguishable from a real 404 deprives the prober of useful
+// fingerprinting signal.
+
+// Trailing-slash entries match by prefix (case-insensitive); exact paths
+// match only on full equality.
+const HONEYPOT_PATHS = [
+  // WordPress + common CMS attack surfaces
+  '/wp-login.php', '/wp-admin/', '/wp-content/', '/wp-includes/', '/wp-json/',
+  '/xmlrpc.php', '/wordpress/',
+  // Generic admin probes
+  '/admin/', '/administrator/', '/phpmyadmin/', '/pma/', '/myadmin/',
+  // Config and secret exfiltration
+  '/.env', '/.env.local', '/.env.production',
+  '/.git/config', '/.git/HEAD',
+  '/.aws/credentials', '/.ssh/id_rsa',
+  '/config.php', '/configuration.php', '/wp-config.php', '/database.yml',
+  // Common framework/dev leaks
+  '/server-status', '/server-info',
+  // Common backdoor file probes
+  '/shell.php', '/backdoor.php', '/c99.php', '/r57.php',
+  // PHP CVE probes
+  '/cgi-bin/', '/_ignition/execute-solution',
+  // ColdFusion / Java / Tomcat
+  '/CFIDE/administrator/', '/manager/html', '/host-manager/html',
+  // S3-style probes
+  '/index.php', '/index.asp', '/index.aspx',
+  // Fake user-dump endpoints
+  '/api/v1/users', '/api/users', '/api/admin', '/users.json',
+  '/dump.sql', '/db.sql', '/backup.zip', '/backup.sql', '/site.tar.gz',
+];
+
+const HP_TRAIL_SLASH_PREFIXES = HONEYPOT_PATHS.filter(function(p) { return p.endsWith('/'); });
+const HP_EXACT = new Set(HONEYPOT_PATHS.filter(function(p) { return !p.endsWith('/'); }));
+
+function isHoneypotPath(pathname) {
+  if (HP_EXACT.has(pathname)) return true;
+  var lower = pathname.toLowerCase();
+  for (var i = 0; i < HP_TRAIL_SLASH_PREFIXES.length; i++) {
+    if (lower.startsWith(HP_TRAIL_SLASH_PREFIXES[i].toLowerCase())) return true;
+  }
+  return false;
+}
+
+const HP_HITS_PREFIX = 'sec:honeypot:hits:';
+const HP_INDEX_KEY = 'sec:honeypot:index';
+const HP_HITS_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+const HP_INDEX_CAP = 5000;
+
+async function logHoneypotHit(env, hit) {
+  // Structured stdout log for Cloudflare Workers Observability.
+  try { console.log('honeypot_hit', JSON.stringify(hit)); } catch (e) {}
+  if (!env || !env.WEBHOOK_SUBS) return;
+  var rayId = hit.cf_ray || ('nocf-' + Date.now());
+  try {
+    await env.WEBHOOK_SUBS.put(
+      HP_HITS_PREFIX + rayId,
+      JSON.stringify(hit),
+      { expirationTtl: HP_HITS_TTL_SECONDS }
+    );
+  } catch (e) { return; }
+  try {
+    var raw = await env.WEBHOOK_SUBS.get(HP_INDEX_KEY);
+    var idx = [];
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) idx = parsed.filter(function(v) { return typeof v === 'string'; });
+      } catch (e) {}
+    }
+    idx.push(rayId);
+    if (idx.length > HP_INDEX_CAP) idx = idx.slice(-HP_INDEX_CAP);
+    await env.WEBHOOK_SUBS.put(HP_INDEX_KEY, JSON.stringify(idx));
+  } catch (e) {}
+}
+
+function makeHoneypotHit(request, pathname) {
+  var cf = request.cf || {};
+  return {
+    detected_at: new Date().toISOString(),
+    ip: request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous',
+    path: pathname,
+    method: request.method,
+    user_agent: (request.headers.get('user-agent') || '').slice(0, 256),
+    cf_ray: request.headers.get('cf-ray') || '',
+    asn: typeof cf.asn === 'number' ? cf.asn : null,
+    country: typeof cf.country === 'string' ? cf.country : null,
+  };
+}
+
+function honeypot404() {
+  return new Response('Not Found', {
+    status: 404,
+    headers: Object.assign({}, SECURITY_HEADERS, {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'no-store',
+    }),
+  });
+}
+
+// IOC export endpoint logic. Aggregates the last 2000 honeypot hits by
+// IP, tags attacker patterns, scores confidence. Identical envelope to
+// TF's /api/security/iocs.json so downstream defenders can ingest either
+// feed with the same parser.
+async function aggregateAndExportIocs(env) {
+  var iocs = [];
+  if (env && env.WEBHOOK_SUBS) {
+    var raw = null;
+    try { raw = await env.WEBHOOK_SUBS.get(HP_INDEX_KEY); } catch (e) {}
+    var idx = [];
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) idx = parsed.filter(function(v) { return typeof v === 'string'; });
+      } catch (e) {}
+    }
+    var recent = idx.slice(-2000);
+    var hits = [];
+    var batchSize = 25;
+    for (var i = 0; i < recent.length; i += batchSize) {
+      var batch = recent.slice(i, i + batchSize);
+      var results = await Promise.all(batch.map(function(id) {
+        return env.WEBHOOK_SUBS.get(HP_HITS_PREFIX + id).then(function(s) {
+          if (!s) return null;
+          try { return JSON.parse(s); } catch (e) { return null; }
+        }).catch(function() { return null; });
+      }));
+      for (var k = 0; k < results.length; k++) {
+        if (results[k]) hits.push(results[k]);
+      }
+    }
+    iocs = aggregateIocsByIp(hits, 720);
+  }
+
+  var payload = {
+    version: 1,
+    generated_at: new Date().toISOString(),
+    source: 'https://terminalfeed.io/api/security/iocs.json',
+    window_hours: 720,
+    total_iocs: iocs.length,
+    iocs: iocs,
+    policy: {
+      description: 'Indicators of compromise observed by TerminalFeed honeypot endpoints over the last 30 days. Free, public, machine-readable. Downstream defenders may ingest and pre-block at their own edge. Not a threat-intel re-export; only what we directly observed against our own perimeter.',
+      license: 'CC0',
+      contact: 'security@terminalfeed.io',
+    },
+  };
+
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: Object.assign({}, SECURITY_HEADERS, {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      'access-control-allow-origin': '*',
+      'x-terminalfeed-iocs-version': '1',
+    }),
+  });
+}
+
+function aggregateIocsByIp(hits, windowHours) {
+  var cutoff = Date.now() - windowHours * 60 * 60 * 1000;
+  var grouped = new Map();
+  for (var i = 0; i < hits.length; i++) {
+    var h = hits[i];
+    var ts = Date.parse(h.detected_at);
+    if (!isFinite(ts) || ts < cutoff) continue;
+    if (!h.ip || h.ip === 'anonymous') continue;
+    if (!grouped.has(h.ip)) grouped.set(h.ip, []);
+    grouped.get(h.ip).push(h);
+  }
+  var out = [];
+  grouped.forEach(function(group, ip) {
+    var sorted = group.slice().sort(function(a, b) { return a.detected_at.localeCompare(b.detected_at); });
+    var first = sorted[0];
+    var last = sorted[sorted.length - 1];
+    var pathSet = new Set();
+    for (var j = 0; j < group.length; j++) pathSet.add(group[j].path);
+    var paths = Array.from(pathSet).slice(0, 10);
+    var tags = ['honeypot'];
+    for (var p = 0; p < paths.length; p++) {
+      var path = paths[p];
+      if (path.indexOf('wp-') !== -1) tags.push('scanner:wordpress');
+      if (path === '/.env' || path.indexOf('/.env') === 0) tags.push('scanner:env-leak');
+      if (path.indexOf('/admin') !== -1 || path.indexOf('/phpmyadmin') !== -1) tags.push('scanner:admin-brute');
+      if (path.indexOf('/.git') !== -1 || path.indexOf('/.aws') !== -1 || path.indexOf('/.ssh') !== -1) tags.push('scanner:secrets');
+      if (path.indexOf('.php') !== -1 || path.indexOf('cgi-bin') !== -1) tags.push('scanner:legacy-php');
+    }
+    var confidence = 'low';
+    if (group.length >= 5 || paths.length >= 3) confidence = 'medium';
+    if (group.length >= 20 || paths.length >= 5) confidence = 'high';
+    out.push({
+      type: 'ip', value: ip,
+      asn: first.asn, country: first.country,
+      first_seen: first.detected_at, last_seen: last.detected_at,
+      hits: group.length, paths: paths,
+      tags: Array.from(new Set(tags)),
+      confidence: confidence,
+    });
+  });
+  out.sort(function(a, b) {
+    var dt = b.last_seen.localeCompare(a.last_seen);
+    return dt !== 0 ? dt : b.hits - a.hits;
+  });
+  return out.slice(0, 1000);
+}
+
 // --- Main Export (ES Module format) ---
 // IMPORTANT: In Cloudflare dashboard, set Worker type to "ES Module" (not "Service Worker")
 
@@ -9094,24 +9311,25 @@ export default {
       return rateLimit429(rl);
     }
 
-    // Honeypot endpoints: well-known scanner targets returning a static 200.
-    // Logging them lets us correlate scanner waves with later attack traffic.
-    // 200 (not 404) deliberately — it makes the scanner waste cycles parsing
-    // the response body.
-    if (path === '.env' || path === 'wp-admin' || path === '.git/config' || path === 'admin/login' || path === 'phpinfo' || path === 'config') {
+    // Honeypot trap (federation parity with TensorFeed).
+    // Comprehensive path list with KV-indexed structured logging that
+    // powers /api/security/iocs.json. Returns an indistinguishable 404
+    // so probers cannot fingerprint which paths are traps. The legacy
+    // Analytics Engine signal is preserved so we keep the dashboard
+    // panels that look for honeypot data points.
+    if (isHoneypotPath(url.pathname)) {
+      var hit = makeHoneypotHit(request, url.pathname);
+      ctx.waitUntil(logHoneypotHit(env, hit));
       try {
         if (env && env.AGENT_ANALYTICS) {
           env.AGENT_ANALYTICS.writeDataPoint({
-            blobs: ['honeypot:' + path, clientIp, request.headers.get('User-Agent') || ''],
+            blobs: ['honeypot:' + url.pathname, hit.ip, hit.user_agent],
             doubles: [1],
             indexes: ['honeypot'],
           });
         }
       } catch (e) {}
-      return new Response('# nothing here, friend\n', {
-        status: 200,
-        headers: Object.assign({}, SECURITY_HEADERS, { 'Content-Type': 'text/plain' }),
-      });
+      return honeypot404();
     }
 
     // Pre-filter known scanner UAs on /api/admin/*. Cheap signal — these tools
@@ -9239,6 +9457,13 @@ async function dispatchRoute(request, env, url, path) {
       var ua = request.headers.get('User-Agent') || '';
       var hasBearer = !!extractBearerToken(request);
       _recordTrafficHit(env, path, hasBearer, ua);
+    }
+
+    // Public IOC export (federation parity with TensorFeed). Aggregates
+    // honeypot hits from KV into a structured, agent-readable feed any
+    // downstream defender can pre-block from. CC0, edge-cached 5 min.
+    if (path === 'security/iocs.json' || path === 'security/iocs') {
+      return await aggregateAndExportIocs(env);
     }
 
     // Path-prefix routes: webhook subscription per-id actions
