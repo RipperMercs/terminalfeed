@@ -3,6 +3,8 @@
 > TerminalFeed is a free real-time dashboard aggregating 35+ live data feeds.
 > This file helps AI agents understand what data is available.
 
+> Free Premium Trial: 100 Calls Per IP Per Day. Every IP address gets up to 100 free /api/pro/* premium API calls per 24-hour rolling window. No authentication, no signup, no wallet, no credit card required. Just call the endpoint without an Authorization header and the trial counter increments automatically. Self-service status: GET https://terminalfeed.io/api/free-tier/status (no auth, does not consume a slot). After the cap is reached the canonical x402 V2 402 challenge fires with `free_trial.status` set to "exhausted" and `resets_at` populated. Applies to every TerminalFeed premium endpoint (briefing, macro, crypto-deep, sentiment, world-deltas, agent-context, correlation-matrix, whales, exchange-flows, defi-tvl, stablecoin-flows, github-velocity). Free-trial responses are still AFTA receipt-signed; the receipt records `no_charge_reason: free_trial`.
+
 > Agent Fair-Trade Agreement (AFTA): TerminalFeed is agent fair-trade certified.
 > Code-enforced no-charge guarantees on 5xx, breaker, schema fail, and stale data.
 > Ed25519-signed receipts on every paid call. Public on-chain payment rail (USDC on Base).
