@@ -884,8 +884,130 @@ function withRateLimitHeaders(resp, rl) {
   return new Response(resp.body, { status: resp.status, headers: newHeaders });
 }
 
+// =============================================================================
+// Free premium-trial quota (100 calls / IP / 24h rolling, per-isolate)
+// =============================================================================
+// Each IP gets up to FREE_TRIAL_LIMIT_PER_DAY /api/pro/* calls without any
+// authentication. Over the cap, the standard canonical x402 V2 402 fires.
+// Per-isolate in-memory Map (matches TensorFeed's rate-limit pattern); a
+// coordinated burst across Cloudflare PoPs may briefly exceed the nominal
+// cap on a single isolate. Acceptable for a free-trial feature where slight
+// over-generosity is preferable to under-grant. KV-backed counters would be
+// exact but pay an op per request — not worth it at this volume.
+var FREE_TRIAL_WINDOW_MS = 24 * 60 * 60 * 1000;
+var FREE_TRIAL_LIMIT_PER_DAY = 100;
+var FREE_TRIAL_MAX_TRACKED_IPS = 50000;
+var _freeTrialBuckets = new Map();
 
-// ---Twitter / X OAuth 1.0a 
+function _freeTrialGC(now) {
+  if (_freeTrialBuckets.size <= FREE_TRIAL_MAX_TRACKED_IPS) return;
+  var dropTarget = FREE_TRIAL_MAX_TRACKED_IPS / 2;
+  for (var entry of _freeTrialBuckets) {
+    var k = entry[0];
+    var st = entry[1];
+    if (now - st.windowStart > FREE_TRIAL_WINDOW_MS * 2) _freeTrialBuckets.delete(k);
+    if (_freeTrialBuckets.size <= dropTarget) break;
+  }
+}
+
+// Atomic check-and-increment. Returns post-call state (used includes this
+// call when allowed=true). Caller should fall through to the canonical
+// x402 V2 challenge when allowed=false.
+function checkFreeTrialQuota(ip) {
+  var now = Date.now();
+  _freeTrialGC(now);
+
+  var state = _freeTrialBuckets.get(ip);
+  if (!state || now - state.windowStart >= FREE_TRIAL_WINDOW_MS) {
+    state = { count: 0, windowStart: now };
+    _freeTrialBuckets.set(ip, state);
+  }
+
+  var allowed = state.count < FREE_TRIAL_LIMIT_PER_DAY;
+  if (allowed) state.count += 1;
+
+  var resetMs = state.windowStart + FREE_TRIAL_WINDOW_MS - now;
+  return {
+    allowed: allowed,
+    used: state.count,
+    remaining: Math.max(0, FREE_TRIAL_LIMIT_PER_DAY - state.count),
+    limit: FREE_TRIAL_LIMIT_PER_DAY,
+    resetSeconds: Math.max(1, Math.ceil(resetMs / 1000)),
+    resetAt: new Date(state.windowStart + FREE_TRIAL_WINDOW_MS).toISOString(),
+  };
+}
+
+// Read-only peek for /api/free-tier/status. Does NOT increment so agents
+// can budget without burning a slot.
+function peekFreeTrialQuota(ip) {
+  var now = Date.now();
+  var state = _freeTrialBuckets.get(ip);
+  if (!state || now - state.windowStart >= FREE_TRIAL_WINDOW_MS) {
+    return {
+      allowed: true,
+      used: 0,
+      remaining: FREE_TRIAL_LIMIT_PER_DAY,
+      limit: FREE_TRIAL_LIMIT_PER_DAY,
+      resetSeconds: Math.floor(FREE_TRIAL_WINDOW_MS / 1000),
+      resetAt: new Date(now + FREE_TRIAL_WINDOW_MS).toISOString(),
+    };
+  }
+  var resetMs = state.windowStart + FREE_TRIAL_WINDOW_MS - now;
+  return {
+    allowed: state.count < FREE_TRIAL_LIMIT_PER_DAY,
+    used: state.count,
+    remaining: Math.max(0, FREE_TRIAL_LIMIT_PER_DAY - state.count),
+    limit: FREE_TRIAL_LIMIT_PER_DAY,
+    resetSeconds: Math.max(1, Math.ceil(resetMs / 1000)),
+    resetAt: new Date(state.windowStart + FREE_TRIAL_WINDOW_MS).toISOString(),
+  };
+}
+
+var FREE_TRIAL_DEFAULTS = {
+  WINDOW_MS: FREE_TRIAL_WINDOW_MS,
+  LIMIT_PER_DAY: FREE_TRIAL_LIMIT_PER_DAY,
+};
+
+// =============================================================================
+// Admin per-IP rate limit (5 / IP / minute, in-memory)
+// =============================================================================
+// Tighter cap than the public bucket. Counts every request including ones
+// with a wrong key, so brute-force probes saturate the limiter rather than
+// the worker request budget. Per-isolate, same trade-off as the free-trial
+// bucket. Cap deliberately sits below public and MCP caps since admin is
+// not a user-facing surface.
+var ADMIN_RL_WINDOW_MS = 60 * 1000;
+var ADMIN_RL_LIMIT_PER_MIN = 5;
+var ADMIN_RL_MAX_TRACKED_IPS = 50000;
+var _adminRlBuckets = new Map();
+
+function checkAdminIPRateLimit(ip) {
+  var now = Date.now();
+  if (_adminRlBuckets.size > ADMIN_RL_MAX_TRACKED_IPS) {
+    for (var entry of _adminRlBuckets) {
+      var k = entry[0];
+      var st = entry[1];
+      if (now - st.windowStart > ADMIN_RL_WINDOW_MS * 2) _adminRlBuckets.delete(k);
+      if (_adminRlBuckets.size <= ADMIN_RL_MAX_TRACKED_IPS / 2) break;
+    }
+  }
+  var state = _adminRlBuckets.get(ip);
+  if (!state || now - state.windowStart >= ADMIN_RL_WINDOW_MS) {
+    state = { count: 0, windowStart: now };
+    _adminRlBuckets.set(ip, state);
+  }
+  state.count += 1;
+  var resetSec = Math.max(1, Math.ceil((state.windowStart + ADMIN_RL_WINDOW_MS - now) / 1000));
+  return {
+    allowed: state.count <= ADMIN_RL_LIMIT_PER_MIN,
+    limit: ADMIN_RL_LIMIT_PER_MIN,
+    remaining: Math.max(0, ADMIN_RL_LIMIT_PER_MIN - state.count),
+    reset: resetSec,
+  };
+}
+
+
+// ---Twitter / X OAuth 1.0a
 
 // ---Route Handlers 
 
@@ -5490,6 +5612,385 @@ async function aftaCommitInternal(env, token, cost, endpoint, noChargeReason, re
   }
 }
 
+// =============================================================================
+// AI-agent wantlist (POST/GET /api/wantlist)
+// =============================================================================
+// Lets agents (or their operators) tell TerminalFeed what data they wish
+// it served. Anonymous by default. Per-IP rate-limited to 5 submissions
+// per 24h. Stored in WEBHOOK_SUBS KV with 30-day TTL on every key, so
+// patterns matter but individual posts age out.
+//
+// KV layout (WEBHOOK_SUBS):
+//   wl:item:{id}             WantlistItem (TTL 30d)
+//   wl:index                 string[] of recent ids (capped at 200)
+//   wl:topic:{slug}          number (running counter per topic, TTL 30d)
+//   wl:rl:{ip}:{date}        number (per-IP submissions today, TTL 24h+1m)
+//
+// Limits & validation (mirror TensorFeed's wantlist module):
+//   - topic: 1..60 chars, required
+//   - description: 1..500 chars, required
+//   - request_type: enum, default 'other'
+//   - contact_optional: 0..200 chars, optional
+//   - body size cap: 10 KB
+
+var WL_ITEM_TTL_SECONDS = 30 * 24 * 60 * 60;
+var WL_INDEX_KEY = 'wl:index';
+var WL_INDEX_CAP = 200;
+var WL_RL_PER_IP_PER_DAY = 5;
+var WL_TOPIC_MAX_LEN = 60;
+var WL_DESCRIPTION_MAX_LEN = 500;
+var WL_CONTACT_MAX_LEN = 200;
+var WL_BODY_BYTES_CAP = 10 * 1024;
+var WL_REQUEST_TYPE_VALUES = ['data_source', 'endpoint', 'tool', 'mcp', 'integration', 'other'];
+
+function _wlSlugifyTopic(input) {
+  return String(input || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50);
+}
+
+function _wlGenerateId() {
+  var ts = Math.floor(Date.now() / 1000).toString(36);
+  var rand = Math.random().toString(36).slice(2, 10);
+  return ts + '-' + rand;
+}
+
+function _wlUtcDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function _wlParseSubmission(body) {
+  var topicRaw = (typeof body.topic === 'string') ? body.topic.trim() : '';
+  if (!topicRaw) return { ok: false, error: 'missing_topic', hint: 'topic is required (a short label, e.g. "real estate records")' };
+  if (topicRaw.length > WL_TOPIC_MAX_LEN) return { ok: false, error: 'topic_too_long', hint: 'topic must be ' + WL_TOPIC_MAX_LEN + ' chars or fewer' };
+
+  var descRaw = (typeof body.description === 'string') ? body.description.trim() : '';
+  if (!descRaw) return { ok: false, error: 'missing_description', hint: 'description is required (1-2 sentences explaining what data you want)' };
+  if (descRaw.length > WL_DESCRIPTION_MAX_LEN) return { ok: false, error: 'description_too_long', hint: 'description must be ' + WL_DESCRIPTION_MAX_LEN + ' chars or fewer' };
+
+  var reqType = (typeof body.request_type === 'string') ? body.request_type : 'other';
+  if (WL_REQUEST_TYPE_VALUES.indexOf(reqType) === -1) {
+    return { ok: false, error: 'invalid_request_type', hint: 'request_type must be one of: ' + WL_REQUEST_TYPE_VALUES.join(', ') };
+  }
+
+  var contact = null;
+  if (body.contact_optional !== undefined && body.contact_optional !== null) {
+    if (typeof body.contact_optional !== 'string') {
+      return { ok: false, error: 'invalid_contact_optional', hint: 'contact_optional must be a string' };
+    }
+    var c = body.contact_optional.trim();
+    if (c.length > WL_CONTACT_MAX_LEN) return { ok: false, error: 'contact_too_long', hint: 'contact_optional must be ' + WL_CONTACT_MAX_LEN + ' chars or fewer' };
+    contact = c || null;
+  }
+
+  return {
+    ok: true,
+    item: {
+      topic: topicRaw,
+      request_type: reqType,
+      description: descRaw,
+      contact_optional: contact,
+    },
+  };
+}
+
+async function _wlCheckAndIncrementRL(env, ip) {
+  var date = _wlUtcDate();
+  var key = 'wl:rl:' + ip + ':' + date;
+  var current = 0;
+  try {
+    var raw = await env.WEBHOOK_SUBS.get(key);
+    current = raw ? parseInt(raw, 10) : 0;
+    if (isNaN(current) || current < 0) current = 0;
+  } catch (e) {}
+  if (current >= WL_RL_PER_IP_PER_DAY) {
+    return { allowed: false, usedToday: current, limit: WL_RL_PER_IP_PER_DAY };
+  }
+  try {
+    await env.WEBHOOK_SUBS.put(key, String(current + 1), { expirationTtl: 24 * 60 * 60 + 60 });
+  } catch (e) {}
+  return { allowed: true, usedToday: current + 1, limit: WL_RL_PER_IP_PER_DAY };
+}
+
+async function _wlSubmit(env, ip, body) {
+  var parsed = _wlParseSubmission(body);
+  if (!parsed.ok) return parsed;
+
+  var rl = await _wlCheckAndIncrementRL(env, ip);
+  if (!rl.allowed) {
+    return {
+      ok: false,
+      error: 'rate_limit_exceeded',
+      hint: 'This IP submitted ' + rl.usedToday + ' wantlist items in the last 24h (cap is ' + rl.limit + '). Aggregate by topic before submitting more.',
+      rate_limit: { used_today: rl.usedToday, limit_per_day: rl.limit },
+    };
+  }
+
+  var id = _wlGenerateId();
+  var createdAt = new Date().toISOString();
+  var topicSlug = _wlSlugifyTopic(parsed.item.topic);
+  var item = {
+    id: id,
+    created_at: createdAt,
+    topic: parsed.item.topic,
+    topic_slug: topicSlug,
+    request_type: parsed.item.request_type,
+    description: parsed.item.description,
+    contact_optional: parsed.item.contact_optional,
+  };
+
+  var indexCurrent = [];
+  try {
+    var ic = await env.WEBHOOK_SUBS.get(WL_INDEX_KEY, 'json');
+    if (Array.isArray(ic)) indexCurrent = ic;
+  } catch (e) {}
+  var indexNext = [id].concat(indexCurrent.filter(function(x) { return x !== id; })).slice(0, WL_INDEX_CAP);
+
+  var topicCurrent = 0;
+  try {
+    var tc = await env.WEBHOOK_SUBS.get('wl:topic:' + topicSlug, 'json');
+    if (typeof tc === 'number' && tc >= 0) topicCurrent = tc;
+  } catch (e) {}
+
+  // Topic counter inherits the item TTL so unique-topic keys do not
+  // accumulate forever as the corpus rotates. Popular topics re-extend
+  // their TTL each time a new submission arrives, so live demand stays
+  // surfaced.
+  await Promise.all([
+    env.WEBHOOK_SUBS.put('wl:item:' + id, JSON.stringify(item), { expirationTtl: WL_ITEM_TTL_SECONDS }),
+    env.WEBHOOK_SUBS.put(WL_INDEX_KEY, JSON.stringify(indexNext)),
+    env.WEBHOOK_SUBS.put('wl:topic:' + topicSlug, JSON.stringify(topicCurrent + 1), { expirationTtl: WL_ITEM_TTL_SECONDS }),
+  ]);
+
+  return {
+    ok: true,
+    id: id,
+    created_at: createdAt,
+    rate_limit: {
+      used_today: rl.usedToday,
+      limit_per_day: rl.limit,
+      remaining: Math.max(0, rl.limit - rl.usedToday),
+    },
+  };
+}
+
+async function _wlList(env, recentLimit) {
+  var cap = Math.min(Math.max(1, recentLimit || 25), 100);
+  var ids = [];
+  try {
+    var ic = await env.WEBHOOK_SUBS.get(WL_INDEX_KEY, 'json');
+    if (Array.isArray(ic)) ids = ic;
+  } catch (e) {}
+  var idsToHydrate = ids.slice(0, cap);
+  var items = await Promise.all(
+    idsToHydrate.map(function(id) { return env.WEBHOOK_SUBS.get('wl:item:' + id, 'json'); })
+  );
+  var recent = items.filter(function(i) { return i && typeof i === 'object'; });
+
+  var topicMap = {};
+  var requestTypeCounts = {
+    data_source: 0, endpoint: 0, tool: 0, mcp: 0, integration: 0, other: 0,
+  };
+  for (var i = 0; i < recent.length; i++) {
+    var it = recent[i];
+    if (it.topic_slug) topicMap[it.topic_slug] = (topicMap[it.topic_slug] || 0) + 1;
+    if (it.request_type && Object.prototype.hasOwnProperty.call(requestTypeCounts, it.request_type)) {
+      requestTypeCounts[it.request_type] += 1;
+    }
+  }
+  var topTopics = Object.keys(topicMap)
+    .map(function(slug) { return { topic_slug: slug, count: topicMap[slug] }; })
+    .sort(function(a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.topic_slug < b.topic_slug ? -1 : 1;
+    })
+    .slice(0, 20);
+
+  return {
+    generated_at: new Date().toISOString(),
+    items_indexed: ids.length,
+    recent: recent,
+    top_topics: topTopics,
+    request_type_counts: requestTypeCounts,
+    ttl_days: WL_ITEM_TTL_SECONDS / 86400,
+    rate_limit_per_ip_per_day: WL_RL_PER_IP_PER_DAY,
+    posture: 'TerminalFeed AI-agent wantlist. Anonymous by default; aggregate over recent submissions. Use to express what data you wish TerminalFeed served. Patterns inform pipeline priorities; individual posts expire after 30 days. No PII collection. The wantlist is a signal collector, not a contract; we do not promise to build any specific request.',
+  };
+}
+
+async function handleWantlist(request, env, url) {
+  if (!env || !env.WEBHOOK_SUBS) {
+    return jsonResponse({ ok: false, error: 'kv_unbound', hint: 'WEBHOOK_SUBS KV binding is not configured on this worker.' }, 503);
+  }
+
+  if (request.method === 'GET') {
+    var recentParam = url.searchParams.get('recent');
+    var recentN = recentParam ? parseInt(recentParam, 10) : 25;
+    if (isNaN(recentN)) recentN = 25;
+    var snapshot = await _wlList(env, recentN);
+    return jsonResponse(snapshot, 200, 60);
+  }
+
+  if (request.method !== 'POST') {
+    return jsonResponse({ ok: false, error: 'method_not_allowed', hint: 'GET to read aggregated snapshot, POST to submit a wantlist item.' }, 405);
+  }
+
+  // Pre-parse body size cap. Stops an attacker from burning CPU just
+  // reaching the parser.
+  var lenHeader = request.headers.get('Content-Length');
+  if (lenHeader) {
+    var declared = parseInt(lenHeader, 10);
+    if (!isNaN(declared) && declared > WL_BODY_BYTES_CAP) {
+      return jsonResponse({
+        ok: false,
+        error: 'payload_too_large',
+        hint: 'Wantlist submissions must be ' + WL_BODY_BYTES_CAP + ' bytes or fewer.',
+      }, 413);
+    }
+  }
+
+  var body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return jsonResponse({ ok: false, error: 'invalid_json', hint: 'POST body must be valid JSON.' }, 400);
+  }
+  if (!body || typeof body !== 'object') {
+    return jsonResponse({ ok: false, error: 'invalid_body', hint: 'POST body must be a JSON object.' }, 400);
+  }
+
+  var ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
+  var result = await _wlSubmit(env, ip, body);
+
+  if (!result.ok) {
+    var status = result.error === 'rate_limit_exceeded' ? 429 : 400;
+    return jsonResponse(result, status);
+  }
+  return jsonResponse(result, 201);
+}
+
+
+// === Cross-sell: suggested_next_calls ===
+//
+// Every premium response carries a `suggested_next_calls` block pointing at
+// 1-3 other TerminalFeed endpoints relevant to the just-served query.
+// Trains agents to walk the catalog rather than treat each call as
+// isolated. Compounds with the free trial: an agent burning trial calls
+// discovers more of the surface area, deeper evaluation, more conversion
+// paths. Static map (predictable, easy to audit). Suggestions are inside
+// the signed receipt body so an agent can later audit "what TerminalFeed
+// recommended at the time of this call".
+//
+// Each entry: path (no origin), method (default GET), why (agent-facing
+// prose), credits (0 free, 2 paid), optional inheritParams (URL params
+// copied verbatim from the inbound call), optional defaultParams.
+
+var TF_FREE_NEXT_CALL = 0;
+var TF_PRO_NEXT_CALL = 2;
+
+var SUGGESTION_MAP = {
+  '/api/pro/briefing': [
+    { path: '/api/pro/macro', why: 'Same composed pattern, deeper macro view: FRED + Finnhub + Frankfurter rollup with optional ?history=30d for 30-day series.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/world-deltas', why: 'Polling endpoint, only the events newer than your last call. Pair with this briefing for incremental world-state tracking.', credits: TF_PRO_NEXT_CALL, defaultParams: { since: new Date(Date.now() - 5 * 60 * 1000).toISOString() } },
+    { path: '/api/pro/agent-context', why: 'Composed paste-ready system_prompt of the current world state. Drop into an LLM call as system context.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/macro': [
+    { path: '/api/pro/correlation-matrix', why: '30-day correlations across the 10 historical series feeding this macro view (incl. fed rate, CPI, treasury 10y, gold, oil).', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/sentiment', why: 'Cross-check macro signals against crypto sentiment (F&G + trending symbol sentiment scoring).', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/economic-data', why: 'Free FRED rollup (Fed rate, CPI, unemployment) for spot checks without the premium history series.', credits: TF_FREE_NEXT_CALL },
+  ],
+  '/api/pro/crypto-deep': [
+    { path: '/api/pro/whales', why: 'Large BTC/ETH/Solana transactions with wallet attribution. Pair with the price action surfaced here.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/exchange-flows', why: 'Labeled-wallet exchange flow ledger. Real bias signal vs. just price movement.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/sentiment', why: 'Sentiment scoring over trending crypto symbols. Useful when this deep-dive shows divergence between price and on-chain.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/sentiment': [
+    { path: '/api/pro/world-deltas', why: 'See whether sentiment shift maps to a fresh event (markets / disasters / launches).', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/crypto-deep', why: 'Drill into any symbol scored here with per-coin on-chain depth.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/world-deltas': [
+    { path: '/api/pro/briefing', why: 'Full composed snapshot if your "since" cursor missed too many events to reconstruct.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/agent-context', why: 'Paste-ready system prompt for the current world state. Cheaper context-build than reconstructing deltas.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/agent-context': [
+    { path: '/api/pro/briefing', why: 'Structured fields instead of paste-ready prose. Use when your agent reasons over typed data not text.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/world-deltas', why: 'Polling endpoint for incremental updates. Drop into the same agent loop as agent-context.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/correlation-matrix': [
+    { path: '/api/pro/macro', why: 'The macro indicators that compose the correlation series. Drill into any single series here.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/crypto-deep', why: 'Per-coin price + on-chain depth for any crypto pair surfacing in the matrix.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/whales': [
+    { path: '/api/pro/exchange-flows', why: 'Labeled-wallet flows. Cross-reference whale transactions against known exchange addresses.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/crypto-deep', why: 'Per-coin context (price action, on-chain network stats) for the assets these whales moved.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/exchange-flows': [
+    { path: '/api/pro/whales', why: 'Large transactions stream. Pair with the labeled-wallet flows here for full directional bias.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/stablecoin-flows', why: 'Top-20 stablecoins with 1d/7d/30d deltas. Stablecoin inflows to exchanges are a leading indicator of crypto-buying.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/defi-tvl': [
+    { path: '/api/pro/stablecoin-flows', why: 'Where the capital that funds DeFi TVL is parked. Useful upstream signal for TVL deltas.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/exchange-flows', why: 'Exchange flows ledger. Cross-check whether DeFi TVL drops correlate with off-chain liquidation flows.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/stablecoin-flows': [
+    { path: '/api/pro/defi-tvl', why: 'DeFi TVL rollup. Stablecoin minting + on-chain bias here predicts where TVL lands.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/exchange-flows', why: 'Labeled-wallet flows. Often the route stablecoins take before they show up as DeFi capital.', credits: TF_PRO_NEXT_CALL },
+  ],
+  '/api/pro/github-velocity': [
+    { path: '/api/gh-trending', why: 'Free GitHub trending feed for spot checks without the velocity scoring.', credits: TF_FREE_NEXT_CALL },
+    { path: '/api/pro/sentiment', why: 'Cross-check whether high-velocity projects are also gathering crypto-market sentiment.', credits: TF_PRO_NEXT_CALL },
+  ],
+};
+
+// Fallback shown when an inbound premium endpoint has no specific
+// suggestion entry yet. Surfaces the discovery surfaces so the agent
+// always has a "where else can I look" hook.
+var FALLBACK_SUGGESTIONS = [
+  { path: '/api/meta', why: 'Full machine-readable catalog of TerminalFeed endpoints (free, no auth).', credits: TF_FREE_NEXT_CALL },
+  { path: '/api/free-tier/status', why: 'Check your remaining free premium-trial calls for today (no auth).', credits: TF_FREE_NEXT_CALL },
+];
+
+function _renderSuggestion(template, origin, inboundUrl) {
+  var params = new URLSearchParams();
+  if (template.inheritParams) {
+    for (var i = 0; i < template.inheritParams.length; i++) {
+      var k = template.inheritParams[i];
+      var v = inboundUrl.searchParams.get(k);
+      if (v !== null) params.set(k, v);
+    }
+  }
+  if (template.defaultParams) {
+    var keys = Object.keys(template.defaultParams);
+    for (var j = 0; j < keys.length; j++) {
+      var dk = keys[j];
+      if (!params.has(dk)) params.set(dk, template.defaultParams[dk]);
+    }
+  }
+  var qs = params.toString();
+  return {
+    url: origin + template.path + (qs ? '?' + qs : ''),
+    method: template.method || 'GET',
+    why: template.why,
+    credits: template.credits,
+  };
+}
+
+function buildSuggestedNextCalls(request) {
+  var inboundUrl;
+  try { inboundUrl = new URL(request.url); } catch (e) { return []; }
+  var key = inboundUrl.pathname;
+  var templates = SUGGESTION_MAP[key] || FALLBACK_SUGGESTIONS;
+  var out = [];
+  for (var i = 0; i < templates.length && i < 3; i++) {
+    out.push(_renderSuggestion(templates[i], inboundUrl.origin, inboundUrl));
+  }
+  return out;
+}
+
+
 // === premiumResponse + premiumValidationFailure (AFTA helpers) ===
 //
 // premiumResponse() is the single exit point for a successful premium
@@ -5545,6 +6046,91 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
       bodyResult.stale_age_seconds = staleness.ageSeconds;
       bodyResult.stale_sla_seconds = staleness.slaSeconds;
     }
+  }
+
+  // Cross-sell hints. Surface 1-3 next-call suggestions before hashing
+  // so the receipt covers what TerminalFeed recommended at the time of
+  // this call (audit-friendly). Only attached to non-error bodies; the
+  // 5xx envelope stays minimal.
+  if (!handlerResult || !handlerResult.__error) {
+    var nextCalls = buildSuggestedNextCalls(request);
+    if (nextCalls && nextCalls.length > 0) {
+      bodyResult.suggested_next_calls = nextCalls;
+    }
+  }
+
+  // Free-trial path bypasses the AFTA commit entirely (no token, no
+  // balance, no charge). Log the no-charge event so /api/payment/no-charge-stats
+  // reflects the trial volume. Honor any handler-supplied no-charge reason
+  // (e.g. stale_data) so the receipt still tells the truth about freshness.
+  if (paymentCtx.freeTrial) {
+    var trialReason = noChargeReason || 'free_trial';
+    noChargeReason = trialReason;
+    var trialChargedCredits = 0;
+    var trialRemainingCredits = 0;
+
+    await aftaLogNoChargeEvent(env, trialReason, endpoint, cost, 'free_trial');
+
+    var trialRequestHash = await aftaHashRequest(request.method, url);
+    var trialResponseHash = await aftaHashResponse(bodyResult);
+    var trialCapturedAt = null;
+    if (typeof bodyResult.captured_at === 'string') trialCapturedAt = bodyResult.captured_at;
+    else if (typeof bodyResult.generated_at === 'string') trialCapturedAt = bodyResult.generated_at;
+    else if (bodyResult._meta && typeof bodyResult._meta.generated_at === 'string') trialCapturedAt = bodyResult._meta.generated_at;
+    var trialSlaSec = (function() {
+      var sla = aftaResolveSLA(endpoint);
+      return sla ? sla.maxAgeSeconds : null;
+    })();
+
+    var trialCore = {
+      v: 1,
+      id: aftaGenerateReceiptId(),
+      endpoint: endpoint,
+      method: request.method,
+      token_short: 'free_trial',
+      credits_charged: trialChargedCredits,
+      credits_remaining: trialRemainingCredits,
+      request_hash: trialRequestHash,
+      response_hash: trialResponseHash,
+      captured_at: trialCapturedAt,
+      server_time: new Date().toISOString(),
+      no_charge_reason: trialReason,
+      freshness_sla_seconds: trialSlaSec,
+    };
+    var trialSigned = await aftaSignReceipt(env, trialCore);
+
+    var trialBilling = {
+      tier: 'free_trial',
+      credits_charged: 0,
+      credits_remaining: 0,
+      no_charge_reason: trialReason,
+      afta_doc: AFTA_DOC,
+      free_trial_used_today: paymentCtx.freeTrial.used,
+      free_trial_remaining: paymentCtx.freeTrial.remaining,
+      free_trial_limit: paymentCtx.freeTrial.limit,
+      free_trial_resets_at: paymentCtx.freeTrial.resetAt,
+      upgrade_when_ready: 'https://terminalfeed.io/api/payment/buy-credits',
+    };
+
+    var trialResponseBody = Object.assign({}, bodyResult, { billing: trialBilling });
+    if (trialSigned) trialResponseBody.receipt = trialSigned;
+    else trialResponseBody.receipt_status = 'pending_key_bootstrap';
+
+    var trialHeaders = Object.assign({}, SECURITY_HEADERS, {
+      'Content-Type': 'application/json',
+      'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow, noarchive',
+      'X-Credits-Remaining': '0',
+      'X-TerminalFeed-Free-Trial-Used': String(paymentCtx.freeTrial.used),
+      'X-TerminalFeed-Free-Trial-Remaining': String(paymentCtx.freeTrial.remaining),
+      'X-TerminalFeed-Free-Trial-Limit': String(paymentCtx.freeTrial.limit),
+      'X-TerminalFeed-Free-Trial-Resets-At': paymentCtx.freeTrial.resetAt,
+    });
+    if (trialSigned) trialHeaders['X-TerminalFeed-Receipt-Id'] = trialSigned.id;
+    applyCorsHeaders(trialHeaders, request, 'premium');
+
+    return new Response(JSON.stringify(trialResponseBody), { status: status, headers: trialHeaders });
   }
 
   // Commit the deferred debit on the TensorFeed credit ledger. On the
@@ -6008,6 +6594,34 @@ async function handleAftaCertifyCheck(request, env, url) {
   return jsonResponse(result, 200, 60);
 }
 
+// GET /api/free-tier/status
+// Self-service, no-auth quota check. Returns the caller IP's current
+// premium-trial state (used today, remaining, resets_at) without burning
+// a slot. Cheap (single in-memory peek). Returned in the same shape as
+// the embedded free_trial block in the 402 challenge so agents can use a
+// single parser for both.
+async function handleFreeTierStatus(request) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  var ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
+  var peek = peekFreeTrialQuota(ip);
+  return jsonResponse({
+    ok: true,
+    ip: ip,
+    free_trial: {
+      calls_per_ip_per_day: peek.limit,
+      window: '24h rolling per IP',
+      auth_required: false,
+      used_today: peek.used,
+      remaining: peek.remaining,
+      resets_at: peek.resetAt,
+      retry_in_seconds_when_exhausted: peek.resetSeconds,
+      note: 'Each IP gets ' + peek.limit + ' free premium API calls per 24-hour window. No authentication, no signup, no wallet required. Excess returns canonical x402 V2 challenge with the same trial state surfaced.',
+      applies_to: '/api/pro/* (every premium endpoint)',
+      upgrade_when_ready: 'https://terminalfeed.io/api/payment/buy-credits',
+    },
+  }, 200, 60);
+}
+
 async function handleApiMeta(request, env) {
   if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
   return jsonResponse({
@@ -6060,6 +6674,19 @@ async function handleApiMeta(request, env) {
       confirm: 'https://terminalfeed.io/api/payment/confirm',
       balance: 'https://terminalfeed.io/api/payment/balance',
       history: 'https://terminalfeed.io/api/payment/history',
+    },
+    free_trial: {
+      calls_per_ip_per_day: FREE_TRIAL_LIMIT_PER_DAY,
+      window: '24h rolling per IP',
+      auth_required: false,
+      applies_to: '/api/pro/* (every premium endpoint)',
+      status_endpoint: 'https://terminalfeed.io/api/free-tier/status',
+      note: 'Every IP gets ' + FREE_TRIAL_LIMIT_PER_DAY + ' free premium calls per 24-hour window with no signup. Free-trial responses are still AFTA receipt-signed and recorded as no_charge_reason=free_trial.',
+    },
+    wantlist: {
+      submit: 'https://terminalfeed.io/api/wantlist (POST)',
+      read: 'https://terminalfeed.io/api/wantlist (GET)',
+      posture: 'Anonymous demand-signal collector. Tell us what data you wish TerminalFeed served. Per-IP rate limit ' + WL_RL_PER_IP_PER_DAY + '/day. Items expire after 30 days.',
     },
     discovery: {
       llms_txt: 'https://terminalfeed.io/llms.txt',
@@ -6116,11 +6743,35 @@ function premiumJsonResponse(data, creditsRemaining, status, request) {
 // Coinbase spec example shows "USDC" but that is the Sepolia value; signing
 // with the wrong name produces a different domain hash and the contract
 // rejects with FiatTokenV2: invalid signature.
-function json402(reason, signupPath, request, costCredits) {
+function json402(reason, signupPath, request, costCredits, exhaustedFreeTrial) {
   var cost = (typeof costCredits === 'number' && costCredits > 0) ? costCredits : 1;
   // 1 credit = $0.02 = 20000 atomic micro-USDC (USDC has 6 decimals).
   var atomicAmount = String(cost * 20000);
   var resourceUrl = (request && request.url) || 'https://terminalfeed.io/api/pro/';
+
+  // Always advertise the free-trial allowance so an agent probing a 402
+  // discovers the option even without a prior call. When the caller
+  // exhausted today's quota, surface the exhaustion state so the agent
+  // can decide whether to wait for the window reset or pay now.
+  var freeTrialAdvert = {
+    calls_per_ip_per_day: FREE_TRIAL_LIMIT_PER_DAY,
+    window: '24h rolling per IP',
+    auth_required: false,
+    docs: 'https://terminalfeed.io/api/free-tier/status',
+    note: 'TerminalFeed offers ' + FREE_TRIAL_LIMIT_PER_DAY + ' free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
+  };
+  if (exhaustedFreeTrial) {
+    freeTrialAdvert.status = 'exhausted';
+    freeTrialAdvert.used_today = exhaustedFreeTrial.used;
+    freeTrialAdvert.remaining = exhaustedFreeTrial.remaining;
+    freeTrialAdvert.resets_at = exhaustedFreeTrial.resetAt;
+    freeTrialAdvert.retry_in_seconds = exhaustedFreeTrial.resetSeconds;
+  }
+
+  var message = exhaustedFreeTrial
+    ? 'This IP has used all ' + exhaustedFreeTrial.limit + ' free premium calls in the current 24-hour window. The free quota resets at ' + exhaustedFreeTrial.resetAt + '. To continue immediately, sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits.'
+    : 'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use. Or simply retry from a fresh IP with no Authorization header to consume a free-trial slot.';
+
   return premiumJsonResponse(
     {
       x402Version: 2,
@@ -6140,6 +6791,9 @@ function json402(reason, signupPath, request, costCredits) {
         extra: { name: 'USD Coin', version: '2' },
       }],
       extensions: {},
+      ok: false,
+      message: message,
+      free_trial: freeTrialAdvert,
       // Legacy fields kept for back-compat with existing TerminalFeed clients.
       signup: 'https://terminalfeed.io' + (signupPath || '/developers/agent-payments'),
       pricing: { '$1_usd': '50_credits' },
@@ -6242,79 +6896,42 @@ async function validateAndCharge(env, token, cost, endpoint) {
   return result;
 }
 
-// Section 2 of cc-spec-premium-tier-polish: sandbox evaluation tier.
-// 10 free calls per IP per 24h, opt-in via ?evaluation=1 with no bearer.
-// Bypasses validate-and-charge entirely (no TensorFeed traffic on sandbox).
-var SANDBOX_QUOTA_PER_IP_PER_DAY = 10;
-var SANDBOX_KEY_TTL_SECONDS = 90000;  // 25h to absorb UTC-day-rollover
-
-async function _handleSandboxCall(request, env, url, endpointPath, fetchFn) {
-  if (!env || !env.WEBHOOK_SUBS) {
-    return jsonResponse({
-      error: 'evaluation_unavailable',
-      message: 'Sandbox tier requires KV binding which is not currently configured.',
-    }, 503);
-  }
-  var ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'unknown';
-  var dateUtc = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD UTC
-  var quotaKey = 'eval:' + ip + ':' + dateUtc;
-
-  var raw = await env.WEBHOOK_SUBS.get(quotaKey);
-  var count = raw ? parseInt(raw, 10) : 0;
-  if (isNaN(count) || count < 0) count = 0;
-
-  if (count >= SANDBOX_QUOTA_PER_IP_PER_DAY) {
-    return jsonResponse({
-      error: 'evaluation_quota_exhausted',
-      message: 'Free evaluation is ' + SANDBOX_QUOTA_PER_IP_PER_DAY + ' calls per IP per 24 hours. Buy credits to continue.',
-      buy_url: 'https://terminalfeed.io/api/payment/buy-credits',
-      docs_url: 'https://terminalfeed.io/developers/agent-payments',
-      window_resets_at_utc_date: dateUtc + 'T23:59:59Z',
-    }, 429);
-  }
-
-  // Increment quota BEFORE the fetch so a slow upstream doesn't allow a
-  // race past the cap. KV writes are eventually consistent globally; if a
-  // burst of requests hits different edge regions, they may briefly exceed
-  // 10 by ~1-2. Acceptable for a free-evaluation tier.
-  await env.WEBHOOK_SUBS.put(quotaKey, String(count + 1), { expirationTtl: SANDBOX_KEY_TTL_SECONDS });
-
-  try {
-    var data = await fetchFn(env, url);
-    // Override / inject _meta.tier = "evaluation" with remaining quota.
-    var existingMeta = data && data._meta ? data._meta : null;
-    var newMeta = Object.assign({}, existingMeta || {
-      generated_at: new Date().toISOString(),
-      endpoint: endpointPath,
-      sources: [],
-    }, {
-      tier: 'evaluation',
-      evaluation_remaining: SANDBOX_QUOTA_PER_IP_PER_DAY - (count + 1),
-    });
-    var resp = Object.assign({}, data, { _meta: newMeta });
-    return premiumJsonResponse(resp, null, 200, request);
-  } catch (e) {
-    return premiumJsonResponse({
-      source: 'terminalfeed-pro',
-      endpoint: endpointPath,
-      generated_at: new Date().toISOString(),
-      warning: 'sandbox_upstream_partial',
-      message: 'Aggregator caught an exception during evaluation call. Retry shortly.',
-      _meta: {
-        tier: 'evaluation',
-        evaluation_remaining: SANDBOX_QUOTA_PER_IP_PER_DAY - (count + 1),
-      },
-    }, null, 200, request);
-  }
-}
-
 async function handlePremium(request, env, url, endpointPath, costCredits, fetchFn) {
   var token = extractBearerToken(request);
   if (!token) {
-    // Sandbox path: opt-in via ?evaluation=1
-    var isEval = url.searchParams.get('evaluation') === '1';
-    if (isEval) return await _handleSandboxCall(request, env, url, endpointPath, fetchFn);
-    return json402('missing_token', null, request);
+    // No bearer, no X-PAYMENT: give the IP a free-trial slot if its 24h
+    // quota allows. The trial does NOT mint a bearer token and does NOT
+    // settle on-chain. The same fetchFn runs as on the paid path; the
+    // commit branch in aftaPremiumResponse sees freeTrial set and logs
+    // a no-charge event with reason='free_trial' instead of touching
+    // the credit ledger. Excess returns the canonical x402 V2 challenge
+    // with the exhaustion state surfaced under free_trial.status.
+    //
+    // Querying ?evaluation=1 (legacy alias for the old 10/IP/day sandbox)
+    // is honored but lands on the same trial path; no behavior split.
+    var trialIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
+    var trial = checkFreeTrialQuota(trialIp);
+    if (!trial.allowed) {
+      return json402('payment_required', null, request, costCredits, trial);
+    }
+
+    var trialCtx = {
+      token: null,
+      cost: costCredits,
+      endpoint: endpointPath,
+      currentBalance: 0,
+      reservationId: null,
+      freeTrial: trial,
+    };
+
+    var trialHandlerResult;
+    try {
+      trialHandlerResult = await fetchFn(env, url);
+    } catch (e) {
+      trialHandlerResult = { __error: (e && e.message) || 'upstream_exception', __status: 500 };
+    }
+
+    return await aftaPremiumResponse(trialHandlerResult, trialCtx, request, env);
   }
 
   // Per-token rate limit (advisory). Stops a runaway agent from burning
@@ -6432,11 +7049,15 @@ async function fetchProBriefing(env, url) {
           count: arr.length,
           top: arr.slice(0, 5).map(function(m) {
             // Polymarket questions are user-generated. Sanitize before any agent reads them.
-            return {
+            // Conditionally attach `outcomes` so a Polymarket market that
+            // omits the field doesn't write `outcomes: undefined` into the
+            // signed receipt body (canonicalJSON throws on undefined).
+            var predTop = {
               question: sanitizeForLLM(m.question),
               volume_24hr: parseFloat(m.volume24hr) || 0,
-              outcomes: m.outcomes,
             };
+            if (m.outcomes !== undefined) predTop.outcomes = m.outcomes;
+            return predTop;
           }),
         };
       }
@@ -6866,6 +7487,8 @@ async function fetchProExchangeFlows(env, url) {
       blocksScanned.push({ number: blockNumber, time: blockTime, tx_count: txs.length });
       txs.forEach(function(tx) {
         if (!tx || typeof tx.value !== 'string' || !tx.from || !tx.to) return;
+        // Receipt sign would crash on tx_hash:undefined; skip rows without it.
+        if (typeof tx.hash !== 'string' || !tx.hash) return;
         var fromLower = tx.from.toLowerCase();
         var toLower = tx.to.toLowerCase();
         var fromExch = ETH_EXCHANGE_ADDRESSES[fromLower];
@@ -7029,8 +7652,10 @@ async function fetchProGithubVelocity(env, url) {
   ]);
 
   function _shapeRepo(r) {
+    // null-coerce every direct GitHub field so a malformed search hit
+    // does not produce undefined values that crash receipt signing.
     return {
-      full_name: r.full_name,
+      full_name: r.full_name || null,
       description: r.description ? (r.description.length > 200 ? r.description.slice(0, 197) + '...' : r.description) : null,
       language: r.language || null,
       stars: r.stargazers_count || 0,
@@ -7040,9 +7665,9 @@ async function fetchProGithubVelocity(env, url) {
       license: r.license && r.license.spdx_id ? r.license.spdx_id : null,
       owner: r.owner && r.owner.login ? r.owner.login : null,
       owner_type: r.owner && r.owner.type ? r.owner.type : null,
-      created_at: r.created_at,
-      pushed_at: r.pushed_at,
-      url: r.html_url,
+      created_at: r.created_at || null,
+      pushed_at: r.pushed_at || null,
+      url: r.html_url || null,
     };
   }
 
@@ -7534,6 +8159,10 @@ async function fetchProWhales(env, url) {
     mp.forEach(function(tx) {
       if (!tx || typeof tx.value !== 'number') return;
       if (tx.value < BTC_WHALE_SATS_THRESHOLD) return;
+      // Skip txs without a usable txid — without one, the explorer_url
+      // would be 'https://mempool.space/tx/undefined' AND tx_hash itself
+      // would be undefined (canonicalJSON would throw at receipt sign).
+      if (typeof tx.txid !== 'string' || !tx.txid) return;
       var btcAmount = tx.value / 100000000;
       btcWhales.push({
         tx_hash: tx.txid,
@@ -7559,13 +8188,17 @@ async function fetchProWhales(env, url) {
     var txs = Array.isArray(blk.transactions) ? blk.transactions : [];
     txs.forEach(function(tx) {
       if (!tx || typeof tx.value !== 'string') return;
+      // Skip txs missing the hash/from/to fields. Without them the
+      // signed receipt body would carry undefined values (canonicalJSON
+      // refuses) and the explorer_url would render as '/tx/undefined'.
+      if (typeof tx.hash !== 'string' || !tx.hash) return;
       var wei = _hexToBigInt(tx.value);
       if (wei < ETH_WHALE_WEI_THRESHOLD) return;
       var ethAmount = _weiToEth(wei);
       ethWhales.push({
         tx_hash: tx.hash,
-        from: tx.from,
-        to: tx.to,
+        from: tx.from || null,
+        to: tx.to || null,
         value_eth: ethAmount,
         value_usd: ethPriceUsd > 0 ? Math.round(ethAmount * ethPriceUsd) : null,
         block_number: blockNumber,
@@ -7980,11 +8613,15 @@ async function fetchProAgentContext(env, url) {
       var qs = await sources[6].value.json();
       var feats = (qs && qs.features) || [];
       significantQuakes = feats.slice(0, 3).map(function(f) {
+        // Short-circuit chains can yield undefined when the intermediate
+        // is falsy; coerce to null so canonicalJSON (receipt sign) never
+        // sees undefined inside the signed body.
+        var props = f && f.properties;
         return {
-          magnitude: f.properties && f.properties.mag,
-          place: f.properties && f.properties.place,
-          time: f.properties && f.properties.time ? new Date(f.properties.time).toISOString() : null,
-          url: f.properties && f.properties.url,
+          magnitude: (props && props.mag != null) ? props.mag : null,
+          place: (props && props.place) || null,
+          time: (props && props.time) ? new Date(props.time).toISOString() : null,
+          url: (props && props.url) || null,
         };
       });
     } catch (e) {}
@@ -7995,12 +8632,15 @@ async function fetchProAgentContext(env, url) {
     try {
       var ll = await sources[7].value.json();
       upcomingLaunches = ((ll && ll.results) || []).slice(0, 3).map(function(L) {
+        // Same canonicalJSON-safety reason: every short-circuit chain
+        // here can land on undefined when the upstream omits a nested
+        // object; pin each to null.
         return {
-          mission: (L.mission && L.mission.name) || L.name,
-          vehicle: L.rocket && L.rocket.configuration && L.rocket.configuration.name,
-          provider: L.launch_service_provider && L.launch_service_provider.name,
-          net: L.net,
-          status: L.status && L.status.name,
+          mission: (L.mission && L.mission.name) || L.name || null,
+          vehicle: (L.rocket && L.rocket.configuration && L.rocket.configuration.name) || null,
+          provider: (L.launch_service_provider && L.launch_service_provider.name) || null,
+          net: L.net || null,
+          status: (L.status && L.status.name) || null,
         };
       });
     } catch (e) {}
@@ -8216,8 +8856,8 @@ async function fetchProWorldDeltasOneHour() {
           timestamp: new Date(f.properties.time).toISOString(),
           severity: f.properties.mag >= 6 ? 'major' : (f.properties.mag >= 5 ? 'moderate' : 'minor'),
           data: {
-            magnitude: f.properties.mag,
-            place: f.properties.place,
+            magnitude: f.properties.mag != null ? f.properties.mag : null,
+            place: f.properties.place || null,
             depth_km: coords[2] != null ? coords[2] : null,
             url: f.properties.url || null,
             mag_type: f.properties.magType || null,
@@ -8241,7 +8881,7 @@ async function fetchProWorldDeltasOneHour() {
           timestamp: h.created_at,
           severity: pts >= 100 ? 'major' : (pts >= 25 ? 'moderate' : 'minor'),
           data: {
-            title: h.title,
+            title: h.title || null,
             url: h.url || ('https://news.ycombinator.com/item?id=' + h.objectID),
             points: pts,
             num_comments: h.num_comments || 0,
@@ -8299,12 +8939,12 @@ async function fetchProWorldDeltasOneHour() {
           timestamp: new Date(netMs).toISOString(),
           severity: 'moderate',
           data: {
-            mission: (launch.mission && launch.mission.name) || launch.name,
-            vehicle: launch.rocket && launch.rocket.configuration && launch.rocket.configuration.name,
-            provider: launch.launch_service_provider && launch.launch_service_provider.name,
-            status: launch.status && launch.status.name,
-            net: launch.net,
-            url: launch.url,
+            mission: (launch.mission && launch.mission.name) || launch.name || null,
+            vehicle: (launch.rocket && launch.rocket.configuration && launch.rocket.configuration.name) || null,
+            provider: (launch.launch_service_provider && launch.launch_service_provider.name) || null,
+            status: (launch.status && launch.status.name) || null,
+            net: launch.net || null,
+            url: launch.url || null,
             window: netMs > Date.now() ? 'upcoming' : 'recent',
           },
         });
@@ -8539,8 +9179,11 @@ async function fetchProSentiment(env, url) {
       var pm = await sources[6].value.json();
       if (Array.isArray(pm)) {
         predictionMarkets = pm.slice(0, 5).map(function(m) {
+          // Sanitize + null-coerce so a Polymarket market lacking the
+          // `question` field doesn't write undefined into the signed
+          // receipt body (canonicalJSON throws on undefined).
           return {
-            question: m.question,
+            question: sanitizeForLLM(m.question) || null,
             yes_probability: m.lastTradePrice != null ? parseFloat(m.lastTradePrice) : null,
             volume_24h: parseFloat(m.volume24hr) || 0,
             url: m.slug ? 'https://polymarket.com/event/' + m.slug : null,
@@ -9296,7 +9939,27 @@ export default {
     var clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
     var rl = null;
     if (path.indexOf('admin/') === 0) {
-      rl = await checkRateLimit(env, 'adm', clientIp, 30, 60, ctx);
+      // Tight in-memory cap. Counts every request including ones with a wrong
+      // key, so brute-force probes saturate the limiter rather than the worker
+      // request budget. 5/min is well above legitimate operator usage.
+      var adminRl = checkAdminIPRateLimit(clientIp);
+      if (!adminRl.allowed) {
+        return rateLimit429(adminRl);
+      }
+      // Authoritative auth check: any /api/admin/* call without a valid
+      // ADMIN_SECRET bearer returns 401 (was 404 by route-default for typos).
+      // Telemetry-legible: failed auth is now distinguishable from typo'd path.
+      var adminAuth = request.headers.get('Authorization') || '';
+      if (!env || !env.ADMIN_SECRET || adminAuth !== 'Bearer ' + env.ADMIN_SECRET) {
+        return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), {
+          status: 401,
+          headers: Object.assign({}, SECURITY_HEADERS, {
+            'Content-Type': 'application/json',
+            'WWW-Authenticate': 'Bearer realm="admin"',
+            'Cache-Control': 'no-store',
+          }),
+        });
+      }
     } else if (path === 'error') {
       rl = await checkRateLimit(env, 'err', clientIp, 10, 60, ctx);
     } else if (path === 'btc-alert-check') {
@@ -9348,7 +10011,7 @@ export default {
     // Count every request for ai-stats
     hitCounter++;
     var t0 = Date.now();
-    var resp = await dispatchRoute(request, env, url, path);
+    var resp = await dispatchRoute(request, env, url, path, ctx);
     var duration = Date.now() - t0;
     _recordTrafficOutcome(env, path, resp.status, duration);
     if (rl) resp = withRateLimitHeaders(resp, rl);
@@ -9447,7 +10110,7 @@ function smartNotFound(path) {
   return null;
 }
 
-async function dispatchRoute(request, env, url, path) {
+async function dispatchRoute(request, env, url, path, ctx) {
   // (route table moved here so the fetch() entry point can wrap the response
   // with rate-limit headers / breakers / etc. without touching every case.)
 
@@ -9585,6 +10248,8 @@ async function dispatchRoute(request, env, url, path) {
       case 'receipt/verify':                return await handleReceiptVerify(request);
       case 'afta-certify/check':            return await handleAftaCertifyCheck(request, env, url);
       case 'meta':                           return await handleApiMeta(request, env);
+      case 'free-tier/status':               return await handleFreeTierStatus(request);
+      case 'wantlist':                       return await handleWantlist(request, env, url, ctx);
 
       default: {
         var hint = smartNotFound(path);
