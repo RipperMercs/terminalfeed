@@ -1,0 +1,12 @@
+#!/bin/sh
+# Pizza Robot Studios pre-commit hook: block commits that look like they
+# contain API keys. Mandated by the global CLAUDE.md after the April 17,
+# 2026 Finnhub-key-in-history incident on this repo. Patterns cover the
+# providers we actually use; expand here if a new provider is added to
+# the stack.
+PATTERNS="sk-ant-[a-zA-Z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|re_[a-zA-Z0-9_-]{20,}|xoxb-[a-zA-Z0-9-]{20,}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}"
+if git diff --cached | grep -qE "$PATTERNS"; then
+  echo "COMMIT BLOCKED: possible API key detected in staged changes."
+  echo "Remove the key from the diff, move it behind process.env / wrangler secret put, then retry."
+  exit 1
+fi

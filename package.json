@@ -10,7 +10,8 @@
     "prebuild": "node scripts/verify-deploy.js && node scripts/generate-blog-data.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky"
   },
   "dependencies": {
     "react": "^19.2.4",
@@ -26,6 +27,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "husky": "^9.1.7",
     "terser": "^5.46.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",
