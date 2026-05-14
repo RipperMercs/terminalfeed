@@ -24,6 +24,26 @@
 // driving the production /api/pro/* endpoints during the migration period.
 import { createPremiumHandler } from "afta-cloudflare-worker";
 
+// Bazaar pilot registry. The two helpers replace the default-empty stubs
+// further down in this file via the _BAZAAR_REGISTRY_* hook globals — pilot
+// paths get a real description + extension, non-pilots fall through to the
+// generic 402 shape unchanged.
+import {
+  isBazaarPilotPath,
+  bazaarExtensionsFor as _bazaarExtensionsForRegistry,
+  bazaarDescriptionFor as _bazaarDescriptionForRegistry,
+} from "./bazaar-pilots.js";
+
+// CDP x402 facilitator client. Used by handlePremium when an X-PAYMENT header
+// arrives on a Bazaar pilot path. Inert when env.CDP_API_KEY_ID is missing.
+import { cdpVerify, cdpSettle } from "./cdp-facilitator.js";
+
+// Expose the registry to the stubs in this file. Both stubs check for these
+// globals at call time, so importing them lazily here is fine even though
+// json402 is declared further down.
+var _BAZAAR_REGISTRY_EXT = _bazaarExtensionsForRegistry;
+var _BAZAAR_REGISTRY_DESC = _bazaarDescriptionForRegistry;
+
 const workerStartTime = Date.now();
 
 // =============================================================================
@@ -621,6 +641,14 @@ function corsModeForPath(path) {
 // Without these in Access-Control-Expose-Headers, JS sees only the safelisted set
 // and `response.headers.get('X-RateLimit-Remaining')` returns null. Includes both
 // the legacy X- forms and the IETF draft RateLimit-* names tensorfeed.ai also emits.
+// x402 V2 transport headers (PAYMENT-REQUIRED, PAYMENT-RESPONSE, WWW-Authenticate)
+// MUST be exposed so browser-side agents can read them through CORS. Per the
+// x402 V2 HTTP transport spec, all protocol information is communicated via
+// these headers; response bodies are an implementation concern. CDP Bazaar
+// indexes endpoints by reading PAYMENT-REQUIRED off the 402 response, so the
+// header being readable is load-bearing for cataloging. The X-Payment-* family
+// is listed proactively for future TF-style header emission; the CDP/x402scan
+// validators tolerate extras here.
 const CORS_EXPOSE_HEADERS = [
   'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset',
   'RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset',
@@ -629,7 +657,15 @@ const CORS_EXPOSE_HEADERS = [
   'X-Idempotency-Replay',
   'X-TerminalFeed-Pricing',
   'Link',
+  'PAYMENT-REQUIRED',
   'PAYMENT-RESPONSE',
+  'EXTENSION-RESPONSES',
+  'WWW-Authenticate',
+  'X-Payment-Address',
+  'X-Payment-Currency',
+  'X-Payment-Network',
+  'X-Payment-Credits-Required',
+  'X-Payment-Min-USD',
 ].join(', ');
 
 const CORS_HEADERS = Object.assign({}, SECURITY_HEADERS, {
@@ -4294,32 +4330,26 @@ async function handleSubscribeResume(request, env, subId) {
     }, validation.credits_remaining, 200, request);
   }
 
-  // If balance < one cycle, return 402 with topup link.
-  // Canonical x402 V2 envelope so AgentCore-style agents can read the gap.
+  // If balance < one cycle, return 402 with topup link. Canonical x402 V2
+  // envelope + PAYMENT-REQUIRED / WWW-Authenticate header pair so AgentCore-
+  // style agents and the CDP Bazaar crawler can read the gap off either the
+  // header or the body.
   if (typeof validation.credits_remaining === 'number' && validation.credits_remaining < WEBHOOK_FIRE_COST_CREDITS) {
-    return premiumJsonResponse({
-      x402Version: 2,
+    var subResumePath = '';
+    try { subResumePath = new URL(request.url).pathname; } catch (e) { subResumePath = ''; }
+    var subCanonical = buildCanonicalPaymentRequired({
+      reason: 'insufficient_credits',
+      resourceUrl: request.url,
+      resourcePath: subResumePath,
+      description: 'TerminalFeed premium webhook subscription resume. Requires balance to cover one cycle.',
+      atomicAmount: String(WEBHOOK_FIRE_COST_CREDITS * 20000),
+    });
+    return paymentRequired402(subCanonical, {
       ok: false,
-      error: 'insufficient_credits',
-      resource: {
-        url: request.url,
-        description: 'TerminalFeed premium webhook subscription resume. Requires balance to cover one cycle.',
-        mimeType: 'application/json',
-      },
-      accepts: [{
-        scheme: 'exact',
-        network: 'eip155:8453',
-        amount: String(WEBHOOK_FIRE_COST_CREDITS * 20000),
-        asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        payTo: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1',
-        maxTimeoutSeconds: 60,
-        extra: { name: 'USD Coin', version: '2' },
-      }],
-      extensions: {},
       balance_remaining: validation.credits_remaining,
       credits_per_cycle: WEBHOOK_FIRE_COST_CREDITS,
       buy_url: 'https://terminalfeed.io/api/payment/buy-credits',
-    }, validation.credits_remaining, 402, request);
+    }, request);
   }
 
   rec.active = true;
@@ -4491,7 +4521,10 @@ async function _fetchEndpointDataForWebhook(env, endpointSlug) {
 var MCP_PROTOCOL_VERSION = '2024-11-05';
 var MCP_SERVER_INFO = {
   name: 'terminalfeed',
-  version: '1.0.0',
+  // Bump on tool-metadata changes so agents that cache /list responses pick
+  // up the new descriptions. 1.1.0 = strict-premium flag + USD prices in
+  // tool descriptions for the Bazaar pilot (tf_premium_briefing).
+  version: '1.1.0',
 };
 
 function _toolToMCP(def) {
@@ -4913,8 +4946,8 @@ const LLM_TOOL_DEFINITIONS = [
   },
   {
     name: 'tf_premium_briefing',
-    short_description: 'Composed world briefing including prediction markets (1 credit).',
-    description: 'Premium version of tf_briefing. Adds Polymarket prediction markets to the standard briefing payload, supports section filtering via ?include=, and supports ?history=24h for hourly BTC chart. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Use when the agent needs prediction-market context or recent BTC trajectory in addition to the basic snapshot.',
+    short_description: 'Composed world briefing including prediction markets (1 credit, $0.02). Strict premium.',
+    description: 'Premium version of tf_briefing. Adds Polymarket prediction markets to the standard briefing payload, supports section filtering via ?include=, and supports ?history=24h for hourly BTC chart. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Use when the agent needs prediction-market context or recent BTC trajectory in addition to the basic snapshot. Strict premium, no free trial. Free basic version (without predictions or history series) available at tf_briefing (no auth required).',
     url: 'https://terminalfeed.io/api/pro/briefing',
     method: 'GET',
     auth: 'bearer',
@@ -6737,71 +6770,173 @@ function premiumJsonResponse(data, creditsRemaining, status, request) {
   return new Response(JSON.stringify(data), { status: status, headers: headers });
 }
 
+// Bazaar pilot registry hooks. Default-empty stubs land here so the canonical
+// 402 response shape stays consistent across pilot and non-pilot endpoints;
+// the real registry (bazaar-pilots) overrides these by closing over a richer
+// lookup. CDP Bazaar reads `extensions.bazaar` off the canonical PaymentRequired
+// object delivered via the PAYMENT-REQUIRED header; non-pilot endpoints emit
+// `{}` and CDP simply skips them during indexing.
+function bazaarExtensionsFor(path) {
+  if (typeof _BAZAAR_REGISTRY_EXT === 'function') return _BAZAAR_REGISTRY_EXT(path);
+  return {};
+}
+function bazaarDescriptionFor(path, fallback) {
+  if (typeof _BAZAAR_REGISTRY_DESC === 'function') return _BAZAAR_REGISTRY_DESC(path, fallback);
+  return fallback;
+}
+
+// Strict-premium endpoints bypass the per-IP free-trial pool. Two reasons:
+//   1. CDP Bazaar + x402scan probe anonymously. The free-trial happy path
+//      returns 200 and hides the payment challenge the crawler needs to read,
+//      so the endpoint never gets cataloged. Every Bazaar pilot path MUST be
+//      in STRICT_PREMIUM_PATHS for this reason.
+//   2. The 30% of premium endpoints that represent the moat (full-window
+//      historical, heavy aggregations) shouldn't be giving away 100/day per
+//      IP. The free-trial pool stays on the 70% that act as the funnel.
+// Parametric routes (e.g. /api/pro/providers/:slug) use STRICT_PREMIUM_PREFIXES.
+const STRICT_PREMIUM_PATHS = [
+  // Wave 0 Bazaar pilot — the agent-on-boot morning brief. CDP Bazaar
+  // crawler probes anonymously; must see a 402 not the free-trial 200.
+  '/api/pro/briefing',
+];
+const STRICT_PREMIUM_PREFIXES = [
+  // Reserved for parametric routes (Wave 2 of Bazaar pilots, e.g.
+  // '/api/pro/providers/'). Empty for now.
+];
+function isStrictPremiumPath(path) {
+  if (!path) return false;
+  if (STRICT_PREMIUM_PATHS.indexOf(path) !== -1) return true;
+  for (var i = 0; i < STRICT_PREMIUM_PREFIXES.length; i++) {
+    if (path.indexOf(STRICT_PREMIUM_PREFIXES[i]) === 0) return true;
+  }
+  return false;
+}
+
 // Canonical Coinbase x402 V2 402 response shape, AWS Bedrock AgentCore-compatible.
 // EIP-712 domain `name` for native USDC on Base mainnet is "USD Coin" (verified
 // via eth_call name() on 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913). The
 // Coinbase spec example shows "USDC" but that is the Sepolia value; signing
 // with the wrong name produces a different domain hash and the contract
 // rejects with FiatTokenV2: invalid signature.
-function json402(reason, signupPath, request, costCredits, exhaustedFreeTrial) {
+//
+// Header pair: PAYMENT-REQUIRED carries the base64-encoded canonical object
+// (x402 V2 transport spec). WWW-Authenticate mirrors it under the RFC 7235
+// challenge convention used by cataloged servers (e.g. blockrun.ai). CDP's
+// Bazaar crawler reads PAYMENT-REQUIRED off the header, not the body, so
+// emitting it on every 402 is non-negotiable for indexing.
+function json402(reason, signupPath, request, costCredits, exhaustedFreeTrial, opts) {
+  opts = opts || {};
+  var isStrict = !!opts.strict;
   var cost = (typeof costCredits === 'number' && costCredits > 0) ? costCredits : 1;
   // 1 credit = $0.02 = 20000 atomic micro-USDC (USDC has 6 decimals).
   var atomicAmount = String(cost * 20000);
   var resourceUrl = (request && request.url) || 'https://terminalfeed.io/api/pro/';
+  var resourcePath = '';
+  try { resourcePath = new URL(resourceUrl).pathname; } catch (e) { resourcePath = ''; }
 
-  // Always advertise the free-trial allowance so an agent probing a 402
-  // discovers the option even without a prior call. When the caller
-  // exhausted today's quota, surface the exhaustion state so the agent
-  // can decide whether to wait for the window reset or pay now.
-  var freeTrialAdvert = {
-    calls_per_ip_per_day: FREE_TRIAL_LIMIT_PER_DAY,
-    window: '24h rolling per IP',
-    auth_required: false,
-    docs: 'https://terminalfeed.io/api/free-tier/status',
-    note: 'TerminalFeed offers ' + FREE_TRIAL_LIMIT_PER_DAY + ' free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
-  };
-  if (exhaustedFreeTrial) {
-    freeTrialAdvert.status = 'exhausted';
-    freeTrialAdvert.used_today = exhaustedFreeTrial.used;
-    freeTrialAdvert.remaining = exhaustedFreeTrial.remaining;
-    freeTrialAdvert.resets_at = exhaustedFreeTrial.resetAt;
-    freeTrialAdvert.retry_in_seconds = exhaustedFreeTrial.resetSeconds;
+  // Strict-premium endpoints bypass the free-trial pool entirely (see
+  // isStrictPremiumPath). For those, free_trial is null and the message is
+  // honest so a human or agent probing anonymously gets a coherent answer
+  // instead of a confusing "0/100 free trial calls left".
+  var freeTrialAdvert = null;
+  var message;
+  if (isStrict) {
+    message = 'Strict premium endpoint, no free trial. Sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits to call this endpoint. Free-tier sibling endpoints are listed at https://terminalfeed.io/developers.';
+  } else {
+    // Always advertise the free-trial allowance so an agent probing a 402
+    // discovers the option even without a prior call. When the caller
+    // exhausted today's quota, surface the exhaustion state so the agent
+    // can decide whether to wait for the window reset or pay now.
+    freeTrialAdvert = {
+      calls_per_ip_per_day: FREE_TRIAL_LIMIT_PER_DAY,
+      window: '24h rolling per IP',
+      auth_required: false,
+      docs: 'https://terminalfeed.io/api/free-tier/status',
+      note: 'TerminalFeed offers ' + FREE_TRIAL_LIMIT_PER_DAY + ' free premium API calls per IP per 24-hour window. No authentication, no signup, no wallet required. After the cap is reached this 402 challenge fires and on-chain or credit-flow payment is required.',
+    };
+    if (exhaustedFreeTrial) {
+      freeTrialAdvert.status = 'exhausted';
+      freeTrialAdvert.used_today = exhaustedFreeTrial.used;
+      freeTrialAdvert.remaining = exhaustedFreeTrial.remaining;
+      freeTrialAdvert.resets_at = exhaustedFreeTrial.resetAt;
+      freeTrialAdvert.retry_in_seconds = exhaustedFreeTrial.resetSeconds;
+    }
+    message = exhaustedFreeTrial
+      ? 'This IP has used all ' + exhaustedFreeTrial.limit + ' free premium calls in the current 24-hour window. The free quota resets at ' + exhaustedFreeTrial.resetAt + '. To continue immediately, sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits.'
+      : 'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use. Or simply retry from a fresh IP with no Authorization header to consume a free-trial slot.';
   }
 
-  var message = exhaustedFreeTrial
-    ? 'This IP has used all ' + exhaustedFreeTrial.limit + ' free premium calls in the current 24-hour window. The free quota resets at ' + exhaustedFreeTrial.resetAt + '. To continue immediately, sign an EIP-3009 transferWithAuthorization via X-PAYMENT or buy credits.'
-    : 'This is a paid endpoint. Sign an EIP-3009 transferWithAuthorization and submit it via X-PAYMENT, or use the credits flow for repeat use. Or simply retry from a fresh IP with no Authorization header to consume a free-trial slot.';
+  // Build the canonical x402 V2 PaymentRequired object exactly once. Per the
+  // V2 spec, `network` is the human-readable chain id ("base"), not the CAIP-2
+  // form. The Bazaar crawler validates against this name. `accepts` carries
+  // the EIP-3009 settlement parameters; `extensions.bazaar` (when populated by
+  // the pilot registry) is the discovery payload CDP indexes.
+  var canonicalPaymentRequired = buildCanonicalPaymentRequired({
+    reason: reason,
+    resourceUrl: resourceUrl,
+    resourcePath: resourcePath,
+    description: 'TerminalFeed Premium API endpoint. USDC on Base mainnet, AFTA-certified, federated credit ledger with TensorFeed.',
+    atomicAmount: atomicAmount,
+  });
 
-  return premiumJsonResponse(
-    {
-      x402Version: 2,
-      error: reason || 'payment_required',
-      resource: {
-        url: resourceUrl,
-        description: 'TerminalFeed Premium API endpoint. USDC on Base mainnet, AFTA-certified, federated credit ledger with TensorFeed.',
-        mimeType: 'application/json',
-      },
-      accepts: [{
-        scheme: 'exact',
-        network: 'eip155:8453',
-        amount: atomicAmount,
-        asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-        payTo: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1',
-        maxTimeoutSeconds: 60,
-        extra: { name: 'USD Coin', version: '2' },
-      }],
-      extensions: {},
-      ok: false,
-      message: message,
-      free_trial: freeTrialAdvert,
-      // Legacy fields kept for back-compat with existing TerminalFeed clients.
-      signup: 'https://terminalfeed.io' + (signupPath || '/developers/agent-payments'),
-      pricing: { '$1_usd': '50_credits' },
+  return paymentRequired402(canonicalPaymentRequired, {
+    ok: false,
+    message: message,
+    free_trial: freeTrialAdvert,
+    // Legacy fields kept for back-compat with existing TerminalFeed clients.
+    signup: 'https://terminalfeed.io' + (signupPath || '/developers/agent-payments'),
+    pricing: { '$1_usd': '50_credits' },
+  }, request);
+}
+
+// Shared canonical x402 V2 PaymentRequired builder. Both the generic premium
+// 402 path and endpoint-specific 402s (e.g. webhook subscription resume on
+// insufficient credits) call this so the body shape and the PAYMENT-REQUIRED
+// header stay in lockstep across the Worker.
+function buildCanonicalPaymentRequired(opts) {
+  opts = opts || {};
+  var path = opts.resourcePath || '';
+  var fallback = opts.description || 'TerminalFeed Premium API endpoint.';
+  return {
+    x402Version: 2,
+    error: opts.reason || 'payment_required',
+    resource: {
+      url: opts.resourceUrl || 'https://terminalfeed.io/api/pro/',
+      description: bazaarDescriptionFor(path, fallback),
+      mimeType: 'application/json',
     },
-    null,
-    402,
-    request
-  );
+    accepts: [{
+      scheme: 'exact',
+      network: 'base',
+      amount: opts.atomicAmount || '20000',
+      asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      payTo: '0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1',
+      maxTimeoutSeconds: 60,
+      extra: { name: 'USD Coin', version: '2' },
+    }],
+    extensions: bazaarExtensionsFor(path),
+  };
+}
+
+// Emits a 402 with the x402 V2 transport headers required by CDP Bazaar. We
+// can't call premiumJsonResponse here because that helper has no path to
+// inject PAYMENT-REQUIRED / WWW-Authenticate, and these must be present on
+// every 402 for Bazaar to index the endpoint. Body spreads the canonical so
+// the header and body stay in lockstep.
+function paymentRequired402(canonicalPaymentRequired, extraBody, request) {
+  var canonicalB64 = btoa(JSON.stringify(canonicalPaymentRequired));
+  var body = Object.assign({}, canonicalPaymentRequired, extraBody || {});
+  var headers = Object.assign({}, SECURITY_HEADERS, {
+    'Content-Type': 'application/json',
+    'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    'Link': LINK_HEADER,
+    'Cache-Control': 'no-store',
+    'X-Robots-Tag': 'noindex, nofollow, noarchive',
+    'PAYMENT-REQUIRED': canonicalB64,
+    'WWW-Authenticate': 'X402 requirements="' + canonicalB64 + '"',
+  });
+  applyCorsHeaders(headers, request, 'premium');
+  return new Response(JSON.stringify(body), { status: 402, headers: headers });
 }
 
 function extractBearerToken(request) {
@@ -6896,9 +7031,234 @@ async function validateAndCharge(env, token, cost, endpoint) {
   return result;
 }
 
+// Normalize the network field on a paymentPayload or paymentRequirements
+// object for CDP's /verify and /settle endpoints. CDP requires CAIP-2 form
+// (e.g. 'eip155:8453' for Base mainnet) while our 402 manifest emits the
+// short-name form ('base') that matches blockrun.ai's cataloged shape. Both
+// refer to the same chain; the EIP-712 signature commits to chainId only,
+// so re-labelling here is signature-safe. Returns a shallow clone with
+// network swapped if needed; original object untouched.
+var _BASE_TO_CAIP2 = { 'base': 'eip155:8453', 'base-sepolia': 'eip155:84532' };
+function _normalizeNetworkForCdp(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  var current = obj.network;
+  var caip2 = current && _BASE_TO_CAIP2[current];
+  if (!caip2) return obj;
+  return Object.assign({}, obj, { network: caip2 });
+}
+
+// Decode the X-PAYMENT header (base64-encoded canonical x402 V2 payload).
+// Returns null when absent or malformed; the caller falls back to bearer auth.
+// Accepts both standard base64 and base64url (some clients emit url-safe form).
+// Logs only on decode failure — the cdp_settle.result log captures successful
+// settles, no need to also log every successful decode.
+function _decodeXPaymentHeader(request) {
+  var raw = request.headers.get('X-PAYMENT') || request.headers.get('x-payment') || '';
+  if (!raw) return null;
+  // Normalize base64url -> base64. atob is strict about + / vs - _.
+  var normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+  while (normalized.length % 4 !== 0) normalized += '=';
+  try {
+    var json = atob(normalized);
+    var parsed = JSON.parse(json);
+    if (parsed && typeof parsed === 'object') return parsed;
+    console.log('x_payment.decode_failed', { reason: 'not_object', raw_len: raw.length });
+    return null;
+  } catch (e) {
+    console.log('x_payment.decode_failed', {
+      reason: (e && e.message) || 'parse_exception',
+      raw_len: raw.length,
+      raw_prefix: raw.slice(0, 16),
+    });
+    return null;
+  }
+}
+
+// Settle a Bazaar pilot payment through CDP. Per x402 V2: verify first
+// (synchronous, no money moves), then run the handler, then settle
+// (money moves), then attach PAYMENT-RESPONSE so the client can confirm
+// settlement happened. Cataloging requires the settle to succeed; the
+// EXTENSION-RESPONSES header on the settle response shows `bazaar:
+// processing` once CDP starts indexing.
+async function handleCdpPilotSettle(request, env, url, endpointPath, costCredits, fetchFn, xPaymentPayload) {
+  var resourcePath = endpointPath;
+  var atomicAmount = String((costCredits || 1) * 20000);
+  var canonical = buildCanonicalPaymentRequired({
+    reason: 'payment_required',
+    resourceUrl: request.url,
+    resourcePath: resourcePath,
+    description: bazaarDescriptionFor(resourcePath, 'TerminalFeed Premium API endpoint.'),
+    atomicAmount: atomicAmount,
+  });
+  var paymentRequirements = canonical.accepts[0];
+
+  // Normalize network for the CDP forward path. CDP's /verify and /settle
+  // require CAIP-2 ('eip155:8453' for Base mainnet) even though the 402
+  // PaymentRequired manifest emits the short-name 'base'. Both forms refer
+  // to the same chain; the EIP-712 signature commits to chainId (8453) only,
+  // not the string label, so re-labelling here is signature-safe. Confirmed
+  // via CDP invalid_network response on correlation 9fbd... at 2026-05-14.
+  // Keep the 402 manifest emitting 'base' (matches blockrun.ai catalog
+  // evidence + AJV validators already accept it).
+  var cdpPaymentRequirements = _normalizeNetworkForCdp(paymentRequirements);
+
+  // CDP's x402V2PaymentPayload schema requires an `accepted` field inside
+  // paymentPayload — the specific accepts[] entry the agent signed against,
+  // echoed back. Confirmed via correlation 9fbd9e1c848969cd-IAD at 2026-05-14:
+  // omitting `accepted` returns 400 invalid_request "schema requires 'accepted'".
+  // We attach the same (network-normalized) requirements object the agent
+  // would have read out of our 402, so signature recovery + amount check on
+  // CDP's side line up. Network on paymentPayload also normalized so the
+  // signed authorization can be matched to the canonical chain id.
+  //
+  // CDP's bazaar discovery validator (downstream of /settle) additionally
+  // requires a `resource` block — confirmed 2026-05-14 via EXTENSION-RESPONSES
+  // base64-JSON `{"bazaar":{"status":"rejected","rejectedReason":"discovery
+  // request validation failed: resource is required"}}` on a successful
+  // verify+settle pair. Bazaar needs to know what resource the payment was
+  // for to catalog it. We echo back the same `resource` block the agent saw
+  // in our 402 manifest.
+  var cdpPaymentPayload = Object.assign(
+    {},
+    _normalizeNetworkForCdp(xPaymentPayload),
+    {
+      accepted: cdpPaymentRequirements,
+      resource: canonical.resource,
+    }
+  );
+
+  // Verify before doing the work. Verify is a free check; settle moves money.
+  // CDP's /verify schema requires x402Version at the top level of the request
+  // body, alongside paymentPayload + paymentRequirements. Confirmed via the
+  // correlation_id 9fbd885e42460918-IAD on 2026-05-14: nesting x402Version
+  // only inside paymentPayload returns 400 invalid_request.
+  var verifyRes = await cdpVerify(env, {
+    x402Version: 2,
+    paymentPayload: cdpPaymentPayload,
+    paymentRequirements: cdpPaymentRequirements,
+  });
+  if (!verifyRes.ok) {
+    // Only log verify on failure — successful settles are already covered by
+    // cdp_settle.result. CDP returns two error envelope shapes (schema vs
+    // semantic validation); we surface both so the actual rejection reason
+    // is visible without having to add diagnostic logs case-by-case.
+    console.log('cdp_pilot.verify_rejected', {
+      endpoint: endpointPath,
+      status: verifyRes.status,
+      reason: verifyRes.reason || null,
+      invalid_reason: verifyRes.body && verifyRes.body.invalidReason || null,
+      invalid_message: verifyRes.body && verifyRes.body.invalidMessage || null,
+      error_type: verifyRes.body && verifyRes.body.errorType || null,
+      error_message: verifyRes.body && verifyRes.body.errorMessage || null,
+      correlation_id: verifyRes.body && verifyRes.body.correlationId || null,
+    });
+    var verifyExtra = {
+      ok: false,
+      message: 'CDP verify rejected the X-PAYMENT signature. Re-sign the EIP-3009 authorization against the resource shown in PAYMENT-REQUIRED and retry.',
+      verify_status: verifyRes.status,
+      verify_reason: verifyRes.reason || null,
+    };
+    if (verifyRes.body && verifyRes.body.invalidReason) verifyExtra.invalid_reason = verifyRes.body.invalidReason;
+    return paymentRequired402(canonical, verifyExtra, request);
+  }
+
+  // Run the actual handler. Charging only happens via settle below; if the
+  // upstream fetcher throws we 500 without billing.
+  var handlerResult;
+  try {
+    handlerResult = await fetchFn(env, url);
+  } catch (e) {
+    return premiumJsonResponse({
+      ok: false,
+      error: 'upstream_failure',
+      message: (e && e.message) || 'upstream_exception',
+    }, null, 500, request);
+  }
+  if (handlerResult && handlerResult.__error) {
+    return premiumJsonResponse({
+      ok: false,
+      error: 'upstream_failure',
+      message: handlerResult.__error,
+    }, null, handlerResult.__status || 500, request);
+  }
+
+  // Settle. CDP broadcasts the EIP-3009 transferWithAuthorization and
+  // returns EXTENSION-RESPONSES with bazaar state. Same body shape as verify:
+  // x402Version at the top level, network normalized to CAIP-2.
+  var settleRes = await cdpSettle(env, {
+    x402Version: 2,
+    paymentPayload: cdpPaymentPayload,
+    paymentRequirements: cdpPaymentRequirements,
+  });
+  // Unconditional log so the (bazaar absent) case is visible too. Bazaar
+  // cataloging only proceeds when CDP returns the `bazaar: processing` token
+  // on this header; absent token = the request settled but isn't being
+  // indexed. We need to see all three states (processing / rejected / none)
+  // to know whether the pilot is being cataloged.
+  console.log('cdp_settle.result', {
+    endpoint: endpointPath,
+    ok: settleRes.ok,
+    status: settleRes.status,
+    bazaar: settleRes.bazaar || '(none)',
+    bazaar_rejected_reason: (settleRes.bazaar_detail && settleRes.bazaar_detail.rejectedReason) || null,
+    extension_responses: settleRes.extension_responses || '(none)',
+    success: settleRes.body && settleRes.body.success,
+    tx: settleRes.body && settleRes.body.transaction,
+    payer: settleRes.body && settleRes.body.payer,
+    network: settleRes.body && settleRes.body.network,
+    body_keys: settleRes.body ? Object.keys(settleRes.body) : null,
+  });
+
+  // Attach PAYMENT-RESPONSE per x402 V2 transport spec.
+  var headers = Object.assign({}, SECURITY_HEADERS, {
+    'Content-Type': 'application/json',
+    'X-TerminalFeed-Pricing': PRICING_DISCOVERY_URL,
+    'Link': LINK_HEADER,
+    'Cache-Control': 'no-store',
+    'X-Robots-Tag': 'noindex, nofollow, noarchive',
+  });
+  if (settleRes.body) {
+    try {
+      headers['PAYMENT-RESPONSE'] = btoa(JSON.stringify(settleRes.body));
+    } catch (e) { /* skip header on encode failure; body still ships */ }
+  }
+  // Echo CDP's EXTENSION-RESPONSES through to the agent client so they can
+  // read bazaar state (processing / rejected / etc.) without tail access.
+  // Header is already base64-JSON when present, pass through unchanged.
+  if (settleRes.extension_responses) {
+    headers['EXTENSION-RESPONSES'] = settleRes.extension_responses;
+  }
+  applyCorsHeaders(headers, request, 'premium');
+  return new Response(JSON.stringify(handlerResult), { status: 200, headers: headers });
+}
+
 async function handlePremium(request, env, url, endpointPath, costCredits, fetchFn) {
+  // X-PAYMENT settlement path. For Bazaar pilots, route through CDP — first
+  // successful settle on a pilot path is what gets it cataloged. Non-pilot
+  // X-PAYMENT requests don't have a self-broadcast facilitator on TerminalFeed
+  // yet, so we send them back to the bearer-credits flow with a clear hint.
+  var xPayment = _decodeXPaymentHeader(request);
+  if (xPayment) {
+    if (isBazaarPilotPath(endpointPath)) {
+      return await handleCdpPilotSettle(request, env, url, endpointPath, costCredits, fetchFn, xPayment);
+    }
+    return premiumJsonResponse({
+      ok: false,
+      error: 'unsupported_settlement_path',
+      message: 'Direct X-PAYMENT settle is currently only enabled for Bazaar pilot paths. For other premium endpoints, buy credits at /api/payment/buy-credits and call with Authorization: Bearer tf_live_<token>.',
+      buy_credits: 'https://terminalfeed.io/api/payment/buy-credits',
+    }, null, 400, request);
+  }
+
   var token = extractBearerToken(request);
   if (!token) {
+    // Strict-premium endpoints (Bazaar pilots + heavy aggregations) skip the
+    // free-trial pool entirely. CDP's Bazaar crawler probes anonymously and
+    // needs to see the 402 to index the endpoint; the trial 200 hides the
+    // challenge. Falls straight through to the canonical PaymentRequired.
+    if (isStrictPremiumPath(endpointPath)) {
+      return json402('payment_required', null, request, costCredits, null, { strict: true });
+    }
     // No bearer, no X-PAYMENT: give the IP a free-trial slot if its 24h
     // quota allows. The trial does NOT mint a bearer token and does NOT
     // settle on-chain. The same fetchFn runs as on the paid path; the

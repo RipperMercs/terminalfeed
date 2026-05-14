@@ -9,6 +9,11 @@
   },
   "dependencies": {
     "afta-cloudflare-worker": "^0.2.0",
-    "afta-protocol": "^0.1.0"
+    "afta-protocol": "^0.1.0",
+    "jose": "^6.2.3"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
   }
 }
