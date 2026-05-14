@@ -1685,13 +1685,21 @@
     },
     "/api/space-weather": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "NOAA SWPC: Kp index, solar wind, X-ray flare class, active alerts",
         "description": "Geomagnetic Kp index, solar wind speed/density, peak X-ray flare class over last 24h (A/B/C/M/X), and up to 5 active NOAA space weather alerts. Source: services.swpc.noaa.gov. 5-minute cache.",
         "responses": {
           "200": {
             "description": "Current space weather snapshot",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1699,13 +1707,21 @@
     },
     "/api/wildfires": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "NASA FIRMS active fire detections (North America 24h)",
         "description": "Top 25 most intense satellite fire detections in North America over last 24 hours, sorted by Fire Radiative Power (MW). Includes lat/lon, approximate US state, satellite, confidence. Source: NASA FIRMS VIIRS SNPP NRT. 10-minute cache. Requires NASA_FIRMS_MAP_KEY env var on the worker.",
         "responses": {
           "200": {
             "description": "Wildfire detections snapshot",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1713,13 +1729,21 @@
     },
     "/api/severe-weather": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "NWS active US severe weather alerts (top 15 by severity)",
         "description": "Top 15 active National Weather Service alerts ranked by severity score (severity x urgency x certainty). Tornado, flood, severe thunderstorm, hurricane, winter storm, fire, heat, wind. Source: api.weather.gov. 60-second cache.",
         "responses": {
           "200": {
             "description": "Active severe weather alerts",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1727,17 +1751,54 @@
     },
     "/api/climate/earthquakes": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "USGS pre-built earthquake summary feed (parameterized)",
         "description": "USGS Earthquake Hazards Program summary feeds. Selectable magnitude bucket (significant, 4.5, 2.5, 1.0, all) crossed with period (hour, day, week, month). 20 selectable feeds. Returns a flattened list (id, magnitude, place, time ISO 8601, depth_km, lat, lon, tsunami, USGS detail URL). Cache TTL scales with feed window (60s for hour up to 900s for month). US Government public domain (17 USC §105). Mirrors TensorFeed's same-named endpoint for federation parity.",
         "parameters": [
-          { "name": "magnitude", "in": "query", "required": false, "schema": { "type": "string", "enum": ["significant", "4.5", "2.5", "1.0", "all"] }, "description": "Magnitude bucket. Default 2.5." },
-          { "name": "period", "in": "query", "required": false, "schema": { "type": "string", "enum": ["hour", "day", "week", "month"] }, "description": "Period bucket. Default day." }
+          {
+            "name": "magnitude",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "significant",
+                "4.5",
+                "2.5",
+                "1.0",
+                "all"
+              ]
+            },
+            "description": "Magnitude bucket. Default 2.5."
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hour",
+                "day",
+                "week",
+                "month"
+              ]
+            },
+            "description": "Period bucket. Default day."
+          }
         ],
         "responses": {
           "200": {
             "description": "Earthquake feed for the selected bucket",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1745,21 +1806,100 @@
     },
     "/api/climate/weather-alerts": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "NWS active alerts (parameterized, US-only)",
         "description": "Active National Weather Service alerts from api.weather.gov, filterable by 2-letter US state code, exact NWS event name, severity, urgency, and status. Returns id, event, severity, urgency, certainty, headline, description, areaDesc, sent/effective/expires/ends, sender_name, web URL. 60-second cache. NWS-required User-Agent header sent on every fetch. US Government public domain (17 USC §105). Mirrors TensorFeed's same-named endpoint for federation parity.",
         "parameters": [
-          { "name": "area", "in": "query", "required": false, "schema": { "type": "string" }, "description": "2-letter US state code, e.g. CA, NY." },
-          { "name": "event", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Exact NWS event name, e.g. \"Tornado Warning\", \"Heat Advisory\"." },
-          { "name": "severity", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Extreme", "Severe", "Moderate", "Minor", "Unknown"] }, "description": "Alert severity." },
-          { "name": "urgency", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Immediate", "Expected", "Future", "Past", "Unknown"] }, "description": "Alert urgency." },
-          { "name": "status", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Actual", "Exercise", "System", "Test", "Draft"] }, "description": "Alert status." },
-          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 100 }, "description": "Max alerts (1-100). Default 50." }
+          {
+            "name": "area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "2-letter US state code, e.g. CA, NY."
+          },
+          {
+            "name": "event",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exact NWS event name, e.g. \"Tornado Warning\", \"Heat Advisory\"."
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Extreme",
+                "Severe",
+                "Moderate",
+                "Minor",
+                "Unknown"
+              ]
+            },
+            "description": "Alert severity."
+          },
+          {
+            "name": "urgency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Immediate",
+                "Expected",
+                "Future",
+                "Past",
+                "Unknown"
+              ]
+            },
+            "description": "Alert urgency."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Actual",
+                "Exercise",
+                "System",
+                "Test",
+                "Draft"
+              ]
+            },
+            "description": "Alert status."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Max alerts (1-100). Default 50."
+          }
         ],
         "responses": {
           "200": {
             "description": "Filtered active alerts",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1767,13 +1907,21 @@
     },
     "/api/funding-rates": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "Top 20 perp futures funding rates across 4 venues",
         "description": "Top 20 perpetual futures contracts by absolute annualized funding rate, across Binance USD-M, Bybit linear, dYdX v4, and Hyperliquid. Includes venue, symbol, period rate, annualized %, mark price. 60-second cache.",
         "responses": {
           "200": {
             "description": "Funding rate leaderboard",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1781,17 +1929,41 @@
     },
     "/api/air-quality": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "Open-Meteo Air Quality (US AQI, PM2.5, PM10, ozone, NO2)",
         "description": "Air quality snapshot for any lat/lon. Returns US AQI band, European AQI, PM2.5, PM10, ozone, nitrogen dioxide, sulphur dioxide, carbon monoxide. Per-coordinates cache (rounded to 2 decimals) for 30 minutes. Defaults to Los Angeles when lat/lon are missing or invalid. Source: Open-Meteo Air Quality API.",
         "parameters": [
-          { "name": "lat", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Latitude (-90 to 90). Default 34.05." },
-          { "name": "lon", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Longitude (-180 to 180). Default -118.24." }
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            },
+            "description": "Latitude (-90 to 90). Default 34.05."
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            },
+            "description": "Longitude (-180 to 180). Default -118.24."
+          }
         ],
         "responses": {
           "200": {
             "description": "Air quality snapshot",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1799,16 +1971,32 @@
     },
     "/api/shodan": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "Shodan InternetDB exposure scan (no key required)",
         "description": "Shodan InternetDB lookup. Returns open ports, known CVEs, hostnames, tags, and CPEs for public IPv4 addresses. With no parameters, returns a curated rotation across Cloudflare DNS, Google DNS, Quad9, OpenDNS, GitHub, and Fastly. With ?ip=, looks up any single public IPv4. Private and reserved ranges are rejected. 1-hour cache.",
         "parameters": [
-          { "name": "ip", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Public IPv4 address. Omit for the curated demo set." }
+          {
+            "name": "ip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Public IPv4 address. Omit for the curated demo set."
+          }
         ],
         "responses": {
           "200": {
             "description": "Exposure snapshot",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1816,13 +2004,21 @@
     },
     "/api/volcanoes": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "Smithsonian GVP weekly volcano activity report",
         "description": "Latest volcano activity reports from the Smithsonian Institution Global Volcanism Program weekly bulletin. Includes volcano name, country, summary, and link. 1-hour cache.",
         "responses": {
           "200": {
             "description": "Active volcano reports",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1830,7 +2026,9 @@
     },
     "/api/harnesses": {
       "get": {
-        "tags": ["free"],
+        "tags": [
+          "free"
+        ],
         "summary": "Agentic-coding harness leaderboards (Claude Code, Cursor, Codex, Aider, OpenHands, Devin, SWE-Agent)",
         "description": "Snapshot of public benchmark scores across SWE-bench Verified, Terminal-Bench, Aider Polyglot, and METR HCAST. Each row pairs a harness with a model, and same-model cross-harness gaps are exposed as a first-class metric. Hand-curated weekly. 12-hour cache. CORS enabled, no auth required.",
         "parameters": [
@@ -1838,14 +2036,29 @@
             "name": "view",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["raw", "summary", "gaps", "combined"], "default": "raw" },
+            "schema": {
+              "type": "string",
+              "enum": [
+                "raw",
+                "summary",
+                "gaps",
+                "combined"
+              ],
+              "default": "raw"
+            },
             "description": "raw=full benchmark/result graph, summary=top combined leaderboard plus biggest harness gaps, gaps=full per-model harness deltas, combined=normalized cross-benchmark ranking"
           }
         ],
         "responses": {
           "200": {
             "description": "Harness leaderboard snapshot",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": []
@@ -1990,7 +2203,20 @@
         "x-pricing-credits": 1,
         "x-pricing-usd": 0.02,
         "x-composes-sources": 6,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.02"
+          }
+        }
       }
     },
     "/api/pro/macro": {
@@ -2066,7 +2292,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 14,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/crypto-deep": {
@@ -2150,7 +2389,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 7,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/payment/info": {
@@ -2173,7 +2425,7 @@
           }
         },
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0,
+        "x-pricing-usd": 0,
         "security": []
       }
     },
@@ -2227,7 +2479,7 @@
           }
         ],
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0,
+        "x-pricing-usd": 0,
         "security": []
       }
     },
@@ -2288,7 +2540,7 @@
           }
         ],
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0,
+        "x-pricing-usd": 0,
         "security": []
       }
     },
@@ -2336,7 +2588,7 @@
           }
         ],
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0
+        "x-pricing-usd": 0
       }
     },
     "/api/llm-tools": {
@@ -2467,7 +2719,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 7,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/world-deltas": {
@@ -2541,7 +2806,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 4,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/agent-context": {
@@ -2604,7 +2882,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 13,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/correlation-matrix": {
@@ -2661,7 +2952,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 10,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/whales": {
@@ -2718,7 +3022,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 4,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/exchange-flows": {
@@ -2775,7 +3092,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 3,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api": {
@@ -2878,7 +3208,7 @@
           }
         },
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0,
+        "x-pricing-usd": 0,
         "x-mcp-protocol-version": "2024-11-05"
       }
     },
@@ -2952,7 +3282,7 @@
           }
         },
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0,
+        "x-pricing-usd": 0,
         "x-fire-cost-credits": 1,
         "x-fire-cost-usd": 0.02,
         "x-fire-interval": "5 minutes",
@@ -2987,7 +3317,7 @@
           }
         },
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0
+        "x-pricing-usd": 0
       }
     },
     "/api/pro/subscribe/{id}": {
@@ -3035,7 +3365,7 @@
           }
         },
         "x-pricing-credits": 0,
-        "x-pricing-usd": 0.0
+        "x-pricing-usd": 0
       }
     },
     "/api/pro/defi-tvl": {
@@ -3092,7 +3422,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 2,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/stablecoin-flows": {
@@ -3149,7 +3492,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 1,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     },
     "/api/pro/github-velocity": {
@@ -3206,7 +3562,20 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 2,
-        "x-license": "inference-only"
+        "x-license": "inference-only",
+        "x-payment-required": true,
+        "x-payment-info": {
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.04"
+          }
+        }
       }
     }
   },
@@ -3226,7 +3595,7 @@
     }
   ],
   "externalDocs": {
-    "description": "Premium API for AI agents \u2014 full developer guide, payment flow, and cross-site bundle with TensorFeed.",
+    "description": "Premium API for AI agents — full developer guide, payment flow, and cross-site bundle with TensorFeed.",
     "url": "https://terminalfeed.io/developers/agent-payments"
   }
 }
