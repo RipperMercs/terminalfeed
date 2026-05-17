@@ -76,7 +76,7 @@ export const ALL_PANELS = [
   { id: 'npm-trends', label: 'NPM Trends', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
 { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
-  { id: 'recipe', label: "Tonight's Recipe", defaultSpan: 1 },
+  { id: 'recipe', label: 'Recipes (HangryHQ)', defaultSpan: 1 },
   { id: 'humans-in-space', label: 'Humans In Space', defaultSpan: 1 },
   { id: 'this-day', label: 'This Day In History', defaultSpan: 1 },
   { id: 'originals', label: 'TF Originals', defaultSpan: 1 },
