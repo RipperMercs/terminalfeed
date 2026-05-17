@@ -1065,7 +1065,7 @@ function handleIndex() {
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
-      '/api/llm-tools',
+      '/api/llm-tools', '/api/hangry-recipes',
     ],
     premium: {
       docs: 'https://terminalfeed.io/developers/agent-payments',
@@ -2565,6 +2565,9 @@ const RSS_WHITELIST = [
   /^https:\/\/changelog\.com\/podcast\/feed$/,
   /^https:\/\/feed\.syntax\.fm\/rss$/,
   /^https:\/\/anchor\.fm\/s\/[a-f0-9]+\/podcast\/rss$/,
+  // Sister sites (owned): blended into the Tech / AI feed with their real links.
+  /^https:\/\/tensorfeed\.ai\/feed\.xml$/,
+  /^https:\/\/vr\.org\/feed\.xml$/,
 ];
 
 function rssUrlAllowed(u) {
@@ -3392,6 +3395,57 @@ async function handleVolcanoes() {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
     return jsonResponse({ data: { count: 0, items: [] } });
+  }
+}
+
+
+// GET /api/hangry-recipes
+// Proxies HangryHQ's editor-tier recipe feed (sister site). Funnels recipe
+// traffic to hangryhq.com: every item links to a hangryhq.com/recipes/<slug>
+// page. Hard-cached 6h, stale-on-fail, never 500s. Returns an empty list
+// (panel self-hides) if the upstream feed is unreachable.
+async function handleHangryRecipes() {
+  var KEY = 'hangry-recipes';
+  var cached = getCached(KEY, 21600000);
+  if (cached) return jsonResponse(cached, 200, 21600);
+
+  try {
+    var res = await fetchWithTimeout('https://hangryhq.com/data/recipes-feed.json', {
+      headers: { 'Accept': 'application/json' },
+    }, 8000);
+    if (!res.ok) throw new Error('hangryhq ' + res.status);
+    var json = await res.json();
+    var src = Array.isArray(json && json.recipes) ? json.recipes : [];
+
+    var recipes = [];
+    for (var i = 0; i < src.length && recipes.length < 30; i++) {
+      var r = src[i] || {};
+      var name = typeof r.name === 'string' ? r.name.trim() : '';
+      var url = typeof r.url === 'string' ? r.url.trim() : '';
+      // Only surface items that actually link back to a HangryHQ recipe page.
+      if (!name || !/^https:\/\/hangryhq\.com\/recipes\//.test(url)) continue;
+      recipes.push({
+        name: name,
+        category: typeof r.category === 'string' ? r.category : 'Recipe',
+        area: typeof r.area === 'string' ? r.area : '',
+        thumbnail: typeof r.image === 'string' ? r.image : '',
+        url: url,
+        time_minutes: typeof r.timeMinutes === 'number' ? r.timeMinutes : 0,
+      });
+    }
+
+    var data = {
+      data: { count: recipes.length, recipes: recipes },
+      source: 'hangryhq.com',
+      attribution: 'Recipes by HangryHQ',
+      updated_at: new Date().toISOString(),
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 21600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale);
+    return jsonResponse({ data: { count: 0, recipes: [] }, source: 'hangryhq.com' });
   }
 }
 
@@ -10549,6 +10603,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'air-quality':    return await handleAirQuality(url);
       case 'shodan':         return await handleShodan(url);
       case 'volcanoes':      return await handleVolcanoes();
+      case 'hangry-recipes': return await handleHangryRecipes();
       case 'xkcd':           return await handleXkcd();
       case 'ai-stats':       return handleAiStats();
       case 'briefing':       return await handleBriefing();
