@@ -555,7 +555,7 @@ function App() {
         ))}
       </div>
       <div>
-        {!newsFilter && sisterOriginals.map((s, i) => { const sc = s.source === 'VR.ORG' ? 'var(--teal)' : 'var(--purple)'; return (
+        {!newsFilter && sisterOriginals.map((s, i) => { const sc = s.source === 'VR.ORG' ? 'var(--cyan)' : 'var(--purple)'; return (
           <a key={`sis-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title={`${s.source === 'VR.ORG' ? 'VR.org' : 'TensorFeed'} original`}>
             <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>{s.source === 'VR.ORG' ? 'VR.ORG' : 'TF'}</span>
             <span className="newsTitle">{s.title}</span>
@@ -940,7 +940,7 @@ function App() {
     </>),
     'recipe': hideRecipes ? null : (<>
       <PanelHead panelId="recipe" isStale={panelHealth.isStale('recipe')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Tonight</span><span className="panelTag">HANGRYHQ</span></div></PanelHead>
-      {recipes.length > 0 ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recipes.map((r, i) => (<a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent">{r.thumbnail ? <img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" /> : null}<div className="recipeInfo"><div className="recipeName">{r.name}</div><div className="recipeMeta">{[r.area, r.category, r.timeMinutes ? `${r.timeMinutes}m` : ''].filter(Boolean).join(' · ')}</div></div></a>))}<a href="https://hangryhq.com/recipes" target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: 'var(--teal)', textAlign: 'right', textDecoration: 'none', paddingTop: 2 }}>more recipes at HangryHQ &rarr;</a></div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>}
+      {recipes.length > 0 ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recipes.map((r, i) => (<a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent">{r.thumbnail ? <img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" /> : null}<div className="recipeInfo"><div className="recipeName">{r.name}</div><div className="recipeMeta">{[r.area, r.category, r.timeMinutes ? `${r.timeMinutes}m` : ''].filter(Boolean).join(' · ')}</div></div></a>))}<a href="https://hangryhq.com/recipes" target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: 'var(--cyan)', textAlign: 'right', textDecoration: 'none', paddingTop: 2 }}>more recipes at HangryHQ &rarr;</a></div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>}
     </>),
     'daily-learn': (<>
       <PanelHead panelId="daily-learn" isStale={panelHealth.isStale('daily-learn')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Daily</span><span className="panelTag">LEARN</span></div></PanelHead>
