@@ -53,26 +53,8 @@
   overflow: hidden;
 }
 
-.titleLink {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  min-width: 0;
-}
-
 .meta {
   font-size: 9px;
   color: var(--text-dim);
   letter-spacing: 0.3px;
-}
-
-.sister {
-  color: var(--teal);
-  text-decoration: none;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.sister:hover {
-  text-decoration: underline;
 }
