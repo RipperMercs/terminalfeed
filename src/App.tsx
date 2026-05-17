@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
 import { useFearGreed } from './hooks/useFearGreed';
 import { useHackerNews } from './hooks/useHackerNews';
+import { useSisterOriginals } from './hooks/useSisterOriginals';
 import { useTime } from './hooks/useTime';
 import { useSimStocks, INDICES } from './hooks/useSimStocks';
 import { useSimCrypto } from './hooks/useSimCrypto';
@@ -130,6 +131,7 @@ function App() {
   const { data: priceData } = useBtcPrice();
   const fearGreed = useFearGreed();
   const stories = useHackerNews();
+  const sisterOriginals = useSisterOriginals();
   const now = useTime();
   const stocks = useSimStocks();
   const crypto = useSimCrypto();
@@ -553,6 +555,12 @@ function App() {
         ))}
       </div>
       <div>
+        {!newsFilter && sisterOriginals.map((s, i) => { const sc = s.source === 'VR.ORG' ? 'var(--teal)' : 'var(--purple)'; return (
+          <a key={`sis-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title={`${s.source === 'VR.ORG' ? 'VR.org' : 'TensorFeed'} original`}>
+            <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>{s.source === 'VR.ORG' ? 'VR.ORG' : 'TF'}</span>
+            <span className="newsTitle">{s.title}</span>
+            <span className="newsMeta">{timeAgo(s.time)}</span>
+          </a>); })}
         {stories.length === 0 && <StateChip kind="waiting" label="HN" block />}
         {stories.filter((s) => !newsFilter || getTag(s.title) === newsFilter).map((story) => { const tag = getTag(story.title); const tc = tagColors[tag] || 'var(--text-mid)'; return (
           <a key={story.id} href={story.url || `https://news.ycombinator.com/item?id=${story.id}`} target="_blank" rel="noopener noreferrer" className="newsRow">
