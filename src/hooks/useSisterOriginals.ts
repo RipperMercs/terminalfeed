@@ -20,7 +20,10 @@ const FEEDS: { source: SisterItem['source']; url: string; host: string }[] = [
 
 const CACHE_KEY = 'sister_originals_1';
 const POLL_MS = 15 * 60_000; // 15 min; editorial changes slowly
-const MAX_ITEMS = 6;
+// Keep owned rows light so HN still leads the feed: at most 2 per site,
+// 3 total stacked at the top.
+const PER_FEED = 2;
+const MAX_ITEMS = 3;
 
 export function useSisterOriginals(): SisterItem[] {
   const [items, setItems] = useState<SisterItem[]>(() => {
@@ -43,7 +46,7 @@ export function useSisterOriginals(): SisterItem[] {
             if (!res.ok) return;
             const data = await res.json();
             const list = Array.isArray(data?.items) ? data.items : [];
-            for (const it of list.slice(0, 4)) {
+            for (const it of list.slice(0, PER_FEED)) {
               const title = typeof it?.title === 'string' ? it.title.trim() : '';
               const link = typeof it?.link === 'string' ? it.link.trim() : '';
               // Only surface items that actually link back to the sister site.
