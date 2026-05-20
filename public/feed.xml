@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Fri, 05 Jun 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 12 Jun 2026 12:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Week 8: We Stopped Waiting for AdSense. Here's What That Bought Us.</title>
+      <link>https://terminalfeed.io/blog/originals/week-8</link>
+      <description>Four weeks ago I was still waiting on Google. Then I stopped. Stopping was the most important monetization decision this project has made. A Founder Friday on why building dependence on a permission-granting gatekeeper is the wrong shape for an AI-era publisher.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Fri, 12 Jun 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/originals/week-8</guid>
+    </item>
 
     <item>
       <title>Week 7: The Cost of Saying Yes</title>
