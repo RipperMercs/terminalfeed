@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Thu, 07 May 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 22 May 2026 12:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Week 5: Going Quiet to Ship a Network</title>
+      <link>https://terminalfeed.io/blog/originals/week-5</link>
+      <description>Six weeks dark on the blog while TerminalFeed quietly turned into a federation. VR.org, HangryHQ, and TensorFeed now share data, payments, and security infra. Here is what shipped, and why the network matters more than any one site.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Fri, 22 May 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/originals/week-5</guid>
+    </item>
 
     <item>
       <title>bitcointicker.co Alternatives: The Real-Time Crypto Dashboard Landscape in 2026</title>

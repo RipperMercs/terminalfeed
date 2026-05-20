@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-11T19:41:59.828Z",
+  "updated": "2026-05-20T04:03:32.782Z",
   "articles": [
+    {
+      "slug": "originals/week-5",
+      "title": "Week 5: Going Quiet to Ship a Network",
+      "excerpt": "Six weeks dark on the blog while TerminalFeed quietly turned into a federation. VR.org, HangryHQ, and TensorFeed now share data, payments, and security infra. Here is what shipped, and why the network matters more than any one site.",
+      "author": "Ripper",
+      "author_title": "Founder",
+      "tags": [
+        "WEEKLY",
+        "FOUNDER FRIDAY"
+      ],
+      "published": "2026-05-22",
+      "read_time": "5 min read"
+    },
     {
       "slug": "bitcointicker-co-alternatives",
       "title": "bitcointicker.co Alternatives: The Real-Time Crypto Dashboard Landscape in 2026",
@@ -59,19 +72,6 @@
       "tags": [
         "BITCOIN",
         "MARKETS"
-      ],
-      "published": "2026-05-03",
-      "read_time": ""
-    },
-    {
-      "slug": "terminalfeed-vs-coinbase-price-widget",
-      "title": "TerminalFeed vs Coinbase Price Widget: Embed Comparison",
-      "excerpt": "Coinbase's price widget is brokerage-branded and pushes signups. TerminalFeed's embed is unbranded, ad-free, and theme-customizable. Honest comparison of where each one fits.",
-      "author": "Pulse",
-      "author_title": "Market Analyst",
-      "tags": [
-        "COMPARISON",
-        "BITCOIN"
       ],
       "published": "2026-05-03",
       "read_time": ""

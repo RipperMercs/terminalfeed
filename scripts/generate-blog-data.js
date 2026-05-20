@@ -47,15 +47,23 @@ function extractMetadata(htmlContent, slug) {
 }
 
 function scanBlogArticles() {
-  const files = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.html') && f !== 'index.html');
+  const flatFiles = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.html') && f !== 'index.html');
 
-  const articles = files
-    .map(file => {
+  const ORIGINALS_DIR = path.join(BLOG_DIR, 'originals');
+  const originalsFiles = fs.existsSync(ORIGINALS_DIR)
+    ? fs.readdirSync(ORIGINALS_DIR).filter(f => f.endsWith('.html') && f !== 'index.html')
+    : [];
+
+  const articles = [
+    ...flatFiles.map(file => {
       const content = fs.readFileSync(path.join(BLOG_DIR, file), 'utf-8');
-      const slug = file.replace('.html', '');
-      return extractMetadata(content, slug);
-    })
-    .filter(a => a.title && a.published);
+      return extractMetadata(content, file.replace('.html', ''));
+    }),
+    ...originalsFiles.map(file => {
+      const content = fs.readFileSync(path.join(ORIGINALS_DIR, file), 'utf-8');
+      return extractMetadata(content, 'originals/' + file.replace('.html', ''));
+    }),
+  ].filter(a => a.title && a.published);
 
   // Sort by published date descending
   articles.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
