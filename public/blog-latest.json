@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-20T04:24:16.366Z",
+  "updated": "2026-05-20T04:31:40.308Z",
   "articles": [
+    {
+      "slug": "originals/week-8",
+      "title": "Week 8: We Stopped Waiting for AdSense. Here's What That Bought Us.",
+      "excerpt": "Four weeks ago I was still waiting on Google. Then I stopped. Stopping was the most important monetization decision this project has made. A Founder Friday on why building dependence on a permission-granting gatekeeper is the wrong shape for an AI-era publisher.",
+      "author": "Ripper",
+      "author_title": "Founder",
+      "tags": [
+        "WEEKLY",
+        "FOUNDER FRIDAY"
+      ],
+      "published": "2026-06-12",
+      "read_time": "5 min read"
+    },
     {
       "slug": "originals/week-7",
       "title": "Week 7: The Cost of Saying Yes",
@@ -62,19 +75,6 @@
       ],
       "published": "2026-05-05",
       "read_time": "8 min read"
-    },
-    {
-      "slug": "how-ai-agents-pay-terminalfeed",
-      "title": "How AI Agents Pay for Real-Time Data on TerminalFeed",
-      "excerpt": "A working walkthrough of the TerminalFeed payment flow for autonomous AI agents. Buy USDC credits on Base, mint a bearer token, call premium endpoints, federate with TensorFeed. Real curl examples, no marketing fluff.",
-      "author": "Signal",
-      "author_title": "Infrastructure Writer",
-      "tags": [
-        "AGENTS",
-        "API"
-      ],
-      "published": "2026-05-04",
-      "read_time": "9 min read"
     }
   ]
 }
