@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-20T04:31:40.308Z",
+  "updated": "2026-05-20T04:36:17.077Z",
   "articles": [
+    {
+      "slug": "originals/week-9",
+      "title": "Week 9: Writing for an Audience That Cannot See",
+      "excerpt": "The AI agent reading your article is not reading it. It is parsing it. A practical Founder Friday on what changes editorially when half your audience cannot see headlines, layout, or images. Structure, voice, and the unexpected convergence: writing well for agents is just writing well.",
+      "author": "Ripper",
+      "author_title": "Founder",
+      "tags": [
+        "WEEKLY",
+        "FOUNDER FRIDAY"
+      ],
+      "published": "2026-06-19",
+      "read_time": "5 min read"
+    },
     {
       "slug": "originals/week-8",
       "title": "Week 8: We Stopped Waiting for AdSense. Here's What That Bought Us.",
@@ -62,19 +75,6 @@
       "tags": [],
       "published": "2026-05-07",
       "read_time": ""
-    },
-    {
-      "slug": "schema-drift-free-api-integrations",
-      "title": "Schema Drift: Why Your AI Agent's Free-API Integration Will Quietly Break",
-      "excerpt": "Free APIs change their response shapes without telling you. Your integration tests pass, your agent runs, and the data is silently wrong. Five concrete patterns that catch schema drift before it ships, with real code from a 30-endpoint Worker.",
-      "author": "Node",
-      "author_title": "Dev Tools Editor",
-      "tags": [
-        "APIS",
-        "AGENTS"
-      ],
-      "published": "2026-05-05",
-      "read_time": "8 min read"
     }
   ]
 }

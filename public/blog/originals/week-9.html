@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 9: Writing for an Audience That Cannot See | TerminalFeed Originals</title>
+  <meta name="description" content="The AI agent reading your article is not reading it. It is parsing it. A practical Founder Friday on what changes editorially when half your audience cannot see headlines, layout, or images. Structure, voice, and the unexpected convergence: writing well for agents is just writing well.">
+  <meta property="og:title" content="Week 9: Writing for an Audience That Cannot See">
+  <meta property="og:description" content="The AI agent reading your article is not reading it. It is parsing it. A practical Founder Friday on what changes when half your audience cannot see anything but signal.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/originals/week-9">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-06-19">
+  <meta property="article:author" content="Ripper">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/originals/week-9">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Week 9: Writing for an Audience That Cannot See",
+    "description": "The AI agent reading your article is not reading it. It is parsing it. A practical Founder Friday on what changes editorially when half your audience cannot see headlines, layout, or images.",
+    "author": {
+      "@type": "Person",
+      "name": "Ripper",
+      "url": "https://terminalfeed.io/team/ripper"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://terminalfeed.io/logo.png"
+      }
+    },
+    "datePublished": "2026-06-19",
+    "dateModified": "2026-06-19",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/originals/week-9",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C;
+      color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block;
+      font-size: 9px;
+      color: #5DCAA5;
+      border: 1px solid #5DCAA530;
+      background: #5DCAA510;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+      letter-spacing: 1px;
+    }
+    .tag-original {
+      color: #EF9F27 !important;
+      border-color: #EF9F2730 !important;
+      background: #EF9F2710 !important;
+    }
+    .article-header h1 {
+      font-size: 22px;
+      color: #F0EDE6;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 {
+      font-size: 16px;
+      color: #4ADE80;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      font-family: inherit;
+      background: #111114;
+      border: 1px solid #1E1E24;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #5DCAA5;
+    }
+    .callout {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-left: 3px solid #EF9F27;
+      border-radius: 6px;
+      padding: 18px 20px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .callout strong { color: #F0EDE6; }
+    .cta-box {
+      background: #111114;
+      border: 1px solid #5DCAA530;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #0A0A0C;
+      background: #5DCAA5;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+    .author-box {
+      background: #111114;
+      border: 1px solid #1E1E24;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 36px;
+      font-size: 12px;
+      color: #8A8880;
+      line-height: 1.7;
+    }
+    .author-box strong { color: #F0EDE6; }
+    footer.footer {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 11px;
+      color: #4E4D49;
+      border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><a href="/blog#originals">Originals</a><span class="bc-sep">&rsaquo;</span><span>Week 9</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Originals", "item": "https://terminalfeed.io/blog#originals" },
+        { "@type": "ListItem", "position": 4, "name": "Week 9", "item": "https://terminalfeed.io/blog/originals/week-9" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag tag-original">ORIGINAL</span>
+        <span class="article-tag">WEEKLY</span>
+        <span class="article-tag">FOUNDER FRIDAY</span>
+      </div>
+      <h1>Week 9: Writing for an Audience That Cannot See</h1>
+      <div class="article-meta">
+        <span>By <a href="/team/ripper" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Ripper</a></span>
+        <span>Founder &amp; Editor-in-Chief</span>
+        <span>June 19, 2026</span>
+        <span>5 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>An AI agent reading this paragraph is not reading it. It is parsing it. The agent does not register typography or color or the soft padding of the container. It sees a stream of tokens, some structural and some semantic, and it weighs them against an objective set by whichever model is asking. <a href="/blog/originals/week-8">Last week</a> I argued that the publisher's job in 2026 is to serve two audiences with different mechanics. This week I want to get specific about what that means at the level of a single sentence.</p>
+
+      <p>Writing for an audience that cannot see is the editorial half of the architectural problem. The monetization side of the question is settled by <a href="/blog/how-ai-agents-pay-terminalfeed">x402 V2 and AFTA</a>. The content side is not settled. Most publishers have not even noticed the question.</p>
+
+      <h2>What the Agent Actually Sees</h2>
+
+      <p>An AI agent fetching an article sees, in rough order of weight: the HTTP status, the canonical URL, the JSON-LD structured data, the meta description, the h1 and h2 elements, the body text in document order, the alt text on any images, and finally the raw markup if the model is large enough to attend to it. It does not see the dark monospace styling. It does not see the orange tag chips. It does not see whether the layout is responsive. None of those exist in the input the model receives.</p>
+
+      <p>The corollary is uncomfortable. Most of what passes for "good design" on a modern publication is invisible to half the audience. The hero image, the pull quote, the floating share buttons, the cookie banner, the inline newsletter capture, the related-posts carousel: all of it costs you bytes in the prompt window and contributes nothing to the agent's understanding of what the article actually says. The visual polish that defines a brand to humans is friction to a parser.</p>
+
+      <h2>What Changes Structurally</h2>
+
+      <p>Three structural choices matter disproportionately:</p>
+
+      <p><strong>Semantic HTML, not div soup.</strong> A model parsing a page weighs <code>&lt;h2&gt;</code> differently from <code>&lt;div class="section-title"&gt;</code>. The first carries structural meaning the model was trained to honor. The second is decorative noise it has to infer through. If your CMS spits out generic divs everywhere, the model is doing extra work to find the spine of your argument, and it does that work imperfectly.</p>
+
+      <p><strong>Clean JSON-LD on every article.</strong> The Article schema tells the model exactly who wrote what when, with which canonical URL and which publisher. That metadata costs you nothing to include and saves the model from guessing. It is also what makes citation possible: a model that can locate the canonical URL can link back to you in its response, which is the entire SEO substitute for the AI-search era.</p>
+
+      <p><strong>Predictable URLs.</strong> If your blog lives at <code>/blog/post-slug</code> and that path never moves, the model can reference it reliably. If your URLs include session IDs, tracking parameters, or paginated suffixes that change, every reference rots. URL stability is the closest thing the AI-search era has to a backlink graph, and most sites are quietly destroying it.</p>
+
+      <div class="callout">
+        <strong>The compression test:</strong> Imagine your article was reduced to its h1 plus its first two paragraphs. Does it still tell the reader what the piece is actually about? If yes, you are writing in a way an agent can summarize accurately. If no, the agent is going to invent a summary, and the invented summary will outlive your original framing in every citation that follows.
+      </div>
+
+      <h2>What Changes Editorially</h2>
+
+      <p>The structural changes are mechanical. The editorial changes are harder because they cut against decades of internet writing convention.</p>
+
+      <p><strong>Lead with the answer.</strong> A human reader who clicked your headline will tolerate three paragraphs of setup before you get to the point. An agent will weigh those three paragraphs against the rest of the article and may decide the actual claim is something you said in passing on paragraph nine. Put the claim in paragraph one. Defend it after.</p>
+
+      <p><strong>Cut the SEO padding.</strong> The phrase "in this article we will explore" used to be SEO insurance. It now subtracts from the signal density of your lead. Repetition of the target keyword in the first paragraph is no longer rewarded by modern ranking models that understand semantics. Write the lead the way you would write it to a smart colleague over chat. Concise, specific, opinionated.</p>
+
+      <p><strong>State claims, not just observations.</strong> A model summarizing your piece needs to know what you are arguing. "Some experts believe X" is invisible noise. "X is true because of A, B, and C" is the kind of statement a model can carry forward, attribute to you, and cite. The hedged voice that used to feel professional now reads as content with nothing to attribute.</p>
+
+      <h2>The Convergence Point</h2>
+
+      <p>Here is the part I did not expect when I started thinking about this seriously. Writing well for AI agents is not a separate skill from writing well for humans. It is the same skill, with the soft compromises removed. Clear structure, claims up front, semantic markup, stable URLs, no padding, no hedging. The era did not add a new constraint. It removed the old excuses that let mediocre writing survive on visual polish and audience patience.</p>
+
+      <p>Sites that have been doing this all along are getting rewarded twice. The humans like it because the signal density is high. The agents like it because the structural cues are clean. The convergence is real and the publishers who notice it now will compound the advantage over the next two years. The ones who do not will be the ones surprised that their traffic patterns shifted in ways their analytics cannot explain.</p>
+
+      <h2>What is Next</h2>
+
+      <p>Unified federation analytics is still the load-bearing item, and the framing from <a href="/blog/originals/week-8">week 8</a> still holds: track agent revenue, human-to-agent traffic ratio, retention by tier. The x402 V2 plus AFTA plus Bazaar reference piece comes after that. Once those two ship I want to write a longer-form companion to this dispatch about the actual mechanics of crafting a sentence for two audiences. That one is a craft piece, not a strategic one, and it deserves its own canonical URL.</p>
+
+      <p>If you are a writer reading this and the second half of your audience cannot see your last hero image, ask whether the image was doing any work for the first half either. See you next Friday.</p>
+
+      <div class="cta-box">
+        <p>Read what we publish. See what an agent sees when it reads it.</p>
+        <a href="/" class="cta-link">Open TerminalFeed</a>
+      </div>
+
+      <div class="author-box">
+        <strong>Ripper</strong> is the founder and editor-in-chief of TerminalFeed. He writes the weekly Originals dispatch every Friday.
+      </div>
+
+    </article>
+  </div>
+
+  <footer class="footer">
+    <a href="/">Home</a>
+    <span class="sep">|</span>
+    <a href="/live">Live</a>
+    <span class="sep">|</span>
+    <a href="/tools/">Tools</a>
+    <span class="sep">|</span>
+    <a href="/agent">Agents</a>
+    <span class="sep">|</span>
+    <a href="/radio">Radio</a>
+    <span class="sep">|</span>
+    <a href="/wifi">WiFi</a>
+    <span class="sep">|</span>
+    <a href="/blog">Blog</a>
+    <span class="sep">|</span>
+    <a href="/developers">API</a>
+    <span class="sep">|</span>
+    <a href="/about">About</a>
+    <span class="sep">|</span>
+    <a href="/team">Team</a>
+    <span class="sep">|</span>
+    <a href="/features">Features</a>
+    <span class="sep">|</span>
+    <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer">TensorFeed.ai</a>
+  </footer>
+</body>
+</html>
