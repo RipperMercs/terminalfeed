@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Fri, 29 May 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 05 Jun 2026 12:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Week 7: The Cost of Saying Yes</title>
+      <link>https://terminalfeed.io/blog/originals/week-7</link>
+      <description>Every adjacent vertical that pattern-matches to existing infrastructure looks free and almost never is. The hardest founder skill is not knowing what to build. It is knowing what to refuse. A Founder Friday on scope discipline as the load-bearing decision of running a federation.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Fri, 05 Jun 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/originals/week-7</guid>
+    </item>
 
     <item>
       <title>Week 6: Notes from the Road, and Why a Federation is Easier Than One Big Site</title>
