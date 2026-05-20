@@ -6,12 +6,21 @@
     <description>Original articles on crypto, AI, developer tools, and the open internet. Written by the team behind TerminalFeed.</description>
     <atom:link href="https://terminalfeed.io/feed.xml" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>Fri, 22 May 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 29 May 2026 12:00:00 GMT</lastBuildDate>
     <image>
       <url>https://terminalfeed.io/logo.png</url>
       <title>TerminalFeed Blog</title>
       <link>https://terminalfeed.io/blog</link>
     </image>
+
+    <item>
+      <title>Week 6: Notes from the Road, and Why a Federation is Easier Than One Big Site</title>
+      <link>https://terminalfeed.io/blog/originals/week-6</link>
+      <description>Founder Friday from the road. A counterintuitive argument: running four specialized sites is lower cognitive load than running one sprawling one. Why the federation model is underrated for small teams, and how the shared infrastructure pays back the structural cost.</description>
+      <author>hello@terminalfeed.io (Ripper)</author>
+      <pubDate>Fri, 29 May 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/originals/week-6</guid>
+    </item>
 
     <item>
       <title>Week 5: Going Quiet to Ship a Network</title>

@@ -1,6 +1,19 @@
 {
-  "updated": "2026-05-20T04:03:32.782Z",
+  "updated": "2026-05-20T04:16:11.392Z",
   "articles": [
+    {
+      "slug": "originals/week-6",
+      "title": "Week 6: Notes from the Road, and Why a Federation is Easier Than One Big Site",
+      "excerpt": "Founder Friday from the road. A counterintuitive argument: running four specialized sites is lower cognitive load than running one sprawling one. Why the federation model is underrated for small teams, and how the shared infrastructure pays back the structural cost.",
+      "author": "Ripper",
+      "author_title": "Founder",
+      "tags": [
+        "WEEKLY",
+        "FOUNDER FRIDAY"
+      ],
+      "published": "2026-05-29",
+      "read_time": "5 min read"
+    },
     {
       "slug": "originals/week-5",
       "title": "Week 5: Going Quiet to Ship a Network",
@@ -62,19 +75,6 @@
       ],
       "published": "2026-05-04",
       "read_time": "11 min read"
-    },
-    {
-      "slug": "bitcoin-80k-sentiment-disconnect",
-      "title": "Bitcoin Just Crossed $80,000 and the Sentiment Data Says Fear",
-      "excerpt": "BTC tagged $80,100 today but the Fear and Greed Index reads 40 (Fear) and Polymarket gives 1% odds on $150K by June. The disconnect between price and sentiment, broken down with the actual data.",
-      "author": "Pulse",
-      "author_title": "Market Analyst",
-      "tags": [
-        "BITCOIN",
-        "MARKETS"
-      ],
-      "published": "2026-05-03",
-      "read_time": ""
     }
   ]
 }
