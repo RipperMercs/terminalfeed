@@ -24,7 +24,6 @@ export interface WeatherData {
 }
 
 const CACHE_KEY = 'weather';
-const LOCATION_KEY = 'tf_weather_location';
 const POLL_MS = 5 * 60_000; // 5 min
 
 // WMO weather codes → descriptions + icons
@@ -56,26 +55,10 @@ export function weatherDescription(code: number): { desc: string; icon: string }
   return WMO_CODES[code] ?? { desc: 'Unknown', icon: '?' };
 }
 
-interface SavedLocation {
+interface Location {
   lat: number;
   lon: number;
   city: string;
-}
-
-function getSavedLocation(): SavedLocation | null {
-  try {
-    const raw = localStorage.getItem(LOCATION_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function saveLocation(loc: SavedLocation): void {
-  try {
-    localStorage.setItem(LOCATION_KEY, JSON.stringify(loc));
-  } catch {}
 }
 
 
@@ -84,7 +67,7 @@ export function useWeather(): WeatherData | null {
     return getCache<WeatherData>(CACHE_KEY)?.data ?? null;
   });
   const mountedRef = useRef(true);
-  const locationRef = useRef<SavedLocation | null>(null);
+  const locationRef = useRef<Location | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -140,37 +123,32 @@ export function useWeather(): WeatherData | null {
     };
 
     const init = async () => {
-      // Check for saved location first
-      let loc = getSavedLocation();
-
-      if (!loc) {
-        // IP-based geolocation: no browser prompt needed
-        const ipApis = [
-          'https://ipapi.co/json/',
-          'https://ip-api.com/json/',
-        ];
-        for (const url of ipApis) {
-          try {
-            const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-            if (!res.ok) continue;
-            const json = await res.json();
-            const lat = json.latitude ?? json.lat;
-            const lon = json.longitude ?? json.lon;
-            const city = json.city ?? 'Unknown';
-            if (lat && lon) {
-              loc = { lat, lon, city };
-              saveLocation(loc);
-              break;
-            }
-          } catch {
-            continue;
+      // IP-based geolocation on every mount — no persistence, so the city
+      // tracks the user's current IP (handles travel, VPN changes, etc.)
+      let loc: Location | null = null;
+      const ipApis = [
+        'https://ipapi.co/json/',
+        'https://ip-api.com/json/',
+      ];
+      for (const url of ipApis) {
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+          if (!res.ok) continue;
+          const json = await res.json();
+          const lat = json.latitude ?? json.lat;
+          const lon = json.longitude ?? json.lon;
+          const city = json.city ?? 'Unknown';
+          if (lat && lon) {
+            loc = { lat, lon, city };
+            break;
           }
+        } catch {
+          continue;
         }
-        // Final fallback: Los Angeles
-        if (!loc) {
-          loc = { lat: 34.05, lon: -118.24, city: 'Los Angeles' };
-          saveLocation(loc);
-        }
+      }
+      // Fallback only if both IP APIs failed this session — not persisted.
+      if (!loc) {
+        loc = { lat: 34.05, lon: -118.24, city: 'Los Angeles' };
       }
 
       locationRef.current = loc;
