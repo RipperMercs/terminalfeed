@@ -1062,6 +1062,8 @@ function handleIndex() {
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
       '/api/air-quality', '/api/shodan', '/api/volcanoes',
       '/api/hf-trending', '/api/solana-network',
+      '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
+      '/api/sec-filings', '/api/treasury-yields',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -1325,30 +1327,71 @@ async function handleCoingeckoGold() {
 
 
 // GET /api/crypto-movers
+// CoinGecko free tier started rate-limiting Cloudflare Worker IPs aggressively
+// in 2026, returning 200 with empty/throttled responses. Try CoinGecko first
+// with a UA header, fall back to CoinLore (same upstream as our other crypto
+// endpoints) which has not blocked us.
 async function handleCryptoMovers() {
   var KEY = 'crypto-movers';
   var cached = getCached(KEY, 120000);
   if (cached) return jsonResponse(cached, 200, 120);
 
+  function fromCoingecko(coins) {
+    return coins.slice(0, 15).map(function(c) {
+      return {
+        name: c.name,
+        symbol: (c.symbol || '').toUpperCase(),
+        price_usd: c.current_price,
+        change_24h_percent: c.price_change_percentage_24h || 0,
+        market_cap: c.market_cap,
+        image: c.image,
+      };
+    });
+  }
+
+  function fromCoinlore(coins) {
+    return coins.slice(0, 15).map(function(c) {
+      return {
+        name: c.name,
+        symbol: (c.symbol || '').toUpperCase(),
+        price_usd: parseFloat(c.price_usd) || 0,
+        change_24h_percent: parseFloat(c.percent_change_24h) || 0,
+        market_cap: parseFloat(c.market_cap_usd) || 0,
+        image: null,
+      };
+    });
+  }
+
+  // Primary: CoinGecko
   try {
     var res = await fetchWithTimeout(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&sparkline=false&price_change_percentage=24h'
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&sparkline=false&price_change_percentage=24h',
+      { headers: { 'User-Agent': 'TerminalFeed.io/1.0 (+https://terminalfeed.io)', 'Accept': 'application/json' } },
+      6000
     );
-    var coins = await res.json();
-    var data = {
-      data: coins.slice(0, 15).map(function(c) {
-        return {
-          name: c.name,
-          symbol: (c.symbol || '').toUpperCase(),
-          price_usd: c.current_price,
-          change_24h_percent: c.price_change_percentage_24h || 0,
-          market_cap: c.market_cap,
-          image: c.image,
-        };
-      }),
-    };
-    setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    if (res.ok) {
+      var coins = await res.json();
+      if (Array.isArray(coins) && coins.length > 0) {
+        var mapped = fromCoingecko(coins);
+        if (mapped.length > 0) {
+          var data = { data: mapped, _source: 'coingecko' };
+          setCache(KEY, data);
+          return jsonResponse(data, 200, 120);
+        }
+      }
+    }
+  } catch (e) { /* fall through to CoinLore */ }
+
+  // Fallback: CoinLore
+  try {
+    var lr = await fetchWithTimeout('https://api.coinlore.net/api/tickers/?limit=30', {}, 6000);
+    if (!lr.ok) throw new Error('coinlore ' + lr.status);
+    var lj = await lr.json();
+    var lcoins = Array.isArray(lj.data) ? lj.data : [];
+    if (lcoins.length === 0) throw new Error('coinlore-empty');
+    var ldata = { data: fromCoinlore(lcoins), _source: 'coinlore' };
+    setCache(KEY, ldata);
+    return jsonResponse(ldata, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale);
@@ -2565,8 +2608,10 @@ const RSS_WHITELIST = [
   /^https:\/\/changelog\.com\/podcast\/feed$/,
   /^https:\/\/feed\.syntax\.fm\/rss$/,
   /^https:\/\/anchor\.fm\/s\/[a-f0-9]+\/podcast\/rss$/,
-  // Sister sites (owned): blended into the Tech / AI feed with their real links.
-  /^https:\/\/tensorfeed\.ai\/feed\.xml$/,
+  // Sister sites (owned): on-site editorial feeds blended into the Tech / AI
+  // feed as real rows with real permalinks. tensorfeed.ai/feed.xml is the
+  // outbound aggregator (not useful to blend); originals.xml is the editorial.
+  /^https:\/\/tensorfeed\.ai\/originals\.xml$/,
   /^https:\/\/vr\.org\/feed\.xml$/,
 ];
 
@@ -3097,19 +3142,37 @@ async function handleEconomicData(env) {
 
   if (!env || !env.FRED_API_KEY) return jsonResponse({ data: {} });
 
-  var series = { fed_rate: 'FEDFUNDS', cpi: 'CPIAUCSL', unemployment: 'UNRATE', gdp_growth: 'A191RL1Q225SBEA' };
+  var series = {
+    fed_rate:         'FEDFUNDS',
+    cpi:              'CPIAUCSL',
+    unemployment:     'UNRATE',
+    gdp_growth:       'A191RL1Q225SBEA',
+    yield_10y:        'DGS10',
+    yield_2y:         'DGS2',
+    mortgage_30y:     'MORTGAGE30US',
+    yield_curve_2_10: 'T10Y2Y',
+  };
 
   try {
     var keys = Object.keys(series);
     var results = await Promise.allSettled(
       keys.map(function(key) {
         var id = series[key];
+        // Pull last 5 observations so we can skip FRED's "." sentinel for
+        // pending/unreleased values and still get the most recent real number.
         return fetchWithTimeout(
-          'https://api.stlouisfed.org/fred/series/observations?series_id=' + id + '&sort_order=desc&limit=1&api_key=' + env.FRED_API_KEY + '&file_type=json',
+          'https://api.stlouisfed.org/fred/series/observations?series_id=' + id + '&sort_order=desc&limit=5&api_key=' + env.FRED_API_KEY + '&file_type=json',
           {}, 6000
         ).then(function(res) { return res.json(); })
          .then(function(d) {
-           var obs = d.observations && d.observations[0];
+           var observations = (d && d.observations) || [];
+           var obs = null;
+           for (var i = 0; i < observations.length; i++) {
+             if (observations[i] && observations[i].value && observations[i].value !== '.') {
+               obs = observations[i];
+               break;
+             }
+           }
            return [key, { value: obs ? parseFloat(obs.value) : null, date: obs ? obs.date : '' }];
          });
       })
@@ -3502,9 +3565,10 @@ async function handleSecFilings() {
       var updatedMatch = /<updated>([^<]+)<\/updated>/.exec(block);
       var idMatch = /<id>[^<]*accession-number=([\d-]+)/.exec(block);
       if (!titleMatch || !linkMatch || !updatedMatch) continue;
-      // Title format: "8-K - COMPANY NAME (CIK#######) (Filer)"
+      // Title format: "8-K - COMPANY NAME (#######) (Filer)" (CIK prefix dropped in 2026)
+      // Also accept legacy "(CIK#######)" form just in case.
       var rawTitle = titleMatch[1];
-      var titleParts = /^([\w-]+)\s*-\s*(.+?)\s*\(CIK(\d+)\)/.exec(rawTitle);
+      var titleParts = /^([\w-]+)\s*-\s*(.+?)\s*\((?:CIK)?0*(\d+)\)/.exec(rawTitle);
       if (!titleParts) continue;
       entries.push({
         form_type: titleParts[1],
@@ -3544,49 +3608,90 @@ async function handleTreasuryYields() {
   var cached = getCached(KEY, 1800000);
   if (cached) return jsonResponse(cached, 200, 1800);
 
-  try {
-    var url = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/daily_treasury_yield_curve_rates'
-            + '?sort=-record_date&page[size]=2&fields=record_date,bc_1month,bc_3month,bc_6month,bc_1year,bc_2year,bc_3year,bc_5year,bc_7year,bc_10year,bc_20year,bc_30year';
-    var res = await fetchWithTimeout(url, {}, 8000);
-    if (!res.ok) throw new Error('treasury ' + res.status);
-    var json = await res.json();
-    var rows = (json && json.data) || [];
-    if (rows.length === 0) throw new Error('treasury-empty');
-    var latest = rows[0];
-    var prev = rows[1] || null;
+  function n(v) { var f = parseFloat(v); return Number.isFinite(f) ? f : null; }
+  function delta(curr, prev) {
+    var c = n(curr), p = n(prev);
+    if (c == null || p == null) return null;
+    return parseFloat((c - p).toFixed(3));
+  }
+  function isoDate(mdy) {
+    var p = (mdy || '').split('/');
+    if (p.length !== 3) return mdy;
+    var y = p[2], m = p[0].padStart(2, '0'), d = p[1].padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
 
-    function n(v) { var f = parseFloat(v); return Number.isFinite(f) ? f : null; }
-    function delta(curr, prev) {
-      var c = n(curr), p = n(prev);
-      if (c == null || p == null) return null;
-      return parseFloat((c - p).toFixed(3));
+  try {
+    // Treasury Direct publishes the daily par yield curve as CSV. The
+    // historical fiscaldata v2 path 404s as of 2026-05; the CSV endpoint at
+    // home.treasury.gov is the stable source. Pull current calendar year so
+    // we always have at least one trading day plus the prior day for deltas.
+    var year = new Date().getUTCFullYear();
+    var url = 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/'
+            + year + '/all?type=daily_treasury_yield_curve&field_tdr_date_value=' + year + '&page&_format=csv';
+    // home.treasury.gov (Drupal) blocks non-browser UAs with 403. Spoof Chrome.
+    var res = await fetchWithTimeout(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/csv,text/plain,*/*',
+      },
+    }, 10000);
+    if (!res.ok) throw new Error('treasury ' + res.status);
+    var csv = await res.text();
+    var lines = csv.split(/\r?\n/).filter(function(l) { return l.trim(); });
+    if (lines.length < 2) throw new Error('treasury-empty');
+
+    // Header: Date,"1 Mo","1.5 Month","2 Mo","3 Mo","4 Mo","6 Mo","1 Yr","2 Yr","3 Yr","5 Yr","7 Yr","10 Yr","20 Yr","30 Yr"
+    var header = lines[0].split(',').map(function(h) { return h.replace(/"/g, '').trim(); });
+    var idx = {};
+    header.forEach(function(h, i) { idx[h] = i; });
+
+    function parseRow(line) {
+      var cols = line.split(',');
+      return {
+        date: cols[idx['Date']],
+        m1:  cols[idx['1 Mo']],
+        m3:  cols[idx['3 Mo']],
+        m6:  cols[idx['6 Mo']],
+        y1:  cols[idx['1 Yr']],
+        y2:  cols[idx['2 Yr']],
+        y3:  cols[idx['3 Yr']],
+        y5:  cols[idx['5 Yr']],
+        y7:  cols[idx['7 Yr']],
+        y10: cols[idx['10 Yr']],
+        y20: cols[idx['20 Yr']],
+        y30: cols[idx['30 Yr']],
+      };
     }
 
+    var latest = parseRow(lines[1]);
+    var prev = lines[2] ? parseRow(lines[2]) : null;
+
     var curve = {
-      m1:  n(latest.bc_1month),
-      m3:  n(latest.bc_3month),
-      m6:  n(latest.bc_6month),
-      y1:  n(latest.bc_1year),
-      y2:  n(latest.bc_2year),
-      y3:  n(latest.bc_3year),
-      y5:  n(latest.bc_5year),
-      y7:  n(latest.bc_7year),
-      y10: n(latest.bc_10year),
-      y20: n(latest.bc_20year),
-      y30: n(latest.bc_30year),
+      m1:  n(latest.m1),
+      m3:  n(latest.m3),
+      m6:  n(latest.m6),
+      y1:  n(latest.y1),
+      y2:  n(latest.y2),
+      y3:  n(latest.y3),
+      y5:  n(latest.y5),
+      y7:  n(latest.y7),
+      y10: n(latest.y10),
+      y20: n(latest.y20),
+      y30: n(latest.y30),
     };
     var deltas = prev ? {
-      m1:  delta(latest.bc_1month, prev.bc_1month),
-      m3:  delta(latest.bc_3month, prev.bc_3month),
-      m6:  delta(latest.bc_6month, prev.bc_6month),
-      y1:  delta(latest.bc_1year,  prev.bc_1year),
-      y2:  delta(latest.bc_2year,  prev.bc_2year),
-      y3:  delta(latest.bc_3year,  prev.bc_3year),
-      y5:  delta(latest.bc_5year,  prev.bc_5year),
-      y7:  delta(latest.bc_7year,  prev.bc_7year),
-      y10: delta(latest.bc_10year, prev.bc_10year),
-      y20: delta(latest.bc_20year, prev.bc_20year),
-      y30: delta(latest.bc_30year, prev.bc_30year),
+      m1:  delta(latest.m1,  prev.m1),
+      m3:  delta(latest.m3,  prev.m3),
+      m6:  delta(latest.m6,  prev.m6),
+      y1:  delta(latest.y1,  prev.y1),
+      y2:  delta(latest.y2,  prev.y2),
+      y3:  delta(latest.y3,  prev.y3),
+      y5:  delta(latest.y5,  prev.y5),
+      y7:  delta(latest.y7,  prev.y7),
+      y10: delta(latest.y10, prev.y10),
+      y20: delta(latest.y20, prev.y20),
+      y30: delta(latest.y30, prev.y30),
     } : {};
 
     // Curve inversion check: 2Y > 10Y is the classic recession signal
@@ -3598,7 +3703,7 @@ async function handleTreasuryYields() {
       endpoint: 'treasury-yields',
       updated_at: new Date().toISOString(),
       data: {
-        record_date: latest.record_date,
+        record_date: isoDate(latest.date),
         curve: curve,
         deltas_bps: deltas, // change from previous trading day (in pct points, positive=rising)
         inverted_2_10: inverted_2_10,
@@ -3614,6 +3719,67 @@ async function handleTreasuryYields() {
     return jsonResponse({ data: { curve: {}, error: 'treasury_unavailable' } }, 200, 60);
   }
 }
+
+// =============================================================================
+// /api/npm-trends : Yesterday's download counts for a curated set of packages
+// =============================================================================
+// Source: npmjs.org downloads API. Free, no key, no auth. Bulk endpoint
+// accepts comma-separated package names and returns { pkg: { downloads, ... } }.
+// Cache 1h — npm publishes once per day.
+
+var NPM_TREND_PACKAGES = [
+  'react', 'next', 'vue', 'svelte', 'astro',
+  'typescript', 'vite', 'tailwindcss', 'express', 'bun',
+  'eslint', 'prettier', 'webpack', 'rollup', 'esbuild',
+];
+
+async function handleNpmTrends() {
+  var KEY = 'npm-trends';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var list = NPM_TREND_PACKAGES.join(',');
+    var res = await fetchWithTimeout(
+      'https://api.npmjs.org/downloads/point/last-day/' + list,
+      { headers: { 'Accept': 'application/json' } },
+      8000
+    );
+    if (!res.ok) throw new Error('npm ' + res.status);
+    var json = await res.json();
+
+    var packages = NPM_TREND_PACKAGES.map(function(pkg) {
+      var rec = json[pkg];
+      return {
+        package: pkg,
+        downloads: (rec && typeof rec.downloads === 'number') ? rec.downloads : null,
+        date: rec ? rec.start : null,
+      };
+    }).filter(function(p) { return p.downloads != null; })
+      .sort(function(a, b) { return b.downloads - a.downloads; });
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'npm-trends',
+      updated_at: new Date().toISOString(),
+      data: packages,
+      attribution: 'npmjs.org public downloads API',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'npm-trends',
+      updated_at: new Date().toISOString(),
+      data: [],
+      error: 'npm_unavailable',
+    }, 200, 60);
+  }
+}
+
 
 // =============================================================================
 // /api/eonet : NASA EONET active natural event tracker
@@ -10573,6 +10739,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'sports-scoreboard': return await handleSportsScoreboard(url);
       case 'sports-summary':    return await handleSportsSummary(url);
       case 'gh-trending':    return await handleGhTrending(url, env);
+      case 'github-trending':return await handleGhTrending(url, env);
+      case 'npm-trends':     return await handleNpmTrends();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
