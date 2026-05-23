@@ -4201,7 +4201,7 @@ async function handleInternetPulse(env) {
         top_attacked_locations: topList(topAttacked).slice(0, 5),
         top_traffic_locations: topList(topTraffic).slice(0, 5),
       },
-      attribution: 'Cloudflare Radar — global internet aggregate stats',
+      attribution: 'Cloudflare Radar: global internet aggregate stats',
     };
     setCache(KEY, data);
     return jsonResponse(data, 200, 1800);
