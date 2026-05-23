@@ -2,6 +2,8 @@ import { memo, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useBtcPrice } from '../hooks/useBtcPrice';
 import type { PriceTick } from '../hooks/useBtcPrice';
+import { useCoinbaseTrades } from '../hooks/useCoinbaseTrades';
+import type { BtcTrade } from '../hooks/useCoinbaseTrades';
 import { PanelHead } from './PanelHead';
 import { LatencyChip } from './LatencyChip';
 import { CountUp } from '../primitives';
@@ -24,6 +26,43 @@ function formatCompact(n: number): string {
   if (n >= 1e6)  return `${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3)  return `${(n / 1e3).toFixed(1)}K`;
   return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function TradeTape({ trades }: { trades: BtcTrade[] }) {
+  return (
+    <div className={styles.tape}>
+      <div className={styles.tapeLabel}>
+        <span>TAPE · COINBASE</span>
+        <span>{trades.length > 0 ? `${trades.length} prints` : 'connecting'}</span>
+      </div>
+      {trades.length === 0 ? (
+        <div className={styles.tapeEmpty}>awaiting fills...</div>
+      ) : (
+        <div className={styles.tapeList}>
+          {trades.map((t, i) => {
+            const cls = t.side === 'buy' ? styles.tapeBuy : styles.tapeSell;
+            const arrow = t.side === 'buy' ? '▲' : '▼';
+            const price = (t.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+            // Most Coinbase prints are between 0.0001 and 1 BTC. Show enough
+            // precision that "0.0001 BTC" never collapses to "0.0000".
+            const size = t.size ?? 0;
+            let sizeStr: string;
+            if (size >= 1) sizeStr = size.toFixed(2);
+            else if (size >= 0.01) sizeStr = size.toFixed(3);
+            else if (size >= 0.0001) sizeStr = size.toFixed(5);
+            else sizeStr = size.toExponential(1);
+            return (
+              <span key={`${t.time}-${i}`} className={`${styles.tapeRow} ${cls}`}>
+                <span>{arrow}</span>
+                <span>${price}</span>
+                <span className={styles.tapeSize}>{sizeStr} BTC</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface ChartProps {
@@ -74,6 +113,7 @@ function HeroChart({ ticks, hostRef, pathRef }: ChartProps) {
 
 export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols }: Props) {
   const { data, priceHistory } = useBtcPrice();
+  const trades = useCoinbaseTrades();
   const [paused, setPaused] = useState(false);
   const [noTick, setNoTick] = useState(false);
   const chartHostRef = useRef<HTMLDivElement | null>(null);
@@ -170,6 +210,7 @@ export const BtcHero = memo(function BtcHero({ layout, panelHealth, getGridCols 
               <div className={styles.rangeMarker} style={{ left: markerPct + '%' }} />
             </div>
           </div>
+          <TradeTape trades={trades} />
         </div>
         <div style={{ position: 'relative' }}>
           {noTick && !isStale && <span className={styles.watchdog}>NO TICK</span>}

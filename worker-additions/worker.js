@@ -1064,6 +1064,7 @@ function handleIndex() {
       '/api/hf-trending', '/api/solana-network',
       '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
       '/api/sec-filings', '/api/treasury-yields',
+      '/api/cve', '/api/arxiv', '/api/liquidations', '/api/internet-pulse',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -3780,6 +3781,442 @@ async function handleNpmTrends() {
   }
 }
 
+// =============================================================================
+// /api/cve : Recently exploited + newly published CVEs
+// =============================================================================
+// Source A: CISA Known Exploited Vulnerabilities (KEV) catalog, the authoritative
+//           US gov list of CVEs with confirmed in-the-wild exploitation. Public
+//           domain JSON, no key, sorted newest-first by dateAdded.
+// Source B: NIST NVD CVE API v2.0, latest published CVEs across the whole CVE
+//           catalog (350k+). Free, no key required (50 req/30s without one).
+// Cache 5 min. Both upstreams update daily but we want fresh hits faster than
+// that when something hot drops.
+
+async function handleCve() {
+  var KEY = 'cve';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+
+  function fetchKev() {
+    return fetchWithTimeout(
+      'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
+      { headers: { 'Accept': 'application/json' } },
+      8000
+    ).then(function(r) {
+      if (!r.ok) throw new Error('kev ' + r.status);
+      return r.json();
+    }).then(function(j) {
+      var list = Array.isArray(j.vulnerabilities) ? j.vulnerabilities : [];
+      // KEV is sorted newest-first by dateAdded. Take the top 8.
+      return list.slice(0, 8).map(function(v) {
+        return {
+          cve: v.cveID || null,
+          vendor: sanitizeForLLM(v.vendorProject || ''),
+          product: sanitizeForLLM(v.product || ''),
+          name: sanitizeForLLM(v.vulnerabilityName || ''),
+          date_added: v.dateAdded || null,
+          due_date: v.dueDate || null,
+          known_ransomware: v.knownRansomwareCampaignUse === 'Known',
+          short_description: sanitizeForLLM(v.shortDescription || ''),
+          url: v.cveID ? ('https://nvd.nist.gov/vuln/detail/' + v.cveID) : null,
+        };
+      });
+    });
+  }
+
+  function fetchNvd() {
+    // NVD's default sort is publication-date ASCENDING — without a date filter
+    // we get CVEs from 1990. Use lastModStartDate to scope to the last 7 days,
+    // then sort published-desc client-side. NVD requires ISO 8601 with millis.
+    var now = new Date();
+    var weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    function iso(d) { return d.toISOString().replace(/Z$/, ''); }
+    var url = 'https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=10'
+            + '&pubStartDate=' + encodeURIComponent(iso(weekAgo))
+            + '&pubEndDate=' + encodeURIComponent(iso(now));
+    return fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 10000)
+      .then(function(r) {
+        if (!r.ok) throw new Error('nvd ' + r.status);
+        return r.json();
+      }).then(function(j) {
+        var list = Array.isArray(j.vulnerabilities) ? j.vulnerabilities : [];
+        // NVD returns wrappers: { cve: { id, descriptions, metrics, published, ... } }
+        return list.map(function(w) {
+          var c = w.cve || {};
+          var desc = '';
+          if (Array.isArray(c.descriptions)) {
+            for (var i = 0; i < c.descriptions.length; i++) {
+              if (c.descriptions[i].lang === 'en') { desc = c.descriptions[i].value; break; }
+            }
+          }
+          // Pull CVSS v3.1 base score if present.
+          var score = null, severity = null;
+          var m = c.metrics || {};
+          var v31 = (m.cvssMetricV31 && m.cvssMetricV31[0]) || (m.cvssMetricV30 && m.cvssMetricV30[0]) || null;
+          if (v31 && v31.cvssData) {
+            score = v31.cvssData.baseScore;
+            severity = v31.cvssData.baseSeverity;
+          }
+          return {
+            cve: c.id || null,
+            published: c.published || null,
+            modified: c.lastModified || null,
+            severity: severity,
+            score: score,
+            description: sanitizeForLLM(desc),
+            url: c.id ? ('https://nvd.nist.gov/vuln/detail/' + c.id) : null,
+          };
+        }).sort(function(a, b) {
+          return new Date(b.published || 0) - new Date(a.published || 0);
+        });
+      });
+  }
+
+  try {
+    var results = await Promise.allSettled([fetchKev(), fetchNvd()]);
+    var kev = results[0].status === 'fulfilled' ? results[0].value : [];
+    var nvd = results[1].status === 'fulfilled' ? results[1].value : [];
+
+    if (kev.length === 0 && nvd.length === 0) throw new Error('both-sources-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'cve',
+      updated_at: new Date().toISOString(),
+      data: {
+        kev_exploited: kev,        // confirmed in-the-wild exploitation
+        nvd_recent: nvd,           // newly published CVEs (may not be exploited)
+        kev_count: kev.length,
+        nvd_count: nvd.length,
+      },
+      attribution: 'CISA Known Exploited Vulnerabilities + NIST NVD (US public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'cve',
+      updated_at: new Date().toISOString(),
+      data: { kev_exploited: [], nvd_recent: [], kev_count: 0, nvd_count: 0 },
+      error: 'cve_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/arxiv : Latest arXiv preprints in cs.AI / cs.LG / cs.CL
+// =============================================================================
+// Source: arXiv Atom feed (export.arxiv.org). Free, no key. Returns the most
+// recently submitted papers in the AI/ML/NLP categories. Cache 1h — arXiv
+// updates submissions in batches with a few-hour lag, sub-hourly polling adds
+// no signal.
+
+async function handleArxiv() {
+  var KEY = 'arxiv';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var url = 'http://export.arxiv.org/api/query'
+            + '?search_query=cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.CL'
+            + '&sortBy=submittedDate&sortOrder=descending&max_results=15';
+    var res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/atom+xml' } }, 12000);
+    if (!res.ok) throw new Error('arxiv ' + res.status);
+    var xml = await res.text();
+
+    var entries = [];
+    var entryRe = /<entry>([\s\S]*?)<\/entry>/g;
+    var match;
+    while ((match = entryRe.exec(xml)) !== null && entries.length < 15) {
+      var block = match[1];
+      var titleMatch = /<title>([\s\S]*?)<\/title>/.exec(block);
+      var summaryMatch = /<summary>([\s\S]*?)<\/summary>/.exec(block);
+      var publishedMatch = /<published>([^<]+)<\/published>/.exec(block);
+      var updatedMatch = /<updated>([^<]+)<\/updated>/.exec(block);
+      var idMatch = /<id>([^<]+)<\/id>/.exec(block);
+
+      // Authors: there can be many <author><name>X</name></author> blocks.
+      var authors = [];
+      var authorRe = /<author>[\s\S]*?<name>([^<]+)<\/name>[\s\S]*?<\/author>/g;
+      var am;
+      while ((am = authorRe.exec(block)) !== null && authors.length < 8) {
+        authors.push(am[1].trim());
+      }
+
+      // Primary category
+      var catMatch = /<arxiv:primary_category[^>]*term="([^"]+)"/.exec(block);
+
+      if (!titleMatch || !idMatch) continue;
+
+      // Clean whitespace from title/summary
+      var title = titleMatch[1].replace(/\s+/g, ' ').trim();
+      var summary = summaryMatch ? summaryMatch[1].replace(/\s+/g, ' ').trim() : '';
+      // arXiv abstract URL like http://arxiv.org/abs/2509.12345v1
+      var url2 = idMatch[1].trim();
+      var arxivId = (/abs\/(.+)$/.exec(url2) || [])[1] || null;
+
+      entries.push({
+        arxiv_id: arxivId,
+        title: sanitizeForLLM(title),
+        authors: authors,
+        primary_category: catMatch ? catMatch[1] : null,
+        published: publishedMatch ? publishedMatch[1] : null,
+        updated: updatedMatch ? updatedMatch[1] : null,
+        summary: sanitizeForLLM(summary),
+        url: url2,
+        pdf_url: arxivId ? ('https://arxiv.org/pdf/' + arxivId) : null,
+      });
+    }
+
+    if (entries.length === 0) throw new Error('arxiv-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'arxiv',
+      updated_at: new Date().toISOString(),
+      data: entries,
+      attribution: 'arXiv.org (CC0 / open access). Per arXiv API policy: cache responses, do not hammer.',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'arxiv',
+      updated_at: new Date().toISOString(),
+      data: [],
+      error: 'arxiv_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/liquidations : Recent perp futures liquidations across BTC, ETH, SOL
+// =============================================================================
+// Source: OKX public liquidation-orders endpoint. Free, no key. Returns the
+// most recent filled liquidations per underlying. We aggregate side, count,
+// and biggest single liq across the three majors. Cache 60s.
+//
+// OKX BTC-USDT-SWAP: 1 contract = 0.01 BTC face value.
+// OKX ETH-USDT-SWAP: 1 contract = 0.1 ETH.
+// OKX SOL-USDT-SWAP: 1 contract = 1 SOL.
+// We use these to normalize size to USD notional via bkPx (bankruptcy price).
+
+async function handleLiquidations() {
+  var KEY = 'liquidations';
+  var cached = getCached(KEY, 60000);
+  if (cached) return jsonResponse(cached, 200, 60);
+
+  var assets = [
+    { ul: 'BTC-USDT', sym: 'BTC', contractSize: 0.01 },
+    { ul: 'ETH-USDT', sym: 'ETH', contractSize: 0.1 },
+    { ul: 'SOL-USDT', sym: 'SOL', contractSize: 1 },
+  ];
+
+  function fetchOne(asset) {
+    var url = 'https://www.okx.com/api/v5/public/liquidation-orders'
+            + '?instType=SWAP&state=filled&uly=' + asset.ul + '&limit=100';
+    return fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 6000)
+      .then(function(r) {
+        if (!r.ok) throw new Error('okx ' + r.status);
+        return r.json();
+      }).then(function(j) {
+        if (j.code !== '0' || !Array.isArray(j.data) || j.data.length === 0) return [];
+        var details = j.data[0] && Array.isArray(j.data[0].details) ? j.data[0].details : [];
+        return details.map(function(d) {
+          var px = parseFloat(d.bkPx);
+          var contracts = parseFloat(d.sz);
+          var notional = (Number.isFinite(px) && Number.isFinite(contracts)) ? px * contracts * asset.contractSize : 0;
+          // OKX side: 'sell' means the position holder was forced to sell (long
+          // liquidation); 'buy' means short liquidation.
+          var liquidated_side = d.side === 'sell' ? 'long' : 'short';
+          return {
+            symbol: asset.sym,
+            side: liquidated_side,
+            price: Number.isFinite(px) ? px : null,
+            notional_usd: Math.round(notional),
+            time: d.ts ? parseInt(d.ts, 10) : null,
+          };
+        }).filter(function(l) { return l.notional_usd > 0; });
+      })
+      .catch(function() { return []; });
+  }
+
+  try {
+    var settled = await Promise.all(assets.map(fetchOne));
+    var all = [].concat(settled[0], settled[1], settled[2])
+                .sort(function(a, b) { return (b.time || 0) - (a.time || 0); });
+
+    if (all.length === 0) throw new Error('no-liquidations');
+
+    var longs = all.filter(function(x) { return x.side === 'long'; });
+    var shorts = all.filter(function(x) { return x.side === 'short'; });
+    var sum = function(arr) { return arr.reduce(function(a, b) { return a + (b.notional_usd || 0); }, 0); };
+    var biggest = all.slice().sort(function(a, b) { return (b.notional_usd || 0) - (a.notional_usd || 0); })[0];
+
+    var bySymbol = {};
+    assets.forEach(function(a) {
+      var s = all.filter(function(x) { return x.symbol === a.sym; });
+      bySymbol[a.sym] = {
+        count: s.length,
+        long_notional_usd: sum(s.filter(function(x) { return x.side === 'long'; })),
+        short_notional_usd: sum(s.filter(function(x) { return x.side === 'short'; })),
+      };
+    });
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'liquidations',
+      updated_at: new Date().toISOString(),
+      data: {
+        recent: all.slice(0, 25),
+        totals: {
+          count: all.length,
+          long_notional_usd: sum(longs),
+          short_notional_usd: sum(shorts),
+          long_count: longs.length,
+          short_count: shorts.length,
+        },
+        biggest: biggest,
+        by_symbol: bySymbol,
+      },
+      attribution: 'OKX public liquidation-orders. Sample only — not all venues. BTC/ETH/SOL perp swaps.',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 60);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'liquidations',
+      updated_at: new Date().toISOString(),
+      data: { recent: [], totals: { count: 0 }, biggest: null, by_symbol: {} },
+      error: 'liquidations_unavailable',
+    }, 200, 30);
+  }
+}
+
+
+// =============================================================================
+// /api/internet-pulse : Cloudflare Radar global internet stats
+// =============================================================================
+// Source: Cloudflare Radar GraphQL/REST APIs. Requires CF_API_TOKEN secret with
+// 'Account.Cloudflare Radar' read scope (or the simpler "Read Radar data"
+// template). Composes three Radar feeds into a single 30-min snapshot:
+//   - HTTP request mix (mobile vs desktop, bot vs human, http/2 vs http/3)
+//   - Top attacked locations (DDoS layer 7)
+//   - Top traffic locations
+//
+// Without a token, returns a clean { needs_token: true } payload so the panel
+// can render an unobtrusive "configure to enable" state instead of crashing.
+
+async function handleInternetPulse(env) {
+  var KEY = 'internet-pulse';
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  if (!env || !env.CF_API_TOKEN) {
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'internet-pulse',
+      updated_at: new Date().toISOString(),
+      data: {
+        needs_token: true,
+        message: 'CF_API_TOKEN not configured. Set via: wrangler secret put CF_API_TOKEN',
+      },
+    }, 200, 60);
+  }
+
+  var headers = {
+    'Authorization': 'Bearer ' + env.CF_API_TOKEN,
+    'Accept': 'application/json',
+  };
+
+  function call(path) {
+    return fetchWithTimeout('https://api.cloudflare.com/client/v4/radar/' + path, { headers: headers }, 8000)
+      .then(function(r) {
+        if (!r.ok) throw new Error('radar ' + r.status + ' ' + path);
+        return r.json();
+      });
+  }
+
+  try {
+    var settled = await Promise.allSettled([
+      // HTTP request summary: mobile vs desktop, bot vs human, etc.
+      call('http/summary/device_type?dateRange=1d'),
+      call('http/summary/bot_class?dateRange=1d'),
+      call('http/summary/ip_version?dateRange=1d'),
+      // Top L7 DDoS targets
+      call('attacks/layer7/top/locations/target?dateRange=1d&limit=5'),
+      // Top traffic origins
+      call('http/top/locations?dateRange=1d&limit=5'),
+    ]);
+
+    function pick(idx) {
+      var s = settled[idx];
+      return (s && s.status === 'fulfilled') ? s.value : null;
+    }
+
+    var deviceSummary = pick(0);
+    var botSummary = pick(1);
+    var ipSummary = pick(2);
+    var topAttacked = pick(3);
+    var topTraffic = pick(4);
+
+    // Radar wraps results as { result: { summary_0: {...}, top_0: [...] } }
+    function summary(j) {
+      if (!j || !j.result) return null;
+      // Try summary_0 (the most common key) then any other key.
+      return j.result.summary_0 || (function() {
+        for (var k in j.result) { if (typeof j.result[k] === 'object') return j.result[k]; }
+        return null;
+      })();
+    }
+    function topList(j) {
+      if (!j || !j.result) return [];
+      if (Array.isArray(j.result.top_0)) return j.result.top_0;
+      for (var k in j.result) { if (Array.isArray(j.result[k])) return j.result[k]; }
+      return [];
+    }
+
+    if (!deviceSummary && !botSummary && !ipSummary && !topAttacked && !topTraffic) {
+      throw new Error('all-radar-calls-failed');
+    }
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'internet-pulse',
+      updated_at: new Date().toISOString(),
+      data: {
+        window: 'last 24h',
+        device_mix: summary(deviceSummary),
+        bot_mix: summary(botSummary),
+        ip_version_mix: summary(ipSummary),
+        top_attacked_locations: topList(topAttacked).slice(0, 5),
+        top_traffic_locations: topList(topTraffic).slice(0, 5),
+      },
+      attribution: 'Cloudflare Radar — global internet aggregate stats',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'internet-pulse',
+      updated_at: new Date().toISOString(),
+      data: { window: 'last 24h' },
+      error: 'radar_unavailable',
+    }, 200, 60);
+  }
+}
 
 // =============================================================================
 // /api/eonet : NASA EONET active natural event tracker
@@ -10741,6 +11178,10 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'gh-trending':    return await handleGhTrending(url, env);
       case 'github-trending':return await handleGhTrending(url, env);
       case 'npm-trends':     return await handleNpmTrends();
+      case 'cve':            return await handleCve();
+      case 'arxiv':          return await handleArxiv();
+      case 'liquidations':   return await handleLiquidations();
+      case 'internet-pulse': return await handleInternetPulse(env);
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
