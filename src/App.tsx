@@ -1580,14 +1580,19 @@ function App() {
         );
       };
 
-      type TopRow = { clientCountryAlpha2?: string; clientCountryName?: string; originCountryAlpha2?: string; originCountryName?: string; value?: string };
+      type TopRow = {
+        clientCountryAlpha2?: string; clientCountryName?: string;
+        originCountryAlpha2?: string; originCountryName?: string;
+        targetCountryAlpha2?: string; targetCountryName?: string;
+        value?: string;
+      };
       const renderTopLocations = (rows: TopRow[]) => {
         if (!rows || rows.length === 0) return <span style={dim}>no data</span>;
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {rows.slice(0, 4).map((r, i) => {
-              const code = r.clientCountryAlpha2 ?? r.originCountryAlpha2 ?? '??';
-              const name = r.clientCountryName ?? r.originCountryName ?? code;
+              const code = r.clientCountryAlpha2 ?? r.originCountryAlpha2 ?? r.targetCountryAlpha2 ?? '??';
+              const name = r.clientCountryName ?? r.originCountryName ?? r.targetCountryName ?? code;
               const pct = parseFloat(r.value ?? '');
               return (
                 <div key={code + i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
