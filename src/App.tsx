@@ -95,6 +95,11 @@ import { useFederalRegister } from './hooks/useFederalRegister';
 import { useOpenFdaRecalls } from './hooks/useOpenFdaRecalls';
 import { useGhReleases } from './hooks/useGhReleases';
 import { usePypiTrends } from './hooks/usePypiTrends';
+import { useCve } from './hooks/useCve';
+import { useArxiv } from './hooks/useArxiv';
+import { useLiquidations } from './hooks/useLiquidations';
+import { useWikiFeatured } from './hooks/useWikiFeatured';
+import { useNhcStorms } from './hooks/useNhcStorms';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -207,6 +212,11 @@ function App() {
   const fdaRecalls = useOpenFdaRecalls();
   const ghReleases = useGhReleases();
   const pypiTrends = usePypiTrends();
+  const cve = useCve();
+  const arxiv = useArxiv();
+  const liquidations = useLiquidations();
+  const wikiFeatured = useWikiFeatured();
+  const nhcStorms = useNhcStorms();
   const secFilings = useSecFilings();
   const treasuryYields = useTreasuryYields();
   const eonet = useEonet();
@@ -360,6 +370,11 @@ function App() {
     if (fdaRecalls && fdaRecalls.recent.length > 0) panelHealth.reportData('openfda-recalls');
     if (ghReleases && ghReleases.recent.length > 0) panelHealth.reportData('gh-releases');
     if (pypiTrends.length > 0) panelHealth.reportData('pypi-trends');
+    if (cve && (cve.kev_count > 0 || cve.nvd_count > 0)) panelHealth.reportData('cve');
+    if (arxiv.length > 0) panelHealth.reportData('arxiv');
+    if (liquidations && liquidations.totals.count > 0) panelHealth.reportData('liquidations');
+    if (wikiFeatured) panelHealth.reportData('wiki-featured');
+    if (nhcStorms) panelHealth.reportData('nhc-storms');
     if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
@@ -1764,6 +1779,206 @@ function App() {
           ))}
         </div>
         <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>pypistats.org · daily downloads</div>
+      </>);
+    })(),
+    'cve': (() => {
+      const sevColor: Record<string, string> = {
+        CRITICAL: 'var(--red)',
+        HIGH: '#f59e0b',
+        MEDIUM: 'var(--amber)',
+        LOW: 'var(--text-dim)',
+      };
+      const kev = cve?.kev_exploited ?? [];
+      const nvd = cve?.nvd_recent ?? [];
+      return (<>
+        <PanelHead panelId="cve" isStale={panelHealth.isStale('cve')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">CVE / KEV</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>EXPLOITED</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>5m</span>
+        </PanelHead>
+        {!cve && <LoadingOrHide label="loading vulns..." />}
+        {cve && (<>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>CISA KEV · in-the-wild</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 6 }}>
+            {kev.slice(0, 5).map((v) => (
+              <a key={v.cve} href={v.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 9, color: v.known_ransomware ? 'var(--red)' : 'var(--amber)', fontWeight: 700, minWidth: 86, flexShrink: 0, fontFamily: 'inherit', paddingTop: 1 }}>{v.cve}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.vendor} {v.product}</div>
+                </div>
+                {v.known_ransomware && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 700 }}>RANS</span>}
+              </a>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>NVD · last 7 days</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {nvd.slice(0, 4).map((v) => {
+              const c = v.severity ? (sevColor[v.severity] ?? 'var(--text-dim)') : 'var(--text-dim)';
+              return (
+                <a key={v.cve} href={v.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 9, color: c, fontWeight: 700, minWidth: 86, flexShrink: 0, paddingTop: 1 }}>{v.cve}</span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.description}</span>
+                  {v.score != null && <span style={{ fontSize: 9, color: c, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{v.score.toFixed(1)}</span>}
+                </a>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>cisa.gov · nvd.nist.gov</div>
+        </>)}
+      </>);
+    })(),
+    'arxiv': (() => {
+      return (<>
+        <PanelHead panelId="arxiv" isStale={panelHealth.isStale('arxiv')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">arXiv AI Papers</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>AI/ML</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {arxiv.length === 0 && <LoadingOrHide label="loading papers..." />}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {arxiv.slice(0, 7).map((p) => {
+            const authors = (p.authors ?? []).slice(0, 2).join(', ') + ((p.authors?.length ?? 0) > 2 ? ' et al.' : '');
+            return (
+              <a key={p.arxiv_id} href={p.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 9, color: 'var(--purple)', fontWeight: 600, minWidth: 60, flexShrink: 0, paddingTop: 1, letterSpacing: 0.3 }}>{p.primary_category || 'cs.AI'}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{p.title}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{authors}</div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>arxiv.org · cs.AI/cs.LG/cs.CL</div>
+      </>);
+    })(),
+    'liquidations': (() => {
+      function fmtUsd(n: number): string {
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+        return '$' + n;
+      }
+      const t = liquidations?.totals;
+      const big = liquidations?.biggest;
+      const bySym = liquidations?.by_symbol ?? {};
+      return (<>
+        <PanelHead panelId="liquidations" isStale={panelHealth.isStale('liquidations')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Liquidations</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>OKX PERPS</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>60s</span>
+        </PanelHead>
+        {!liquidations && <LoadingOrHide label="loading liqs..." />}
+        {liquidations && t && (<>
+          <div style={{ display: 'flex', gap: 12, fontVariantNumeric: 'tabular-nums', marginBottom: 4 }}>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Long</div>
+              <div style={{ fontSize: 16, color: 'var(--red)', fontWeight: 700 }}>{fmtUsd(t.long_notional_usd)}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{t.long_count} fills</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Short</div>
+              <div style={{ fontSize: 16, color: 'var(--green)', fontWeight: 700 }}>{fmtUsd(t.short_notional_usd)}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{t.short_count} fills</div>
+            </div>
+          </div>
+          {big && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, marginBottom: 4 }}>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Biggest single</div>
+              <div style={{ fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ color: big.side === 'long' ? 'var(--red)' : 'var(--green)', fontWeight: 700 }}>{big.symbol} {big.side}</span>
+                <span style={{ color: 'var(--text)', marginLeft: 6 }}>{fmtUsd(big.notional_usd)}</span>
+                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>@ ${big.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+            </div>
+          )}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 9, fontVariantNumeric: 'tabular-nums', color: 'var(--text-dim)' }}>
+            {Object.entries(bySym).map(([sym, s]) => (
+              <div key={sym} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
+                <span style={{ color: 'var(--text)' }}>{sym}</span>
+                <span><span style={{ color: 'var(--red)' }}>{fmtUsd(s.long_notional_usd)}</span> / <span style={{ color: 'var(--green)' }}>{fmtUsd(s.short_notional_usd)}</span></span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>okx perp swaps · long fills / short fills</div>
+        </>)}
+      </>);
+    })(),
+    'wiki-featured': (() => {
+      const tfa = wikiFeatured?.featured_article;
+      const news = wikiFeatured?.news ?? [];
+      return (<>
+        <PanelHead panelId="wiki-featured" isStale={panelHealth.isStale('wiki-featured')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Wikipedia Today</span><span className="panelTag" style={{ color: 'var(--accent)', background: 'rgba(93,202,165,0.1)' }}>FEATURED</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>6h</span>
+        </PanelHead>
+        {!wikiFeatured && <LoadingOrHide label="loading wikipedia..." />}
+        {wikiFeatured && tfa && (<>
+          <a href={tfa.url ?? '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textDecoration: 'none', color: 'inherit', marginBottom: 6 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {tfa.thumbnail && (
+                <img src={tfa.thumbnail} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 2, flexShrink: 0 }} />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600, lineHeight: 1.3 }}>{tfa.title}</div>
+                <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 2, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{tfa.extract}</div>
+              </div>
+            </div>
+          </a>
+          {news.length > 0 && (<>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, borderTop: '1px solid var(--border)', paddingTop: 4 }}>In the news</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {news.slice(0, 3).map((n, i) => (
+                <div key={i} style={{ fontSize: 9, color: 'var(--text-dim)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }} dangerouslySetInnerHTML={{ __html: n.story }} />
+              ))}
+            </div>
+          </>)}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>en.wikipedia.org · CC BY-SA</div>
+        </>)}
+      </>);
+    })(),
+    'nhc-storms': (() => {
+      const classLabel: Record<string, string> = {
+        HU: 'Hurricane', MH: 'Major Hurricane', TS: 'Tropical Storm', STS: 'Subtropical Storm',
+        TD: 'Tropical Depression', STD: 'Subtropical Depression', PTC: 'Potential Tropical Cyclone',
+      };
+      const classColor: Record<string, string> = {
+        MH: 'var(--red)', HU: 'var(--red)', TS: 'var(--amber)', STS: 'var(--amber)',
+        TD: 'var(--text-dim)', STD: 'var(--text-dim)', PTC: 'var(--text-dim)',
+      };
+      const active = nhcStorms?.active ?? [];
+      const note = nhcStorms?.season_note;
+      return (<>
+        <PanelHead panelId="nhc-storms" isStale={panelHealth.isStale('nhc-storms')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Hurricane Center</span><span className="panelTag" style={{ color: active.length > 0 ? 'var(--red)' : 'var(--text-dim)', background: active.length > 0 ? 'rgba(248,113,113,0.1)' : 'rgba(138,136,128,0.1)' }}>{active.length > 0 ? `${active.length} ACTIVE` : 'CALM'}</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>15m</span>
+        </PanelHead>
+        {!nhcStorms && <LoadingOrHide label="loading nhc..." />}
+        {nhcStorms && active.length === 0 && (
+          <div style={{ fontSize: 10, color: 'var(--text-dim)', lineHeight: 1.5, padding: '4px 0' }}>
+            <div style={{ color: 'var(--green)', fontWeight: 600, marginBottom: 2 }}>No active storms</div>
+            <div>{note}</div>
+          </div>
+        )}
+        {nhcStorms && active.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {active.map((s) => {
+              const c = classColor[s.classification] ?? 'var(--text-dim)';
+              const label = classLabel[s.classification] ?? s.classification;
+              return (
+                <a key={s.id ?? s.name} href={s.public_advisory_url ?? '#'} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block', paddingBottom: 4, borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: c }}>{s.name}</span>
+                    <span style={{ fontSize: 9, color: c, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: 'var(--text-dim)', display: 'flex', gap: 10, fontVariantNumeric: 'tabular-nums' }}>
+                    {s.intensity_mph != null && <span><b style={{ color: 'var(--text)' }}>{s.intensity_mph}</b> mph</span>}
+                    {s.pressure_mb != null && <span><b style={{ color: 'var(--text)' }}>{s.pressure_mb}</b> mb</span>}
+                  </div>
+                  {s.movement && <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{s.movement}</div>}
+                </a>
+              );
+            })}
+          </div>
+        )}
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>nhc.noaa.gov · atlantic + east pacific</div>
       </>);
     })(),
     'sponsor-slot': (<>
