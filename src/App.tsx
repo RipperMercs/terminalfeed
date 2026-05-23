@@ -90,6 +90,7 @@ import { useEonet } from './hooks/useEonet';
 import { useAirQuality } from './hooks/useAirQuality';
 import { useShodan } from './hooks/useShodan';
 import { useVolcanoes } from './hooks/useVolcanoes';
+import { useCfRadar } from './hooks/useCfRadar';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -197,6 +198,7 @@ function App() {
   const airQuality = useAirQuality();
   const shodan = useShodan();
   const volcanoes = useVolcanoes();
+  const cfRadar = useCfRadar();
   const secFilings = useSecFilings();
   const treasuryYields = useTreasuryYields();
   const eonet = useEonet();
@@ -345,6 +347,7 @@ function App() {
     if (airQuality?.snapshot?.usAqi != null) panelHealth.reportData('air-quality');
     if (shodan && shodan.targets.length > 0) panelHealth.reportData('shodan');
     if (volcanoes && volcanoes.items.length > 0) panelHealth.reportData('volcanoes');
+    if (cfRadar.kind === 'ready') panelHealth.reportData('cf-radar');
     if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
@@ -1517,6 +1520,107 @@ function App() {
             <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>internetdb.shodan.io · public IPs</div>
           </div>
         )}
+      </>);
+    })(),
+    'cf-radar': (() => {
+      // Pulls /api/radar (Cloudflare Radar composite). When the worker
+      // doesn't yet have CF_API_TOKEN, surfaces a clean "config needed"
+      // state instead of a loading spinner that never resolves.
+      const dim = { fontSize: 10, color: 'var(--text-dim)' } as const;
+      const head = (
+        <PanelHead panelId="cf-radar" isStale={panelHealth.isStale('cf-radar')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Cloudflare Radar</span><span className="panelTag" style={{ color: 'var(--accent)', background: 'rgba(93,202,165,0.1)' }}>GLOBAL 24H</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30m</span>
+        </PanelHead>
+      );
+
+      if (cfRadar.kind === 'loading') {
+        return (<>{head}<div style={{ ...dim, padding: '4px 0' }}>loading radar...</div></>);
+      }
+      if (cfRadar.kind === 'needs_token') {
+        return (<>
+          {head}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 10 }}>
+            <span style={{ color: 'var(--amber)', letterSpacing: 0.5, fontWeight: 600 }}>CONFIG NEEDED</span>
+            <span style={{ color: 'var(--text-dim)', lineHeight: 1.5 }}>
+              Set <code style={{ color: 'var(--text)' }}>CF_API_TOKEN</code> as a Worker secret with{' '}
+              <span style={{ color: 'var(--text)' }}>Account → Cloudflare Radar → Read</span> permission.
+            </span>
+            <code style={{ fontSize: 9, color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              wrangler secret put CF_API_TOKEN
+            </code>
+          </div>
+        </>);
+      }
+      if (cfRadar.kind === 'error') {
+        return (<>{head}<div style={{ ...dim, padding: '4px 0', color: 'var(--amber)' }}>radar unavailable</div></>);
+      }
+
+      // kind === 'ready'
+      const d = cfRadar.data;
+      type Mix = Record<string, string> | null;
+      const renderMix = (mix: Mix, formatLabel?: (k: string) => string) => {
+        if (!mix) return <span style={dim}>no data</span>;
+        // Coerce to [label, percent] pairs, sort desc, take top 3.
+        const pairs = Object.entries(mix)
+          .map(([k, v]) => [formatLabel ? formatLabel(k) : k, parseFloat(v)] as [string, number])
+          .filter(([, n]) => Number.isFinite(n))
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3);
+        if (pairs.length === 0) return <span style={dim}>no data</span>;
+        return (
+          <div style={{ display: 'flex', gap: 10, fontSize: 10, fontVariantNumeric: 'tabular-nums' }}>
+            {pairs.map(([k, n]) => (
+              <span key={k}>
+                <span style={{ color: 'var(--text)', fontWeight: 600 }}>{n.toFixed(1)}%</span>
+                <span style={{ color: 'var(--text-dim)' }}> {k.toLowerCase()}</span>
+              </span>
+            ))}
+          </div>
+        );
+      };
+
+      type TopRow = { clientCountryAlpha2?: string; clientCountryName?: string; originCountryAlpha2?: string; originCountryName?: string; value?: string };
+      const renderTopLocations = (rows: TopRow[]) => {
+        if (!rows || rows.length === 0) return <span style={dim}>no data</span>;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {rows.slice(0, 4).map((r, i) => {
+              const code = r.clientCountryAlpha2 ?? r.originCountryAlpha2 ?? '??';
+              const name = r.clientCountryName ?? r.originCountryName ?? code;
+              const pct = parseFloat(r.value ?? '');
+              return (
+                <div key={code + i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+                  <span style={{ color: 'var(--text)' }}>{code} <span style={{ color: 'var(--text-dim)' }}>{name}</span></span>
+                  <span style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{Number.isFinite(pct) ? `${pct.toFixed(1)}%` : 'n/a'}</span>
+                </div>
+              );
+            })}
+          </div>
+        );
+      };
+
+      return (<>
+        {head}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>Device</div>
+            {renderMix(d.device_mix)}
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>Bot mix</div>
+            {renderMix(d.bot_mix)}
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>IP version</div>
+            {renderMix(d.ip_version_mix)}
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6 }}>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>Top L7 DDoS targets</div>
+            {renderTopLocations(d.top_attacked_locations as TopRow[])}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>radar.cloudflare.com · last 24h</div>
+        </div>
       </>);
     })(),
     'sponsor-slot': (<>
