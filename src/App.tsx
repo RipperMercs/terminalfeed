@@ -91,6 +91,10 @@ import { useAirQuality } from './hooks/useAirQuality';
 import { useShodan } from './hooks/useShodan';
 import { useVolcanoes } from './hooks/useVolcanoes';
 import { useCfRadar } from './hooks/useCfRadar';
+import { useFederalRegister } from './hooks/useFederalRegister';
+import { useOpenFdaRecalls } from './hooks/useOpenFdaRecalls';
+import { useGhReleases } from './hooks/useGhReleases';
+import { usePypiTrends } from './hooks/usePypiTrends';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -199,6 +203,10 @@ function App() {
   const shodan = useShodan();
   const volcanoes = useVolcanoes();
   const cfRadar = useCfRadar();
+  const federalRegister = useFederalRegister();
+  const fdaRecalls = useOpenFdaRecalls();
+  const ghReleases = useGhReleases();
+  const pypiTrends = usePypiTrends();
   const secFilings = useSecFilings();
   const treasuryYields = useTreasuryYields();
   const eonet = useEonet();
@@ -348,6 +356,10 @@ function App() {
     if (shodan && shodan.targets.length > 0) panelHealth.reportData('shodan');
     if (volcanoes && volcanoes.items.length > 0) panelHealth.reportData('volcanoes');
     if (cfRadar.kind === 'ready') panelHealth.reportData('cf-radar');
+    if (federalRegister.length > 0) panelHealth.reportData('federal-register');
+    if (fdaRecalls && fdaRecalls.recent.length > 0) panelHealth.reportData('openfda-recalls');
+    if (ghReleases && ghReleases.recent.length > 0) panelHealth.reportData('gh-releases');
+    if (pypiTrends.length > 0) panelHealth.reportData('pypi-trends');
     if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
@@ -1207,12 +1219,15 @@ function App() {
     </>),
     'producthunt': (<>
       <PanelHead panelId="producthunt" isStale={panelHealth.isStale('producthunt')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Product Hunt</span><span className="panelTag">TODAY</span></div></PanelHead>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {phProducts.length === 0 && <LoadingOrHide label="loading products..." />}
         {phProducts.map((p, i) => (
-          <a key={i} href={p.link} target="_blank" rel="noopener noreferrer" className="newsRow">
-            <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 700, flexShrink: 0, minWidth: 16 }}>{i + 1}</span>
-            <span className="newsTitle">{p.title}</span>
+          <a key={i} href={p.link} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+            <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 700, flexShrink: 0, minWidth: 16, paddingTop: 1 }}>{i + 1}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="newsTitle" style={{ fontWeight: 600 }}>{p.title}</div>
+              {p.tagline && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.tagline}</div>}
+            </div>
             <span className="newsMeta">{p.pubDate ? timeAgo(Math.floor(new Date(p.pubDate).getTime() / 1000)) : ''}</span>
           </a>
         ))}
@@ -1626,6 +1641,129 @@ function App() {
           </div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic' }}>radar.cloudflare.com · last 24h</div>
         </div>
+      </>);
+    })(),
+    'federal-register': (() => {
+      const typeColor: Record<string, string> = {
+        'Rule': 'var(--red)',
+        'Proposed Rule': 'var(--amber)',
+        'Notice': 'var(--text-dim)',
+        'Presidential Document': 'var(--purple)',
+      };
+      return (<>
+        <PanelHead panelId="federal-register" isStale={panelHealth.isStale('federal-register')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Federal Register</span><span className="panelTag" style={{ color: 'var(--accent)', background: 'rgba(93,202,165,0.1)' }}>7D</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30m</span>
+        </PanelHead>
+        {federalRegister.length === 0 && <LoadingOrHide label="loading rules..." />}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {federalRegister.slice(0, 8).map((d) => {
+            const c = typeColor[d.type] ?? 'var(--text-dim)';
+            const short = (d.type || '').replace('Presidential Document', 'PRES').replace('Proposed Rule', 'PROP').toUpperCase();
+            const agency = d.agencies?.[0] ?? '';
+            return (
+              <a key={d.document_number} href={d.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 9, color: c, fontWeight: 700, minWidth: 36, flexShrink: 0, paddingTop: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>{short}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="newsTitle" style={{ fontWeight: 500 }}>{d.title}</div>
+                  {agency && <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agency}</div>}
+                </div>
+                <span className="newsMeta" style={{ fontSize: 9 }}>{d.publication_date?.slice(5) ?? ''}</span>
+              </a>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>federalregister.gov · public domain</div>
+      </>);
+    })(),
+    'openfda-recalls': (() => {
+      const classColor: Record<string, string> = {
+        'Class I': 'var(--red)',
+        'Class II': 'var(--amber)',
+        'Class III': 'var(--text-dim)',
+      };
+      const categoryTag: Record<string, string> = { food: 'FOOD', drug: 'DRUG', device: 'DEV' };
+      const recent = fdaRecalls?.recent ?? [];
+      const byClass = fdaRecalls?.by_class ?? {};
+      return (<>
+        <PanelHead panelId="openfda-recalls" isStale={panelHealth.isStale('openfda-recalls')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">FDA Recalls</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>30D</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>6h</span>
+        </PanelHead>
+        {!fdaRecalls && <LoadingOrHide label="loading recalls..." />}
+        {fdaRecalls && (<>
+          <div style={{ display: 'flex', gap: 10, fontSize: 9, color: 'var(--text-dim)', marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <span><b style={{ color: 'var(--red)' }}>{byClass['Class I'] ?? 0}</b> CLASS I</span>
+            <span><b style={{ color: 'var(--amber)' }}>{byClass['Class II'] ?? 0}</b> II</span>
+            <span><b style={{ color: 'var(--text)' }}>{byClass['Class III'] ?? 0}</b> III</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {recent.slice(0, 7).map((r, i) => {
+              const c = classColor[r.classification] ?? 'var(--text-dim)';
+              return (
+                <div key={r.report_date + i} className="listRow" style={{ alignItems: 'flex-start', paddingTop: 2, paddingBottom: 2 }}>
+                  <span style={{ fontSize: 9, color: c, fontWeight: 700, minWidth: 32, flexShrink: 0, paddingTop: 1, letterSpacing: 0.5 }}>{categoryTag[r.category] ?? 'OTH'}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.product || r.reason}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.firm}</div>
+                  </div>
+                  <span style={{ fontSize: 9, color: c, flexShrink: 0, fontWeight: 600 }}>{(r.classification || '').replace('Class ', 'C')}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>openfda · last 30 days</div>
+        </>)}
+      </>);
+    })(),
+    'gh-releases': (() => {
+      const recent = ghReleases?.recent ?? [];
+      const freshCount = ghReleases?.fresh_count ?? 0;
+      return (<>
+        <PanelHead panelId="gh-releases" isStale={panelHealth.isStale('gh-releases')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">GitHub Releases</span><span className="panelTag" style={{ color: freshCount > 0 ? 'var(--green)' : 'var(--text-dim)', background: freshCount > 0 ? 'rgba(74,222,128,0.1)' : 'rgba(138,136,128,0.1)' }}>{freshCount > 0 ? `${freshCount} TODAY` : 'TRACKED'}</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!ghReleases && <LoadingOrHide label="loading releases..." />}
+        {ghReleases && recent.length === 0 && <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>no recent releases</div>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {recent.slice(0, 8).map((r) => {
+            const repoShort = r.repo.split('/')[1] ?? r.repo;
+            return (
+              <a key={r.repo + r.tag} href={r.url} target="_blank" rel="noopener noreferrer" className="newsRow">
+                <span style={{ fontSize: 10, color: r.prerelease ? 'var(--amber)' : 'var(--green)', fontWeight: 600, minWidth: 56, flexShrink: 0, fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{repoShort}</span>
+                <span className="newsTitle" style={{ fontSize: 10 }}>{r.tag}{r.prerelease ? ' ·pre' : ''}</span>
+                <span className="newsMeta" style={{ fontSize: 9 }}>{r.published_at ? timeAgo(Math.floor(new Date(r.published_at).getTime() / 1000)) : ''}</span>
+              </a>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>{ghReleases?.repos_tracked ?? 0} repos · last 1h</div>
+      </>);
+    })(),
+    'pypi-trends': (() => {
+      function fmt(n: number | null): string {
+        if (n == null) return 'n/a';
+        if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+        return String(n);
+      }
+      return (<>
+        <PanelHead panelId="pypi-trends" isStale={panelHealth.isStale('pypi-trends')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">PyPI Trends</span><span className="panelTag" style={{ color: 'var(--accent)', background: 'rgba(93,202,165,0.1)' }}>PYTHON</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>6h</span>
+        </PanelHead>
+        {pypiTrends.length === 0 && <LoadingOrHide label="loading downloads..." />}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontVariantNumeric: 'tabular-nums' }}>
+          {pypiTrends.slice(0, 10).map((p, i) => (
+            <a key={p.package} href={`https://pypi.org/project/${p.package}/`} target="_blank" rel="noopener noreferrer" className="listRow" style={{ paddingTop: 2, paddingBottom: 2 }}>
+              <span style={{ fontSize: 10, color: 'var(--text-dim)', minWidth: 16, flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ flex: 1, fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.package}</span>
+              <span style={{ fontSize: 10, color: 'var(--green)', minWidth: 50, textAlign: 'right' }}>{fmt(p.downloads_last_day)}/d</span>
+            </a>
+          ))}
+        </div>
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>pypistats.org · daily downloads</div>
       </>);
     })(),
     'sponsor-slot': (<>
