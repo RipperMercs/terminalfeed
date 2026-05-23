@@ -1065,6 +1065,8 @@ function handleIndex() {
       '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
       '/api/sec-filings', '/api/treasury-yields',
       '/api/cve', '/api/arxiv', '/api/liquidations', '/api/radar',
+      '/api/federal-register', '/api/openfda-recalls', '/api/gh-releases',
+      '/api/pypi-trends', '/api/producthunt',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -4099,6 +4101,452 @@ async function handleLiquidations() {
       data: { recent: [], totals: { count: 0 }, biggest: null, by_symbol: {} },
       error: 'liquidations_unavailable',
     }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/federal-register : Recent federal rules + proposed rules + presidential docs
+// =============================================================================
+// Source: federalregister.gov public API (api/v1). Public domain, no key.
+// Pulls documents published in the last 7 days, newest first. Useful as a
+// macro/policy signal: new rules from agencies often move markets.
+// Cache 30 min. The Federal Register publishes Monday-Friday.
+
+async function handleFederalRegister() {
+  var KEY = 'federal-register';
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  function iso(d) { return d.toISOString().split('T')[0]; }
+  var weekAgo = iso(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+
+  try {
+    var url = 'https://www.federalregister.gov/api/v1/documents.json'
+            + '?per_page=20&order=newest'
+            + '&conditions%5Bpublication_date%5D%5Bgte%5D=' + weekAgo
+            + '&fields%5B%5D=title&fields%5B%5D=type&fields%5B%5D=publication_date'
+            + '&fields%5B%5D=agencies&fields%5B%5D=html_url&fields%5B%5D=abstract'
+            + '&fields%5B%5D=document_number';
+    var res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 10000);
+    if (!res.ok) throw new Error('fr ' + res.status);
+    var json = await res.json();
+
+    var docs = (json.results || []).map(function(d) {
+      var agencyNames = Array.isArray(d.agencies)
+        ? d.agencies.map(function(a) { return a.name || a.raw_name || ''; }).filter(Boolean).slice(0, 2)
+        : [];
+      return {
+        title: sanitizeForLLM(d.title || ''),
+        type: d.type || '',                     // 'Rule', 'Proposed Rule', 'Notice', 'Presidential Document'
+        publication_date: d.publication_date,
+        agencies: agencyNames,
+        abstract: sanitizeForLLM(d.abstract || ''),
+        document_number: d.document_number,
+        url: d.html_url,
+      };
+    });
+
+    if (docs.length === 0) throw new Error('fr-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'federal-register',
+      updated_at: new Date().toISOString(),
+      data: docs,
+      total_in_window: json.count || docs.length,
+      window: 'last 7 days',
+      attribution: 'federalregister.gov public API (US public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'federal-register',
+      updated_at: new Date().toISOString(),
+      data: [],
+      error: 'federal_register_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/openfda-recalls : Recent FDA enforcement actions (food + drug + device)
+// =============================================================================
+// Source: openFDA enforcement reports. Public domain, no key required for
+// modest volume. Pulls last 30 days across all three categories, sorted by
+// report_date desc. Classifications: Class I (most serious) -> Class III.
+// Cache 6 hours -- FDA publishes daily.
+
+async function handleOpenFdaRecalls() {
+  var KEY = 'openfda-recalls';
+  var cached = getCached(KEY, 21600000); // 6h
+  if (cached) return jsonResponse(cached, 200, 21600);
+
+  function formatYmd(s) {
+    // FDA returns 'YYYYMMDD' as a string. Normalize to 'YYYY-MM-DD'.
+    if (!s || typeof s !== 'string' || s.length !== 8) return s || null;
+    return s.slice(0, 4) + '-' + s.slice(4, 6) + '-' + s.slice(6, 8);
+  }
+
+  // Window: last 30 days. openFDA wants 'report_date:[YYYYMMDD+TO+YYYYMMDD]'.
+  function ymd(d) {
+    var y = d.getUTCFullYear();
+    var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    var dd = String(d.getUTCDate()).padStart(2, '0');
+    return y + m + dd;
+  }
+  var to = new Date();
+  var from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+  var range = ymd(from) + '+TO+' + ymd(to);
+
+  function fetchCategory(category) {
+    var url = 'https://api.fda.gov/' + category + '/enforcement.json'
+            + '?search=report_date:%5B' + range + '%5D'
+            + '&sort=report_date:desc&limit=8';
+    return fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 8000)
+      .then(function(r) {
+        // openFDA returns 404 when zero results match. Treat as empty, not error.
+        if (r.status === 404) return { results: [] };
+        if (!r.ok) throw new Error('fda ' + category + ' ' + r.status);
+        return r.json();
+      }).then(function(j) {
+        return (j.results || []).map(function(r) {
+          return {
+            category: category,                  // food, drug, device
+            product: sanitizeForLLM(r.product_description || ''),
+            reason: sanitizeForLLM(r.reason_for_recall || ''),
+            classification: r.classification || '',
+            firm: sanitizeForLLM(r.recalling_firm || ''),
+            voluntary: (r.voluntary_mandated || '').toLowerCase().indexOf('voluntary') !== -1,
+            state: r.state || '',
+            country: r.country || '',
+            report_date: formatYmd(r.report_date),
+            recall_initiation_date: formatYmd(r.recall_initiation_date),
+            status: r.status || '',
+          };
+        });
+      })
+      .catch(function() { return []; });
+  }
+
+  try {
+    var settled = await Promise.all([
+      fetchCategory('food'),
+      fetchCategory('drug'),
+      fetchCategory('device'),
+    ]);
+    var all = [].concat(settled[0], settled[1], settled[2])
+                .sort(function(a, b) {
+                  // YYYY-MM-DD strings sort lexically the same as chronologically.
+                  return (b.report_date || '').localeCompare(a.report_date || '');
+                });
+    if (all.length === 0) throw new Error('fda-empty');
+
+    // Compute classification breakdown (Class I is most severe).
+    var classCounts = { 'Class I': 0, 'Class II': 0, 'Class III': 0 };
+    all.forEach(function(r) {
+      if (classCounts.hasOwnProperty(r.classification)) classCounts[r.classification] += 1;
+    });
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'openfda-recalls',
+      updated_at: new Date().toISOString(),
+      data: {
+        recent: all.slice(0, 20),
+        window: 'last 30 days',
+        by_class: classCounts,
+        by_category: {
+          food: settled[0].length,
+          drug: settled[1].length,
+          device: settled[2].length,
+        },
+      },
+      attribution: 'openFDA enforcement reports (US public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 21600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'openfda-recalls',
+      updated_at: new Date().toISOString(),
+      data: { recent: [], window: 'last 30 days', by_class: {}, by_category: {} },
+      error: 'openfda_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/gh-releases : Last-24h releases from a curated list of major repos
+// =============================================================================
+// Source: GitHub /repos/{owner}/{repo}/releases. Free unauth (60 req/hr) or
+// auth via GITHUB_TOKEN secret (5000 req/hr). 12 curated repos, ~12 requests
+// per cold cache fill. Cache 1h -- new releases are infrequent enough that
+// hourly polling beats per-request to GitHub.
+
+var GH_RELEASE_REPOS = [
+  'microsoft/vscode',
+  'nodejs/node',
+  'python/cpython',
+  'facebook/react',
+  'vuejs/core',
+  'vercel/next.js',
+  'vitejs/vite',
+  'tailwindlabs/tailwindcss',
+  'withastro/astro',
+  'oven-sh/bun',
+  'denoland/deno',
+  'microsoft/TypeScript',
+];
+
+async function handleGhReleases(env) {
+  var KEY = 'gh-releases';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  var headers = {
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+  if (env && env.GITHUB_TOKEN) headers['Authorization'] = 'Bearer ' + env.GITHUB_TOKEN;
+
+  function fetchOne(repo) {
+    var url = 'https://api.github.com/repos/' + repo + '/releases?per_page=3';
+    return fetchWithTimeout(url, { headers: headers }, 6000)
+      .then(function(r) {
+        if (r.status === 404) return [];           // some repos use tags, not releases
+        if (!r.ok) throw new Error('gh ' + r.status);
+        return r.json();
+      }).then(function(arr) {
+        if (!Array.isArray(arr)) return [];
+        return arr.map(function(rel) {
+          return {
+            repo: repo,
+            tag: rel.tag_name || '',
+            name: sanitizeForLLM(rel.name || rel.tag_name || ''),
+            prerelease: !!rel.prerelease,
+            published_at: rel.published_at || null,
+            url: rel.html_url || '',
+            author: rel.author?.login || null,
+          };
+        });
+      })
+      .catch(function() { return []; });
+  }
+
+  try {
+    var settled = await Promise.all(GH_RELEASE_REPOS.map(fetchOne));
+    var all = [].concat.apply([], settled);
+
+    // Sort by published_at desc, take top 25 across all repos.
+    all.sort(function(a, b) { return new Date(b.published_at || 0) - new Date(a.published_at || 0); });
+    var top = all.slice(0, 25);
+
+    // Compute "fresh" count: releases published in last 24h.
+    var dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    var fresh = all.filter(function(r) {
+      var t = new Date(r.published_at || 0).getTime();
+      return t > dayAgo;
+    });
+
+    if (all.length === 0) throw new Error('gh-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'gh-releases',
+      updated_at: new Date().toISOString(),
+      data: {
+        recent: top,
+        fresh_24h: fresh,
+        repos_tracked: GH_RELEASE_REPOS.length,
+        fresh_count: fresh.length,
+      },
+      attribution: 'GitHub Releases API. Set GITHUB_TOKEN for higher rate limits.',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'gh-releases',
+      updated_at: new Date().toISOString(),
+      data: { recent: [], fresh_24h: [], repos_tracked: GH_RELEASE_REPOS.length, fresh_count: 0 },
+      error: 'gh_releases_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/pypi-trends : Daily downloads for a curated set of Python packages
+// =============================================================================
+// Source: pypistats.org public API. Free, no key, no auth. One request per
+// package. Cache 1h -- pypistats updates daily.
+//
+// Companion to /api/npm-trends (same shape) so a single panel can render
+// either ecosystem.
+
+var PYPI_TREND_PACKAGES = [
+  'requests', 'numpy', 'pandas', 'fastapi', 'flask',
+  'django', 'pydantic', 'sqlalchemy', 'pillow', 'openai',
+  'anthropic', 'transformers', 'torch', 'pytest', 'ruff',
+];
+
+async function handlePypiTrends() {
+  var KEY = 'pypi-trends';
+  // 6h cache. pypistats.org rate-limits Worker egress IPs aggressively, so we
+  // amortize the partial-response problem by holding the response longer.
+  var cached = getCached(KEY, 21600000);
+  if (cached) return jsonResponse(cached, 200, 21600);
+
+  function fetchOne(pkg) {
+    return fetchWithTimeout(
+      'https://pypistats.org/api/packages/' + pkg + '/recent',
+      { headers: { 'Accept': 'application/json' } },
+      6000
+    ).then(function(r) {
+      if (!r.ok) throw new Error('pypi ' + r.status);
+      return r.json();
+    }).then(function(j) {
+      var d = j.data || {};
+      return {
+        package: pkg,
+        downloads_last_day: typeof d.last_day === 'number' ? d.last_day : null,
+        downloads_last_week: typeof d.last_week === 'number' ? d.last_week : null,
+        downloads_last_month: typeof d.last_month === 'number' ? d.last_month : null,
+      };
+    }).catch(function() { return { package: pkg, downloads_last_day: null, downloads_last_week: null, downloads_last_month: null }; });
+  }
+
+  try {
+    // pypistats.org rate-limits Worker egress IPs aggressively. Sequential
+    // with a 400ms gap reliably gets the majority through. ~6s total for 15
+    // packages; well within the request budget given the 6-hour cache TTL.
+    var settled = [];
+    for (var i = 0; i < PYPI_TREND_PACKAGES.length; i++) {
+      settled.push(await fetchOne(PYPI_TREND_PACKAGES[i]));
+      if (i < PYPI_TREND_PACKAGES.length - 1) {
+        await new Promise(function(r) { setTimeout(r, 400); });
+      }
+    }
+    var packages = settled
+      .filter(function(p) { return p.downloads_last_day != null; })
+      .sort(function(a, b) { return (b.downloads_last_day || 0) - (a.downloads_last_day || 0); });
+
+    if (packages.length === 0) throw new Error('pypi-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'pypi-trends',
+      updated_at: new Date().toISOString(),
+      data: packages,
+      attribution: 'pypistats.org public API',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'pypi-trends',
+      updated_at: new Date().toISOString(),
+      data: [],
+      error: 'pypi_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/producthunt : Today's top products from Product Hunt RSS
+// =============================================================================
+// Source: producthunt.com Atom feed. Free, no key. Parse the standard
+// <entry> blocks. Vote counts aren't in the RSS so we just surface name,
+// tagline, link, and time. Cache 1h.
+
+async function handleProductHunt() {
+  var KEY = 'producthunt';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://www.producthunt.com/feed',
+      { headers: { 'Accept': 'application/atom+xml,application/xml,text/xml' } },
+      8000
+    );
+    if (!res.ok) throw new Error('ph ' + res.status);
+    var xml = await res.text();
+
+    var products = [];
+    var entryRe = /<entry>([\s\S]*?)<\/entry>/g;
+    var match;
+    while ((match = entryRe.exec(xml)) !== null && products.length < 15) {
+      var block = match[1];
+      var titleMatch = /<title>([\s\S]*?)<\/title>/.exec(block);
+      var linkMatch = /<link[^>]+href="([^"]+)"/.exec(block);
+      var publishedMatch = /<published>([^<]+)<\/published>/.exec(block);
+      var idMatch = /<id>([^<]+)<\/id>/.exec(block);
+      // PH puts the tagline in <content type="html"> as the first paragraph.
+      var contentMatch = /<content[^>]*>([\s\S]*?)<\/content>/.exec(block);
+      if (!titleMatch || !linkMatch) continue;
+
+      var name = titleMatch[1].replace(/\s+/g, ' ').trim();
+
+      // Tagline lives inside <content type="html"> as the first <p>. The
+      // content is HTML-entity-encoded inside the Atom feed (so &lt;p&gt;).
+      // After decoding, the structure is:
+      //   <p>The tagline text</p>
+      //   <p><a href="...">Discussion</a> | <a href="...">Link</a></p>
+      var tagline = '';
+      if (contentMatch) {
+        // Decode the minimal entity set PH uses.
+        var decoded = contentMatch[1]
+          .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+        var firstP = /<p>\s*([\s\S]*?)\s*<\/p>/.exec(decoded);
+        if (firstP) {
+          tagline = firstP[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        }
+      }
+
+      products.push({
+        id: idMatch ? idMatch[1] : null,
+        name: sanitizeForLLM(name),
+        tagline: sanitizeForLLM(tagline),
+        published: publishedMatch ? publishedMatch[1] : null,
+        url: linkMatch[1],
+      });
+    }
+
+    if (products.length === 0) throw new Error('ph-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'producthunt',
+      updated_at: new Date().toISOString(),
+      data: products,
+      attribution: 'producthunt.com public RSS feed',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'producthunt',
+      updated_at: new Date().toISOString(),
+      data: [],
+      error: 'producthunt_unavailable',
+    }, 200, 60);
   }
 }
 
@@ -11178,10 +11626,15 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'gh-trending':    return await handleGhTrending(url, env);
       case 'github-trending':return await handleGhTrending(url, env);
       case 'npm-trends':     return await handleNpmTrends();
-      case 'cve':            return await handleCve();
-      case 'arxiv':          return await handleArxiv();
-      case 'liquidations':   return await handleLiquidations();
-      case 'radar': return await handleInternetPulse(env);
+      case 'cve':              return await handleCve();
+      case 'arxiv':            return await handleArxiv();
+      case 'liquidations':     return await handleLiquidations();
+      case 'radar':            return await handleInternetPulse(env);
+      case 'federal-register': return await handleFederalRegister();
+      case 'openfda-recalls':  return await handleOpenFdaRecalls();
+      case 'gh-releases':      return await handleGhReleases(env);
+      case 'pypi-trends':      return await handlePypiTrends();
+      case 'producthunt':      return await handleProductHunt();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
