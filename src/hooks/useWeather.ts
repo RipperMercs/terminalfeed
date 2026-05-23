@@ -123,7 +123,7 @@ export function useWeather(): WeatherData | null {
     };
 
     const init = async () => {
-      // IP-based geolocation on every mount — no persistence, so the city
+      // IP-based geolocation on every mount, no persistence, so the city
       // tracks the user's current IP (handles travel, VPN changes, etc.)
       let loc: Location | null = null;
       const ipApis = [
@@ -146,7 +146,7 @@ export function useWeather(): WeatherData | null {
           continue;
         }
       }
-      // Fallback only if both IP APIs failed this session — not persisted.
+      // Fallback only if both IP APIs failed this session (not persisted).
       if (!loc) {
         loc = { lat: 34.05, lon: -118.24, city: 'Los Angeles' };
       }
