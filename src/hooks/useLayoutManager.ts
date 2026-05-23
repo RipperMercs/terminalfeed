@@ -65,6 +65,11 @@ export const ALL_PANELS = [
   { id: 'openfda-recalls', label: 'FDA Recalls', defaultSpan: 1 },
   { id: 'gh-releases', label: 'GitHub Releases', defaultSpan: 1 },
   { id: 'pypi-trends', label: 'PyPI Trends', defaultSpan: 1 },
+  { id: 'cve', label: 'CVE / KEV', defaultSpan: 1 },
+  { id: 'arxiv', label: 'arXiv AI Papers', defaultSpan: 1 },
+  { id: 'liquidations', label: 'Liquidations', defaultSpan: 1 },
+  { id: 'wiki-featured', label: 'Wikipedia Today', defaultSpan: 1 },
+  { id: 'nhc-storms', label: 'Hurricane Center', defaultSpan: 1 },
   { id: 'sponsor-slot', label: 'Sponsor', defaultSpan: 1 },
   { id: 'premium-api', label: 'Premium API', defaultSpan: 1 },
   { id: 'severe-weather', label: 'Severe Weather', defaultSpan: 1 },
@@ -94,7 +99,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '49'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '50'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {

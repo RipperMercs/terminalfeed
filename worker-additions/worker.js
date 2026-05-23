@@ -1067,6 +1067,7 @@ function handleIndex() {
       '/api/cve', '/api/arxiv', '/api/liquidations', '/api/radar',
       '/api/federal-register', '/api/openfda-recalls', '/api/gh-releases',
       '/api/pypi-trends', '/api/producthunt',
+      '/api/wiki-featured', '/api/nhc-storms',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -4460,6 +4461,159 @@ async function handlePypiTrends() {
       updated_at: new Date().toISOString(),
       data: [],
       error: 'pypi_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/wiki-featured : Today's Wikipedia featured article + image + news
+// =============================================================================
+// Source: Wikimedia REST API /feed/featured/{yyyy}/{mm}/{dd}. Free, no key.
+// Per Wikimedia API policy a descriptive User-Agent is required. The endpoint
+// publishes once per day around 00:00 UTC, so we cache 6h aggressively.
+
+async function handleWikiFeatured() {
+  var KEY = 'wiki-featured';
+  var cached = getCached(KEY, 21600000); // 6h
+  if (cached) return jsonResponse(cached, 200, 21600);
+
+  var now = new Date();
+  var y = now.getUTCFullYear();
+  var m = String(now.getUTCMonth() + 1).padStart(2, '0');
+  var d = String(now.getUTCDate()).padStart(2, '0');
+  var url = 'https://en.wikipedia.org/api/rest_v1/feed/featured/' + y + '/' + m + '/' + d;
+
+  try {
+    var res = await fetchWithTimeout(url, {
+      headers: {
+        // Wikimedia asks for a descriptive UA with contact info per their
+        // API access policy.
+        'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)',
+        'Accept': 'application/json',
+      },
+    }, 8000);
+    if (!res.ok) throw new Error('wiki ' + res.status);
+    var json = await res.json();
+
+    var tfa = json.tfa || {};
+    var img = json.image || {};
+    var news = Array.isArray(json.news) ? json.news : [];
+    var onthisday = Array.isArray(json.onthisday) ? json.onthisday : [];
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'wiki-featured',
+      updated_at: new Date().toISOString(),
+      data: {
+        featured_article: {
+          title: sanitizeForLLM(tfa.normalizedtitle || tfa.title || ''),
+          extract: sanitizeForLLM(tfa.extract || ''),
+          thumbnail: tfa.thumbnail?.source || null,
+          url: tfa.content_urls?.desktop?.page || null,
+        },
+        image_of_day: {
+          title: sanitizeForLLM((img.title || '').replace(/^File:/, '')),
+          description: sanitizeForLLM(img.description?.text || ''),
+          thumbnail: img.thumbnail?.source || null,
+          url: img.image?.source || null,
+        },
+        news: news.slice(0, 5).map(function(n) {
+          var pages = Array.isArray(n.links) ? n.links : [];
+          return {
+            story: sanitizeForLLM(n.story || ''),
+            links: pages.slice(0, 4).map(function(p) {
+              return {
+                title: sanitizeForLLM(p.normalizedtitle || p.title || ''),
+                url: p.content_urls?.desktop?.page || null,
+              };
+            }),
+          };
+        }),
+        on_this_day_count: onthisday.length,
+        date: y + '-' + m + '-' + d,
+      },
+      attribution: 'en.wikipedia.org REST API / Creative Commons',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 21600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'wiki-featured',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'wiki_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/nhc-storms : NOAA National Hurricane Center active storms
+// =============================================================================
+// Source: nhc.noaa.gov/CurrentStorms.json. Free, no key, US public domain.
+// Returns currently-active named storms across Atlantic + East Pacific basins.
+// Often empty outside of June-November (hurricane season). Cache 15 min.
+
+async function handleNhcStorms() {
+  var KEY = 'nhc-storms';
+  var cached = getCached(KEY, 900000); // 15 min
+  if (cached) return jsonResponse(cached, 200, 900);
+
+  try {
+    var res = await fetchWithTimeout('https://www.nhc.noaa.gov/CurrentStorms.json', {
+      headers: { 'Accept': 'application/json' },
+    }, 8000);
+    if (!res.ok) throw new Error('nhc ' + res.status);
+    var json = await res.json();
+    var storms = Array.isArray(json.activeStorms) ? json.activeStorms : [];
+
+    var simplified = storms.map(function(s) {
+      return {
+        id: s.id || null,
+        name: s.name || '',
+        classification: s.classification || '',   // 'TD', 'TS', 'HU', etc.
+        intensity_mph: typeof s.intensity === 'string' ? parseInt(s.intensity, 10) : (s.intensity || null),
+        pressure_mb: typeof s.pressure === 'string' ? parseInt(s.pressure, 10) : (s.pressure || null),
+        basin: s.binNumber || '',
+        movement: sanitizeForLLM(s.movement || ''),
+        last_update: s.lastUpdate || null,
+        lat: s.latitudeNumeric != null ? Number(s.latitudeNumeric) : null,
+        lon: s.longitudeNumeric != null ? Number(s.longitudeNumeric) : null,
+        public_advisory_url: s.publicAdvisory?.url || null,
+        forecast_url: s.forecastTrack?.url || null,
+      };
+    });
+
+    // Rough severity ranking so consumers can sort: hurricane > tropical storm > depression.
+    var rank = { 'HU': 4, 'MH': 5, 'TS': 3, 'STS': 3, 'TD': 2, 'STD': 2, 'PTC': 1 };
+    simplified.sort(function(a, b) {
+      return (rank[b.classification] || 0) - (rank[a.classification] || 0);
+    });
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'nhc-storms',
+      updated_at: new Date().toISOString(),
+      data: {
+        active: simplified,
+        count: simplified.length,
+        season_note: simplified.length === 0 ? 'No active storms. Atlantic hurricane season runs Jun 1 - Nov 30.' : null,
+      },
+      attribution: 'NOAA National Hurricane Center (US public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 900);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'nhc-storms',
+      updated_at: new Date().toISOString(),
+      data: { active: [], count: 0 },
+      error: 'nhc_unavailable',
     }, 200, 60);
   }
 }
@@ -11635,6 +11789,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'gh-releases':      return await handleGhReleases(env);
       case 'pypi-trends':      return await handlePypiTrends();
       case 'producthunt':      return await handleProductHunt();
+      case 'wiki-featured':    return await handleWikiFeatured();
+      case 'nhc-storms':       return await handleNhcStorms();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
