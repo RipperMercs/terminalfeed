@@ -1064,7 +1064,7 @@ function handleIndex() {
       '/api/hf-trending', '/api/solana-network',
       '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
       '/api/sec-filings', '/api/treasury-yields',
-      '/api/cve', '/api/arxiv', '/api/liquidations', '/api/internet-pulse',
+      '/api/cve', '/api/arxiv', '/api/liquidations', '/api/radar',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -4104,7 +4104,7 @@ async function handleLiquidations() {
 
 
 // =============================================================================
-// /api/internet-pulse : Cloudflare Radar global internet stats
+// /api/radar : Cloudflare Radar global internet stats
 // =============================================================================
 // Source: Cloudflare Radar GraphQL/REST APIs. Requires CF_API_TOKEN secret with
 // 'Account.Cloudflare Radar' read scope (or the simpler "Read Radar data"
@@ -4117,14 +4117,14 @@ async function handleLiquidations() {
 // can render an unobtrusive "configure to enable" state instead of crashing.
 
 async function handleInternetPulse(env) {
-  var KEY = 'internet-pulse';
+  var KEY = 'radar';
   var cached = getCached(KEY, 1800000);
   if (cached) return jsonResponse(cached, 200, 1800);
 
   if (!env || !env.CF_API_TOKEN) {
     return jsonResponse({
       source: 'terminalfeed.io',
-      endpoint: 'internet-pulse',
+      endpoint: 'radar',
       updated_at: new Date().toISOString(),
       data: {
         needs_token: true,
@@ -4191,7 +4191,7 @@ async function handleInternetPulse(env) {
 
     var data = {
       source: 'terminalfeed.io',
-      endpoint: 'internet-pulse',
+      endpoint: 'radar',
       updated_at: new Date().toISOString(),
       data: {
         window: 'last 24h',
@@ -4210,7 +4210,7 @@ async function handleInternetPulse(env) {
     if (stale) return jsonResponse(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
-      endpoint: 'internet-pulse',
+      endpoint: 'radar',
       updated_at: new Date().toISOString(),
       data: { window: 'last 24h' },
       error: 'radar_unavailable',
@@ -11181,7 +11181,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'cve':            return await handleCve();
       case 'arxiv':          return await handleArxiv();
       case 'liquidations':   return await handleLiquidations();
-      case 'internet-pulse': return await handleInternetPulse(env);
+      case 'radar': return await handleInternetPulse(env);
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
