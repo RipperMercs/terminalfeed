@@ -80,6 +80,11 @@ export const ALL_PANELS = [
   { id: 'phishing', label: 'Phishing Feed', defaultSpan: 1 },
   { id: 'vix', label: 'VIX / Fear Gauge', defaultSpan: 1 },
   { id: 'tor', label: 'Tor Network', defaultSpan: 1 },
+  { id: 'aurora', label: 'Aurora Forecast', defaultSpan: 1 },
+  { id: 'hf-papers', label: 'HF Daily Papers', defaultSpan: 1 },
+  { id: 'eth-staking', label: 'ETH Staking', defaultSpan: 1 },
+  { id: 'fed-press', label: 'Fed Press', defaultSpan: 1 },
+  { id: 'co2', label: 'Atmospheric CO2', defaultSpan: 1 },
   { id: 'sponsor-slot', label: 'Sponsor', defaultSpan: 1 },
   { id: 'premium-api', label: 'Premium API', defaultSpan: 1 },
   { id: 'severe-weather', label: 'Severe Weather', defaultSpan: 1 },
@@ -109,7 +114,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '52'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '53'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
