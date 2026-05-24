@@ -19,14 +19,14 @@ const PRODUCT = 'BTC-USD';
 const MAX_TRADES = 5;
 const IS_MOBILE = typeof window !== 'undefined' && window.innerWidth < 768;
 // Coinbase BTC-USD fires hundreds of HFT prints/second, most of them dust
-// (sub-$1 market-maker activity). The slow throttle + dust filter make the
-// tape readable: only meaningful prints get through, paced at a glanceable
-// rate rather than blink-fast.
-const THROTTLE_MS = IS_MOBILE ? 6000 : 4000;
-// Drop any trade smaller than this many BTC. At $77K/BTC, 0.05 BTC is ~$3.8K
-// notional: small enough to capture retail activity, large enough to skip
-// the satoshi-tier HFT dust that visually dominates an unfiltered feed.
-const MIN_BTC = 0.05;
+// (sub-$1 market-maker activity). The medium throttle + dust filter make
+// the tape readable: only meaningful prints get through, paced at a
+// glanceable rate rather than blink-fast.
+const THROTTLE_MS = IS_MOBILE ? 4000 : 2000;
+// Drop any trade smaller than this many BTC. At $77K/BTC, 0.01 BTC is
+// ~$770 notional: skips satoshi-tier HFT dust while still surfacing normal
+// retail flow. 0.05 BTC was too strict; whole-minute gaps with no prints.
+const MIN_BTC = 0.01;
 
 export function useCoinbaseTrades(): BtcTrade[] {
   const [trades, setTrades] = useState<BtcTrade[]>([]);

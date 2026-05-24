@@ -29,12 +29,12 @@ function formatCompact(n: number): string {
 }
 
 function TradeTape({ trades }: { trades: BtcTrade[] }) {
-  // Size tiers drive visual weight: a 5 BTC print should hit the eye harder
-  // than a 0.05 BTC print. Tier thresholds tuned for the post-dust-filter
-  // distribution where the smallest visible trade is 0.05 BTC.
+  // Size tiers drive visual weight: a 1 BTC print should hit the eye harder
+  // than a 0.01 BTC print. Tier thresholds tuned for the post-dust-filter
+  // distribution where the smallest visible trade is 0.01 BTC (~$770).
   function sizeTier(btc: number): 'small' | 'medium' | 'large' {
-    if (btc >= 2) return 'large';
-    if (btc >= 0.5) return 'medium';
+    if (btc >= 0.5) return 'large';
+    if (btc >= 0.1) return 'medium';
     return 'small';
   }
   function fmtSize(btc: number): string {
@@ -45,11 +45,11 @@ function TradeTape({ trades }: { trades: BtcTrade[] }) {
   return (
     <div className={styles.tape}>
       <div className={styles.tapeLabel}>
-        <span>TAPE · COINBASE · &ge;0.05 BTC</span>
+        <span>TAPE · COINBASE · &ge;0.01 BTC</span>
         <span>{trades.length > 0 ? `${trades.length} prints` : 'waiting'}</span>
       </div>
       {trades.length === 0 ? (
-        <div className={styles.tapeEmpty}>awaiting whale-tier fills...</div>
+        <div className={styles.tapeEmpty}>awaiting fills...</div>
       ) : (
         <div className={styles.tapeList}>
           {trades.map((t, i) => {
