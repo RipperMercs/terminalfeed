@@ -1069,6 +1069,7 @@ function handleIndex() {
       '/api/pypi-trends', '/api/producthunt',
       '/api/wiki-featured', '/api/nhc-storms',
       '/api/btc-difficulty', '/api/congress', '/api/lightning',
+      '/api/neo', '/api/defi-tvl-free', '/api/phishing', '/api/vix', '/api/tor',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -4863,6 +4864,459 @@ async function handleLightning() {
       data: null,
       error: 'lightning_unavailable',
     }, 200, 5);
+  }
+}
+
+// =============================================================================
+// /api/neo : NASA Near Earth Objects close-approach feed
+// =============================================================================
+// Source: api.nasa.gov/neo/rest/v1/feed. Public domain US gov data. The
+// public DEMO_KEY is rate-limited (30/hr) but works fine for our cache TTL.
+// If env.NASA_API_KEY is set, prefer that. Returns 7-day window of asteroid
+// close approaches with closest-approach distance + relative velocity.
+// Cache 1 hour.
+
+async function handleNeo(env) {
+  var KEY = 'neo';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  var apiKey = (env && env.NASA_API_KEY) || 'DEMO_KEY';
+  var today = new Date();
+  function fmtDate(d) {
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+  }
+  var start = fmtDate(today);
+  var end = fmtDate(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://api.nasa.gov/neo/rest/v1/feed?start_date=' + start + '&end_date=' + end + '&api_key=' + apiKey,
+      { headers: { 'Accept': 'application/json' } },
+      10000
+    );
+    if (!res.ok) throw new Error('nasa-neo ' + res.status);
+    var json = await res.json();
+
+    var allObjects = [];
+    var byDate = json.near_earth_objects || {};
+    Object.keys(byDate).forEach(function(date) {
+      (byDate[date] || []).forEach(function(o) {
+        var ca = (o.close_approach_data && o.close_approach_data[0]) || {};
+        var diamMin = o.estimated_diameter?.meters?.estimated_diameter_min || 0;
+        var diamMax = o.estimated_diameter?.meters?.estimated_diameter_max || 0;
+        allObjects.push({
+          id: o.id,
+          name: (o.name || '').replace(/^\(|\)$/g, ''),
+          hazardous: !!o.is_potentially_hazardous_asteroid,
+          sentry_object: !!o.is_sentry_object,
+          absolute_magnitude_h: o.absolute_magnitude_h,
+          diameter_m_min: Math.round(diamMin),
+          diameter_m_max: Math.round(diamMax),
+          close_approach_date: ca.close_approach_date_full || ca.close_approach_date || date,
+          relative_velocity_kmh: ca.relative_velocity ? parseFloat(ca.relative_velocity.kilometers_per_hour) : null,
+          miss_distance_km: ca.miss_distance ? parseFloat(ca.miss_distance.kilometers) : null,
+          miss_distance_lunar: ca.miss_distance ? parseFloat(ca.miss_distance.lunar) : null,
+          orbiting_body: ca.orbiting_body || 'Earth',
+          url: o.nasa_jpl_url,
+        });
+      });
+    });
+
+    // Sort by closest approach (smallest miss distance) then by date
+    allObjects.sort(function(a, b) {
+      return (a.miss_distance_km || Infinity) - (b.miss_distance_km || Infinity);
+    });
+
+    var hazardousCount = allObjects.filter(function(o) { return o.hazardous; }).length;
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'neo',
+      updated_at: new Date().toISOString(),
+      data: {
+        window: { start: start, end: end },
+        total: json.element_count || allObjects.length,
+        hazardous_count: hazardousCount,
+        closest_first: allObjects.slice(0, 20),
+      },
+      attribution: 'NASA Near Earth Object Web Service (public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'neo',
+      updated_at: new Date().toISOString(),
+      data: { closest_first: [], total: 0, hazardous_count: 0 },
+      error: 'neo_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/defi-tvl-free : Top DeFi protocols by TVL (free, no key)
+// =============================================================================
+// Source: api.llama.fi/protocols. Free, no key. 7000+ protocols. We rank by
+// current TVL, surface top 10 plus aggregate stats and 1d/7d deltas. Note
+// that DefiLlama treats CEX custodial reserves as "protocols" (Binance CEX,
+// OKX, etc.) so we tag them differently from pure DeFi protocols.
+// Cache 15 min.
+
+async function handleDefiTvlFree() {
+  var KEY = 'defi-tvl-free';
+  var cached = getCached(KEY, 900000);
+  if (cached) return jsonResponse(cached, 200, 900);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://api.llama.fi/protocols',
+      { headers: { 'Accept': 'application/json' } },
+      12000
+    );
+    if (!res.ok) throw new Error('defillama ' + res.status);
+    var protocols = await res.json();
+    if (!Array.isArray(protocols)) throw new Error('defillama-shape');
+
+    // Filter out broken/zero TVL entries
+    protocols = protocols.filter(function(p) { return typeof p.tvl === 'number' && p.tvl > 0; });
+    protocols.sort(function(a, b) { return b.tvl - a.tvl; });
+
+    var top = protocols.slice(0, 12).map(function(p) {
+      return {
+        name: sanitizeForLLM(p.name || ''),
+        symbol: p.symbol || '',
+        category: p.category || '',
+        chain: p.chain || '',
+        chains: Array.isArray(p.chains) ? p.chains.slice(0, 4) : [],
+        tvl_usd: Math.round(p.tvl),
+        change_1h_pct: typeof p.change_1h === 'number' ? p.change_1h : null,
+        change_1d_pct: typeof p.change_1d === 'number' ? p.change_1d : null,
+        change_7d_pct: typeof p.change_7d === 'number' ? p.change_7d : null,
+        is_cex_reserves: (p.category || '').toLowerCase().indexOf('cex') !== -1,
+        url: p.url || null,
+      };
+    });
+
+    // Aggregate stats: sum of all protocol TVL, sum excluding CEX reserves.
+    var sumAll = protocols.reduce(function(acc, p) { return acc + p.tvl; }, 0);
+    var sumDefiOnly = protocols.reduce(function(acc, p) {
+      var isCex = (p.category || '').toLowerCase().indexOf('cex') !== -1;
+      return acc + (isCex ? 0 : p.tvl);
+    }, 0);
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'defi-tvl-free',
+      updated_at: new Date().toISOString(),
+      data: {
+        protocol_count: protocols.length,
+        total_tvl_usd: Math.round(sumAll),
+        defi_only_tvl_usd: Math.round(sumDefiOnly),
+        top: top,
+      },
+      attribution: 'DefiLlama free API (api.llama.fi/protocols)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 900);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'defi-tvl-free',
+      updated_at: new Date().toISOString(),
+      data: { top: [], protocol_count: 0 },
+      error: 'defillama_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/phishing : Recent verified phishing URLs (OpenPhish raw feed)
+// =============================================================================
+// Source: openphish.com/feed.txt. Free, no key, refreshed every 12 hours.
+// Returns ~500 verified-phishing URLs. We extract the hostname and detect
+// brand impersonation against a common-target list. Cache 1 hour.
+
+var PHISHING_BRAND_TARGETS = [
+  'apple', 'amazon', 'amzn', 'paypal', 'microsoft', 'office365', 'outlook',
+  'google', 'gmail', 'facebook', 'instagram', 'meta', 'whatsapp',
+  'netflix', 'spotify', 'twitter', 'bank', 'chase', 'wellsfargo', 'bofa',
+  'citi', 'usbank', 'binance', 'coinbase', 'kraken', 'metamask', 'phantom',
+  'ledger', 'trezor', 'usps', 'fedex', 'ups', 'dhl', 'irs', 'gov',
+  'adobe', 'docusign', 'dropbox', 'linkedin', 'github', 'discord',
+];
+
+function detectPhishingBrand(host) {
+  if (!host) return null;
+  var lower = host.toLowerCase();
+  for (var i = 0; i < PHISHING_BRAND_TARGETS.length; i++) {
+    if (lower.indexOf(PHISHING_BRAND_TARGETS[i]) !== -1) return PHISHING_BRAND_TARGETS[i];
+  }
+  return null;
+}
+
+async function handlePhishing() {
+  var KEY = 'phishing';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://openphish.com/feed.txt',
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; TerminalFeed.io/1.0; +https://terminalfeed.io)',
+          'Accept': 'text/plain',
+        },
+      },
+      10000
+    );
+    if (!res.ok) throw new Error('openphish ' + res.status);
+    var text = await res.text();
+    var urls = text.split(/\r?\n/).filter(function(u) { return u && u.indexOf('http') === 0; });
+    if (urls.length === 0) throw new Error('openphish-empty');
+
+    // OpenPhish feed is newest-last in the dump. Reverse so most-recent first.
+    urls.reverse();
+    var entries = urls.slice(0, 25).map(function(url) {
+      var host = null;
+      try { host = new URL(url).hostname; } catch (e) { /* skip parse error */ }
+      return {
+        url: url,
+        host: host,
+        brand_target: detectPhishingBrand(host || url),
+      };
+    });
+
+    // Aggregate: brand counts across the entire feed (not just top 25).
+    var brandCounts = {};
+    urls.forEach(function(url) {
+      var brand = detectPhishingBrand(url);
+      if (brand) brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+    });
+    var topBrands = Object.keys(brandCounts)
+      .map(function(b) { return { brand: b, count: brandCounts[b] }; })
+      .sort(function(a, b) { return b.count - a.count; })
+      .slice(0, 8);
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'phishing',
+      updated_at: new Date().toISOString(),
+      data: {
+        total_in_feed: urls.length,
+        recent: entries,
+        top_brand_targets: topBrands,
+      },
+      attribution: 'openphish.com community phishing feed',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'phishing',
+      updated_at: new Date().toISOString(),
+      data: { recent: [], total_in_feed: 0, top_brand_targets: [] },
+      error: 'phishing_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/vix : CBOE Volatility Index + Nasdaq volatility ("fear gauge")
+// =============================================================================
+// Source: FRED VIXCLS + VXNCLS series. Free with FRED_API_KEY. Returns
+// current value, 5-day history, and a classification band (calm / moderate
+// / elevated / high / panic). VIX is THE stock-market fear indicator;
+// daily updates only so cache 1h is plenty.
+
+async function handleVix(env) {
+  var KEY = 'vix';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  if (!env || !env.FRED_API_KEY) {
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'vix',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'fred_key_missing',
+    }, 200, 60);
+  }
+
+  function classify(v) {
+    if (v == null) return null;
+    if (v < 15) return { band: 'calm', label: 'CALM', tone: 'green' };
+    if (v < 20) return { band: 'moderate', label: 'MODERATE', tone: 'amber' };
+    if (v < 30) return { band: 'elevated', label: 'ELEVATED', tone: 'orange' };
+    if (v < 40) return { band: 'high', label: 'HIGH', tone: 'red' };
+    return { band: 'panic', label: 'PANIC', tone: 'red' };
+  }
+
+  function fetchSeries(id, limit) {
+    var url = 'https://api.stlouisfed.org/fred/series/observations?series_id=' + id
+            + '&sort_order=desc&limit=' + (limit || 10)
+            + '&api_key=' + env.FRED_API_KEY + '&file_type=json';
+    return fetchWithTimeout(url, {}, 8000)
+      .then(function(r) { return r.json(); })
+      .then(function(d) { return Array.isArray(d.observations) ? d.observations : []; })
+      .catch(function() { return []; });
+  }
+
+  try {
+    var results = await Promise.all([
+      fetchSeries('VIXCLS', 10),
+      fetchSeries('VXNCLS', 10),
+    ]);
+    var vixObs = results[0];
+    var vxnObs = results[1];
+
+    function firstValid(observations) {
+      for (var i = 0; i < observations.length; i++) {
+        if (observations[i] && observations[i].value && observations[i].value !== '.') {
+          return { value: parseFloat(observations[i].value), date: observations[i].date };
+        }
+      }
+      return { value: null, date: null };
+    }
+
+    function history(observations) {
+      return observations
+        .filter(function(o) { return o.value && o.value !== '.'; })
+        .slice(0, 5)
+        .map(function(o) { return { date: o.date, value: parseFloat(o.value) }; });
+    }
+
+    var vix = firstValid(vixObs);
+    var vxn = firstValid(vxnObs);
+    var vixHistory = history(vixObs);
+
+    // 1-day and 5-day change from history.
+    var vixChange1d = null;
+    var vixChange5d = null;
+    if (vixHistory.length >= 2) vixChange1d = vixHistory[0].value - vixHistory[1].value;
+    if (vixHistory.length >= 5) vixChange5d = vixHistory[0].value - vixHistory[4].value;
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'vix',
+      updated_at: new Date().toISOString(),
+      data: {
+        vix: {
+          value: vix.value,
+          date: vix.date,
+          change_1d: vixChange1d != null ? parseFloat(vixChange1d.toFixed(2)) : null,
+          change_5d: vixChange5d != null ? parseFloat(vixChange5d.toFixed(2)) : null,
+          classification: classify(vix.value),
+        },
+        vxn: {
+          value: vxn.value,
+          date: vxn.date,
+          classification: classify(vxn.value),
+        },
+        vix_history_5d: vixHistory,
+      },
+      attribution: 'FRED VIXCLS / VXNCLS (St. Louis Fed)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'vix',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'vix_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/tor : Tor network relay + bridge + exit counts
+// =============================================================================
+// Source: onionoo.torproject.org. Free, no key, no auth. We hit the
+// /summary endpoint three times with different filters to count total
+// running relays, total exit nodes, and total bridges. Onionoo returns
+// `relays_truncated` and `bridges_truncated` when limit=1 so we get
+// totals without downloading every relay record. Cache 30 min.
+
+async function handleTor() {
+  var KEY = 'tor';
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  function fetchSummary(qs) {
+    return fetchWithTimeout(
+      'https://onionoo.torproject.org/summary?' + qs,
+      { headers: { 'Accept': 'application/json' } },
+      8000
+    ).then(function(r) {
+      if (!r.ok) throw new Error('onionoo ' + r.status);
+      return r.json();
+    }).catch(function() { return null; });
+  }
+
+  function totalFromResponse(resp, type) {
+    if (!resp) return null;
+    var arr = type === 'relay' ? resp.relays : resp.bridges;
+    var truncated = type === 'relay' ? resp.relays_truncated : resp.bridges_truncated;
+    var visible = Array.isArray(arr) ? arr.length : 0;
+    return visible + (truncated || 0);
+  }
+
+  try {
+    var results = await Promise.all([
+      fetchSummary('type=relay&running=true&limit=1'),
+      fetchSummary('type=relay&running=true&flag=Exit&limit=1'),
+      fetchSummary('type=bridge&running=true&limit=1'),
+    ]);
+    var totalRelays = totalFromResponse(results[0], 'relay');
+    var totalExits = totalFromResponse(results[1], 'relay');
+    var totalBridges = totalFromResponse(results[2], 'bridge');
+
+    if (totalRelays == null && totalExits == null && totalBridges == null) {
+      throw new Error('onionoo-empty');
+    }
+
+    var snapshotDate = results[0]?.relays_published || results[1]?.relays_published || results[2]?.bridges_published || null;
+    var exitShare = (totalExits != null && totalRelays) ? (totalExits / totalRelays) * 100 : null;
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'tor',
+      updated_at: new Date().toISOString(),
+      data: {
+        running_relays: totalRelays,
+        running_exits: totalExits,
+        exit_percent_of_relays: exitShare != null ? parseFloat(exitShare.toFixed(2)) : null,
+        running_bridges: totalBridges,
+        snapshot_at: snapshotDate,
+      },
+      attribution: 'Tor Project Onionoo (onionoo.torproject.org)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'tor',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'tor_unavailable',
+    }, 200, 30);
   }
 }
 
@@ -12042,6 +12496,11 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'btc-difficulty':   return await handleBtcDifficulty();
       case 'congress':         return await handleCongress();
       case 'lightning':        return await handleLightning();
+      case 'neo':              return await handleNeo(env);
+      case 'defi-tvl-free':    return await handleDefiTvlFree();
+      case 'phishing':         return await handlePhishing();
+      case 'vix':              return await handleVix(env);
+      case 'tor':              return await handleTor();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
