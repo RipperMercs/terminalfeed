@@ -1070,6 +1070,7 @@ function handleIndex() {
       '/api/wiki-featured', '/api/nhc-storms',
       '/api/btc-difficulty', '/api/congress', '/api/lightning',
       '/api/neo', '/api/defi-tvl-free', '/api/phishing', '/api/vix', '/api/tor',
+      '/api/aurora', '/api/hf-papers', '/api/eth-staking', '/api/fed-press', '/api/co2',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -5380,6 +5381,423 @@ async function handleTor() {
       updated_at: new Date().toISOString(),
       data: null,
       error: 'tor_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/aurora : NOAA OVATION aurora visibility forecast (30-min lead time)
+// =============================================================================
+// Source: services.swpc.noaa.gov/json/ovation_aurora_latest.json. Public
+// domain US gov data. Returns a 65,160-point lat/lon grid with aurora
+// probability percentages. We aggregate by hemisphere into a tiny summary
+// the panel can render without shipping 1.5MB of grid data to every visitor.
+// Cache 5 min — forecast updates every 30 min upstream.
+
+async function handleAurora() {
+  var KEY = 'aurora';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json',
+      { headers: { 'Accept': 'application/json' } },
+      10000
+    );
+    if (!res.ok) throw new Error('noaa-aurora ' + res.status);
+    var json = await res.json();
+    var coords = Array.isArray(json.coordinates) ? json.coordinates : [];
+    if (coords.length === 0) throw new Error('aurora-empty');
+
+    // Each coord is [longitude, latitude, aurora_probability_percent].
+    var northMax = 0, southMax = 0;
+    var northHighCount = 0, southHighCount = 0;            // cells with >=10%
+    var northStormCount = 0, southStormCount = 0;          // cells with >=50%
+    var totalCells = coords.length;
+
+    for (var i = 0; i < coords.length; i++) {
+      var c = coords[i];
+      var lat = c[1], pct = c[2];
+      if (typeof pct !== 'number' || pct <= 0) continue;
+      if (lat >= 0) {
+        if (pct > northMax) northMax = pct;
+        if (pct >= 10) northHighCount += 1;
+        if (pct >= 50) northStormCount += 1;
+      } else {
+        if (pct > southMax) southMax = pct;
+        if (pct >= 10) southHighCount += 1;
+        if (pct >= 50) southStormCount += 1;
+      }
+    }
+
+    function bandFor(pct) {
+      if (pct >= 80) return { label: 'STORM',     tone: 'red' };
+      if (pct >= 50) return { label: 'HIGH',      tone: 'orange' };
+      if (pct >= 25) return { label: 'MODERATE',  tone: 'amber' };
+      if (pct >= 10) return { label: 'LOW',       tone: 'green' };
+      return { label: 'QUIET', tone: 'dim' };
+    }
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'aurora',
+      updated_at: new Date().toISOString(),
+      data: {
+        observation_time: json['Observation Time'] || null,
+        forecast_time: json['Forecast Time'] || null,
+        northern_hemisphere: {
+          max_percent: Math.round(northMax * 10) / 10,
+          band: bandFor(northMax),
+          cells_above_10pct: northHighCount,
+          cells_above_50pct: northStormCount,
+        },
+        southern_hemisphere: {
+          max_percent: Math.round(southMax * 10) / 10,
+          band: bandFor(southMax),
+          cells_above_10pct: southHighCount,
+          cells_above_50pct: southStormCount,
+        },
+        total_cells_sampled: totalCells,
+      },
+      attribution: 'NOAA Space Weather Prediction Center OVATION model',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'aurora',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'aurora_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/hf-papers : HuggingFace community-curated daily AI papers
+// =============================================================================
+// Source: huggingface.co/api/daily_papers. Free, no key. Different signal
+// than the raw arXiv firehose: HF community votes on which papers from the
+// day's preprint stream are most interesting. We surface the top by upvotes.
+// Cache 1 hour.
+
+async function handleHfPapers() {
+  var KEY = 'hf-papers';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://huggingface.co/api/daily_papers',
+      { headers: { 'Accept': 'application/json' } },
+      10000
+    );
+    if (!res.ok) throw new Error('hf ' + res.status);
+    var json = await res.json();
+    if (!Array.isArray(json)) throw new Error('hf-shape');
+
+    // HF returns most-recent posts; sort by upvotes descending to surface
+    // the day's most-discussed.
+    var papers = json.map(function(p) {
+      var paper = p.paper || {};
+      var authors = Array.isArray(paper.authors)
+        ? paper.authors.slice(0, 3).map(function(a) { return a.name || ''; }).filter(Boolean)
+        : [];
+      return {
+        title: sanitizeForLLM(p.title || paper.title || ''),
+        arxiv_id: paper.id || null,
+        authors: authors,
+        upvotes: typeof paper.upvotes === 'number' ? paper.upvotes : 0,
+        published_at: paper.publishedAt || null,
+        summary: sanitizeForLLM(paper.summary || ''),
+        url: paper.id ? ('https://huggingface.co/papers/' + paper.id) : null,
+      };
+    }).sort(function(a, b) { return b.upvotes - a.upvotes; })
+      .slice(0, 15);
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'hf-papers',
+      updated_at: new Date().toISOString(),
+      data: {
+        count: papers.length,
+        papers: papers,
+      },
+      attribution: 'huggingface.co/papers community curation',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'hf-papers',
+      updated_at: new Date().toISOString(),
+      data: { count: 0, papers: [] },
+      error: 'hf_papers_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/eth-staking : Ethereum staking stats via Lido + DefiLlama
+// =============================================================================
+// Source: Lido eth-api for current stETH APR + DefiLlama for the Lido TVL
+// (which represents ETH staked via Lido). Free, no key. The two endpoints
+// together give a snapshot of liquid staking's largest pool. Cache 30 min.
+
+async function handleEthStaking() {
+  var KEY = 'eth-staking';
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  function fetchLidoApr() {
+    return fetchWithTimeout(
+      'https://eth-api.lido.fi/v1/protocol/steth/apr/last',
+      { headers: { 'Accept': 'application/json' } },
+      8000
+    ).then(function(r) {
+      if (!r.ok) throw new Error('lido-apr ' + r.status);
+      return r.json();
+    }).then(function(j) {
+      var d = j.data || {};
+      return {
+        apr_percent: typeof d.apr === 'number' ? d.apr : null,
+        as_of_unix: typeof d.timeUnix === 'number' ? d.timeUnix : null,
+      };
+    }).catch(function() { return null; });
+  }
+
+  function fetchLidoTvl() {
+    return fetchWithTimeout(
+      'https://api.llama.fi/protocol/lido',
+      { headers: { 'Accept': 'application/json' } },
+      10000
+    ).then(function(r) {
+      if (!r.ok) throw new Error('llama-lido ' + r.status);
+      return r.json();
+    }).then(function(j) {
+      var tvl = typeof j.tvl === 'number' ? j.tvl : null;
+      // DefiLlama also provides currentChainTvls. Fall back via Ethereum.
+      if (tvl == null && j.currentChainTvls && typeof j.currentChainTvls.Ethereum === 'number') {
+        tvl = j.currentChainTvls.Ethereum;
+      }
+      return {
+        tvl_usd: tvl,
+        change_1d_pct: typeof j.change_1d === 'number' ? j.change_1d : null,
+        change_7d_pct: typeof j.change_7d === 'number' ? j.change_7d : null,
+      };
+    }).catch(function() { return null; });
+  }
+
+  try {
+    var results = await Promise.all([fetchLidoApr(), fetchLidoTvl()]);
+    var apr = results[0];
+    var tvl = results[1];
+    if (!apr && !tvl) throw new Error('eth-staking-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'eth-staking',
+      updated_at: new Date().toISOString(),
+      data: {
+        lido: {
+          apr_percent: apr ? apr.apr_percent : null,
+          tvl_usd: tvl ? tvl.tvl_usd : null,
+          change_1d_pct: tvl ? tvl.change_1d_pct : null,
+          change_7d_pct: tvl ? tvl.change_7d_pct : null,
+          as_of_unix: apr ? apr.as_of_unix : null,
+        },
+      },
+      attribution: 'eth-api.lido.fi + api.llama.fi/protocol/lido',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'eth-staking',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'eth_staking_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/fed-press : Federal Reserve Board press releases
+// =============================================================================
+// Source: federalreserve.gov press_all.xml RSS feed. Public domain. Cache 1h.
+
+async function handleFedPress() {
+  var KEY = 'fed-press';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://www.federalreserve.gov/feeds/press_all.xml',
+      {
+        headers: {
+          'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)',
+          'Accept': 'application/rss+xml,application/xml,text/xml',
+        },
+      },
+      10000
+    );
+    if (!res.ok) throw new Error('fed ' + res.status);
+    var xml = await res.text();
+
+    var items = [];
+    var itemRe = /<item>([\s\S]*?)<\/item>/g;
+    var m;
+    while ((m = itemRe.exec(xml)) !== null && items.length < 10) {
+      var block = m[1];
+      var titleMatch = /<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/.exec(block);
+      var linkMatch = /<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/.exec(block);
+      var dateMatch = /<pubDate>([^<]+)<\/pubDate>/.exec(block);
+      var descMatch = /<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/.exec(block);
+      if (!titleMatch) continue;
+      items.push({
+        title: sanitizeForLLM((titleMatch[1] || '').trim()),
+        link: linkMatch ? linkMatch[1].trim() : null,
+        pub_date: dateMatch ? dateMatch[1].trim() : null,
+        summary: sanitizeForLLM((descMatch ? descMatch[1] : '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()),
+      });
+    }
+    if (items.length === 0) throw new Error('fed-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'fed-press',
+      updated_at: new Date().toISOString(),
+      data: items,
+      attribution: 'federalreserve.gov press release RSS (US public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'fed-press',
+      updated_at: new Date().toISOString(),
+      data: [],
+      error: 'fed_press_unavailable',
+    }, 200, 30);
+  }
+}
+
+// =============================================================================
+// /api/co2 : Mauna Loa Observatory atmospheric CO2
+// =============================================================================
+// Source: NOAA Global Monitoring Lab daily Mauna Loa CO2 measurements.
+// Public domain US gov data. The text file goes back to 1974, daily ppm
+// readings. We compute current ppm + change vs 1y, 10y, 50y ago.
+// Cache 6h: data updates daily after preliminary QC.
+
+async function handleCo2() {
+  var KEY = 'co2';
+  var cached = getCached(KEY, 21600000);
+  if (cached) return jsonResponse(cached, 200, 21600);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_daily_mlo.txt',
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 TerminalFeed.io (+https://terminalfeed.io)',
+          'Accept': 'text/plain',
+        },
+      },
+      10000
+    );
+    if (!res.ok) throw new Error('noaa-co2 ' + res.status);
+    var text = await res.text();
+
+    // Format: "YYYY  MM  DD  decimal_year  CO2_ppm" with leading comment lines starting with #
+    var lines = text.split(/\r?\n/);
+    var observations = [];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line || line.indexOf('#') === 0) continue;
+      var parts = line.split(/\s+/);
+      if (parts.length < 5) continue;
+      var y = parseInt(parts[0], 10);
+      var mo = parseInt(parts[1], 10);
+      var d = parseInt(parts[2], 10);
+      var ppm = parseFloat(parts[4]);
+      if (!Number.isFinite(y) || !Number.isFinite(ppm) || ppm <= 0) continue;
+      observations.push({
+        date: y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'),
+        date_obj: new Date(Date.UTC(y, mo - 1, d)),
+        ppm: ppm,
+      });
+    }
+    if (observations.length === 0) throw new Error('co2-empty');
+
+    // observations are oldest-first; take the latest few and key reference points
+    observations.sort(function(a, b) { return a.date_obj - b.date_obj; });
+    var latest = observations[observations.length - 1];
+
+    function findClosestTo(targetDate) {
+      var bestDiff = Infinity, best = null;
+      for (var k = 0; k < observations.length; k++) {
+        var diff = Math.abs(observations[k].date_obj - targetDate);
+        if (diff < bestDiff) { bestDiff = diff; best = observations[k]; }
+      }
+      return best;
+    }
+    function delta(o) {
+      if (!o) return null;
+      return parseFloat((latest.ppm - o.ppm).toFixed(2));
+    }
+
+    var oneYearAgo  = findClosestTo(new Date(latest.date_obj.getTime() - 365 * 86400000));
+    var tenYearsAgo = findClosestTo(new Date(latest.date_obj.getTime() - 10 * 365 * 86400000));
+    var fiftyYearsAgo = findClosestTo(new Date(latest.date_obj.getTime() - 50 * 365 * 86400000));
+    var preIndustrial = 280;  // commonly cited 1750 baseline (ppm)
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'co2',
+      updated_at: new Date().toISOString(),
+      data: {
+        latest_ppm: parseFloat(latest.ppm.toFixed(2)),
+        latest_date: latest.date,
+        change_vs_1y: delta(oneYearAgo),
+        change_vs_10y: delta(tenYearsAgo),
+        change_vs_50y: delta(fiftyYearsAgo),
+        change_vs_preindustrial: parseFloat((latest.ppm - preIndustrial).toFixed(2)),
+        reference: {
+          one_year_ago: oneYearAgo ? { date: oneYearAgo.date, ppm: oneYearAgo.ppm } : null,
+          ten_years_ago: tenYearsAgo ? { date: tenYearsAgo.date, ppm: tenYearsAgo.ppm } : null,
+          fifty_years_ago: fiftyYearsAgo ? { date: fiftyYearsAgo.date, ppm: fiftyYearsAgo.ppm } : null,
+          preindustrial_baseline_ppm: preIndustrial,
+        },
+        observation_count: observations.length,
+      },
+      attribution: 'NOAA Global Monitoring Lab, Mauna Loa Observatory (preliminary)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 21600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 30);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'co2',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'co2_unavailable',
     }, 200, 30);
   }
 }
@@ -12565,6 +12983,11 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'phishing':         return await handlePhishing();
       case 'vix':              return await handleVix(env);
       case 'tor':              return await handleTor();
+      case 'aurora':           return await handleAurora();
+      case 'hf-papers':        return await handleHfPapers();
+      case 'eth-staking':      return await handleEthStaking();
+      case 'fed-press':        return await handleFedPress();
+      case 'co2':              return await handleCo2();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);

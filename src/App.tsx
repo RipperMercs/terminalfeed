@@ -110,6 +110,11 @@ import { useDefiTvl } from './hooks/useDefiTvl';
 import { usePhishing } from './hooks/usePhishing';
 import { useVix } from './hooks/useVix';
 import { useTor } from './hooks/useTor';
+import { useAurora } from './hooks/useAurora';
+import { useHfPapers } from './hooks/useHfPapers';
+import { useEthStaking } from './hooks/useEthStaking';
+import { useFedPress } from './hooks/useFedPress';
+import { useCo2 } from './hooks/useCo2';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -237,6 +242,11 @@ function App() {
   const phishing = usePhishing();
   const vix = useVix();
   const tor = useTor();
+  const aurora = useAurora();
+  const hfPapers = useHfPapers();
+  const ethStaking = useEthStaking();
+  const fedPress = useFedPress();
+  const co2 = useCo2();
   const secFilings = useSecFilings();
   const treasuryYields = useTreasuryYields();
   const eonet = useEonet();
@@ -405,6 +415,11 @@ function App() {
     if (phishing && phishing.recent.length > 0) panelHealth.reportData('phishing');
     if (vix && vix.vix.value != null) panelHealth.reportData('vix');
     if (tor && tor.running_relays != null) panelHealth.reportData('tor');
+    if (aurora) panelHealth.reportData('aurora');
+    if (hfPapers.length > 0) panelHealth.reportData('hf-papers');
+    if (ethStaking && ethStaking.lido.apr_percent != null) panelHealth.reportData('eth-staking');
+    if (fedPress.length > 0) panelHealth.reportData('fed-press');
+    if (co2 && co2.latest_ppm) panelHealth.reportData('co2');
     if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
@@ -2393,6 +2408,168 @@ function App() {
             </div>
           </div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>onionoo.torproject.org · the onion router</div>
+        </>)}
+      </>);
+    })(),
+    'aurora': (() => {
+      const toneMap: Record<string, string> = {
+        red: 'var(--red)',
+        orange: '#f59e0b',
+        amber: 'var(--amber)',
+        green: 'var(--green)',
+        dim: 'var(--text-dim)',
+      };
+      const n = aurora?.northern_hemisphere;
+      const s = aurora?.southern_hemisphere;
+      const nColor = n ? toneMap[n.band.tone] ?? 'var(--text-dim)' : 'var(--text-dim)';
+      const sColor = s ? toneMap[s.band.tone] ?? 'var(--text-dim)' : 'var(--text-dim)';
+      return (<>
+        <PanelHead panelId="aurora" isStale={panelHealth.isStale('aurora')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Aurora Forecast</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>OVATION 30m</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>5m</span>
+        </PanelHead>
+        {!aurora && <LoadingOrHide label="loading aurora..." />}
+        {aurora && n && s && (<>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>North</div>
+              <div style={{ fontSize: 22, color: nColor, fontWeight: 700 }}>{n.max_percent.toFixed(0)}%</div>
+              <div style={{ fontSize: 9, color: nColor, fontWeight: 600, letterSpacing: 0.5 }}>{n.band.label}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>South</div>
+              <div style={{ fontSize: 22, color: sColor, fontWeight: 700 }}>{s.max_percent.toFixed(0)}%</div>
+              <div style={{ fontSize: 9, color: sColor, fontWeight: 600, letterSpacing: 0.5 }}>{s.band.label}</div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 10, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>N cells &ge;10% / &ge;50%</span>
+              <span style={{ color: 'var(--text)' }}>{n.cells_above_10pct} / {n.cells_above_50pct}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>S cells &ge;10% / &ge;50%</span>
+              <span style={{ color: 'var(--text)' }}>{s.cells_above_10pct} / {s.cells_above_50pct}</span>
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 2 }}>0-10 quiet · 10-25 low · 25-50 moderate · 50-80 high · 80+ storm</div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>noaa swpc · 30-min ovation forecast</div>
+        </>)}
+      </>);
+    })(),
+    'hf-papers': (<>
+      <PanelHead panelId="hf-papers" isStale={panelHealth.isStale('hf-papers')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">HF Daily Papers</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>CURATED</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+      </PanelHead>
+      {hfPapers.length === 0 && <LoadingOrHide label="loading papers..." />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {hfPapers.slice(0, 8).map((p) => {
+          const authors = p.authors.slice(0, 2).join(', ') + (p.authors.length > 2 ? ' et al.' : '');
+          return (
+            <a key={p.arxiv_id ?? p.title} href={p.url ?? '#'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, minWidth: 30, flexShrink: 0, paddingTop: 1, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{p.upvotes}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{p.title}</div>
+                <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{authors}</div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>huggingface.co/papers · upvote rank</div>
+    </>),
+    'eth-staking': (() => {
+      function fmtBig(n: number | null): string {
+        if (n == null) return 'n/a';
+        if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+        if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+        return `$${n.toFixed(0)}`;
+      }
+      const l = ethStaking?.lido;
+      return (<>
+        <PanelHead panelId="eth-staking" isStale={panelHealth.isStale('eth-staking')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">ETH Staking</span><span className="panelTag" style={{ color: 'var(--cyan)', background: 'rgba(96,165,250,0.1)' }}>LIDO</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30m</span>
+        </PanelHead>
+        {!ethStaking && <LoadingOrHide label="loading staking..." />}
+        {ethStaking && l && (<>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>stETH APR</div>
+              <div style={{ fontSize: 22, color: 'var(--cyan)', fontWeight: 700 }}>{l.apr_percent != null ? l.apr_percent.toFixed(2) + '%' : 'n/a'}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Lido TVL</div>
+              <div style={{ fontSize: 18, color: 'var(--text)', fontWeight: 700 }}>{fmtBig(l.tvl_usd)}</div>
+              {l.change_1d_pct != null && (
+                <div style={{ fontSize: 9, color: l.change_1d_pct >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {l.change_1d_pct >= 0 ? '+' : ''}{l.change_1d_pct.toFixed(2)}% 1d
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 9, color: 'var(--text-dim)' }}>
+            Lido is the largest liquid staking pool. APR reflects 7-day moving average.
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>lido.fi + defillama</div>
+        </>)}
+      </>);
+    })(),
+    'fed-press': (<>
+      <PanelHead panelId="fed-press" isStale={panelHealth.isStale('fed-press')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Fed Press</span><span className="panelTag" style={{ color: 'var(--accent)', background: 'rgba(93,202,165,0.1)' }}>FOMC</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+      </PanelHead>
+      {fedPress.length === 0 && <LoadingOrHide label="loading fed..." />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {fedPress.slice(0, 6).map((item, i) => (
+          <a key={i + (item.link ?? '')} href={item.link ?? '#'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', fontWeight: 500 }}>{item.title}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>federalreserve.gov press</div>
+    </>),
+    'co2': (() => {
+      const d = co2;
+      function fmtChange(n: number | null): string {
+        if (n == null) return 'n/a';
+        return (n >= 0 ? '+' : '') + n.toFixed(2);
+      }
+      return (<>
+        <PanelHead panelId="co2" isStale={panelHealth.isStale('co2')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Atmospheric CO2</span><span className="panelTag" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}>MAUNA LOA</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>6h</span>
+        </PanelHead>
+        {!co2 && <LoadingOrHide label="loading co2..." />}
+        {co2 && d && (<>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: '#f59e0b', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{d.latest_ppm.toFixed(2)}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>ppm</span>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 6 }}>{d.latest_date}</div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 10, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>vs 1 year ago</span>
+              <span style={{ color: 'var(--red)' }}>{fmtChange(d.change_vs_1y)} ppm</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>vs 10 years ago</span>
+              <span style={{ color: 'var(--red)' }}>{fmtChange(d.change_vs_10y)} ppm</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>vs 50 years ago</span>
+              <span style={{ color: 'var(--red)' }}>{fmtChange(d.change_vs_50y)} ppm</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>vs preindustrial (280)</span>
+              <span style={{ color: 'var(--red)', fontWeight: 600 }}>{fmtChange(d.change_vs_preindustrial)} ppm</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>noaa global monitoring lab · daily</div>
         </>)}
       </>);
     })(),
