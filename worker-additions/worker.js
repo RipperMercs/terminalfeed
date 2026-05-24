@@ -1068,6 +1068,7 @@ function handleIndex() {
       '/api/federal-register', '/api/openfda-recalls', '/api/gh-releases',
       '/api/pypi-trends', '/api/producthunt',
       '/api/wiki-featured', '/api/nhc-storms',
+      '/api/btc-difficulty', '/api/congress', '/api/lightning',
       '/api/harnesses',
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
@@ -4623,6 +4624,242 @@ async function handleNhcStorms() {
       updated_at: new Date().toISOString(),
       data: { active: [], count: 0 },
       error: 'nhc_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/btc-difficulty : Bitcoin difficulty adjustment progress + retarget
+// =============================================================================
+// Source: mempool.space /api/v1/difficulty-adjustment. Public, no key.
+// Bitcoin retargets difficulty every 2016 blocks (about 2 weeks). The endpoint
+// returns where we are in the current epoch plus the estimated change at the
+// next retarget. Cache 5 min; the underlying numbers shift slowly.
+
+async function handleBtcDifficulty() {
+  var KEY = 'btc-difficulty';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonResponse(cached, 200, 300);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://mempool.space/api/v1/difficulty-adjustment',
+      { headers: { 'Accept': 'application/json' } },
+      8000
+    );
+    if (!res.ok) throw new Error('mempool ' + res.status);
+    var d = await res.json();
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'btc-difficulty',
+      updated_at: new Date().toISOString(),
+      data: {
+        progress_percent: typeof d.progressPercent === 'number' ? d.progressPercent : null,
+        difficulty_change_percent: typeof d.difficultyChange === 'number' ? d.difficultyChange : null,
+        previous_retarget_percent: typeof d.previousRetarget === 'number' ? d.previousRetarget : null,
+        remaining_blocks: typeof d.remainingBlocks === 'number' ? d.remainingBlocks : null,
+        remaining_time_ms: typeof d.remainingTime === 'number' ? d.remainingTime : null,
+        estimated_retarget_at: typeof d.estimatedRetargetDate === 'number' ? new Date(d.estimatedRetargetDate).toISOString() : null,
+        next_retarget_height: typeof d.nextRetargetHeight === 'number' ? d.nextRetargetHeight : null,
+        avg_block_time_seconds: typeof d.timeAvg === 'number' ? Math.round(d.timeAvg / 1000) : null,
+      },
+      attribution: 'mempool.space free API',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'btc-difficulty',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'difficulty_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/congress : US Congress legislative activity (RSS-driven)
+// =============================================================================
+// Source: congress.gov public RSS feeds. Two streams composed:
+//   1. presented-to-president.xml: bills that passed both chambers and are at
+//      the White House for signature. Highest-signal legislative news.
+//   2. most-viewed-bills.xml: weekly digest of top-10 most-viewed bills.
+//      The "description" is a CDATA HTML blob with one <li> per bill.
+// Cache 30 min. Public domain.
+
+async function handleCongress() {
+  var KEY = 'congress';
+  var cached = getCached(KEY, 1800000);
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  function fetchFeed(url) {
+    return fetchWithTimeout(url, {
+      headers: {
+        'User-Agent': 'TerminalFeed.io hello@terminalfeed.io',
+        'Accept': 'application/rss+xml,application/xml,text/xml',
+      },
+    }, 8000).then(function(r) {
+      if (!r.ok) throw new Error('congress ' + r.status);
+      return r.text();
+    }).catch(function() { return ''; });
+  }
+
+  // Parse a simple flat RSS into { title, description, link, pubDate } items.
+  function parseRssItems(xml, max) {
+    var items = [];
+    var itemRe = /<item>([\s\S]*?)<\/item>/g;
+    var m;
+    while ((m = itemRe.exec(xml)) !== null && items.length < max) {
+      var block = m[1];
+      var titleMatch = /<title>([\s\S]*?)<\/title>/.exec(block);
+      var descMatch = /<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/.exec(block);
+      var linkMatch = /<link>([^<]+)<\/link>/.exec(block);
+      var dateMatch = /<pubDate>([^<]+)<\/pubDate>/.exec(block);
+      items.push({
+        title: sanitizeForLLM((titleMatch ? titleMatch[1] : '').replace(/^<!\[CDATA\[|\]\]>$/g, '').trim()),
+        description: sanitizeForLLM((descMatch ? descMatch[1] : '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()),
+        link: linkMatch ? linkMatch[1].trim() : null,
+        pubDate: dateMatch ? dateMatch[1] : null,
+      });
+    }
+    return items;
+  }
+
+  // The "most-viewed" feed packs all bills into one <item> CDATA HTML blob.
+  // Pull individual bill links out of the embedded <li><a href>title</a> ...</li>.
+  function parseMostViewed(xml) {
+    var descMatch = /<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/.exec(xml);
+    if (!descMatch) return [];
+    var html = descMatch[1];
+    var bills = [];
+    var liRe = /<li>([\s\S]*?)<\/li>/g;
+    var li;
+    while ((li = liRe.exec(html)) !== null && bills.length < 10) {
+      var linkMatch = /<a[^>]+href=['"]([^'"]+)['"][^>]*>([^<]+)<\/a>/.exec(li[1]);
+      if (!linkMatch) continue;
+      var rest = li[1].replace(/<a[^>]+>[^<]+<\/a>/, '').replace(/<[^>]+>/g, '').trim();
+      // rest is like "[119th] - Digital Asset Market Clarity Act of 2025"
+      bills.push({
+        bill_id: linkMatch[2],
+        url: linkMatch[1],
+        title: sanitizeForLLM(rest.replace(/^[\s–—-]+/, '').replace(/^\[[^\]]+\]\s*[-–—]?\s*/, '').trim()),
+      });
+    }
+    return bills;
+  }
+
+  try {
+    var results = await Promise.all([
+      fetchFeed('https://www.congress.gov/rss/presented-to-president.xml'),
+      fetchFeed('https://www.congress.gov/rss/most-viewed-bills.xml'),
+    ]);
+    var presentedXml = results[0];
+    var mostViewedXml = results[1];
+
+    var presented = presentedXml ? parseRssItems(presentedXml, 8) : [];
+    var mostViewed = mostViewedXml ? parseMostViewed(mostViewedXml) : [];
+
+    if (presented.length === 0 && mostViewed.length === 0) throw new Error('congress-empty');
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'congress',
+      updated_at: new Date().toISOString(),
+      data: {
+        presented_to_president: presented,
+        most_viewed_bills: mostViewed,
+      },
+      attribution: 'congress.gov RSS feeds (US public domain)',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'congress',
+      updated_at: new Date().toISOString(),
+      data: { presented_to_president: [], most_viewed_bills: [] },
+      error: 'congress_unavailable',
+    }, 200, 60);
+  }
+}
+
+// =============================================================================
+// /api/lightning : Bitcoin Lightning Network capacity + node stats
+// =============================================================================
+// Source: mempool.space /api/v1/lightning/statistics/latest. Public, no key.
+// Returns total capacity (sats), channel count, node count, avg fee rate.
+// Includes a previous snapshot so we can compute multi-day deltas. Cache 1h
+// since LN stats are recomputed daily.
+
+async function handleLightning() {
+  var KEY = 'lightning';
+  var cached = getCached(KEY, 3600000);
+  if (cached) return jsonResponse(cached, 200, 3600);
+
+  try {
+    var res = await fetchWithTimeout(
+      'https://mempool.space/api/v1/lightning/statistics/latest',
+      { headers: { 'Accept': 'application/json' } },
+      8000
+    );
+    if (!res.ok) throw new Error('lightning ' + res.status);
+    var json = await res.json();
+    var latest = json.latest || {};
+    var prev = json.previous || null;
+
+    function delta(a, b) {
+      if (typeof a !== 'number' || typeof b !== 'number') return null;
+      return a - b;
+    }
+
+    // total_capacity is in sats. Convert to BTC for readability.
+    var capacityBtc = typeof latest.total_capacity === 'number' ? latest.total_capacity / 1e8 : null;
+    var prevCapacityBtc = prev && typeof prev.total_capacity === 'number' ? prev.total_capacity / 1e8 : null;
+
+    var data = {
+      source: 'terminalfeed.io',
+      endpoint: 'lightning',
+      updated_at: new Date().toISOString(),
+      data: {
+        capacity_btc: capacityBtc,
+        capacity_sats: latest.total_capacity || null,
+        channel_count: latest.channel_count || null,
+        node_count: latest.node_count || null,
+        tor_nodes: latest.tor_nodes || null,
+        clearnet_nodes: latest.clearnet_nodes || null,
+        unannounced_nodes: latest.unannounced_nodes || null,
+        avg_capacity_sats: latest.avg_capacity || null,
+        median_capacity_sats: latest.med_capacity || null,
+        avg_fee_rate_ppm: latest.avg_fee_rate || null,
+        median_fee_rate_ppm: latest.med_fee_rate || null,
+        snapshot_date: latest.added || null,
+        previous_snapshot_date: prev?.added || null,
+        delta_since_previous: prev ? {
+          capacity_btc: delta(capacityBtc, prevCapacityBtc),
+          channel_count: delta(latest.channel_count, prev.channel_count),
+          node_count: delta(latest.node_count, prev.node_count),
+        } : null,
+      },
+      attribution: 'mempool.space Lightning Network statistics',
+    };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 60);
+    return jsonResponse({
+      source: 'terminalfeed.io',
+      endpoint: 'lightning',
+      updated_at: new Date().toISOString(),
+      data: null,
+      error: 'lightning_unavailable',
     }, 200, 60);
   }
 }
@@ -11800,6 +12037,9 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'producthunt':      return await handleProductHunt();
       case 'wiki-featured':    return await handleWikiFeatured();
       case 'nhc-storms':       return await handleNhcStorms();
+      case 'btc-difficulty':   return await handleBtcDifficulty();
+      case 'congress':         return await handleCongress();
+      case 'lightning':        return await handleLightning();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return handleHarnesses(url);
