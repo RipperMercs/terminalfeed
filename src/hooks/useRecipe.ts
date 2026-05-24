@@ -14,9 +14,24 @@ export interface RecipeData {
 // 5 deterministically per UTC day. All visitors today see the same 5; the
 // set rotates at UTC midnight. Frontend just displays what the Worker
 // returns: no client-side shuffle, no localStorage staleness.
-const API_URL = '/api/hangry-recipes';
-const CACHE_KEY = 'recipes_hangry_daily';
+//
+// We append `?day=YYYY-MM-DD` to the URL so each day is a unique URL from
+// the CF edge cache's perspective. Without this, the edge can hold a stale
+// response for up to its prior Cache-Control max-age (was 6h in the old
+// shape), preventing the panel from flipping at UTC midnight.
+const API_PATH = '/api/hangry-recipes';
+// v3 bumps past the v2 (`recipes_hangry_daily`) cache key that briefly
+// held 30 stale recipes from the pre-rotation worker response.
+const CACHE_KEY = 'recipes_hangry_v3';
 const REFRESH_MS = 30 * 60_000;   // poll every 30 min so we catch the daily flip quickly
+
+function utcDateKey(): string {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 function parse(json: unknown): RecipeData[] {
   const recipes = (json as { data?: { recipes?: unknown } })?.data?.recipes;
@@ -52,12 +67,15 @@ export function useRecipe(): RecipeData[] {
 
     const fetchRecipes = async () => {
       try {
-        const res = await fetch(API_URL, { signal: AbortSignal.timeout(8000) });
+        const url = `${API_PATH}?day=${utcDateKey()}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
         if (!res.ok) return;
         const json = await res.json();
         if (!mountedRef.current) return;
         const picks = parse(json);
-        if (picks.length > 0) {
+        // Defensive: if the worker / CDN somehow gave us a non-rotated set
+        // (>5 items would mean we're seeing the old shape), skip caching.
+        if (picks.length > 0 && picks.length <= 5) {
           setRecipes(picks);
           setCache(CACHE_KEY, picks, 'hangryhq');
         }
