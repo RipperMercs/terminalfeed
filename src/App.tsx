@@ -76,9 +76,7 @@ import { useTCGMarket } from './hooks/useTCGMarket';
 import { useCloudStatus } from './hooks/useCloudStatus';
 import { OriginalsPanel } from './components/OriginalsPanel';
 import { LoadingOrHide } from './components/LoadingOrHide';
-import { useGasTracker } from './hooks/useGasTracker';
 import { useHuggingFace } from './hooks/useHuggingFace';
-import { useSolanaNetwork } from './hooks/useSolanaNetwork';
 import { useHarnesses } from './hooks/useHarnesses';
 import { useSpaceWeather } from './hooks/useSpaceWeather';
 import { useWildfires } from './hooks/useWildfires';
@@ -116,7 +114,6 @@ import { useEthStaking } from './hooks/useEthStaking';
 import { useFedPress } from './hooks/useFedPress';
 import { useCo2 } from './hooks/useCo2';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
-import { GasPanel } from './panels/GasPanel';
 import './App.css';
 
 function App() {
@@ -211,9 +208,7 @@ function App() {
   const { stats: flightStats, status: flightStatus } = useFlightRadar();
   const cloudStatus = useCloudStatus();
   const tcgMarket = useTCGMarket();
-  const { gas: gasData, trend: gasTrend } = useGasTracker();
   const hfModels = useHuggingFace();
-  const solanaNet = useSolanaNetwork();
   const harnesses = useHarnesses();
   const spaceWeather = useSpaceWeather();
   const wildfires = useWildfires();
@@ -391,7 +386,6 @@ function App() {
     if (recipes.length > 0) panelHealth.reportData('recipe');
     if (humansInSpace) panelHealth.reportData('humans-in-space');
     if (thisDayEvents.length > 0) panelHealth.reportData('this-day');
-    if (gasData) panelHealth.reportData('gas');
     if (airQuality?.snapshot?.usAqi != null) panelHealth.reportData('air-quality');
     if (shodan && shodan.targets.length > 0) panelHealth.reportData('shodan');
     if (volcanoes && volcanoes.items.length > 0) panelHealth.reportData('volcanoes');
@@ -523,37 +517,6 @@ function App() {
         </div>
       </>);
     })(),
-    'gas': <GasPanel gas={gasData} trend={gasTrend} layout={layout} panelHealth={panelHealth} getGridCols={getGridCols} />,
-    'solana-network': (<>
-      <PanelHead panelId="solana-network" isStale={panelHealth.isStale('solana-network')} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Solana Network</span><span className="panelTag" style={{ color: 'var(--green)', background: 'rgba(74,222,128,0.1)' }}>TPS</span></div>
-        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30s</span>
-      </PanelHead>
-      {!solanaNet ? <LoadingOrHide label="loading network..." /> : (<>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 28, fontWeight: 600, color: 'var(--green)', letterSpacing: -1 }}>{(solanaNet.tps ?? 0).toLocaleString()}</span>
-          <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>tx / sec</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10 }}>
-          <div className="listRow">
-            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>3-MIN AVG</span>
-            <span style={{ color: 'var(--text)', fontWeight: 600 }}>{(solanaNet.tpsAvg ?? 0).toLocaleString()} tps</span>
-          </div>
-          <div className="listRow">
-            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>SLOT TIME</span>
-            <span style={{ color: 'var(--text)', fontWeight: 600 }}>{solanaNet.slotMs ? `${solanaNet.slotMs} ms` : 'n/a'}</span>
-          </div>
-          <div className="listRow">
-            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>SLOT</span>
-            <span style={{ color: 'var(--text)', fontFamily: 'var(--font-mono, monospace)' }}>{(solanaNet.slot ?? 0).toLocaleString()}</span>
-          </div>
-          <div className="listRow">
-            <span style={{ color: 'var(--text-dim)', minWidth: 80 }}>EPOCH</span>
-            <span style={{ color: 'var(--text)' }}>{solanaNet.epoch ?? 0} <span style={{ color: 'var(--text-dim)' }}>({(solanaNet.epochProgress ?? 0).toFixed(1)}%)</span></span>
-          </div>
-        </div>
-      </>)}
-    </>),
     'btc-network': (<>
       <PanelHead panelId="btc-network" isStale={panelHealth.isStale('btc-network')} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft">

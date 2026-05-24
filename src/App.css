@@ -664,8 +664,6 @@
 
 /* Crypto/DeFi → amber */
 .panel[data-panel-id="crypto"],
-.panel[data-panel-id="gas"],
-.panel[data-panel-id="solana-network"],
 .panel[data-panel-id="funding-rates"]     { --panel-accent: #EF9F27; }
 
 /* Markets / forex → green */
