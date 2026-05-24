@@ -100,6 +100,11 @@ import { useArxiv } from './hooks/useArxiv';
 import { useLiquidations } from './hooks/useLiquidations';
 import { useWikiFeatured } from './hooks/useWikiFeatured';
 import { useNhcStorms } from './hooks/useNhcStorms';
+import { useCertStream } from './hooks/useCertStream';
+import { useBtcDifficulty } from './hooks/useBtcDifficulty';
+import { useCongress } from './hooks/useCongress';
+import { useLightning } from './hooks/useLightning';
+import { useBlueskyFirehose } from './hooks/useBlueskyFirehose';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -217,6 +222,11 @@ function App() {
   const liquidations = useLiquidations();
   const wikiFeatured = useWikiFeatured();
   const nhcStorms = useNhcStorms();
+  const certStream = useCertStream();
+  const btcDifficulty = useBtcDifficulty();
+  const congress = useCongress();
+  const lightning = useLightning();
+  const blueskyFirehose = useBlueskyFirehose();
   const secFilings = useSecFilings();
   const treasuryYields = useTreasuryYields();
   const eonet = useEonet();
@@ -375,6 +385,11 @@ function App() {
     if (liquidations && liquidations.totals.count > 0) panelHealth.reportData('liquidations');
     if (wikiFeatured) panelHealth.reportData('wiki-featured');
     if (nhcStorms) panelHealth.reportData('nhc-storms');
+    if (certStream.length > 0) panelHealth.reportData('cert-stream');
+    if (btcDifficulty) panelHealth.reportData('btc-difficulty');
+    if (congress && (congress.presented_to_president.length > 0 || congress.most_viewed_bills.length > 0)) panelHealth.reportData('congress');
+    if (lightning) panelHealth.reportData('lightning');
+    if (blueskyFirehose.length > 0) panelHealth.reportData('bsky-firehose');
     if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
@@ -1981,6 +1996,174 @@ function App() {
         <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>nhc.noaa.gov · atlantic + east pacific</div>
       </>);
     })(),
+    'cert-stream': (<>
+      <PanelHead panelId="cert-stream" isStale={panelHealth.isStale('cert-stream')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Cert Stream</span><span className="panelTag" style={{ color: 'var(--green)', background: 'rgba(74,222,128,0.1)' }}>LIVE CT</span></div>
+        <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><span className="liveDot" style={{ background: 'var(--green)' }} /><span className="liveText">REALTIME</span></span>
+      </PanelHead>
+      {certStream.length === 0 && <LoadingOrHide label="waiting for certificates..." />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontVariantNumeric: 'tabular-nums' }}>
+        {certStream.map((c, i) => (
+          <div key={c.time + i} className="listRow" style={{ paddingTop: 2, paddingBottom: 2, alignItems: 'baseline' }}>
+            <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.domain}</span>
+            <span style={{ fontSize: 9, color: 'var(--text-dim)', flexShrink: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.issuer}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>certstream.calidog.io · global ct log firehose</div>
+    </>),
+    'btc-difficulty': (() => {
+      function fmtDuration(ms: number | null): string {
+        if (ms == null || ms <= 0) return 'n/a';
+        const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+        const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        if (days > 0) return `${days}d ${hours}h`;
+        return `${hours}h`;
+      }
+      const d = btcDifficulty;
+      const pct = d?.progress_percent ?? 0;
+      const change = d?.difficulty_change_percent ?? 0;
+      const changeColor = change >= 0 ? 'var(--red)' : 'var(--green)';   // higher difficulty = harder for miners
+      const changeArrow = change >= 0 ? '▲' : '▼';
+      return (<>
+        <PanelHead panelId="btc-difficulty" isStale={panelHealth.isStale('btc-difficulty')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">BTC Difficulty</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>EPOCH</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>5m</span>
+        </PanelHead>
+        {!btcDifficulty && <LoadingOrHide label="loading difficulty..." />}
+        {btcDifficulty && (<>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold)', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(1)}%</span>
+            <span style={{ fontSize: 13, color: changeColor, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{changeArrow} {Math.abs(change).toFixed(2)}%</span>
+          </div>
+          <div style={{ height: 6, background: 'var(--border)', borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
+            <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: '100%', background: 'linear-gradient(90deg, var(--gold), #f59e0b)' }} />
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Blocks until retarget</span>
+              <span style={{ color: 'var(--text)' }}>{d?.remaining_blocks?.toLocaleString() ?? 'n/a'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Time until retarget</span>
+              <span style={{ color: 'var(--text)' }}>{fmtDuration(d?.remaining_time_ms ?? null)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Avg block time</span>
+              <span style={{ color: 'var(--text)' }}>{d?.avg_block_time_seconds ? (d.avg_block_time_seconds / 60).toFixed(1) + 'm' : 'n/a'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Previous retarget</span>
+              <span style={{ color: (d?.previous_retarget_percent ?? 0) >= 0 ? 'var(--red)' : 'var(--green)' }}>
+                {d?.previous_retarget_percent != null ? `${d.previous_retarget_percent >= 0 ? '+' : ''}${d.previous_retarget_percent.toFixed(2)}%` : 'n/a'}
+              </span>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>mempool.space · 2016-block epoch</div>
+        </>)}
+      </>);
+    })(),
+    'congress': (() => {
+      const presented = congress?.presented_to_president ?? [];
+      const popular = congress?.most_viewed_bills ?? [];
+      return (<>
+        <PanelHead panelId="congress" isStale={panelHealth.isStale('congress')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">US Congress</span><span className="panelTag" style={{ color: 'var(--accent)', background: 'rgba(93,202,165,0.1)' }}>BILLS</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30m</span>
+        </PanelHead>
+        {!congress && <LoadingOrHide label="loading bills..." />}
+        {congress && (<>
+          {presented.length > 0 && (<>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>At President's Desk</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 6 }}>
+              {presented.slice(0, 4).map((b) => (
+                <a key={b.title + (b.link ?? '')} href={b.link ?? '#'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 700, minWidth: 56, flexShrink: 0, paddingTop: 1 }}>{b.title}</span>
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{b.description}</div>
+                </a>
+              ))}
+            </div>
+          </>)}
+          {popular.length > 0 && (<>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Most Viewed</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {popular.slice(0, 5).map((b, i) => (
+                <a key={b.bill_id + i} href={b.url} target="_blank" rel="noopener noreferrer" className="newsRow">
+                  <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 14, flexShrink: 0 }}>{i + 1}</span>
+                  <span style={{ fontSize: 9, color: 'var(--accent)', fontWeight: 600, minWidth: 52, flexShrink: 0 }}>{b.bill_id}</span>
+                  <span style={{ flex: 1, fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
+                </a>
+              ))}
+            </div>
+          </>)}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>congress.gov · public domain</div>
+        </>)}
+      </>);
+    })(),
+    'lightning': (() => {
+      function fmtBtc(n: number | null): string { return n == null ? 'n/a' : n.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' BTC'; }
+      function fmtCount(n: number | null): string { return n == null ? 'n/a' : n.toLocaleString(); }
+      const d = lightning;
+      const delta = d?.delta_since_previous;
+      return (<>
+        <PanelHead panelId="lightning" isStale={panelHealth.isStale('lightning')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Lightning Network</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>BTC L2</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!lightning && <LoadingOrHide label="loading ln..." />}
+        {lightning && (<>
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Total Capacity</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold)', fontVariantNumeric: 'tabular-nums' }}>{fmtBtc(d?.capacity_btc ?? null)}</span>
+              {delta?.capacity_btc != null && (
+                <span style={{ fontSize: 11, color: delta.capacity_btc >= 0 ? 'var(--green)' : 'var(--red)', fontVariantNumeric: 'tabular-nums' }}>
+                  {delta.capacity_btc >= 0 ? '+' : ''}{delta.capacity_btc.toFixed(0)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 10, fontVariantNumeric: 'tabular-nums', display: 'flex', flexDirection: 'column', gap: 1, color: 'var(--text-dim)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Channels</span>
+              <span><b style={{ color: 'var(--text)' }}>{fmtCount(d?.channel_count ?? null)}</b>
+                {delta?.channel_count != null && <span style={{ color: delta.channel_count >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 6, fontSize: 9 }}>{delta.channel_count >= 0 ? '+' : ''}{delta.channel_count}</span>}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Nodes</span>
+              <span><b style={{ color: 'var(--text)' }}>{fmtCount(d?.node_count ?? null)}</b>
+                {delta?.node_count != null && <span style={{ color: delta.node_count >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 6, fontSize: 9 }}>{delta.node_count >= 0 ? '+' : ''}{delta.node_count}</span>}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Tor / Clearnet</span>
+              <span style={{ color: 'var(--text)' }}>{fmtCount(d?.tor_nodes ?? null)} / {fmtCount(d?.clearnet_nodes ?? null)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Median fee</span>
+              <span style={{ color: 'var(--text)' }}>{d?.median_fee_rate_ppm ?? 'n/a'} ppm</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>mempool.space · public channels only</div>
+        </>)}
+      </>);
+    })(),
+    'bsky-firehose': (<>
+      <PanelHead panelId="bsky-firehose" isStale={panelHealth.isStale('bsky-firehose')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Bluesky Firehose</span><span className="panelTag" style={{ color: 'var(--cyan)', background: 'rgba(96,165,250,0.1)' }}>JETSTREAM</span></div>
+        <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><span className="liveDot" style={{ background: 'var(--green)' }} /><span className="liveText">REALTIME</span></span>
+      </PanelHead>
+      {blueskyFirehose.length === 0 && <LoadingOrHide label="waiting for posts..." />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {blueskyFirehose.map((p) => (
+          <div key={p.did + p.createdAt} style={{ fontSize: 10, color: 'var(--text)', lineHeight: 1.4, padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+            {p.text}
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>jetstream2.us-east.bsky.network · at-proto firehose</div>
+    </>),
     'sponsor-slot': (<>
       <PanelHead panelId="sponsor-slot" isStale={false} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">Sponsor</span><span className="panelTag" style={{ color: 'var(--amber)', background: 'rgba(239,159,39,0.1)' }}>AVAILABLE</span></div>

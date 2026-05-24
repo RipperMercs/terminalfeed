@@ -70,6 +70,11 @@ export const ALL_PANELS = [
   { id: 'liquidations', label: 'Liquidations', defaultSpan: 1 },
   { id: 'wiki-featured', label: 'Wikipedia Today', defaultSpan: 1 },
   { id: 'nhc-storms', label: 'Hurricane Center', defaultSpan: 1 },
+  { id: 'cert-stream', label: 'Cert Stream', defaultSpan: 1 },
+  { id: 'btc-difficulty', label: 'BTC Difficulty', defaultSpan: 1 },
+  { id: 'congress', label: 'US Congress', defaultSpan: 1 },
+  { id: 'lightning', label: 'Lightning Network', defaultSpan: 1 },
+  { id: 'bsky-firehose', label: 'Bluesky Firehose', defaultSpan: 1 },
   { id: 'sponsor-slot', label: 'Sponsor', defaultSpan: 1 },
   { id: 'premium-api', label: 'Premium API', defaultSpan: 1 },
   { id: 'severe-weather', label: 'Severe Weather', defaultSpan: 1 },
@@ -99,7 +104,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '50'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '51'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
