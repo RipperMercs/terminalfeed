@@ -4024,7 +4024,9 @@ async function handleLiquidations() {
   function fetchOne(asset) {
     var url = 'https://www.okx.com/api/v5/public/liquidation-orders'
             + '?instType=SWAP&state=filled&uly=' + asset.ul + '&limit=100';
-    return fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 6000)
+    // OKX occasionally takes 6-8s for a single symbol. 9s timeout reduces
+    // partial-response cases that the no-cache-on-partial guard then catches.
+    return fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 9000)
       .then(function(r) {
         if (!r.ok) throw new Error('okx ' + r.status);
         return r.json();
@@ -4088,10 +4090,17 @@ async function handleLiquidations() {
         biggest: biggest,
         by_symbol: bySymbol,
       },
-      attribution: 'OKX public liquidation-orders. Sample only — not all venues. BTC/ETH/SOL perp swaps.',
+      attribution: 'OKX public liquidation-orders. Sample only, not all venues. BTC/ETH/SOL perp swaps.',
     };
-    setCache(KEY, data);
-    return jsonResponse(data, 200, 60);
+    // Only cache when all three symbols returned at least one liquidation;
+    // OKX occasionally times out on a single asset, leaving by_symbol with a
+    // zero count for that symbol. A partial response is still useful to the
+    // current caller, but caching it would freeze the panel on incomplete
+    // data for the next minute. Skipping setCache means the next request
+    // immediately tries fresh.
+    var anyEmpty = assets.some(function(a) { return (bySymbol[a.sym].count || 0) === 0; });
+    if (!anyEmpty) setCache(KEY, data);
+    return jsonResponse(data, 200, anyEmpty ? 15 : 60);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonResponse(stale, 200, 30);
