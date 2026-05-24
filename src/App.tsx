@@ -1996,22 +1996,33 @@ function App() {
         <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>nhc.noaa.gov · atlantic + east pacific</div>
       </>);
     })(),
-    'cert-stream': (<>
-      <PanelHead panelId="cert-stream" isStale={panelHealth.isStale('cert-stream')} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft"><span className="panelTitle">Cert Stream</span><span className="panelTag" style={{ color: 'var(--green)', background: 'rgba(74,222,128,0.1)' }}>LIVE CT</span></div>
-        <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><span className="liveDot" style={{ background: 'var(--green)' }} /><span className="liveText">REALTIME</span></span>
-      </PanelHead>
-      {certStream.length === 0 && <LoadingOrHide label="waiting for certificates..." />}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontVariantNumeric: 'tabular-nums' }}>
-        {certStream.map((c, i) => (
-          <div key={c.time + i} className="listRow" style={{ paddingTop: 2, paddingBottom: 2, alignItems: 'baseline' }}>
-            <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.domain}</span>
-            <span style={{ fontSize: 9, color: 'var(--text-dim)', flexShrink: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.issuer}</span>
+    'cert-stream': (() => {
+      const latest = certStream[0];
+      const live = !!latest && (Date.now() - latest.time < 60_000);
+      return (<>
+        <PanelHead panelId="cert-stream" isStale={panelHealth.isStale('cert-stream')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Cert Stream</span><span className="panelTag" style={{ color: live ? 'var(--green)' : 'var(--amber)', background: live ? 'rgba(74,222,128,0.1)' : 'rgba(239,159,39,0.1)' }}>LIVE CT</span></div>
+          <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span className="liveDot" style={{ background: live ? 'var(--green)' : 'var(--amber)' }} />
+            <span className="liveText" style={{ color: live ? undefined : 'var(--amber)' }}>{live ? 'REALTIME' : 'WAITING'}</span>
+          </span>
+        </PanelHead>
+        {certStream.length === 0 && (
+          <div style={{ fontSize: 10, color: 'var(--text-dim)', padding: '6px 0', lineHeight: 1.5 }}>
+            Waiting for upstream feed. calidog.io CertStream is occasionally quiet.
           </div>
-        ))}
-      </div>
-      <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>certstream.calidog.io · global ct log firehose</div>
-    </>),
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontVariantNumeric: 'tabular-nums' }}>
+          {certStream.map((c, i) => (
+            <div key={c.time + i} className="listRow" style={{ paddingTop: 2, paddingBottom: 2, alignItems: 'baseline' }}>
+              <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.domain}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', flexShrink: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.issuer}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>certstream.calidog.io · global ct log firehose</div>
+      </>);
+    })(),
     'btc-difficulty': (() => {
       function fmtDuration(ms: number | null): string {
         if (ms == null || ms <= 0) return 'n/a';
