@@ -105,6 +105,11 @@ import { useBtcDifficulty } from './hooks/useBtcDifficulty';
 import { useCongress } from './hooks/useCongress';
 import { useLightning } from './hooks/useLightning';
 import { useBlueskyFirehose } from './hooks/useBlueskyFirehose';
+import { useNeo } from './hooks/useNeo';
+import { useDefiTvl } from './hooks/useDefiTvl';
+import { usePhishing } from './hooks/usePhishing';
+import { useVix } from './hooks/useVix';
+import { useTor } from './hooks/useTor';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import { GasPanel } from './panels/GasPanel';
 import './App.css';
@@ -227,6 +232,11 @@ function App() {
   const congress = useCongress();
   const lightning = useLightning();
   const blueskyFirehose = useBlueskyFirehose();
+  const neo = useNeo();
+  const defiTvl = useDefiTvl();
+  const phishing = usePhishing();
+  const vix = useVix();
+  const tor = useTor();
   const secFilings = useSecFilings();
   const treasuryYields = useTreasuryYields();
   const eonet = useEonet();
@@ -390,6 +400,11 @@ function App() {
     if (congress && (congress.presented_to_president.length > 0 || congress.most_viewed_bills.length > 0)) panelHealth.reportData('congress');
     if (lightning) panelHealth.reportData('lightning');
     if (blueskyFirehose.length > 0) panelHealth.reportData('bsky-firehose');
+    if (neo && neo.closest_first.length > 0) panelHealth.reportData('neo');
+    if (defiTvl && defiTvl.top.length > 0) panelHealth.reportData('defi-tvl');
+    if (phishing && phishing.recent.length > 0) panelHealth.reportData('phishing');
+    if (vix && vix.vix.value != null) panelHealth.reportData('vix');
+    if (tor && tor.running_relays != null) panelHealth.reportData('tor');
     if (spaceWeather && (spaceWeather.kpIndex != null || spaceWeather.solarWindSpeedKms != null)) panelHealth.reportData('space-weather');
     if (wildfires && !wildfires.error && wildfires.total24h > 0) panelHealth.reportData('wildfires');
     if (severeWeather && severeWeather.top.length > 0) panelHealth.reportData('severe-weather');
@@ -2175,6 +2190,212 @@ function App() {
       </div>
       <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>jetstream2.us-east.bsky.network · at-proto firehose</div>
     </>),
+    'neo': (() => {
+      function fmtLunar(ld: number | null): string {
+        if (ld == null) return 'n/a';
+        if (ld < 1) return ld.toFixed(2) + ' LD';
+        return ld.toFixed(1) + ' LD';
+      }
+      function fmtDiameter(min: number, max: number): string {
+        if (max < 1000) return `${min}-${max}m`;
+        return `${(min / 1000).toFixed(1)}-${(max / 1000).toFixed(1)}km`;
+      }
+      const list = neo?.closest_first ?? [];
+      const hazardous = neo?.hazardous_count ?? 0;
+      return (<>
+        <PanelHead panelId="neo" isStale={panelHealth.isStale('neo')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Near Earth Objects</span><span className="panelTag" style={{ color: hazardous > 0 ? 'var(--red)' : 'var(--purple)', background: hazardous > 0 ? 'rgba(248,113,113,0.1)' : 'rgba(167,139,250,0.1)' }}>{hazardous > 0 ? `${hazardous} HAZARD` : 'NASA NEO'}</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!neo && <LoadingOrHide label="loading asteroids..." />}
+        {neo && (<>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <b style={{ color: 'var(--text)' }}>{neo.total}</b> close approaches · next 7 days
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {list.slice(0, 7).map((o) => (
+              <a key={o.id} href={o.url} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 9, color: o.hazardous ? 'var(--red)' : 'var(--text-dim)', fontWeight: 600, minWidth: 60, flexShrink: 0, paddingTop: 1, fontVariantNumeric: 'tabular-nums' }}>{fmtLunar(o.miss_distance_lunar)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.name}{o.hazardous && <span style={{ color: 'var(--red)', marginLeft: 6, fontSize: 9 }}>HAZ</span>}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{fmtDiameter(o.diameter_m_min, o.diameter_m_max)} · {(o.close_approach_date || '').slice(0, 10)}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>nasa neo · 1 LD = 384,400 km (earth-moon)</div>
+        </>)}
+      </>);
+    })(),
+    'defi-tvl': (() => {
+      function fmtBig(n: number): string {
+        if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+        if (n >= 1e9)  return `$${(n / 1e9).toFixed(1)}B`;
+        if (n >= 1e6)  return `$${(n / 1e6).toFixed(0)}M`;
+        return `$${n}`;
+      }
+      return (<>
+        <PanelHead panelId="defi-tvl" isStale={panelHealth.isStale('defi-tvl')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">DeFi TVL</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>DEFILLAMA</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>15m</span>
+        </PanelHead>
+        {!defiTvl && <LoadingOrHide label="loading tvl..." />}
+        {defiTvl && (<>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Total</div>
+              <div style={{ fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{fmtBig(defiTvl.total_tvl_usd)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>DeFi only</div>
+              <div style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 700 }}>{fmtBig(defiTvl.defi_only_tvl_usd)}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {defiTvl.top.slice(0, 8).map((p, i) => {
+              const c1d = p.change_1d_pct;
+              const cColor = c1d == null ? 'var(--text-dim)' : c1d >= 0 ? 'var(--green)' : 'var(--red)';
+              return (
+                <a key={p.name + i} href={p.url ?? '#'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'baseline', paddingTop: 2, paddingBottom: 2 }}>
+                  <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 16, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{i + 1}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: p.is_cex_reserves ? 400 : 600 }}>
+                    {p.name}
+                    {p.is_cex_reserves && <span style={{ color: 'var(--text-dim)', marginLeft: 4, fontSize: 9 }}>·cex</span>}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 56, textAlign: 'right' }}>{fmtBig(p.tvl_usd)}</span>
+                  <span style={{ fontSize: 9, color: cColor, fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 44, textAlign: 'right' }}>
+                    {c1d == null ? '·' : `${c1d >= 0 ? '+' : ''}${c1d.toFixed(2)}%`}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>defillama · {defiTvl.protocol_count} protocols tracked</div>
+        </>)}
+      </>);
+    })(),
+    'phishing': (() => {
+      return (<>
+        <PanelHead panelId="phishing" isStale={panelHealth.isStale('phishing')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Phishing Feed</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>OPENPHISH</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!phishing && <LoadingOrHide label="loading phishing feed..." />}
+        {phishing && (<>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <b style={{ color: 'var(--text)' }}>{phishing.total_in_feed}</b> verified urls · top targets:
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 6 }}>
+            {phishing.top_brand_targets.slice(0, 6).map((b) => (
+              <div key={b.brand} className="listRow" style={{ paddingTop: 2, paddingBottom: 2, alignItems: 'baseline' }}>
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, textTransform: 'capitalize' }}>{b.brand}</span>
+                <span style={{ fontSize: 10, color: 'var(--red)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{b.count}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Recent</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {phishing.recent.slice(0, 4).map((p, i) => (
+              <div key={p.url + i} style={{ fontSize: 9, color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
+                <span style={{ color: p.brand_target ? 'var(--red)' : 'var(--amber)', fontWeight: 600 }}>{p.brand_target || '?'}</span>
+                {' '}<span style={{ color: 'var(--text)' }}>{p.host || p.url}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>openphish · community verified</div>
+        </>)}
+      </>);
+    })(),
+    'vix': (() => {
+      const toneMap: Record<string, string> = {
+        green: 'var(--green)',
+        amber: 'var(--amber)',
+        orange: '#f59e0b',
+        red: 'var(--red)',
+      };
+      const v = vix?.vix;
+      const vxn = vix?.vxn;
+      const cls = v?.classification;
+      const color = cls ? toneMap[cls.tone] ?? 'var(--text)' : 'var(--text-dim)';
+      const c1d = v?.change_1d;
+      const c5d = v?.change_5d;
+      return (<>
+        <PanelHead panelId="vix" isStale={panelHealth.isStale('vix')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">VIX</span><span className="panelTag" style={{ color: color, background: color === 'var(--text-dim)' ? 'rgba(138,136,128,0.1)' : `${color}1a` }}>{cls?.label || 'FEAR GAUGE'}</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>1h</span>
+        </PanelHead>
+        {!vix && <LoadingOrHide label="loading vix..." />}
+        {vix && v && (<>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
+            <span style={{ fontSize: 32, fontWeight: 700, color: color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              {v.value != null ? v.value.toFixed(2) : 'n/a'}
+            </span>
+            <div style={{ fontSize: 10, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.2 }}>
+              {c1d != null && (
+                <div>
+                  <span style={{ color: c1d >= 0 ? 'var(--red)' : 'var(--green)', fontWeight: 600 }}>{c1d >= 0 ? '+' : ''}{c1d.toFixed(2)}</span>
+                  <span> 1d</span>
+                </div>
+              )}
+              {c5d != null && (
+                <div>
+                  <span style={{ color: c5d >= 0 ? 'var(--red)' : 'var(--green)', fontWeight: 600 }}>{c5d >= 0 ? '+' : ''}{c5d.toFixed(2)}</span>
+                  <span> 5d</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 10, fontVariantNumeric: 'tabular-nums', display: 'flex', flexDirection: 'column', gap: 1, color: 'var(--text-dim)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>VXN (Nasdaq vol)</span>
+              <span><b style={{ color: vxn?.classification ? toneMap[vxn.classification.tone] ?? 'var(--text)' : 'var(--text)' }}>{vxn?.value != null ? vxn.value.toFixed(2) : 'n/a'}</b>{vxn?.classification && <span style={{ color: 'var(--text-dim)', marginLeft: 4, fontSize: 9 }}>{vxn.classification.label.toLowerCase()}</span>}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>VIX as of</span>
+              <span style={{ color: 'var(--text)' }}>{v.date || 'n/a'}</span>
+            </div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 2 }}>
+              {'<15 calm · 15-20 moderate · 20-30 elevated · 30-40 high · 40+ panic'}
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>fred · cboe vixcls / vxncls</div>
+        </>)}
+      </>);
+    })(),
+    'tor': (() => {
+      function fmtCount(n: number | null): string { return n == null ? 'n/a' : n.toLocaleString(); }
+      return (<>
+        <PanelHead panelId="tor" isStale={panelHealth.isStale('tor')} layout={layout} getGridCols={getGridCols}>
+          <div className="panelHeaderLeft"><span className="panelTitle">Tor Network</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>ONIONOO</span></div>
+          <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>30m</span>
+        </PanelHead>
+        {!tor && <LoadingOrHide label="loading tor metrics..." />}
+        {tor && (<>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 6, fontVariantNumeric: 'tabular-nums' }}>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Running relays</div>
+              <div style={{ fontSize: 18, color: 'var(--purple)', fontWeight: 700 }}>{fmtCount(tor.running_relays)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Exits</div>
+              <div style={{ fontSize: 18, color: 'var(--accent)', fontWeight: 700 }}>{fmtCount(tor.running_exits)}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{tor.exit_percent_of_relays != null ? tor.exit_percent_of_relays.toFixed(1) + '% of relays' : ''}</div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 4, fontSize: 10, fontVariantNumeric: 'tabular-nums', display: 'flex', flexDirection: 'column', gap: 1, color: 'var(--text-dim)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Running bridges</span>
+              <span style={{ color: 'var(--text)' }}>{fmtCount(tor.running_bridges)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Snapshot</span>
+              <span style={{ color: 'var(--text)' }}>{tor.snapshot_at ? tor.snapshot_at.slice(0, 16) : 'n/a'}</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>onionoo.torproject.org · the onion router</div>
+        </>)}
+      </>);
+    })(),
     'sponsor-slot': (<>
       <PanelHead panelId="sponsor-slot" isStale={false} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">Sponsor</span><span className="panelTag" style={{ color: 'var(--amber)', background: 'rgba(239,159,39,0.1)' }}>AVAILABLE</span></div>
