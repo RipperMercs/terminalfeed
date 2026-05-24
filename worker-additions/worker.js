@@ -4853,14 +4853,16 @@ async function handleLightning() {
     return jsonResponse(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonResponse(stale, 200, 30);
+    // 5s negative cache so transient mempool timeouts don't freeze the panel
+    // for the full 60-min polling window.
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'lightning',
       updated_at: new Date().toISOString(),
       data: null,
       error: 'lightning_unavailable',
-    }, 200, 60);
+    }, 200, 5);
   }
 }
 
