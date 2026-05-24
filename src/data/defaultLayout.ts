@@ -37,7 +37,6 @@ export const DEFAULT_LAYOUT = {
     'predictions',
     'crypto',
     'funding-rates',
-    'gas',
     'uap',
     'the-wire',
     'tcg-market',

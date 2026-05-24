@@ -13,8 +13,6 @@ export const ALL_PANELS = [
   { id: 'crypto', label: 'Crypto', defaultSpan: 1 },
   // Row 3: BTC deep dive
   { id: 'btc-network', label: 'BTC Network', defaultSpan: 1 },
-  { id: 'gas', label: 'ETH Gas', defaultSpan: 1 },
-  { id: 'solana-network', label: 'Solana Network', defaultSpan: 1 },
   { id: 'market-hours', label: 'Market Hours', defaultSpan: 1 },
   // Row 4: Information
   { id: 'news', label: 'Tech / AI Feed', defaultSpan: 1 },
@@ -114,7 +112,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '53'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '54'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
