@@ -155,10 +155,11 @@
   .pulseDot { filter: none; }
   .areaFill { animation: none; }
   .watchdog { animation: none; }
-  .tapeRow { animation: none; }
 }
 
-/* Coinbase trade tape: 1 row of last N trades under the range bar */
+/* Coinbase trade tape: filtered (>=0.05 BTC) prints under the range bar.
+   No animation — at 4s throttle, fade-ins compounded into a flickery feel.
+   Size hierarchy: large prints are bold + bright, small prints are muted. */
 .tape {
   margin-top: 10px;
   padding: 6px 4px 0;
@@ -181,27 +182,29 @@
 .tapeList {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: 4px 12px;
   font-size: 10px;
 }
 .tapeRow {
   display: inline-flex;
   gap: 4px;
   align-items: baseline;
-  animation: tapeFadeIn 0.4s ease-out;
 }
 .tapeBuy  { color: var(--green); }
 .tapeSell { color: var(--red); }
+
+/* Size tiers: large prints dominate the eye, small ones fade into context. */
+.tapeSmall  { opacity: 0.55; font-weight: 400; }
+.tapeMedium { opacity: 0.85; font-weight: 500; }
+.tapeLarge  { opacity: 1;    font-weight: 700; font-size: 11px; }
+
 .tapeSize {
   color: var(--text-dim);
   font-size: 9px;
 }
+.tapeLarge .tapeSize { font-size: 10px; }
 .tapeEmpty {
   color: var(--text-dim);
   font-size: 9px;
   letter-spacing: 0.05em;
-}
-@keyframes tapeFadeIn {
-  from { opacity: 0; transform: translateX(-4px); }
-  to   { opacity: 1; transform: translateX(0); }
 }

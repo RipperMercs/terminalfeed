@@ -29,33 +29,40 @@ function formatCompact(n: number): string {
 }
 
 function TradeTape({ trades }: { trades: BtcTrade[] }) {
+  // Size tiers drive visual weight: a 5 BTC print should hit the eye harder
+  // than a 0.05 BTC print. Tier thresholds tuned for the post-dust-filter
+  // distribution where the smallest visible trade is 0.05 BTC.
+  function sizeTier(btc: number): 'small' | 'medium' | 'large' {
+    if (btc >= 2) return 'large';
+    if (btc >= 0.5) return 'medium';
+    return 'small';
+  }
+  function fmtSize(btc: number): string {
+    if (btc >= 10) return btc.toFixed(1);
+    if (btc >= 1) return btc.toFixed(2);
+    return btc.toFixed(3);
+  }
   return (
     <div className={styles.tape}>
       <div className={styles.tapeLabel}>
-        <span>TAPE · COINBASE</span>
-        <span>{trades.length > 0 ? `${trades.length} prints` : 'connecting'}</span>
+        <span>TAPE · COINBASE · &ge;0.05 BTC</span>
+        <span>{trades.length > 0 ? `${trades.length} prints` : 'waiting'}</span>
       </div>
       {trades.length === 0 ? (
-        <div className={styles.tapeEmpty}>awaiting fills...</div>
+        <div className={styles.tapeEmpty}>awaiting whale-tier fills...</div>
       ) : (
         <div className={styles.tapeList}>
           {trades.map((t, i) => {
-            const cls = t.side === 'buy' ? styles.tapeBuy : styles.tapeSell;
+            const sideClass = t.side === 'buy' ? styles.tapeBuy : styles.tapeSell;
+            const tier = sizeTier(t.size ?? 0);
+            const tierClass = tier === 'large' ? styles.tapeLarge : tier === 'medium' ? styles.tapeMedium : styles.tapeSmall;
             const arrow = t.side === 'buy' ? '▲' : '▼';
             const price = (t.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
-            // Most Coinbase prints are between 0.0001 and 1 BTC. Show enough
-            // precision that "0.0001 BTC" never collapses to "0.0000".
-            const size = t.size ?? 0;
-            let sizeStr: string;
-            if (size >= 1) sizeStr = size.toFixed(2);
-            else if (size >= 0.01) sizeStr = size.toFixed(3);
-            else if (size >= 0.0001) sizeStr = size.toFixed(5);
-            else sizeStr = size.toExponential(1);
             return (
-              <span key={`${t.time}-${i}`} className={`${styles.tapeRow} ${cls}`}>
+              <span key={`${t.time}-${i}`} className={`${styles.tapeRow} ${sideClass} ${tierClass}`}>
                 <span>{arrow}</span>
                 <span>${price}</span>
-                <span className={styles.tapeSize}>{sizeStr} BTC</span>
+                <span className={styles.tapeSize}>{fmtSize(t.size ?? 0)} BTC</span>
               </span>
             );
           })}
