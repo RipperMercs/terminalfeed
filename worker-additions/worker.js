@@ -3470,52 +3470,116 @@ async function handleVolcanoes() {
 
 // GET /api/hangry-recipes
 // Proxies HangryHQ's editor-tier recipe feed (sister site). Funnels recipe
-// traffic to hangryhq.com: every item links to a hangryhq.com/recipes/<slug>
-// page. Hard-cached 6h, stale-on-fail, never 500s. Returns an empty list
-// (panel self-hides) if the upstream feed is unreachable.
-async function handleHangryRecipes() {
-  var KEY = 'hangry-recipes';
-  var cached = getCached(KEY, 21600000);
-  if (cached) return jsonResponse(cached, 200, 21600);
+// traffic to hangryhq.com: every item links to a hangryhq.com/recipes/<slug>.
+//
+// Two-tier design:
+//  1. Recipe POOL (cached 6h): the full filtered set of valid recipes from
+//     the upstream feed. Refreshed in the background when stale.
+//  2. Daily picks: a deterministic 5-recipe subset chosen via a UTC-day
+//     seeded shuffle. All visitors on the same UTC day see the same 5
+//     recipes in the same order. At UTC midnight, the picks rotate.
+//
+// This gives Evan the "changes every 24h" behavior he asked for without
+// per-visitor randomness or localStorage staleness.
 
-  try {
-    var res = await fetchWithTimeout('https://hangryhq.com/data/recipes-feed.json', {
-      headers: { 'Accept': 'application/json' },
-    }, 8000);
-    if (!res.ok) throw new Error('hangryhq ' + res.status);
-    var json = await res.json();
-    var src = Array.isArray(json && json.recipes) ? json.recipes : [];
+function _hangryDayIndex() {
+  var d = new Date();
+  return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000);
+}
 
-    var recipes = [];
-    for (var i = 0; i < src.length && recipes.length < 30; i++) {
-      var r = src[i] || {};
-      var name = typeof r.name === 'string' ? r.name.trim() : '';
-      var url = typeof r.url === 'string' ? r.url.trim() : '';
-      // Only surface items that actually link back to a HangryHQ recipe page.
-      if (!name || !/^https:\/\/hangryhq\.com\/recipes\//.test(url)) continue;
-      recipes.push({
-        name: name,
-        category: typeof r.category === 'string' ? r.category : 'Recipe',
-        area: typeof r.area === 'string' ? r.area : '',
-        thumbnail: typeof r.image === 'string' ? r.image : '',
-        url: url,
-        time_minutes: typeof r.timeMinutes === 'number' ? r.timeMinutes : 0,
-      });
-    }
+function _hangryNextRotationIso() {
+  var d = new Date();
+  var tomorrow = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1));
+  return tomorrow.toISOString();
+}
 
-    var data = {
-      data: { count: recipes.length, recipes: recipes },
-      source: 'hangryhq.com',
-      attribution: 'Recipes by HangryHQ',
-      updated_at: new Date().toISOString(),
-    };
-    setCache(KEY, data);
-    return jsonResponse(data, 200, 21600);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
-    return jsonResponse({ data: { count: 0, recipes: [] }, source: 'hangryhq.com' });
+// Mulberry32 seeded RNG: identical sequence for identical seed, lightweight.
+function _seededRng(seed) {
+  return function() {
+    seed = (seed + 0x6D2B79F5) | 0;
+    var t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function _shuffleSeeded(arr, seed) {
+  var out = arr.slice();
+  var rng = _seededRng(seed);
+  for (var i = out.length - 1; i > 0; i--) {
+    var j = Math.floor(rng() * (i + 1));
+    var tmp = out[i];
+    out[i] = out[j];
+    out[j] = tmp;
   }
+  return out;
+}
+
+var _HANGRY_POOL_KEY = 'hangry-pool';
+var _HANGRY_POOL_TTL = 6 * 60 * 60 * 1000;        // 6h
+var _HANGRY_POOL_CAP = 80;                        // upstream has ~71 today
+var _HANGRY_DAILY_PICKS = 5;
+
+async function _hangryFetchPool() {
+  var res = await fetchWithTimeout('https://hangryhq.com/data/recipes-feed.json', {
+    headers: { 'Accept': 'application/json' },
+  }, 8000);
+  if (!res.ok) throw new Error('hangryhq ' + res.status);
+  var json = await res.json();
+  var src = Array.isArray(json && json.recipes) ? json.recipes : [];
+
+  var recipes = [];
+  for (var i = 0; i < src.length && recipes.length < _HANGRY_POOL_CAP; i++) {
+    var r = src[i] || {};
+    var name = typeof r.name === 'string' ? r.name.trim() : '';
+    var url = typeof r.url === 'string' ? r.url.trim() : '';
+    if (!name || !/^https:\/\/hangryhq\.com\/recipes\//.test(url)) continue;
+    recipes.push({
+      name: name,
+      category: typeof r.category === 'string' ? r.category : 'Recipe',
+      area: typeof r.area === 'string' ? r.area : '',
+      thumbnail: typeof r.image === 'string' ? r.image : '',
+      url: url,
+      time_minutes: typeof r.timeMinutes === 'number' ? r.timeMinutes : 0,
+    });
+  }
+  return recipes;
+}
+
+async function handleHangryRecipes() {
+  // Step 1: get / refresh the full pool. We cache the POOL (not the picks)
+  // so each request can compute today's picks deterministically.
+  var pool = getCached(_HANGRY_POOL_KEY, _HANGRY_POOL_TTL);
+  if (!pool || !Array.isArray(pool)) {
+    try {
+      pool = await _hangryFetchPool();
+      if (pool.length > 0) setCache(_HANGRY_POOL_KEY, pool);
+    } catch (e) {
+      pool = getStale(_HANGRY_POOL_KEY) || [];
+    }
+  }
+
+  // Step 2: deterministic daily pick. Same seed -> same 5 recipes for all
+  // visitors today; tomorrow's seed picks a different 5.
+  var dayIdx = _hangryDayIndex();
+  var picks = pool.length === 0 ? [] : _shuffleSeeded(pool, dayIdx).slice(0, _HANGRY_DAILY_PICKS);
+
+  var data = {
+    data: {
+      count: picks.length,
+      recipes: picks,
+      pool_size: pool.length,
+      rotates_at: _hangryNextRotationIso(),
+      day_index: dayIdx,
+    },
+    source: 'hangryhq.com',
+    attribution: 'Recipes by HangryHQ',
+    updated_at: new Date().toISOString(),
+  };
+  // Short edge cache: the picks are cheap to recompute and we want them to
+  // flip near-instantly at UTC midnight, not lag by the pool TTL.
+  return jsonResponse(data, 200, 300);
 }
 
 
