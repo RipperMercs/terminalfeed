@@ -1,0 +1,136 @@
+{
+  "x402Version": 2,
+  "site": "terminalfeed.io",
+  "publisher": {
+    "name": "TerminalFeed.io",
+    "url": "https://terminalfeed.io",
+    "description": "Real-time market, geopolitical, and AI-anomaly feeds packaged for autonomous AI agents. USDC micropayments on Base mainnet, AFTA-federated with TensorFeed.ai.",
+    "agent_fair_trade": "TerminalFeed.io is agent fair-trade certified: open pricing, automatic no-charge on 5xx and stale data, Ed25519-signed receipts on every paid call, inference-only license. Companion standard at /.well-known/agent-fair-trade.json.",
+    "method_support": {
+      "live": [
+        {
+          "method": "exact",
+          "network": "eip155:8453",
+          "asset_symbol": "USDC",
+          "note": "USDC on Base mainnet, verified via Base RPC"
+        }
+      ]
+    },
+    "contact": "hello@terminalfeed.io",
+    "docs": "https://terminalfeed.io/developers/agent-payments",
+    "llmsTxt": "https://terminalfeed.io/llms.txt",
+    "operator": {
+      "legalEntity": "Pizza Robot Studios LLC",
+      "jurisdiction": "California, USA",
+      "terms": "https://terminalfeed.io/terms",
+      "privacy": "https://terminalfeed.io/privacy"
+    }
+  },
+  "payment": {
+    "wallet": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "assetSymbol": "USDC",
+    "assetDecimals": 6,
+    "network": "eip155:8453",
+    "networkName": "Base mainnet",
+    "creditsPerUsd": 50,
+    "centsPerCredit": 2
+  },
+  "federation": {
+    "partner": "https://tensorfeed.ai",
+    "sharedWallet": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+    "sharedCreditPool": true,
+    "note": "Wallet is shared with TensorFeed.ai under the AFTA federation. A bearer token minted on either site spends on either site. On-chain settlements to this wallet may originate from premium calls against either domain; ecosystem indexers may attribute volume to the federation rather than to a single publisher."
+  },
+  "items": [
+    {
+      "resource": {
+        "url": "https://terminalfeed.io/api/pro/briefing",
+        "description": "Daily AI agent briefing. Curated market, geopolitical, and AI-industry signals filtered for agent-relevant decision context. One credit per call.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "metadata": {
+        "name": "Pro Briefing",
+        "credits": 1,
+        "category": "agent-briefing"
+      }
+    },
+    {
+      "resource": {
+        "url": "https://terminalfeed.io/api/pro/macro",
+        "description": "Macro-economic feed for AI agents. Curated central bank, currency, commodity, and rate signals with timestamps and source provenance. Two credits per call.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "40000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "metadata": {
+        "name": "Pro Macro Feed",
+        "credits": 2,
+        "category": "macro-finance"
+      }
+    },
+    {
+      "resource": {
+        "url": "https://terminalfeed.io/api/pro/crypto-deep",
+        "description": "Deep crypto signal feed for agents: on-chain flow analytics, stablecoin issuance, exchange reserves, and protocol-level events curated for agent consumption. Two credits per call.",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "method": "GET",
+      "x402Version": 2,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "40000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "metadata": {
+        "name": "Pro Crypto Deep Feed",
+        "credits": 2,
+        "category": "crypto-onchain"
+      }
+    }
+  ]
+}
+</content>
+</invoke>
