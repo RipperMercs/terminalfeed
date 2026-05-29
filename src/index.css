@@ -10,8 +10,8 @@
   --border:      #1A1A22;
   --border-glow: #252530;
   --text:        #C8C8C0;
-  --text-mid:    #7A7A72;
-  --text-dim:    #3E3E3A;
+  --text-mid:    #909088;  /* WCAG AA: 6.0:1 on panel bg (#0D0D0F). Was #7A7A72 (4.49:1, just under AA). */
+  --text-dim:    #828278;  /* WCAG AA: 5.0:1 on panel bg. Was #3E3E3A (1.8:1, far below AA): panel titles + secondary text were effectively unreadable. */
   --green:       #4ADE80;
   --green-dim:   #166534;
   --red:         #F87171;
