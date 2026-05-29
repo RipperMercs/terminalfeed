@@ -10,6 +10,7 @@ export const ALL_PANELS = [
   { id: 'bitcoin', label: 'Bitcoin Price', defaultSpan: 2 },
   // Row 2: Money
   { id: 'markets', label: 'Markets (US)', defaultSpan: 1 },
+  { id: 'ipo-calendar', label: 'IPO Calendar', defaultSpan: 1 },
   { id: 'crypto', label: 'Crypto', defaultSpan: 1 },
   // Row 3: BTC deep dive
   { id: 'btc-network', label: 'BTC Network', defaultSpan: 1 },
