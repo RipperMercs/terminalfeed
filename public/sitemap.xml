@@ -1927,6 +1927,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://terminalfeed.io/try</loc>
+    <lastmod>2026-05-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://terminalfeed.io/use-cases/trading-bots</loc>
     <lastmod>2026-04-27</lastmod>
     <changefreq>weekly</changefreq>
