@@ -11,43 +11,27 @@ export interface TrendingMovie {
   mediaType: 'movie' | 'tv';
 }
 
-// TMDB API: free tier, register at https://www.themoviedb.org/settings/api
-// Paste your "API Read Access Token" (v4 bearer token) below
-const API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzNTJjNWEzNThmYzQ5ZTQ5ODZjODU4OTRiM2Y1ODhiMSIsIm5iZiI6MTc3MzU5ODE1OS4xNDgsInN1YiI6IjY5YjZmNWNmYjU5NzI2M2FhYzVjOWRlNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.rkZR1HpfyhHcyTnbkSSMiqmWf0P6pcVBCAq380cWTFw';
+// Trending movies/TV come from TMDB via the Worker at /api/trending-movies.
+// The TMDB read token lives in a Worker secret (TMDB_READ_TOKEN), never client-side.
 const CACHE_KEY = 'trending_movies';
 const POLL_MS = 30 * 60_000; // 30 min
 const MAX_ITEMS = 10;
 
 async function fetchTrending(): Promise<TrendingMovie[]> {
-  const items: TrendingMovie[] = [];
-
   try {
-    const res = await fetch('https://api.themoviedb.org/3/trending/all/day?language=en-US', { // direct-fetch-exempt: TMDB read token in client bundle (pre-existing hardcode; FIXME: migrate to worker + env var)
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Accept': 'application/json',
-      },
+    const res = await fetch('/api/trending-movies', {
+      headers: { 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000),
     });
 
-    if (!res.ok) return items;
-    const data = await res.json();
-
-    for (const item of (data.results ?? []).slice(0, MAX_ITEMS)) {
-      const isMovie = item.media_type === 'movie';
-      items.push({
-        id: item.id,
-        title: isMovie ? (item.title ?? '') : (item.name ?? ''),
-        overview: item.overview ?? '',
-        poster: item.poster_path ? `https://image.tmdb.org/t/p/w154${item.poster_path}` : '',
-        rating: Math.round((item.vote_average ?? 0) * 10) / 10,
-        releaseDate: isMovie ? (item.release_date ?? '') : (item.first_air_date ?? ''),
-        mediaType: isMovie ? 'movie' : 'tv',
-      });
-    }
-  } catch (e) { if (import.meta.env.DEV) console.warn('[TrendingMovies]', e); }
-
-  return items;
+    if (!res.ok) return [];
+    const json = await res.json();
+    const list: TrendingMovie[] = Array.isArray(json?.data) ? json.data : [];
+    return list.slice(0, MAX_ITEMS);
+  } catch (e) {
+    if (import.meta.env.DEV) console.warn('[TrendingMovies]', e);
+    return [];
+  }
 }
 
 export function useTrendingMovies() {
