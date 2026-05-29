@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Try the Premium API Free: 100 Calls Per IP Per Day, No Signup | TerminalFeed</title>
+  <meta name="description" content="Try every TerminalFeed premium API endpoint free. 100 calls per IP per 24 hours, no signup, no API key, no wallet, no credit card. Just call the endpoint. One curl gets you composed real-time crypto, macro, and agent data.">
+  <link rel="canonical" href="https://terminalfeed.io/try">
+  <meta property="og:title" content="Try the Premium API Free: 100 Calls Per IP Per Day | TerminalFeed">
+  <meta property="og:description" content="Every IP gets 100 free premium API calls per day. No signup, no key, no wallet. One curl and you are in.">
+  <meta property="og:url" content="https://terminalfeed.io/try">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Try the Premium API Free: 100 Calls Per IP Per Day">
+  <meta name="twitter:description" content="Every IP gets 100 free premium API calls per day. No signup, no key, no wallet. One curl and you are in.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="ai-content" content="Free trial of the TerminalFeed premium API. Every IP address gets 100 free /api/pro/* calls per 24-hour rolling window with no authentication, no signup, no wallet, and no credit card. Call any premium endpoint without an Authorization header and the trial counter increments. Check remaining quota at GET /api/free-tier/status.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Try the TerminalFeed Premium API Free",
+    "description": "Every IP address gets 100 free TerminalFeed premium API calls per 24-hour rolling window with no signup, no API key, no wallet, and no credit card.",
+    "author": { "@type": "Organization", "name": "TerminalFeed" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" }
+    },
+    "url": "https://terminalfeed.io/try",
+    "datePublished": "2026-05-29",
+    "dateModified": "2026-05-29",
+    "keywords": "free API trial, premium API free tier, no signup API, no API key, pay per call API, USDC API, agent data API, real-time crypto API, free 100 calls per day"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+      { "@type": "ListItem", "position": 2, "name": "Developers", "item": "https://terminalfeed.io/developers" },
+      { "@type": "ListItem", "position": 3, "name": "Try the Premium API", "item": "https://terminalfeed.io/try" }
+    ]
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace; background: #080808; color: #C8C8C0; padding: 40px 20px; max-width: 880px; margin: 0 auto; line-height: 1.7; }
+    h1 { color: #4ADE80; font-size: 22px; margin-bottom: 8px; }
+    h2 { color: #5DCAA5; font-size: 14px; margin: 36px 0 12px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1A1A22; padding-bottom: 8px; }
+    h3 { color: #C8C8C0; font-size: 13px; margin: 24px 0 8px; }
+    p { font-size: 13px; margin-bottom: 12px; color: #8A8880; }
+    a { color: #4ADE80; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { font-size: 13px; color: #8A8880; margin-bottom: 24px; }
+    .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 8px; margin-bottom: 16px; letter-spacing: 1px; }
+    .badge-green { background: #14532d; color: #4ADE80; }
+    .badge-blue { background: #1e3a5f; color: #60A5FA; }
+    .badge-purple { background: #2E1065; color: #A78BFA; }
+    pre { background: #0D0D12; border: 1px solid #1A1A22; border-radius: 6px; padding: 16px; overflow-x: auto; margin: 8px 0 16px; font-size: 12px; line-height: 1.6; color: #D4D2CB; }
+    code { font-family: inherit; font-size: 12px; }
+    .inline-code { background: #0D0D12; border: 1px solid #1A1A22; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #C8C8C0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 12px; }
+    th { text-align: left; color: #5DCAA5; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1A1A22; }
+    td { color: #8A8880; padding: 6px 12px; border-bottom: 1px solid #0D0D12; vertical-align: top; }
+    td:first-child { color: #60A5FA; font-weight: 600; }
+    .footer { margin-top: 56px; font-size: 10px; color: #3E3E3A; padding-top: 16px; border-top: 1px solid #1A1A22; }
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+    .callout { padding: 12px 16px; background: #0B0F12; border-left: 3px solid #5DCAA5; border-radius: 4px; margin: 12px 0 16px; font-size: 12px; color: #B5B3AB; }
+    .callout strong { color: #5DCAA5; }
+    .cta { display: inline-block; padding: 10px 20px; background: #14532d; color: #4ADE80; border-radius: 4px; margin: 16px 0; font-size: 12px; }
+    .cta:hover { background: #1a6938; text-decoration: none; }
+    ul { font-size: 13px; color: #8A8880; margin: 8px 0 16px 24px; }
+    ul strong { color: #B5B3AB; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/developers">Developers</a><span class="bc-sep">&rsaquo;</span><span>Try the Premium API</span>
+  </nav>
+
+  <h1>&gt;_ Try the Premium API, Free</h1>
+  <p class="subtitle">Every IP gets 100 premium API calls per day. No signup, no API key, no wallet, no credit card. Just call the endpoint.</p>
+
+  <span class="badge badge-green">100 FREE CALLS / DAY</span>
+  <span class="badge badge-blue">NO SIGNUP</span>
+  <span class="badge badge-purple">NO KEY, NO WALLET</span>
+
+  <p>Most paid data APIs make you create an account, verify an email, and paste a credit card before you can see a single response. TerminalFeed does the opposite. Every IP address gets up to 100 free calls to any premium <span class="inline-code">/api/pro/*</span> endpoint per 24-hour rolling window, with no authentication header at all. Evaluate the entire premium surface before you ever think about paying.</p>
+
+  <h2>One Call, No Setup</h2>
+
+  <p>Call any premium endpoint with no <span class="inline-code">Authorization</span> header and the free-trial counter increments automatically:</p>
+
+  <pre><code># A composed world snapshot: BTC + Fear &amp; Greed + earthquakes + HN + prediction markets
+curl https://terminalfeed.io/api/pro/briefing
+
+# Or from JavaScript / an agent runtime
+fetch("https://terminalfeed.io/api/pro/briefing")
+  .then(r =&gt; r.json())
+  .then(console.log)</code></pre>
+
+  <p>That is the whole onboarding. No dashboard, no key rotation, no SDK install.</p>
+
+  <h2>Check Your Remaining Quota</h2>
+
+  <p>The status endpoint is free, needs no auth, and does not consume a call:</p>
+
+  <pre><code>curl https://terminalfeed.io/api/free-tier/status
+
+{
+  "ok": true,
+  "free_trial": {
+    "calls_per_ip_per_day": 100,
+    "window": "24h rolling per IP",
+    "auth_required": false,
+    "used_today": 0,
+    "remaining": 100
+  }
+}</code></pre>
+
+  <h2>Every Premium Endpoint Is Included</h2>
+
+  <p>The free trial applies to all premium endpoints, not a stripped-down sample:</p>
+
+  <table>
+    <tr><th>Endpoint</th><th>What it composes</th></tr>
+    <tr><td>/api/pro/briefing</td><td>BTC + Fear &amp; Greed + earthquakes + HN + Polymarket</td></tr>
+    <tr><td>/api/pro/macro</td><td>Fed rate + CPI + treasury yields + forex + commodities + indices</td></tr>
+    <tr><td>/api/pro/crypto-deep</td><td>Top 50 coins + Binance pairs + on-chain BTC network stats</td></tr>
+    <tr><td>/api/pro/agent-context</td><td>Paste-ready system_prompt of the current world state</td></tr>
+    <tr><td>/api/pro/correlation-matrix</td><td>Computed correlations across 10 historical series</td></tr>
+    <tr><td>/api/pro/whales</td><td>Large BTC / ETH / Solana transactions with attribution</td></tr>
+    <tr><td>/api/pro/exchange-flows</td><td>Labeled exchange-controlled wallet flows</td></tr>
+    <tr><td>/api/pro/defi-tvl</td><td>Top-50 DeFi protocols + chain rollups</td></tr>
+    <tr><td>/api/pro/stablecoin-flows</td><td>Top-20 stablecoins with 1d/7d/30d deltas</td></tr>
+    <tr><td>/api/pro/sentiment</td><td>Crypto Fear &amp; Greed + trending symbols, scored</td></tr>
+    <tr><td>/api/pro/world-deltas</td><td>Events newer than a timestamp you pass</td></tr>
+    <tr><td>/api/pro/github-velocity</td><td>Trending repos with a computed velocity score</td></tr>
+  </table>
+
+  <h2>What Happens After 100 Calls</h2>
+
+  <p>When the daily cap is reached, the endpoint returns the canonical x402 V2 <span class="inline-code">402 Payment Required</span> challenge with <span class="inline-code">free_trial.status</span> set to <span class="inline-code">"exhausted"</span> and a <span class="inline-code">resets_at</span> timestamp. Your quota refills on a rolling 24-hour window, so you can keep evaluating day to day. When you are ready for production volume, top up credits with USDC on Base mainnet:</p>
+
+  <ul>
+    <li><strong>1 credit = $0.02.</strong> Most endpoints cost 1 to 2 credits.</li>
+    <li><strong>No subscription.</strong> Pay per call, scale up and down freely.</li>
+    <li><strong>One token, two sites.</strong> The same credits work on <a href="https://tensorfeed.ai" rel="external">TensorFeed.ai</a> (AI model intelligence and news) from the same pool.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>No human in the loop.</strong> The trial needs no email and no card, and production access is a wallet transaction, not a signup form. This is built for autonomous agents that have a wallet, not an inbox.
+  </div>
+
+  <h2>Next Steps</h2>
+
+  <p><a class="cta" href="/api/pro/briefing">Run a live call now &rarr;</a></p>
+
+  <p>When you are ready: <a href="/developers/agent-payments">agent-payments docs</a> &middot; <a href="/for-devs/api">full API reference</a> &middot; <a href="/openapi.json">OpenAPI 3.1 contract</a> &middot; <a href="/llms.txt">/llms.txt agent discovery</a> &middot; <a href="/for-devs/mcp">free MCP server (30 tools)</a></p>
+
+  <div class="footer">
+    <p>&copy; 2026 TerminalFeed.io &middot; Built by <a href="/team/ripper">Ripper</a></p>
+    <p><a href="/">Home</a> &middot; <a href="/developers">API Docs</a> &middot; <a href="/for-devs">Developer Hub</a> &middot; <a href="/llms.txt">/llms.txt</a> &middot; <a href="/terms">Terms</a> &middot; <a href="https://x.com/terminalfeed" rel="external">@terminalfeed</a></p>
+  </div>
+</body>
+</html>

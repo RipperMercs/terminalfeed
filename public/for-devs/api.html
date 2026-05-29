@@ -104,6 +104,13 @@
 curl https://terminalfeed.io/api/briefing | jq .</pre>
     </div>
 
+    <div class="quick-start">
+      <h3>&gt;_ Try the premium tier free</h3>
+      <p>Every premium <span class="inline">/api/pro/*</span> endpoint is free to evaluate: 100 calls per IP per day, no signup, no key, no wallet. <a href="/try" class="inline">See the free trial &rarr;</a></p>
+      <pre><span class="comment"># No Authorization header needed; the free-trial counter increments automatically</span>
+curl https://terminalfeed.io/api/pro/briefing</pre>
+    </div>
+
     <div class="endpoint-group">
       <div class="group-label">World Snapshot</div>
       <div class="endpoint-row"><span class="path">/api/briefing</span><span class="desc">One-call composed snapshot: BTC + Fear and Greed + earthquakes + HN + ISS. Designed to fit in a single LLM context.</span><span class="cost">FREE</span></div>
