@@ -3045,6 +3045,53 @@ async function handleForex() {
 }
 
 
+// GET /api/trending-movies — TMDB trending (all/day), mapped to the panel shape.
+// Read token comes from the TMDB_READ_TOKEN secret; it is never shipped client-side.
+// Fail-open: missing token or upstream error returns stale cache, else an empty list.
+async function handleTrendingMovies(env) {
+  var KEY = 'trending-movies';
+  var cached = getCached(KEY, 1800000); // 30 min
+  if (cached) return jsonResponse(cached, 200, 1800);
+
+  var token = env && env.TMDB_READ_TOKEN;
+  if (!token) {
+    var staleNoKey = getStale(KEY);
+    if (staleNoKey) return jsonResponse(staleNoKey, 200, 1800);
+    return jsonResponse({ data: [] }, 200, 300);
+  }
+
+  try {
+    var res = await fetchWithTimeout('https://api.themoviedb.org/3/trending/all/day?language=en-US', {
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    if (!res.ok) throw new Error('tmdb HTTP ' + res.status);
+    var d = await res.json();
+    var results = (d && d.results) || [];
+    var items = [];
+    for (var i = 0; i < results.length && items.length < 10; i++) {
+      var item = results[i] || {};
+      var isMovie = item.media_type === 'movie';
+      items.push({
+        id: item.id,
+        title: isMovie ? (item.title || '') : (item.name || ''),
+        overview: item.overview || '',
+        poster: item.poster_path ? ('https://image.tmdb.org/t/p/w154' + item.poster_path) : '',
+        rating: Math.round((item.vote_average || 0) * 10) / 10,
+        releaseDate: isMovie ? (item.release_date || '') : (item.first_air_date || ''),
+        mediaType: isMovie ? 'movie' : 'tv',
+      });
+    }
+    var data = { data: items };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 1800);
+    return jsonResponse({ data: [] }, 200, 300);
+  }
+}
+
+
 // open-notify.org froze on a May-2024 crew snapshot, so we read active astronauts
 // from The Space Devs Launch Library and infer station from nationality.
 async function fetchAstrosFromSpaceDevs() {
@@ -13018,6 +13065,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'air-quality':    return await handleAirQuality(url);
       case 'shodan':         return await handleShodan(url);
       case 'volcanoes':      return await handleVolcanoes();
+      case 'trending-movies':return await handleTrendingMovies(env);
       case 'hangry-recipes': return await handleHangryRecipes();
       case 'xkcd':           return await handleXkcd();
       case 'ai-stats':       return handleAiStats();
