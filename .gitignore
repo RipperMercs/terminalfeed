@@ -50,6 +50,14 @@ CLAUDE.md
 # Internal design v2 mockups and screenshots
 design-spec-v2/
 
+# MCP browser-session logs and root-level screenshots (public repo: keep these
+# out, they are one `git add .` from a public commit). Anchored to root so
+# public/**/*.png|jpg served assets stay tracked.
+.playwright-mcp/
+/*.png
+/*.jpeg
+/*.jpg
+
 # Local planning artifacts that aren't tracked
 agent-outreach-kit.md
 david-followup-*.md
