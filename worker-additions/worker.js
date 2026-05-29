@@ -1106,6 +1106,8 @@ function handleIndex() {
         { path: '/api/pro/defi-tvl', cost_credits: 2 },
         { path: '/api/pro/stablecoin-flows', cost_credits: 2 },
         { path: '/api/pro/github-velocity', cost_credits: 2 },
+        { path: '/api/pro/regime', cost_credits: 2 },
+        { path: '/api/pro/anomalies', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -6567,6 +6569,8 @@ var WEBHOOK_ALLOWED_ENDPOINTS = {
   'correlation-matrix': 'tf_premium_correlation_matrix',
   'whales': 'tf_premium_whales',
   'exchange-flows': 'tf_premium_exchange_flows',
+  'regime': 'tf_premium_regime',
+  'anomalies': 'tf_premium_anomalies',
 };
 
 function _isPrivateOrLocalHostname(hostname) {
@@ -6996,6 +7000,8 @@ async function _fetchEndpointDataForWebhook(env, endpointSlug) {
     case 'correlation-matrix':  return await fetchProCorrelationMatrix(env, fakeUrl);
     case 'whales':              return await fetchProWhales(env, fakeUrl);
     case 'exchange-flows':      return await fetchProExchangeFlows(env, fakeUrl);
+    case 'regime':              return await fetchProRegime(env, fakeUrl);
+    case 'anomalies':           return await fetchProAnomalies(env, fakeUrl);
     default: throw new Error('unknown_endpoint');
   }
 }
@@ -7080,6 +7086,8 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_premium_defi_tvl':           path = '/api/pro/defi-tvl'; break;
     case 'tf_premium_stablecoin_flows':   path = '/api/pro/stablecoin-flows'; break;
     case 'tf_premium_github_velocity':    path = '/api/pro/github-velocity'; break;
+    case 'tf_premium_regime':             path = '/api/pro/regime'; break;
+    case 'tf_premium_anomalies':          path = '/api/pro/anomalies'; break;
     case 'tf_payment_buy_credits':        path = '/api/payment/buy-credits'; method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_confirm':            path = '/api/payment/confirm';     method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_balance':            path = '/api/payment/balance'; break;
@@ -7146,6 +7154,8 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_premium_defi_tvl':           return await handleProDefiTvl(req, env, url);
     case 'tf_premium_stablecoin_flows':   return await handleProStablecoinFlows(req, env, url);
     case 'tf_premium_github_velocity':    return await handleProGithubVelocity(req, env, url);
+    case 'tf_premium_regime':             return await handleProRegime(req, env, url);
+    case 'tf_premium_anomalies':          return await handleProAnomalies(req, env, url);
     case 'tf_payment_buy_credits':        return await handleBuyCredits(req, env);
     case 'tf_payment_confirm':            return await handleConfirmPayment(req, env);
     case 'tf_payment_balance':            return await handleBalance(req, env);
@@ -7585,6 +7595,28 @@ const LLM_TOOL_DEFINITIONS = [
     parameters: {}
   },
   {
+    name: 'tf_premium_regime',
+    short_description: 'Cross-asset market regime: risk_on / risk_off / transition / stress with rationale (2 credits).',
+    description: 'Premium regime classifier. Blends crypto Fear & Greed (alternative.me), VIX (FRED VIXCLS), 24h total crypto market-cap change (CoinLore), and the 10y treasury-yield trend (FRED DGS10) into a labeled regime (risk_on, risk_off, transition, or stress), a risk_score in [-1..+1], a 0-1 confidence, and a per-input drivers[] breakdown showing each signal value, weight, and contribution. A stress override fires when VIX>30 or (Fear&Greed<15 and 24h market cap <-3%). The documented, versioned weighting is the value; the upstreams are free. Saves an agent from fetching and normalizing four sources and designing its own blend. Statistical heuristic, not investment advice. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
+    url: 'https://terminalfeed.io/api/pro/regime',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
+    name: 'tf_premium_anomalies',
+    short_description: 'Ranked cross-feed statistical anomaly stream: vol, rates, sentiment, crypto, seismic (2 credits).',
+    description: 'Premium anomaly screen. Surfaces statistical outliers across feeds in one ranked list: z-score outliers (|z|>2) over a trailing 30 daily-observation window for VIX (FRED VIXCLS) and the 10y treasury yield (FRED DGS10), plus threshold flags for extreme crypto Fear & Greed (<=20 or >=80), large 24h crypto market-cap moves (>5%), and elevated M4.5+ earthquake counts (>=8 in 24h, USGS). Each anomaly carries type, signal, value, baseline, z_score where applicable, severity, and a description. Distinct from world-deltas (a raw time-sorted event log with no statistical filtering): this answers "is anything statistically unusual right now". A screen, not a prediction. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
+    url: 'https://terminalfeed.io/api/pro/anomalies',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
     name: 'tf_payment_buy_credits',
     short_description: 'Quote a USDC credit purchase.',
     description: 'POST endpoint that returns the published USDC wallet address (0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1 on Base mainnet), a unique memo, and a quote tying the dollar amount to credits at $1 USDC = 50 credits. Use as the first step when the agent needs to buy credits to access /api/pro/* endpoints.',
@@ -7927,6 +7959,8 @@ var AFTA_ENDPOINT_FRESHNESS = {
   '/api/pro/defi-tvl':           { maxAgeSeconds: 2 * 60 * 60 },
   '/api/pro/stablecoin-flows':   { maxAgeSeconds: 2 * 60 * 60 },
   '/api/pro/github-velocity':    { maxAgeSeconds: 60 * 60 },
+  '/api/pro/regime':             { maxAgeSeconds: 5 * 60 },
+  '/api/pro/anomalies':          { maxAgeSeconds: 5 * 60 },
 };
 
 var AFTA_FRESHNESS_REASONS = {
@@ -7942,6 +7976,8 @@ var AFTA_FRESHNESS_REASONS = {
   '/api/pro/defi-tvl':           'top-50 DeFi protocols + chain rollups; ~30 min upstream cadence',
   '/api/pro/stablecoin-flows':   'top-20 stablecoins multi-window deltas; hourly upstream',
   '/api/pro/github-velocity':    'GitHub trending + computed velocity; hourly cadence',
+  '/api/pro/regime':             'composed regime signal over Fear&Greed + VIX + crypto mcap + 10y yield; 5-min freshness',
+  '/api/pro/anomalies':          'z-score + threshold screen over FRED, crypto, and seismic feeds; 5-min freshness',
 };
 
 function aftaResolveSLA(path) {
@@ -12292,6 +12328,231 @@ async function handleProCryptoDeep(request, env, url) {
   });
 }
 
+// --- Derived-signal helpers shared by /api/pro/regime and /api/pro/anomalies ---
+function _proRound(x) { return (x == null || !isFinite(x)) ? null : Math.round(x * 100) / 100; }
+function _proClamp(x, lo, hi) { return x < lo ? lo : (x > hi ? hi : x); }
+// Trailing-window stats over an ascending series of daily values. Returns null
+// if there is not enough data to be meaningful.
+function _proSeriesStats(arr) {
+  if (!arr || arr.length < 5) return null;
+  var n = arr.length, sum = 0;
+  for (var i = 0; i < n; i++) sum += arr[i];
+  var mean = sum / n, varAcc = 0;
+  for (var j = 0; j < n; j++) { var d = arr[j] - mean; varAcc += d * d; }
+  var sd = Math.sqrt(varAcc / n);
+  var latest = arr[n - 1];
+  return { mean: mean, sd: sd, latest: latest, z: sd > 0 ? (latest - mean) / sd : 0, n: n };
+}
+
+// /api/pro/regime — cross-asset market regime classification with rationale.
+// Composes signals the worker already knows how to fetch (crypto Fear & Greed,
+// FRED VIXCLS, FRED DGS10, total crypto market-cap 24h change, BTC dominance)
+// into a labeled regime + a documented, versioned weighting. The weighting IS
+// the product; the upstreams are free. Fail-open: any missing signal drops out
+// of the blend and the weights renormalize over what is available.
+async function fetchProRegime(env, url) {
+  var t0 = Date.now();
+  var sourceMeta = [
+    { name: 'AlternativeMe.fng', start: t0 },
+    { name: 'CoinLore.global', start: t0 },
+  ];
+  var settled = await Promise.allSettled([
+    fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
+    fetchWithTimeout('https://api.coinlore.net/api/global/', {}, 6000),
+  ]);
+  var vixSeries = await _fetchFredDailyValues(env, 'VIXCLS', 30);
+  var dgs10Series = await _fetchFredDailyValues(env, 'DGS10', 30);
+
+  // Crypto Fear & Greed (0-100)
+  var fng = null;
+  if (settled[0].status === 'fulfilled' && settled[0].value) {
+    try { var d = await settled[0].value.json(); if (d && d.data && d.data[0]) { var fv = parseInt(d.data[0].value, 10); if (isFinite(fv)) fng = fv; } } catch (e) {}
+  }
+  // Total crypto market cap 24h change % + BTC dominance
+  var mcapChange = null, btcDom = null;
+  if (settled[1].status === 'fulfilled' && settled[1].value) {
+    try {
+      var g = await settled[1].value.json();
+      var gg = (Array.isArray(g) && g[0]) || {};
+      var mc = parseFloat(gg.mcap_change); if (isFinite(mc)) mcapChange = mc;
+      var bd = parseFloat(gg.btc_d); if (isFinite(bd)) btcDom = bd;
+    } catch (e) {}
+  }
+  var vixStats = _proSeriesStats(vixSeries);
+  var vixLatest = vixStats ? vixStats.latest : (vixSeries.length ? vixSeries[vixSeries.length - 1] : null);
+  var dgs10Latest = dgs10Series.length ? dgs10Series[dgs10Series.length - 1] : null;
+  var dgs10Trend = null;
+  if (dgs10Series.length >= 5) {
+    var recent = dgs10Series.slice(-5);
+    var delta = recent[recent.length - 1] - recent[0];
+    dgs10Trend = delta > 0.03 ? 'rising' : (delta < -0.03 ? 'falling' : 'flat');
+  }
+
+  // Each contribution is in [-1 (risk-off) .. +1 (risk-on)]. Weights renormalize
+  // over whichever signals are present this call.
+  var drivers = [], weighted = 0, totalWeight = 0;
+  if (fng != null) {
+    var c1 = _proClamp((fng - 50) / 50, -1, 1), w1 = 0.30;
+    drivers.push({ signal: 'crypto_fear_greed', value: fng, weight: w1, contribution: _proRound(c1), direction: c1 >= 0 ? 'risk_on' : 'risk_off' });
+    weighted += w1 * c1; totalWeight += w1;
+  }
+  if (vixLatest != null) {
+    var vc = vixLatest < 15 ? 1 : (vixLatest < 20 ? 0.4 : (vixLatest < 25 ? -0.3 : (vixLatest < 30 ? -0.7 : -1))), w2 = 0.30;
+    drivers.push({ signal: 'vix', value: _proRound(vixLatest), label: _vixLabel(vixLatest), weight: w2, contribution: vc, direction: vc >= 0 ? 'risk_on' : 'risk_off' });
+    weighted += w2 * vc; totalWeight += w2;
+  }
+  if (mcapChange != null) {
+    var c3 = _proClamp(mcapChange / 5, -1, 1), w3 = 0.25;
+    drivers.push({ signal: 'crypto_mcap_change_24h_pct', value: _proRound(mcapChange), weight: w3, contribution: _proRound(c3), direction: c3 >= 0 ? 'risk_on' : 'risk_off' });
+    weighted += w3 * c3; totalWeight += w3;
+  }
+  if (dgs10Trend) {
+    var tc = dgs10Trend === 'rising' ? -0.5 : (dgs10Trend === 'falling' ? 0.5 : 0), w4 = 0.15;
+    drivers.push({ signal: 'treasury_10y_trend', value: dgs10Latest, trend: dgs10Trend, weight: w4, contribution: tc, direction: tc >= 0 ? 'risk_on' : 'risk_off' });
+    weighted += w4 * tc; totalWeight += w4;
+  }
+  var score = totalWeight > 0 ? weighted / totalWeight : 0;
+
+  var regime, confidence;
+  var vixStress = vixLatest != null && vixLatest > 30;
+  var crisisCombo = fng != null && fng < 15 && mcapChange != null && mcapChange < -3;
+  if (vixStress || crisisCombo) {
+    regime = 'stress';
+    confidence = vixLatest != null ? _proClamp((vixLatest - 25) / 15, 0.4, 1) : 0.6;
+  } else if (score > 0.35) {
+    regime = 'risk_on'; confidence = _proClamp(Math.abs(score), 0.3, 1);
+  } else if (score < -0.35) {
+    regime = 'risk_off'; confidence = _proClamp(Math.abs(score), 0.3, 1);
+  } else {
+    regime = 'transition'; confidence = _proClamp(1 - Math.abs(score), 0.3, 0.7);
+  }
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/regime',
+    generated_at: new Date().toISOString(),
+    regime: regime,
+    risk_score: _proRound(score),
+    confidence: _proRound(confidence),
+    drivers: drivers,
+    inputs: {
+      crypto_fear_greed: fng,
+      vix: vixLatest != null ? _proRound(vixLatest) : null,
+      vix_zscore_30d: vixStats ? _proRound(vixStats.z) : null,
+      treasury_10y: dgs10Latest,
+      treasury_10y_trend: dgs10Trend,
+      crypto_mcap_change_24h_pct: mcapChange != null ? _proRound(mcapChange) : null,
+      btc_dominance_pct: btcDom != null ? _proRound(btcDom) : null,
+    },
+    method: {
+      version: '1.0',
+      scale: 'risk_score in [-1 risk-off .. +1 risk-on]',
+      description: 'Weighted blend of crypto Fear & Greed (0.30), a VIX threshold map (0.30), 24h total crypto market-cap change (0.25), and the 10y treasury-yield trend (0.15), renormalized over the signals available this call. Stress overrides the blend when VIX>30 or (Fear&Greed<15 and 24h market cap <-3%). Statistical heuristic, not investment advice.',
+    },
+    _meta: _premiumMeta('/api/pro/regime', _buildSourcesMeta(settled, sourceMeta).concat([
+      { name: 'FRED.VIXCLS', status: vixSeries.length ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
+      { name: 'FRED.DGS10', status: dgs10Series.length ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
+    ])),
+  };
+}
+
+// /api/pro/anomalies — ranked cross-feed statistical outlier stream. z-score
+// outliers (|z|>2) over a trailing 30 daily-observation window for FRED series,
+// plus threshold flags for extreme sentiment, large 24h crypto moves, and
+// elevated M4.5+ earthquake counts. A screen, not a prediction. Fail-open.
+async function fetchProAnomalies(env, url) {
+  var t0 = Date.now();
+  var sourceMeta = [
+    { name: 'AlternativeMe.fng', start: t0 },
+    { name: 'CoinLore.global', start: t0 },
+    { name: 'USGS.m45_day', start: t0 },
+  ];
+  var settled = await Promise.allSettled([
+    fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
+    fetchWithTimeout('https://api.coinlore.net/api/global/', {}, 6000),
+    fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson', {}, 6000),
+  ]);
+  var vixStats = _proSeriesStats(await _fetchFredDailyValues(env, 'VIXCLS', 30));
+  var dgs10Stats = _proSeriesStats(await _fetchFredDailyValues(env, 'DGS10', 30));
+
+  var fng = null;
+  if (settled[0].status === 'fulfilled' && settled[0].value) {
+    try { var d = await settled[0].value.json(); if (d && d.data && d.data[0]) { var fv = parseInt(d.data[0].value, 10); if (isFinite(fv)) fng = fv; } } catch (e) {}
+  }
+  var mcapChange = null;
+  if (settled[1].status === 'fulfilled' && settled[1].value) {
+    try { var g = await settled[1].value.json(); var gg = (Array.isArray(g) && g[0]) || {}; var mc = parseFloat(gg.mcap_change); if (isFinite(mc)) mcapChange = mc; } catch (e) {}
+  }
+  var quakeCount = null;
+  if (settled[2].status === 'fulfilled' && settled[2].value) {
+    try { var q = await settled[2].value.json(); if (q && Array.isArray(q.features)) quakeCount = q.features.length; } catch (e) {}
+  }
+
+  var anomalies = [];
+  function sev(magnitude, mid, high) { return magnitude >= high ? 'high' : (magnitude >= mid ? 'medium' : 'low'); }
+
+  if (vixStats && Math.abs(vixStats.z) > 2) {
+    anomalies.push({ type: 'volatility', signal: 'VIXCLS', value: _proRound(vixStats.latest), baseline_mean: _proRound(vixStats.mean), z_score: _proRound(vixStats.z), severity: sev(Math.abs(vixStats.z), 2, 3), description: 'VIX is ' + (vixStats.z > 0 ? 'far above' : 'far below') + ' its trailing 30-day mean.' });
+  }
+  if (dgs10Stats && Math.abs(dgs10Stats.z) > 2) {
+    anomalies.push({ type: 'rates', signal: 'DGS10', value: _proRound(dgs10Stats.latest), baseline_mean: _proRound(dgs10Stats.mean), z_score: _proRound(dgs10Stats.z), severity: sev(Math.abs(dgs10Stats.z), 2, 3), description: 'The 10y treasury yield is ' + (dgs10Stats.z > 0 ? 'far above' : 'far below') + ' its trailing 30-day mean.' });
+  }
+  if (fng != null && (fng <= 20 || fng >= 80)) {
+    anomalies.push({ type: 'sentiment', signal: 'crypto_fear_greed', value: fng, z_score: null, severity: (fng <= 10 || fng >= 90) ? 'high' : 'medium', description: fng <= 20 ? 'Crypto sentiment at extreme fear.' : 'Crypto sentiment at extreme greed.' });
+  }
+  if (mcapChange != null && Math.abs(mcapChange) > 5) {
+    anomalies.push({ type: 'crypto', signal: 'crypto_mcap_change_24h', value: _proRound(mcapChange), z_score: null, severity: Math.abs(mcapChange) >= 10 ? 'high' : 'medium', description: 'Total crypto market cap moved ' + _proRound(mcapChange) + '% in 24h.' });
+  }
+  if (quakeCount != null && quakeCount >= 8) {
+    anomalies.push({ type: 'seismic', signal: 'usgs_m4.5_24h', value: quakeCount, z_score: null, severity: quakeCount >= 15 ? 'high' : 'medium', description: quakeCount + ' magnitude-4.5+ earthquakes in the last 24h (elevated).' });
+  }
+
+  var sevRank = { high: 3, medium: 2, low: 1 };
+  anomalies.sort(function(a, b) {
+    var s = (sevRank[b.severity] || 0) - (sevRank[a.severity] || 0);
+    if (s !== 0) return s;
+    return Math.abs(b.z_score || 0) - Math.abs(a.z_score || 0);
+  });
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/anomalies',
+    generated_at: new Date().toISOString(),
+    anomaly_count: anomalies.length,
+    anomalies: anomalies,
+    scanned: ['VIXCLS(FRED)', 'DGS10(FRED)', 'crypto_fear_greed', 'crypto_mcap_change_24h', 'USGS_M4.5+_24h'],
+    observed: {
+      vix_zscore_30d: vixStats ? _proRound(vixStats.z) : null,
+      treasury_10y_zscore_30d: dgs10Stats ? _proRound(dgs10Stats.z) : null,
+      crypto_fear_greed: fng,
+      crypto_mcap_change_24h_pct: mcapChange != null ? _proRound(mcapChange) : null,
+      earthquakes_m45_24h: quakeCount,
+    },
+    method: {
+      version: '1.0',
+      description: 'z-score outliers (|z|>2) over a trailing 30 daily-observation window for FRED series (VIXCLS, DGS10), plus threshold flags for extreme Fear & Greed (<=20 or >=80), large 24h crypto market-cap moves (>5%), and elevated M4.5+ earthquake counts (>=8/24h). A statistical screen, not a prediction.',
+    },
+    _meta: _premiumMeta('/api/pro/anomalies', _buildSourcesMeta(settled, sourceMeta).concat([
+      { name: 'FRED.VIXCLS', status: vixStats ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
+      { name: 'FRED.DGS10', status: dgs10Stats ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
+    ])),
+  };
+}
+
+async function handleProRegime(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/regime', 2, async function(env2, url2) {
+    var KEY = 'pro:regime';
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProRegime(env2, url2); });
+  });
+}
+
+async function handleProAnomalies(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/anomalies', 2, async function(env2, url2) {
+    var KEY = 'pro:anomalies';
+    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProAnomalies(env2, url2); });
+  });
+}
+
 async function handleProSentiment(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/sentiment', 2, async function(env2, url2) {
     var KEY = 'pro:sentiment';
@@ -13117,6 +13378,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'pro/macro':       return await handleProMacro(request, env, url);
       case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
       case 'pro/sentiment':   return await handleProSentiment(request, env, url);
+      case 'pro/regime':      return await handleProRegime(request, env, url);
+      case 'pro/anomalies':   return await handleProAnomalies(request, env, url);
       case 'pro/world-deltas': return await handleProWorldDeltas(request, env, url);
       case 'pro/agent-context': return await handleProAgentContext(request, env, url);
       case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
