@@ -692,7 +692,15 @@ function jsonResponse(data, status, cacheSeconds) {
   if (cacheSeconds > 0) {
     headers['Cache-Control'] = 'public, max-age=' + cacheSeconds + ', s-maxage=' + cacheSeconds;
   }
-  return new Response(JSON.stringify(data), { status: status, headers: headers });
+  var body;
+  try {
+    body = JSON.stringify(data);
+  } catch (e) {
+    // A non-serializable payload (circular ref, BigInt, etc.) must not throw
+    // out of a response builder and become a raw 500.
+    body = '{"error":"serialization_error"}';
+  }
+  return new Response(body, { status: status, headers: headers });
 }
 
 function corsResponse(request, mode) {
@@ -12861,7 +12869,22 @@ export default {
     // Count every request for ai-stats
     hitCounter++;
     var t0 = Date.now();
-    var resp = await dispatchRoute(request, env, url, path, ctx);
+    var resp;
+    try {
+      resp = await dispatchRoute(request, env, url, path, ctx);
+    } catch (err) {
+      // Last-resort backstop for the never-return-500 contract. Any throw that
+      // escapes a handler's own try/catch lands here as a clean JSON envelope
+      // instead of a raw 1101 "Worker threw an exception" runtime error.
+      console.error('[dispatch] uncaught error on /' + path + ': ' + ((err && err.message) || err));
+      resp = jsonResponse({ error: 'internal_error', path: path }, 503);
+    }
+    // Guard against a handler that returned a non-Response (e.g. undefined):
+    // reading .status on it below would itself throw outside any catch.
+    if (!resp || typeof resp.status !== 'number') {
+      console.error('[dispatch] non-Response returned from /' + path);
+      resp = jsonResponse({ error: 'internal_error', path: path }, 503);
+    }
     var duration = Date.now() - t0;
     _recordTrafficOutcome(env, path, resp.status, duration);
     if (rl) resp = withRateLimitHeaders(resp, rl);
