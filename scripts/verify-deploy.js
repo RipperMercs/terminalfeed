@@ -51,21 +51,63 @@ try {
 // 5b. No direct browser-to-external-API fetches in src/ (CLAUDE.md rule #6).
 // Apr 17 2026 incident: ~50 direct fetches in src/ were exposing the Finnhub
 // key on every page view. Every external call must route through the Worker
-// at /api/*. This grep blocks new instances at build time.
+// at /api/*.
 //
-// Allowed: relative paths like fetch('/api/...'), fetch(`/api/...`).
-// Blocked: fetch('https://...'), fetch('http://...'), and the same with backticks.
-// Exemptions: lines tagged with `direct-fetch-exempt` (e.g. WebSocket/SSE
-// streams the Worker can't proxy at scale).
+// This scanner is content-aware (audit 2026-05-29). The old single-line regex
+// had two blind spots: it only matched an inline URL literal sitting directly
+// inside the call (missing `const URL = 'https://...'; fetch(URL)`), and it
+// tested per line (missing multiline `fetch(\n  'https://...')`). It reported
+// "clean" while ~15 hooks fetched externally. This version strips comments,
+// spans newlines, and resolves URL-in-constant indirection.
+//
+// Allowed: relative paths like fetch('/api/...').
+// Blocked: fetch('https://...') / fetch(`http://${h}`) / fetch(EXTERNAL_URL_CONST).
+// Exemptions:
+//   - line-level: `direct-fetch-exempt` on (or within) the call, for genuine
+//     WebSocket/SSE streams the Worker cannot proxy at scale.
+//   - DIRECT_FETCH_DEBT: pre-existing keyless public-API hooks tracked for
+//     migration behind the Worker (audit item #5). Reported as warnings, not
+//     errors, so the build is not blocked while the list is whittled down. Any
+//     NEW or keyed direct fetch outside this list is a hard error. Do NOT add
+//     keyed endpoints here; migrate those instead.
+const DIRECT_FETCH_DEBT = new Set([
+  'src/hooks/useAstros.ts',
+  'src/hooks/useBluesky.ts',
+  'src/hooks/useDevJoke.ts',
+  'src/hooks/useDonations.ts',
+  'src/hooks/useEarthquakes.ts',
+  'src/hooks/useFearGreed.ts',
+  'src/hooks/useFlightRadar.ts',
+  'src/hooks/useFunFact.ts',
+  'src/hooks/useISSPosition.ts',
+  'src/hooks/useMuseumArt.ts',
+  'src/hooks/useNpmTrends.ts',
+  'src/hooks/useSpaceLaunches.ts',
+  'src/hooks/useStackOverflow.ts',
+  'src/hooks/useTCGMarket.ts',
+  'src/hooks/useThisDay.ts',
+  'src/hooks/useTrendingBooks.ts',
+  'src/hooks/useWeather.ts',
+  'src/hooks/useWhaleWatch.ts',
+  'src/hooks/useWikipedia.ts',
+]);
+
+function stripComments(src) {
+  // Replace block + line comments with same-length whitespace, preserving
+  // newlines so reported line numbers stay aligned with the original file.
+  // Intentionally naive (does not parse strings/regex); a build guard should
+  // err toward over-detection. The `[^:]` guard avoids treating the `//` in
+  // https:// or wss:// as the start of a line comment.
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (full, p1) => p1 + ' '.repeat(full.length - p1.length));
+}
+
 function scanDirectFetches() {
   const SCAN_ROOTS = ['src'];
   const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.jsx']);
   const violations = [];
-
-  // Match fetch( / new EventSource( / new WebSocket( with a quoted/templated
-  // absolute URL. Matches single quote, double quote, or backtick.
-  // Example matches: fetch('https://x'), new WebSocket("wss://x"), fetch(`http://${h}`)
-  const RE = /\b(fetch|EventSource|WebSocket)\s*\(\s*['"`](https?:|wss?:)/i;
+  const debt = [];
 
   function walk(dir) {
     if (!fs.existsSync(dir)) return;
@@ -82,31 +124,114 @@ function scanDirectFetches() {
 
   function scanFile(file) {
     const content = fs.readFileSync(file, 'utf8');
-    if (!RE.test(content)) return;
-
+    const stripped = stripComments(content);
+    const rel = path.relative(root, file).split(path.sep).join('/');
     const lines = content.split('\n');
-    lines.forEach((line, i) => {
-      if (!RE.test(line)) return;
-      if (line.includes('direct-fetch-exempt')) return;
-      violations.push({ file: path.relative(root, file), line: i + 1, text: line.trim().slice(0, 160) });
-    });
+
+    // Module-level URL string constants: const/let/var NAME = 'http(s)/ws(s)://...'
+    const urlConsts = new Set();
+    const constRe = /\b(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*['"`](?:https?:|wss?:)\/\//g;
+    let cm;
+    while ((cm = constRe.exec(stripped))) urlConsts.add(cm[1]);
+
+    // Every fetch/EventSource/WebSocket call. `\s*` spans newlines so multiline
+    // calls are caught. First arg is either an inline absolute-URL literal or an
+    // identifier (which is a violation only if it is a known external-URL const).
+    const callRe = /\b(fetch|EventSource|WebSocket)\s*\(\s*(?:(['"`])(?:https?:|wss?:)\/\/|([A-Za-z0-9_$]+)\s*[),])/g;
+    let m;
+    while ((m = callRe.exec(stripped))) {
+      const inlineUrl = !!m[2];
+      const ident = m[3];
+      if (!inlineUrl && !(ident && urlConsts.has(ident))) continue;
+
+      const startLine = stripped.slice(0, m.index).split('\n').length;
+      const endLine = stripped.slice(0, callRe.lastIndex).split('\n').length;
+      // Exempt if the tag appears on any line the call spans.
+      let exempt = false;
+      for (let i = startLine - 1; i < endLine && i < lines.length; i++) {
+        if (lines[i].includes('direct-fetch-exempt')) { exempt = true; break; }
+      }
+      if (exempt) continue;
+
+      const rec = { file: rel, line: startLine, text: (lines[startLine - 1] || '').trim().slice(0, 160) };
+      if (DIRECT_FETCH_DEBT.has(rel)) debt.push(rec);
+      else violations.push(rec);
+    }
   }
 
   for (const r of SCAN_ROOTS) walk(path.join(root, r));
-  return violations;
+  return { violations, debt };
 }
 
-const directFetches = scanDirectFetches();
+const { violations: directFetches, debt: directFetchDebt } = scanDirectFetches();
+if (directFetchDebt.length) {
+  console.warn(`\n[direct-fetch] ${directFetchDebt.length} known pre-existing direct fetch(es) to migrate behind /api/* (audit #5):`);
+  for (const v of directFetchDebt) console.warn(`  ${v.file}:${v.line}  ${v.text}`);
+}
 if (directFetches.length) {
-  console.error(`\n[direct-fetch] ${directFetches.length} direct external fetch(es) in src/:`);
+  console.error(`\n[direct-fetch] ${directFetches.length} NEW direct external fetch(es) in src/:`);
   for (const v of directFetches) {
     console.error(`  ${v.file}:${v.line}  ${v.text}`);
   }
   console.error('\n[direct-fetch] CLAUDE.md rule #6: every external API call must go through the Worker at /api/*.');
   console.error('[direct-fetch] If this is a WebSocket/SSE stream that cannot be proxied, append // direct-fetch-exempt to the line.');
+  console.error('[direct-fetch] If it is a known pre-existing keyless hook, it belongs on DIRECT_FETCH_DEBT (never add keyed endpoints there).');
   errors++;
 } else {
-  console.log('[direct-fetch] no direct external fetches in src/');
+  const tail = directFetchDebt.length ? ` (${directFetchDebt.length} known on the migration list)` : '';
+  console.log(`[direct-fetch] no NEW direct external fetches in src/${tail}`);
+}
+
+// 5c. No hardcoded secrets in src/ (audit 2026-05-29). A live TMDB read JWT
+// shipped in the client bundle because the husky prefix scan never matched raw
+// JWTs. Hard error, no debt allowance: anything matching here must move to a
+// Worker secret and be proxied via /api/*. Tag a genuine false positive with
+// `secret-scan-exempt` on the line.
+function scanHardcodedSecrets() {
+  const SCAN_ROOTS = ['src'];
+  const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.jsx']);
+  const hits = [];
+  const SECRET_RES = [
+    { name: 'jwt', re: /eyJ[A-Za-z0-9_=-]{10,}\.[A-Za-z0-9_=-]{10,}/ },
+    { name: 'bearer-literal', re: /['"`]Bearer\s+[A-Za-z0-9._-]{12,}['"`]/ },
+    { name: 'key-prefix', re: /(sk-ant-[A-Za-z0-9_-]{16,}|AIza[0-9A-Za-z_-]{30,}|re_[A-Za-z0-9_-]{16,}|xoxb-[A-Za-z0-9-]{16,}|ghp_[A-Za-z0-9]{30,}|gho_[A-Za-z0-9]{30,})/ },
+  ];
+
+  function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'node_modules' || entry.name === 'dist') continue;
+        walk(full);
+      } else if (SCAN_EXT.has(path.extname(entry.name))) {
+        const content = fs.readFileSync(full, 'utf8');
+        const rel = path.relative(root, full).split(path.sep).join('/');
+        content.split('\n').forEach((line, i) => {
+          if (line.includes('secret-scan-exempt')) return;
+          for (const s of SECRET_RES) {
+            if (s.re.test(line)) {
+              hits.push({ file: rel, line: i + 1, kind: s.name, text: line.trim().slice(0, 80) });
+              break;
+            }
+          }
+        });
+      }
+    }
+  }
+
+  for (const r of SCAN_ROOTS) walk(path.join(root, r));
+  return hits;
+}
+
+const secretHits = scanHardcodedSecrets();
+if (secretHits.length) {
+  console.error(`\n[secret-scan] ${secretHits.length} hardcoded secret(s) in src/:`);
+  for (const v of secretHits) console.error(`  ${v.file}:${v.line}  [${v.kind}]  ${v.text}`);
+  console.error('\n[secret-scan] Move the secret to a Worker secret (wrangler secret put) and proxy via /api/*. Never ship a key in the client bundle.');
+  errors++;
+} else {
+  console.log('[secret-scan] no hardcoded secrets in src/');
 }
 
 // 6. Em-dash guard (CLAUDE.md rule #1). Blocking by default as of

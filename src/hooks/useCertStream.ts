@@ -24,7 +24,7 @@ export function useCertStream(): CertEntry[] {
     const connect = () => {
       if (!mountedRef.current) return;
       try {
-        ws = new WebSocket(WS_URL);
+        ws = new WebSocket(WS_URL); // direct-fetch-exempt: persistent certstream WS, not Worker-proxiable
 
         ws.onmessage = (event) => {
           if (!mountedRef.current) return;

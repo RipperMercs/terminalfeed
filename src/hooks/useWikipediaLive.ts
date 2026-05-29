@@ -30,7 +30,7 @@ export function useWikipediaLive(): { edits: WikiEdit[]; editsPerMin: number } {
 
     const connect = () => {
       if (!mountedRef.current) return;
-      source = new EventSource(STREAM_URL);
+      source = new EventSource(STREAM_URL); // direct-fetch-exempt: persistent Wikimedia SSE stream, not Worker-proxiable
 
       source.onmessage = (event) => {
         if (!mountedRef.current) return;

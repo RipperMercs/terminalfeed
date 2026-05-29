@@ -26,7 +26,7 @@ export function useBlockStream() {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(MEMPOOL_WS);
+      const ws = new WebSocket(MEMPOOL_WS); // direct-fetch-exempt: persistent mempool.space block WS, not Worker-proxiable
       wsRef.current = ws;
 
       ws.onopen = () => {

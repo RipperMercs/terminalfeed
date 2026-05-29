@@ -105,7 +105,7 @@ export function useSimCrypto(customSymbols: string[] = []) {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(COINCAP_WS);
+      const ws = new WebSocket(COINCAP_WS); // direct-fetch-exempt: persistent CoinCap price WS, not Worker-proxiable
       wsRef.current = ws;
 
       ws.onmessage = (event) => {
