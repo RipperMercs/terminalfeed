@@ -189,7 +189,7 @@ export function useBtcNetwork(): BtcNetworkData {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(MEMPOOL_WS);
+      const ws = new WebSocket(MEMPOOL_WS); // direct-fetch-exempt: persistent mempool.space WS, not Worker-proxiable
       wsRef.current = ws;
 
       ws.onopen = () => {

@@ -41,7 +41,7 @@ export function useCoinbaseTrades(): BtcTrade[] {
     const connect = () => {
       if (!mountedRef.current) return;
       try {
-        ws = new WebSocket(WS_URL);
+        ws = new WebSocket(WS_URL); // direct-fetch-exempt: persistent Coinbase trade WS, not Worker-proxiable
 
         ws.onopen = () => {
           if (!ws || ws.readyState !== WebSocket.OPEN) return;

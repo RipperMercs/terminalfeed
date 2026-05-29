@@ -105,7 +105,7 @@ export function useBtcPrice() {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(BINANCE_WS);
+      const ws = new WebSocket(BINANCE_WS); // direct-fetch-exempt: persistent Binance trade WS, not Worker-proxiable
       wsRef.current = ws;
 
       ws.onopen = () => {

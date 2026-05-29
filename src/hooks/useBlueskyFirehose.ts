@@ -31,7 +31,7 @@ export function useBlueskyFirehose(): BlueskyPost[] {
     const connect = () => {
       if (!mountedRef.current) return;
       try {
-        ws = new WebSocket(WS_URL);
+        ws = new WebSocket(WS_URL); // direct-fetch-exempt: persistent Bluesky Jetstream firehose WS, not Worker-proxiable
 
         ws.onmessage = (event) => {
           if (!mountedRef.current) return;

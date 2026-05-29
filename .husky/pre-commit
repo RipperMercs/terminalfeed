@@ -14,3 +14,13 @@ if git diff --cached | grep -qE "$PATTERNS"; then
   echo "Remove the key from the diff, move it behind process.env / wrangler secret put, then retry."
   exit 1
 fi
+# Raw JWTs and quoted "Bearer <token>" literals. Added 2026-05-29 after a live
+# TMDB v4 read token (a JWT) shipped in the client bundle, slipping past the
+# prefix patterns above. A template like `Bearer ${VAR}` is allowed because the
+# char after the space is $, not a token char.
+JWT_PATTERNS="eyJ[A-Za-z0-9_=-]{10,}\.[A-Za-z0-9_=-]{10,}|Bearer [A-Za-z0-9][A-Za-z0-9._-]{11,}"
+if git diff --cached | grep -qE "$JWT_PATTERNS"; then
+  echo "COMMIT BLOCKED: possible JWT or Bearer token literal detected in staged changes."
+  echo "Move it behind a Worker secret (wrangler secret put) and proxy via /api/*, then retry."
+  exit 1
+fi
