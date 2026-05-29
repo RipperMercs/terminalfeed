@@ -3102,6 +3102,53 @@ async function handleTrendingMovies(env) {
 }
 
 
+// GET /api/ipo-calendar — upcoming US IPOs from Finnhub (reuses FINNHUB_API_KEY).
+// Fail-open: missing key or upstream error returns stale cache, else an empty list.
+async function handleIpoCalendar(env) {
+  var KEY = 'ipo-calendar';
+  var cached = getCached(KEY, 3600000); // 1h
+  if (cached) return jsonResponse(cached, 200, 3600);
+  if (!env || !env.FINNHUB_API_KEY) {
+    var staleNoKey = getStale(KEY);
+    if (staleNoKey) return jsonResponse(staleNoKey, 200, 3600);
+    return jsonResponse({ data: [] }, 200, 600);
+  }
+  try {
+    var now = new Date();
+    var from = now.toISOString().slice(0, 10);
+    var to = new Date(now.getTime() + 60 * 86400000).toISOString().slice(0, 10);
+    var res = await fetchWithTimeout(
+      'https://finnhub.io/api/v1/calendar/ipo?from=' + from + '&to=' + to + '&token=' + env.FINNHUB_API_KEY,
+      {}, 8000
+    );
+    if (!res.ok) throw new Error('finnhub ipo HTTP ' + res.status);
+    var d = await res.json();
+    var raw = (d && d.ipoCalendar) || [];
+    var items = [];
+    for (var i = 0; i < raw.length && items.length < 15; i++) {
+      var r = raw[i] || {};
+      items.push({
+        symbol: r.symbol || '',
+        name: r.name || '',
+        date: r.date || '',
+        exchange: r.exchange || '',
+        price: r.price || '',
+        shares: (r.numberOfShares != null && isFinite(r.numberOfShares)) ? r.numberOfShares : null,
+        status: r.status || '',
+      });
+    }
+    items.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+    var data = { data: items };
+    setCache(KEY, data);
+    return jsonResponse(data, 200, 3600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonResponse(stale, 200, 3600);
+    return jsonResponse({ data: [] }, 200, 600);
+  }
+}
+
+
 // open-notify.org froze on a May-2024 crew snapshot, so we read active astronauts
 // from The Space Devs Launch Library and infer station from nationality.
 async function fetchAstrosFromSpaceDevs() {
@@ -13350,6 +13397,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'shodan':         return await handleShodan(url);
       case 'volcanoes':      return await handleVolcanoes();
       case 'trending-movies':return await handleTrendingMovies(env);
+      case 'ipo-calendar':   return await handleIpoCalendar(env);
       case 'hangry-recipes': return await handleHangryRecipes();
       case 'xkcd':           return await handleXkcd();
       case 'ai-stats':       return handleAiStats();

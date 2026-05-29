@@ -62,6 +62,7 @@ import { useNpmTrends } from './hooks/useNpmTrends';
 import { useAIHub } from './hooks/useAIHub';
 import { usePredictionMarkets } from './hooks/usePredictionMarkets';
 import { useSteamGames } from './hooks/useSteamGames';
+import { useIpoCalendar } from './hooks/useIpoCalendar';
 import { useDailyPaws } from './hooks/useDailyPaws';
 import { useMuseumArt } from './hooks/useMuseumArt';
 import { useNasaApod } from './hooks/useNasaApod';
@@ -191,6 +192,7 @@ function App() {
   const aiHub = useAIHub();
   const { markets: predictionMarkets, status: predictionsStatus } = usePredictionMarkets();
   const steamGames = useSteamGames();
+  const ipoCalendar = useIpoCalendar();
   const { paw, fading: pawFading, fetchNew: fetchNewPaw } = useDailyPaws();
   const museumArt = useMuseumArt();
   const nasaApod = useNasaApod();
@@ -372,6 +374,7 @@ function App() {
     if (earthquakes.length > 0) panelHealth.reportData('seismic');
     if (weather) panelHealth.reportData('weather');
     if (spaceLaunches.length > 0) panelHealth.reportData('launches');
+    if (ipoCalendar.length > 0) panelHealth.reportData('ipo-calendar');
     if (devStatuses.length > 0) panelHealth.reportData('dev-status');
     if (claudeStatus) panelHealth.reportData('claude-status');
     if (cloudStatus) panelHealth.reportData('cloud-status');
@@ -1078,6 +1081,23 @@ function App() {
             <span style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600 }}>{g.playerCount >= 1e6 ? (g.playerCount / 1e6).toFixed(1) + 'M' : g.playerCount >= 1e3 ? (g.playerCount / 1e3).toFixed(0) + 'K' : g.playerCount} playing</span>
           </div>
         ))}
+      </div>
+    </>),
+    'ipo-calendar': ipoCalendar.length === 0 ? null : (<>
+      <PanelHead panelId="ipo-calendar" isStale={panelHealth.isStale('ipo-calendar')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">IPO Calendar</span><span className="panelTag">MARKETS</span></div></PanelHead>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {ipoCalendar.slice(0, 8).map((ipo, i) => {
+          const ts = ipo.date ? Date.parse(ipo.date) : NaN;
+          const days = isFinite(ts) ? Math.ceil((ts - now.getTime()) / 86400000) : null;
+          const when = days == null ? (ipo.date || 'TBA') : days <= 0 ? 'today' : days + 'd';
+          const sym = (ipo.symbol || '').toUpperCase() || 'TBA';
+          return (
+            <div key={(ipo.symbol || '') + '-' + (ipo.date || '') + '-' + i} className="listRow">
+              <span className="listRowSymbol">{sym}{ipo.name ? ' · ' + ipo.name : ''}</span>
+              <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600, whiteSpace: 'nowrap' }}>{when}{ipo.price ? ' · $' + ipo.price : ''}</span>
+            </div>
+          );
+        })}
       </div>
     </>),
     'ai-hub': (<>
