@@ -7,6 +7,12 @@
 # normalization turning the 200 rewrite into a 308 redirect.
 /visual-lab / 200
 
+# Widget gallery: serve the showcase hub (widgets/index.html, which links every
+# /widgets/* showcase page) at the canonical /widgets. The old embed-preview
+# gallery (widgets.html) was retired 2026-05-29; this 200 rewrite to the clean
+# directory path keeps /widgets serving the hub without a 308 normalization.
+/widgets /widgets/ 200
+
 # Well-known URI aliases (RFC 5785) for AI agent discovery.
 # Agents that follow well-known conventions check these paths first.
 /.well-known/openapi.json /openapi.json 200
