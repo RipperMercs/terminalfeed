@@ -54,6 +54,7 @@ export const DEFAULT_LAYOUT = {
     'status-wall',
     'flight-radar',
     'markets',
+    'ipo-calendar',
     'internet-pulse',
     'github',
     'hn-community',
