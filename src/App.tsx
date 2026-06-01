@@ -37,6 +37,7 @@ import { WeatherScene } from './components/WeatherScene';
 import { WeatherForecastStrip } from './components/WeatherForecastStrip';
 import { useInternetPulse } from './hooks/useInternetPulse';
 import { usePanelHealth } from './hooks/usePanelHealth';
+import { PanelAsOf } from './components/PanelAsOf';
 import { useTerminalsOnline } from './hooks/useTerminalsOnline';
 import { usePodcasts } from './hooks/usePodcasts';
 import { uapSightings, getShapeStats } from './data/uapSightings';
@@ -3112,12 +3113,14 @@ function App() {
               return (
                 <div key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
                   <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
+                  <PanelAsOf ts={panelHealth.lastDataAt(id)} stale={panelHealth.isStale(id)} />
                 </div>
               );
             }
             return (
               <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
                 <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
+                <PanelAsOf ts={panelHealth.lastDataAt(id)} stale={panelHealth.isStale(id)} />
               </LazyPanel>
             );
           });
