@@ -22,5 +22,16 @@ id = "285e370fcf3c475fb63d7d45d5ee139c"
 binding = "AGENT_ANALYTICS"
 dataset = "agent_traffic"
 
+# Disaster-recovery target for the daily KV->R2 backup cron. KV has no native
+# backup or point-in-time recovery, so backupKvToR2 gzips every namespace here
+# once a day. Bucket created out-of-band: `wrangler r2 bucket create terminalfeed-backups`.
+[[r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "terminalfeed-backups"
+
+# Two crons. "*/5" runs the source-sync / webhook / alert tick. "17 9" runs the
+# daily KV->R2 backup at 09:17 UTC. Minute 17 is deliberately NOT a multiple of 5
+# so the two triggers never co-fire; scheduled() dispatches on the exact cron
+# string, so a colliding minute would race the wrong handler.
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["*/5 * * * *", "17 9 * * *"]
