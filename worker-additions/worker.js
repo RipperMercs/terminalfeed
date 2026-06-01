@@ -9196,6 +9196,17 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
     return new Response(JSON.stringify(trialResponseBody), { status: status, headers: trialHeaders });
   }
 
+  // Hash the request and response BEFORE committing the debit. aftaHashResponse
+  // canonicalizes the body and THROWS on an undefined or non-finite field (the
+  // signature of a partial upstream shape). Computing the hash here, ahead of the
+  // commit, means such a throw aborts before any credit is charged: the agent gets
+  // a clean no-charge 5xx from the dispatch backstop instead of being debited for a
+  // response whose receipt could never be signed. Moving this below the commit
+  // reopens the charge-then-503-no-receipt hole. (Hardening audit 2026-06-01,
+  // canonicalJSON-undefined class.)
+  var requestHash = await aftaHashRequest(request.method, url);
+  var responseHash = await aftaHashResponse(bodyResult);
+
   // Commit the deferred debit on the TensorFeed credit ledger. On the
   // no-charge path, this writes a no-charge event to TF's network ledger
   // (with the TerminalFeed endpoint path so the network view is correct)
@@ -9239,8 +9250,6 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
     await aftaLogNoChargeEvent(env, noChargeReason, endpoint, cost, token);
   }
 
-  var requestHash = await aftaHashRequest(request.method, url);
-  var responseHash = await aftaHashResponse(bodyResult);
   var capturedForReceipt = null;
   if (typeof bodyResult.captured_at === 'string') capturedForReceipt = bodyResult.captured_at;
   else if (typeof bodyResult.generated_at === 'string') capturedForReceipt = bodyResult.generated_at;
