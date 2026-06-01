@@ -10543,7 +10543,7 @@ async function fetchProMacro(env, url) {
         var observations = (d && d.observations) || [];
         var latest = observations[0];
         var entry = {
-          value: latest && latest.value !== '.' ? parseFloat(latest.value) : null,
+          value: (latest && latest.value !== '.' && isFinite(parseFloat(latest.value))) ? parseFloat(latest.value) : null,
           date: latest ? latest.date : '',
           source: 'fred:' + id,
         };
@@ -11223,8 +11223,8 @@ async function fetchProStablecoinFlows(env, url) {
         .slice(0, 5);
 
       return {
-        symbol: a.symbol,
-        name: a.name,
+        symbol: a.symbol || null,
+        name: a.name || null,
         peg_type: a.pegType || null,
         peg_mechanism: a.pegMechanism || null,
         price_usd: typeof a.price === 'number' ? a.price : null,
@@ -11338,7 +11338,7 @@ async function fetchProDefiTvl(env, url) {
           .slice(0, 50)
           .map(function(p) {
             return {
-              name: p.name,
+              name: p.name || null,
               symbol: p.symbol || null,
               category: p.category || null,
               chain: p.chain || null,
@@ -11367,7 +11367,7 @@ async function fetchProDefiTvl(env, url) {
           .slice(0, 15)
           .map(function(c) {
             return {
-              name: c.name,
+              name: c.name || null,
               chain_id: c.chainId != null ? c.chainId : null,
               token_symbol: c.tokenSymbol || null,
               tvl_usd: c.tvl || 0,
@@ -12052,7 +12052,7 @@ async function fetchProAgentContext(env, url) {
       if (Array.isArray(pm)) {
         predictionMarkets = pm.slice(0, 3).map(function(m) {
           return {
-            question: sanitizeForLLM(m.question),
+            question: sanitizeForLLM(m.question) || null,
             yes_probability: m.lastTradePrice != null ? parseFloat(m.lastTradePrice) : null,
             volume_24h: parseFloat(m.volume24hr) || 0,
             url: m.slug ? 'https://polymarket.com/event/' + m.slug : null,
@@ -12712,11 +12712,11 @@ async function fetchProCryptoDeep(env, url) {
     }
     if (mp[1] && mp[1].status === 'fulfilled' && mp[1].value) {
       network.fees_sat_per_vb = {
-        fastest: mp[1].value.fastestFee,
-        half_hour: mp[1].value.halfHourFee,
-        hour: mp[1].value.hourFee,
-        economy: mp[1].value.economyFee,
-        minimum: mp[1].value.minimumFee,
+        fastest: typeof mp[1].value.fastestFee === 'number' ? mp[1].value.fastestFee : null,
+        half_hour: typeof mp[1].value.halfHourFee === 'number' ? mp[1].value.halfHourFee : null,
+        hour: typeof mp[1].value.hourFee === 'number' ? mp[1].value.hourFee : null,
+        economy: typeof mp[1].value.economyFee === 'number' ? mp[1].value.economyFee : null,
+        minimum: typeof mp[1].value.minimumFee === 'number' ? mp[1].value.minimumFee : null,
       };
     }
     if (mp[2] && mp[2].status === 'fulfilled' && mp[2].value) {
