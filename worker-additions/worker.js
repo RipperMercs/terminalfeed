@@ -2071,6 +2071,135 @@ async function handleAiLeaderboard(env) {
 }
 
 // =============================================================================
+// /api/feed-health : cron-driven feed staleness monitor + alerting
+// =============================================================================
+// The X-TF-As-Of / X-TF-Stale headers make each feed honest, but a header only
+// helps if someone reads it. This monitor closes the loop: every cron tick it
+// probes a curated set of feeds, reads their freshness headers, classifies each
+// as ok / stale / dark, persists the roll-up to KV, and pushes an alert the
+// moment a feed newly degrades. GET /api/feed-health returns the latest roll-up.
+//
+// Push channel: POSTs to env.ALERT_WEBHOOK_URL (Discord, Slack, and generic
+// webhooks all accept a JSON body with content/text). No-ops gracefully (logs +
+// KV + endpoint only) until that secret is set, so the monitor works immediately
+// and turns into push with one `wrangler secret put ALERT_WEBHOOK_URL`.
+
+var FEED_HEALTH_KV_KEY = 'feed:health';
+var FEED_ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1h between pushes for the same problem set
+var FEED_SELF_BASE = 'https://terminalfeed.io';
+var MONITORED_FEEDS = [
+  { id: 'btc-price',      path: '/api/btc-price' },
+  { id: 'stocks',         path: '/api/stocks' },
+  { id: 'crypto',         path: '/api/coingecko/markets' },
+  { id: 'crypto-global',  path: '/api/coingecko/global' },
+  { id: 'fear-greed',     path: '/api/fear-greed' },
+  { id: 'forex',          path: '/api/forex' },
+  { id: 'predictions',    path: '/api/predictions' },
+  { id: 'hackernews',     path: '/api/hackernews' },
+  { id: 'launches',       path: '/api/launches' },
+  { id: 'gas',            path: '/api/gas' },
+  { id: 'service-status', path: '/api/service-status' },
+  { id: 'steam',          path: '/api/steam' },
+  { id: 'volcanoes',      path: '/api/volcanoes' },
+  { id: 'weather',        path: '/api/weather?lat=34.05&lon=-118.24' },
+  { id: 'air-quality',    path: '/api/air-quality?lat=34.05&lon=-118.24' },
+];
+
+// Probe one feed via its public route; classify from the freshness headers.
+// Never throws. dark = endpoint failed or has no data at all; stale = the feed
+// is serving cache after an upstream failure; ok = fresh.
+async function probeFeed(feed) {
+  try {
+    var res = await fetchWithTimeout(FEED_SELF_BASE + feed.path, {}, 8000);
+    if (!res.ok) return { id: feed.id, status: 'dark', reason: 'http ' + res.status };
+    var asOf = res.headers.get('X-TF-As-Of');
+    var stale = res.headers.get('X-TF-Stale') === 'true';
+    var ageSec = parseInt(res.headers.get('X-TF-Age') || '', 10);
+    if (!asOf) return { id: feed.id, status: 'dark', reason: 'no data' };
+    return {
+      id: feed.id,
+      status: stale ? 'stale' : 'ok',
+      asOf: asOf,
+      ageSec: isFinite(ageSec) ? ageSec : null,
+    };
+  } catch (e) {
+    return { id: feed.id, status: 'dark', reason: (e && e.message) || 'fetch failed' };
+  }
+}
+
+// Cron entry: probe every monitored feed, persist the roll-up, and push an alert
+// when a feed NEWLY degrades (with a cooldown so we are told once, not spammed).
+async function checkFeedHealth(env) {
+  if (!env || !env.WEBHOOK_SUBS) return { skipped: true, reason: 'no KV' };
+  var results = await Promise.all(MONITORED_FEEDS.map(probeFeed));
+  var degraded = results.filter(function(r) { return r.status !== 'ok'; });
+  var degradedIds = degraded.map(function(r) { return r.id; });
+  var now = Date.now();
+
+  var prev = null;
+  try {
+    var prevRaw = await env.WEBHOOK_SUBS.get(FEED_HEALTH_KV_KEY);
+    if (prevRaw) prev = JSON.parse(prevRaw);
+  } catch (e) { prev = null; }
+  var prevDegraded = (prev && Array.isArray(prev.degradedIds)) ? prev.degradedIds : [];
+  var lastAlertAt = (prev && prev.lastAlertAt) || 0;
+
+  var newlyDegraded = degradedIds.filter(function(id) { return prevDegraded.indexOf(id) === -1; });
+  var recovered = prevDegraded.filter(function(id) { return degradedIds.indexOf(id) === -1; });
+  var shouldAlert = newlyDegraded.length > 0 && (now - lastAlertAt) > FEED_ALERT_COOLDOWN_MS;
+
+  if (shouldAlert) {
+    var lines = degraded.map(function(r) {
+      var detail = r.reason ? ' (' + r.reason + ')'
+        : (r.ageSec != null ? ' (age ' + Math.round(r.ageSec / 60) + 'm)' : '');
+      return '- ' + r.id + ': ' + r.status + detail;
+    });
+    var msg = '[TerminalFeed] ' + degraded.length + ' feed(s) degraded as of '
+      + new Date(now).toISOString() + ':\n' + lines.join('\n')
+      + '\nDetail: ' + FEED_SELF_BASE + '/api/feed-health';
+    await dispatchFeedAlert(env, msg);
+  }
+
+  var record = {
+    checkedAt: now,
+    checkedAtISO: new Date(now).toISOString(),
+    ok: results.length - degraded.length,
+    degradedIds: degradedIds,
+    feeds: results,
+    lastAlertAt: shouldAlert ? now : lastAlertAt,
+  };
+  try { await env.WEBHOOK_SUBS.put(FEED_HEALTH_KV_KEY, JSON.stringify(record)); } catch (e) {}
+  return { degraded: degradedIds, newlyDegraded: newlyDegraded, recovered: recovered, alerted: shouldAlert };
+}
+
+// Push an alert. Discord (content), Slack (text), and generic webhooks all read
+// one of these fields, so we send both. Logs always; no-ops if no webhook set.
+async function dispatchFeedAlert(env, text) {
+  console.log('[feed-health] ALERT:', text);
+  var url = env && env.ALERT_WEBHOOK_URL;
+  if (!url) return;
+  try {
+    await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, text: text }),
+    }, 8000);
+  } catch (e) { console.error('[feed-health] alert dispatch failed:', e && e.message); }
+}
+
+// GET /api/feed-health — latest monitor roll-up (public read). 60s cache.
+async function handleFeedHealth(env) {
+  var body = { checkedAt: null, ok: 0, degradedIds: [], feeds: [] };
+  if (env && env.WEBHOOK_SUBS) {
+    try {
+      var raw = await env.WEBHOOK_SUBS.get(FEED_HEALTH_KV_KEY, 'json');
+      if (raw) body = raw;
+    } catch (e) {}
+  }
+  return jsonResponse(body, 200, 60);
+}
+
+// =============================================================================
 // /api/space-weather : NOAA SWPC geomagnetic + solar conditions
 // =============================================================================
 // Source: NOAA Space Weather Prediction Center, free, no auth.
@@ -13479,6 +13608,17 @@ export default {
           console.error('freshness check failed:', err.message);
         }
       })());
+      // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
+      ctx.waitUntil((async function() {
+        try {
+          var fh = await checkFeedHealth(env);
+          if (fh && (fh.alerted || (fh.newlyDegraded && fh.newlyDegraded.length))) {
+            console.log('feed-health:', JSON.stringify(fh));
+          }
+        } catch (err) {
+          console.error('feed-health check failed:', err.message);
+        }
+      })());
     } else {
       console.log('unhandled cron schedule:', cron);
     }
@@ -13626,6 +13766,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'hf-trending':    return await handleHfTrending();
       case 'harnesses':      return await handleHarnesses(url, env);
       case 'ai-leaderboard': return await handleAiLeaderboard(env);
+      case 'feed-health':    return await handleFeedHealth(env);
       case 'space-weather':  return await handleSpaceWeather();
       case 'wildfires':      return await handleWildfires(env);
       case 'severe-weather': return await handleSevereWeather();
