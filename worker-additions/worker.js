@@ -13759,6 +13759,17 @@ export default {
           console.error('feed-health check failed:', err.message);
         }
       })());
+    } else if (cron === '17 9 * * *') {
+      // Daily KV->R2 disaster-recovery backup. 09:17 UTC, a non-*/5 minute so it
+      // never co-fires with the 5-minute tick above.
+      ctx.waitUntil((async function() {
+        try {
+          var b = await backupKvToR2(env, 'cron', null);
+          console.log('kv-backup:', JSON.stringify(b));
+        } catch (err) {
+          console.error('kv-backup failed:', err.message);
+        }
+      })());
     } else {
       console.log('unhandled cron schedule:', cron);
     }
@@ -13825,6 +13836,170 @@ function smartNotFound(path) {
     }
   }
   return null;
+}
+
+// === KV -> R2 daily disaster-recovery backup ===
+//
+// Cloudflare KV has no native backup, no trash, and no point-in-time recovery.
+// If a namespace is deleted (a stray wrangler command, stolen creds, a CF-side
+// error) the data is gone for good. WEBHOOK_SUBS holds premium webhook
+// subscriptions, the local no-charge ledger copy, BTC-alert + feed-health state,
+// and rate-limit / free-trial counters. A daily cron gzips every configured KV
+// namespace into r2://<bucket>/{YYYY-MM-DD}/{NAMESPACE}.jsonl.gz plus a per-date
+// manifest.json, so any single day is a clean restore point.
+//
+// The Ed25519 receipt private key lives in a Worker secret, NOT KV, so it is
+// NOT covered here; back it up offline separately.
+//
+// Ported from TensorFeed's worker/src/backup.ts (catch-up spec 2026-06-01) with
+// its hard-won gotchas: R2.put needs a known-length body, so the gzip stream is
+// drained to a single Uint8Array before the put (CompressionStream output length
+// is unknown). Per-namespace failures are recorded and skipped, never aborting
+// the whole run. A missing binding is recorded as binding_missing_from_env. The
+// uncompressed sha256 is intentionally omitted (computing it would require
+// buffering the stream twice); the R2 etag (md5 of the put body) is the integrity
+// check instead.
+
+var BACKUP_NAMESPACES = [
+  { binding: 'WEBHOOK_SUBS', name: 'WEBHOOK_SUBS' },
+];
+
+function _backupDateUtc(now) {
+  return now.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+}
+
+async function _dumpNamespaceToR2(bucket, ns, nsName, datePrefix) {
+  var summary = { name: nsName, key_count: 0, byte_count: 0, sha256_hex: '', duration_ms: 0 };
+  var t0 = Date.now();
+  var lines = [];
+  var cursor = undefined;
+  try {
+    do {
+      var listRes = await ns.list({ limit: 1000, cursor: cursor });
+      var keys = (listRes && listRes.keys) || [];
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i].name;
+        var v = null;
+        try { v = await ns.get(k, 'text'); } catch (e) { v = null; }
+        var m = (keys[i].metadata !== undefined) ? keys[i].metadata : null;
+        lines.push(JSON.stringify({ k: k, v: v, m: m }));
+        summary.key_count += 1;
+      }
+      cursor = (listRes && listRes.list_complete === false) ? listRes.cursor : undefined;
+    } while (cursor);
+  } catch (e) {
+    // Record the first error on this namespace and stop walking it, but let the
+    // overall run continue and still flush whatever lines we collected.
+    summary.error = String((e && e.message) || e).slice(0, 200);
+  }
+
+  var jsonl = lines.length ? (lines.join('\n') + '\n') : '';
+  var rawBytes = new TextEncoder().encode(jsonl);
+  // Gzip via CompressionStream, then DRAIN to a single buffer: R2.put needs a
+  // known content length and a CompressionStream body has none.
+  var gzStream = new Response(rawBytes).body.pipeThrough(new CompressionStream('gzip'));
+  var gzBuf = new Uint8Array(await new Response(gzStream).arrayBuffer());
+  summary.byte_count = gzBuf.byteLength;
+  var objKey = datePrefix + '/' + nsName + '.jsonl.gz';
+  await bucket.put(objKey, gzBuf, { httpMetadata: { contentType: 'application/gzip' } });
+  summary.object_key = objKey;
+  summary.duration_ms = Date.now() - t0;
+  return summary;
+}
+
+async function backupKvToR2(env, triggeredBy, workerVersion) {
+  var bucket = env && env.BACKUPS;
+  if (!bucket) {
+    // No R2 binding (e.g. a dev env without the bucket). No-op cleanly so the
+    // cron does not throw.
+    return { ok: false, skipped: 'no_r2_binding' };
+  }
+  var startedAt = new Date();
+  var datePrefix = _backupDateUtc(startedAt);
+  var runId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (datePrefix + '-' + startedAt.getTime());
+  var nsSummaries = [];
+  for (var i = 0; i < BACKUP_NAMESPACES.length; i++) {
+    var spec = BACKUP_NAMESPACES[i];
+    var ns = env[spec.binding];
+    if (!ns) {
+      // A conditionally-bound namespace absent in this env is recorded, not fatal.
+      nsSummaries.push({ name: spec.name, key_count: 0, byte_count: 0, error: 'binding_missing_from_env' });
+      continue;
+    }
+    try {
+      nsSummaries.push(await _dumpNamespaceToR2(bucket, ns, spec.name, datePrefix));
+    } catch (e) {
+      nsSummaries.push({ name: spec.name, key_count: 0, byte_count: 0, error: String((e && e.message) || e).slice(0, 200) });
+    }
+  }
+  var completedAt = new Date();
+  var manifest = {
+    run_id: runId,
+    date: datePrefix,
+    started_at: startedAt.toISOString(),
+    completed_at: completedAt.toISOString(),
+    duration_ms: completedAt.getTime() - startedAt.getTime(),
+    triggered_by: triggeredBy || 'cron',
+    worker_version: workerVersion || null,
+    namespaces: nsSummaries,
+  };
+  // Manifest is written LAST so its presence means the date's dump finished.
+  await bucket.put(datePrefix + '/manifest.json', JSON.stringify(manifest, null, 2), { httpMetadata: { contentType: 'application/json' } });
+  return Object.assign({ ok: true }, manifest);
+}
+
+async function listRecentBackups(env, limit) {
+  var bucket = env && env.BACKUPS;
+  if (!bucket) return [];
+  var lim = Math.max(1, Math.min(90, limit || 30));
+  var dates = [];
+  var cursor = undefined;
+  do {
+    var res = await bucket.list({ delimiter: '/', cursor: cursor });
+    var prefixes = (res && res.delimitedPrefixes) || [];
+    for (var i = 0; i < prefixes.length; i++) {
+      dates.push(String(prefixes[i]).replace(/\/$/, ''));
+    }
+    cursor = (res && res.truncated) ? res.cursor : undefined;
+  } while (cursor);
+  dates.sort(function(a, b) { return a < b ? 1 : (a > b ? -1 : 0); }); // newest first
+  return dates.slice(0, lim);
+}
+
+async function readManifest(env, date) {
+  var bucket = env && env.BACKUPS;
+  if (!bucket) return null;
+  var obj = await bucket.get(date + '/manifest.json');
+  if (!obj) return null;
+  try { return JSON.parse(await obj.text()); } catch (e) { return null; }
+}
+
+// Admin endpoints. Auth + per-IP rate limit are enforced centrally by the
+// admin/* gate in fetch() before dispatch, so these assume an authorized caller.
+
+async function handleBackupRun(request, env) {
+  if (request.method !== 'POST') return adminJsonResponse({ ok: false, error: 'POST only' }, 405, request);
+  var result = await backupKvToR2(env, 'admin', null);
+  return adminJsonResponse(result, (result && result.ok) ? 200 : 503, request);
+}
+
+async function handleBackupList(request, env, url) {
+  if (request.method !== 'GET') return adminJsonResponse({ ok: false, error: 'GET only' }, 405, request);
+  var limit = parseInt(url.searchParams.get('limit') || '30', 10);
+  if (!Number.isFinite(limit)) limit = 30;
+  var dates = await listRecentBackups(env, limit);
+  return adminJsonResponse({ ok: true, count: dates.length, dates: dates }, 200, request);
+}
+
+async function handleBackupManifest(request, env, url) {
+  if (request.method !== 'GET') return adminJsonResponse({ ok: false, error: 'GET only' }, 405, request);
+  var date = url.searchParams.get('date') || '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return adminJsonResponse({ ok: false, error: 'invalid_date', expected: 'YYYY-MM-DD' }, 400, request);
+  }
+  var manifest = await readManifest(env, date);
+  if (!manifest) return adminJsonResponse({ ok: false, error: 'manifest_not_found', date: date }, 404, request);
+  return adminJsonResponse({ ok: true, manifest: manifest }, 200, request);
 }
 
 async function dispatchRoute(request, env, url, path, ctx) {
@@ -13982,6 +14157,9 @@ async function dispatchRoute(request, env, url, path, ctx) {
 
       // Admin
       case 'admin/agent-traffic': return await handleAdminAgentTraffic(request, env);
+      case 'admin/backup/run':      return await handleBackupRun(request, env);
+      case 'admin/backup/list':     return await handleBackupList(request, env, url);
+      case 'admin/backup/manifest': return await handleBackupManifest(request, env, url);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
