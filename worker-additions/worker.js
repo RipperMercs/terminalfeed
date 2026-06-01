@@ -2186,23 +2186,27 @@ async function checkFeedHealth(env) {
 // nothing is configured, so the monitor works before any channel is wired.
 async function dispatchFeedAlert(env, subject, text) {
   console.log('[feed-health] ALERT:', subject);
-  if (!env) return;
+  if (!env) return { channel: 'none', ok: false, error: 'no env' };
 
   if (env.RESEND_API_KEY && env.ALERT_EMAIL_TO) {
+    var from = env.ALERT_EMAIL_FROM || 'TerminalFeed Alerts <alerts@terminalfeed.io>';
     try {
-      var from = env.ALERT_EMAIL_FROM || 'TerminalFeed Alerts <alerts@terminalfeed.io>';
       var to = env.ALERT_EMAIL_TO.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
       var res = await fetchWithTimeout('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: from, to: to, subject: subject, text: text }),
       }, 8000);
+      var bodyText = await res.text();
       if (!res.ok) {
-        var errBody = await res.text();
-        console.error('[feed-health] resend ' + res.status + ': ' + errBody.slice(0, 300));
+        console.error('[feed-health] resend ' + res.status + ': ' + bodyText.slice(0, 300));
+        return { channel: 'resend', ok: false, status: res.status, error: bodyText.slice(0, 200), from: from };
       }
-    } catch (e) { console.error('[feed-health] resend send failed:', e && e.message); }
-    return;
+      return { channel: 'resend', ok: true, status: res.status, from: from };
+    } catch (e) {
+      console.error('[feed-health] resend send failed:', e && e.message);
+      return { channel: 'resend', ok: false, error: (e && e.message) || 'send failed', from: from };
+    }
   }
 
   if (env.ALERT_WEBHOOK_URL) {
@@ -2213,8 +2217,14 @@ async function dispatchFeedAlert(env, subject, text) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: combined, text: combined }),
       }, 8000);
-    } catch (e) { console.error('[feed-health] webhook dispatch failed:', e && e.message); }
+      return { channel: 'webhook', ok: true };
+    } catch (e) {
+      console.error('[feed-health] webhook dispatch failed:', e && e.message);
+      return { channel: 'webhook', ok: false, error: (e && e.message) };
+    }
   }
+
+  return { channel: 'none', ok: false, error: 'no channel configured (set RESEND_API_KEY + ALERT_EMAIL_TO)' };
 }
 
 // GET /api/feed-health — latest monitor roll-up (public read). 60s cache.
@@ -2233,17 +2243,20 @@ async function handleFeedHealth(env) {
 // optionally send a test alert (?test=1) to verify the configured channel.
 async function handleFeedHealthCheck(request, env, url) {
   var auth = request.headers.get('Authorization');
-  if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
+  // Fail closed: if ADMIN_SECRET is unset, 'Bearer ' + undefined would otherwise
+  // be guessable, so require the secret to actually exist.
+  if (!env.ADMIN_SECRET || !auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
   }
   var wantTest = !!(url && url.searchParams && url.searchParams.get('test'));
+  var dispatch = null;
   if (wantTest) {
-    await dispatchFeedAlert(env, '[TerminalFeed] test alert',
+    dispatch = await dispatchFeedAlert(env, '[TerminalFeed] test alert',
       'Test alert from /api/feed-health-check at ' + new Date().toISOString() + '. If you received this, the alert channel is working.');
   }
   try {
     var result = await checkFeedHealth(env);
-    return jsonResponse({ ok: true, testAlertSent: wantTest, result: result });
+    return jsonResponse({ ok: true, testAlertSent: wantTest, dispatch: dispatch, result: result });
   } catch (err) {
     return jsonResponse({ error: err.message }, 500);
   }
