@@ -306,6 +306,12 @@ async function handleAdminAgentTraffic(request, env) {
 
 const _cache = {};
 
+// When a premium upstream refresh fails, cacheLookupOrFetch serves the last
+// cached entry stale (flagged + no-charged) rather than 5xx, up to this age.
+// Bridges realistic upstream outages so the AFTA stale_data no-charge guarantee
+// can fire; beyond it the data is too old to be useful, so we 5xx instead.
+var STALE_SERVE_MAX_MS = 6 * 60 * 60 * 1000; // 6 hours
+
 // Freshness of the value most recently returned by a cache helper. Set
 // synchronously by getCached/getStale/setCache and read by jsonFreshAuto on the
 // very next line (no await between), so it is race-free across concurrent
@@ -518,6 +524,19 @@ async function cacheLookupOrFetch(key, ttlMs, fetchFn) {
     });
   } catch (e) {
     _recordEndpointError(key, e && e.message);
+    // Upstream fetch failed. If we still hold a cached entry (even past its TTL),
+    // serve it stale rather than 5xx: the agent gets degraded-but-useful data,
+    // and the premium wrapper reads _stale_serve to no-charge it as stale_data so
+    // the published AFTA freshness guarantee actually fires. Only bridge outages
+    // up to STALE_SERVE_MAX_MS; beyond that the data is too old, so rethrow -> 5xx.
+    var staleEntry = _cache[key];
+    if (staleEntry && (Date.now() - staleEntry.ts) <= STALE_SERVE_MAX_MS) {
+      return Object.assign({}, staleEntry.data, {
+        _cached: true,
+        _cache_age_seconds: Math.floor((Date.now() - staleEntry.ts) / 1000),
+        _stale_serve: true,
+      });
+    }
     throw e;
   }
 }
@@ -9116,6 +9135,20 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
     if (typeof bodyResult.__no_charge === 'string') {
       noChargeReason = bodyResult.__no_charge;
       delete bodyResult.__no_charge;
+    }
+
+    // Degraded serve: cacheLookupOrFetch returned a stale cache entry because the
+    // upstream refresh failed. No-charge it as stale_data and flag the body so the
+    // agent sees the data is stale and is not billed for a degraded answer. This
+    // is the path that makes the published stale_data guarantee actually fire,
+    // since the SLA-vs-capturedAt check below can only catch data older than the
+    // SLA, which the in-TTL cache normally never serves.
+    if (!noChargeReason && bodyResult._stale_serve === true) {
+      noChargeReason = 'stale_data';
+      bodyResult.stale = true;
+      if (typeof bodyResult._cache_age_seconds === 'number') bodyResult.stale_age_seconds = bodyResult._cache_age_seconds;
+      var staleServeSla = aftaResolveSLA(endpoint);
+      if (staleServeSla) bodyResult.stale_sla_seconds = staleServeSla.maxAgeSeconds;
     }
 
     // Staleness check. Premium fetchers expose freshness via _meta.generated_at
