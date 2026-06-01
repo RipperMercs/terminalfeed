@@ -2079,51 +2079,50 @@ async function handleAiLeaderboard(env) {
 // as ok / stale / dark, persists the roll-up to KV, and pushes an alert the
 // moment a feed newly degrades. GET /api/feed-health returns the latest roll-up.
 //
-// Push channel: POSTs to env.ALERT_WEBHOOK_URL (Discord, Slack, and generic
-// webhooks all accept a JSON body with content/text). No-ops gracefully (logs +
-// KV + endpoint only) until that secret is set, so the monitor works immediately
-// and turns into push with one `wrangler secret put ALERT_WEBHOOK_URL`.
+// Push channel: email via Resend (preferred), else a generic webhook; see
+// dispatchFeedAlert. No-ops gracefully (logs + KV + endpoint only) until a
+// channel secret is set, so the monitor works immediately.
+//
+// Probing runs the route handlers in-process. A Worker cannot fetch its own
+// /api/* route (that hits the Pages origin and 404s), so we call the handlers
+// directly. In the cron isolate the cache is cold, so each probe is a real
+// upstream liveness test. A feed must be degraded on TWO consecutive ticks
+// before it alerts, so a single transient blip is not a false alarm.
 
 var FEED_HEALTH_KV_KEY = 'feed:health';
 var FEED_ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1h between pushes for the same problem set
 var FEED_SELF_BASE = 'https://terminalfeed.io';
 var MONITORED_FEEDS = [
-  { id: 'btc-price',      path: '/api/btc-price' },
-  { id: 'stocks',         path: '/api/stocks' },
-  { id: 'crypto',         path: '/api/coingecko/markets' },
-  { id: 'crypto-global',  path: '/api/coingecko/global' },
-  { id: 'fear-greed',     path: '/api/fear-greed' },
-  { id: 'forex',          path: '/api/forex' },
-  { id: 'predictions',    path: '/api/predictions' },
-  { id: 'hackernews',     path: '/api/hackernews' },
-  { id: 'launches',       path: '/api/launches' },
-  { id: 'gas',            path: '/api/gas' },
-  { id: 'service-status', path: '/api/service-status' },
-  { id: 'steam',          path: '/api/steam' },
-  { id: 'volcanoes',      path: '/api/volcanoes' },
-  { id: 'weather',        path: '/api/weather?lat=34.05&lon=-118.24' },
-  { id: 'air-quality',    path: '/api/air-quality?lat=34.05&lon=-118.24' },
+  { id: 'btc-price',      run: function(env) { return handleBtcPrice(); } },
+  { id: 'stocks',         run: function(env) { return handleStocks(env, null); } },
+  { id: 'crypto',         run: function(env) { return handleCoingeckoMarkets(); } },
+  { id: 'crypto-global',  run: function(env) { return handleCoingeckoGlobal(); } },
+  { id: 'fear-greed',     run: function(env) { return handleFearGreed(); } },
+  { id: 'forex',          run: function(env) { return handleForex(); } },
+  { id: 'predictions',    run: function(env) { return handlePredictions(); } },
+  { id: 'hackernews',     run: function(env) { return handleHackerNews(); } },
+  { id: 'launches',       run: function(env) { return handleLaunches(); } },
+  { id: 'gas',            run: function(env) { return handleGas(env); } },
+  { id: 'service-status', run: function(env) { return handleServiceStatus(); } },
+  { id: 'steam',          run: function(env) { return handleSteam(); } },
+  { id: 'volcanoes',      run: function(env) { return handleVolcanoes(); } },
+  { id: 'weather',        run: function(env) { return handleWeather(new URL(FEED_SELF_BASE + '/api/weather?lat=34.05&lon=-118.24')); } },
+  { id: 'air-quality',    run: function(env) { return handleAirQuality(new URL(FEED_SELF_BASE + '/api/air-quality?lat=34.05&lon=-118.24')); } },
 ];
 
-// Probe one feed via its public route; classify from the freshness headers.
-// Never throws. dark = endpoint failed or has no data at all; stale = the feed
-// is serving cache after an upstream failure; ok = fresh.
-async function probeFeed(feed) {
+// Probe one feed by running its handler in-process; classify from the freshness
+// headers on the returned Response. Never throws. dark = no data / handler error;
+// stale = serving cache after an upstream failure; ok = fresh.
+async function probeFeed(feed, env) {
   try {
-    var res = await fetchWithTimeout(FEED_SELF_BASE + feed.path, {}, 8000);
-    if (!res.ok) return { id: feed.id, status: 'dark', reason: 'http ' + res.status };
-    var asOf = res.headers.get('X-TF-As-Of');
-    var stale = res.headers.get('X-TF-Stale') === 'true';
-    var ageSec = parseInt(res.headers.get('X-TF-Age') || '', 10);
+    var resp = await feed.run(env);
+    var asOf = resp.headers.get('X-TF-As-Of');
+    var stale = resp.headers.get('X-TF-Stale') === 'true';
+    var ageSec = parseInt(resp.headers.get('X-TF-Age') || '', 10);
     if (!asOf) return { id: feed.id, status: 'dark', reason: 'no data' };
-    return {
-      id: feed.id,
-      status: stale ? 'stale' : 'ok',
-      asOf: asOf,
-      ageSec: isFinite(ageSec) ? ageSec : null,
-    };
+    return { id: feed.id, status: stale ? 'stale' : 'ok', asOf: asOf, ageSec: isFinite(ageSec) ? ageSec : null };
   } catch (e) {
-    return { id: feed.id, status: 'dark', reason: (e && e.message) || 'fetch failed' };
+    return { id: feed.id, status: 'dark', reason: (e && e.message) || 'handler threw' };
   }
 }
 
@@ -2131,7 +2130,7 @@ async function probeFeed(feed) {
 // when a feed NEWLY degrades (with a cooldown so we are told once, not spammed).
 async function checkFeedHealth(env) {
   if (!env || !env.WEBHOOK_SUBS) return { skipped: true, reason: 'no KV' };
-  var results = await Promise.all(MONITORED_FEEDS.map(probeFeed));
+  var results = await Promise.all(MONITORED_FEEDS.map(function(f) { return probeFeed(f, env); }));
   var degraded = results.filter(function(r) { return r.status !== 'ok'; });
   var degradedIds = degraded.map(function(r) { return r.id; });
   var now = Date.now();
@@ -2142,22 +2141,30 @@ async function checkFeedHealth(env) {
     if (prevRaw) prev = JSON.parse(prevRaw);
   } catch (e) { prev = null; }
   var prevDegraded = (prev && Array.isArray(prev.degradedIds)) ? prev.degradedIds : [];
+  var prevAlerted = (prev && Array.isArray(prev.alertedIds)) ? prev.alertedIds : [];
   var lastAlertAt = (prev && prev.lastAlertAt) || 0;
 
-  var newlyDegraded = degradedIds.filter(function(id) { return prevDegraded.indexOf(id) === -1; });
-  var recovered = prevDegraded.filter(function(id) { return degradedIds.indexOf(id) === -1; });
-  var shouldAlert = newlyDegraded.length > 0 && (now - lastAlertAt) > FEED_ALERT_COOLDOWN_MS;
+  // Confirm across two consecutive ticks before alerting (filters single blips).
+  var confirmed = degradedIds.filter(function(id) { return prevDegraded.indexOf(id) !== -1; });
+  // Feeds already notified that are still degraded stay "alerted"; recovered ones
+  // drop out so they can re-alert if they degrade again.
+  var stillAlerted = prevAlerted.filter(function(id) { return degradedIds.indexOf(id) !== -1; });
+  var toAlert = confirmed.filter(function(id) { return stillAlerted.indexOf(id) === -1; });
+  var shouldAlert = toAlert.length > 0 && (now - lastAlertAt) > FEED_ALERT_COOLDOWN_MS;
+  var alertedIds = shouldAlert ? stillAlerted.concat(toAlert) : stillAlerted;
 
   if (shouldAlert) {
-    var lines = degraded.map(function(r) {
+    var alertSet = {};
+    toAlert.forEach(function(id) { alertSet[id] = true; });
+    var lines = degraded.filter(function(r) { return alertSet[r.id]; }).map(function(r) {
       var detail = r.reason ? ' (' + r.reason + ')'
         : (r.ageSec != null ? ' (age ' + Math.round(r.ageSec / 60) + 'm)' : '');
       return '- ' + r.id + ': ' + r.status + detail;
     });
-    var msg = '[TerminalFeed] ' + degraded.length + ' feed(s) degraded as of '
-      + new Date(now).toISOString() + ':\n' + lines.join('\n')
-      + '\nDetail: ' + FEED_SELF_BASE + '/api/feed-health';
-    await dispatchFeedAlert(env, msg);
+    var subject = '[TerminalFeed] ' + toAlert.length + ' feed(s) degraded';
+    var text = toAlert.length + ' feed(s) confirmed degraded as of ' + new Date(now).toISOString() + ':\n'
+      + lines.join('\n') + '\n\nStatus board: ' + FEED_SELF_BASE + '/api/feed-health';
+    await dispatchFeedAlert(env, subject, text);
   }
 
   var record = {
@@ -2165,26 +2172,49 @@ async function checkFeedHealth(env) {
     checkedAtISO: new Date(now).toISOString(),
     ok: results.length - degraded.length,
     degradedIds: degradedIds,
+    alertedIds: alertedIds,
     feeds: results,
     lastAlertAt: shouldAlert ? now : lastAlertAt,
   };
   try { await env.WEBHOOK_SUBS.put(FEED_HEALTH_KV_KEY, JSON.stringify(record)); } catch (e) {}
-  return { degraded: degradedIds, newlyDegraded: newlyDegraded, recovered: recovered, alerted: shouldAlert };
+  return { degraded: degradedIds, confirmed: confirmed, alerted: shouldAlert, alertedNow: shouldAlert ? toAlert : [] };
 }
 
-// Push an alert. Discord (content), Slack (text), and generic webhooks all read
-// one of these fields, so we send both. Logs always; no-ops if no webhook set.
-async function dispatchFeedAlert(env, text) {
-  console.log('[feed-health] ALERT:', text);
-  var url = env && env.ALERT_WEBHOOK_URL;
-  if (!url) return;
-  try {
-    await fetchWithTimeout(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: text, text: text }),
-    }, 8000);
-  } catch (e) { console.error('[feed-health] alert dispatch failed:', e && e.message); }
+// Push an alert. Preferred channel is email via Resend (RESEND_API_KEY +
+// ALERT_EMAIL_TO; the FROM domain must be verified in Resend). Falls back to a
+// generic webhook (ALERT_WEBHOOK_URL) if set. Always logs; no-ops cleanly if
+// nothing is configured, so the monitor works before any channel is wired.
+async function dispatchFeedAlert(env, subject, text) {
+  console.log('[feed-health] ALERT:', subject);
+  if (!env) return;
+
+  if (env.RESEND_API_KEY && env.ALERT_EMAIL_TO) {
+    try {
+      var from = env.ALERT_EMAIL_FROM || 'TerminalFeed Alerts <alerts@terminalfeed.io>';
+      var to = env.ALERT_EMAIL_TO.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      var res = await fetchWithTimeout('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: from, to: to, subject: subject, text: text }),
+      }, 8000);
+      if (!res.ok) {
+        var errBody = await res.text();
+        console.error('[feed-health] resend ' + res.status + ': ' + errBody.slice(0, 300));
+      }
+    } catch (e) { console.error('[feed-health] resend send failed:', e && e.message); }
+    return;
+  }
+
+  if (env.ALERT_WEBHOOK_URL) {
+    var combined = subject + '\n' + text;
+    try {
+      await fetchWithTimeout(env.ALERT_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: combined, text: combined }),
+      }, 8000);
+    } catch (e) { console.error('[feed-health] webhook dispatch failed:', e && e.message); }
+  }
 }
 
 // GET /api/feed-health — latest monitor roll-up (public read). 60s cache.
@@ -13612,7 +13642,7 @@ export default {
       ctx.waitUntil((async function() {
         try {
           var fh = await checkFeedHealth(env);
-          if (fh && (fh.alerted || (fh.newlyDegraded && fh.newlyDegraded.length))) {
+          if (fh && (fh.alerted || (fh.degraded && fh.degraded.length))) {
             console.log('feed-health:', JSON.stringify(fh));
           }
         } catch (err) {
