@@ -9107,6 +9107,17 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
   } else {
     bodyResult = Object.assign({}, handlerResult);
 
+    // Handler-declared no-charge. A pure-compute endpoint that produced a valid
+    // but empty primary result (e.g. world-deltas with zero new events, an empty
+    // screen) sets __no_charge to a reason string. Honor it and strip the internal
+    // marker so it never reaches the wire or the signed body, so an agent polling
+    // for changes is not billed for "nothing new." (Hardening audit 2026-06-01,
+    // empty_result class.)
+    if (typeof bodyResult.__no_charge === 'string') {
+      noChargeReason = bodyResult.__no_charge;
+      delete bodyResult.__no_charge;
+    }
+
     // Staleness check. Premium fetchers expose freshness via _meta.generated_at
     // (per _premiumMeta) which is the moment we composed the response. For
     // endpoints with stale data the captured_at is older than the SLA and we
@@ -9117,7 +9128,7 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
     else if (bodyResult._meta && typeof bodyResult._meta.generated_at === 'string') capturedAt = bodyResult._meta.generated_at;
 
     var staleness = aftaCheckStaleness(endpoint, capturedAt, new Date());
-    if (staleness.applies && staleness.stale) {
+    if (!noChargeReason && staleness.applies && staleness.stale) {
       noChargeReason = 'stale_data';
       bodyResult.stale = true;
       bodyResult.stale_age_seconds = staleness.ageSeconds;
@@ -12423,7 +12434,7 @@ async function fetchProWorldDeltas(env, url) {
     counts[e.type] = (counts[e.type] || 0) + 1;
   });
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/world-deltas',
     generated_at: new Date().toISOString(),
@@ -12445,6 +12456,11 @@ async function fetchProWorldDeltas(env, url) {
     },
     _meta: _premiumMeta('/api/pro/world-deltas', bucketSources),
   };
+  // Valid-but-empty poll: no new events since ?since. No-charge so a monitor
+  // polling every 60-300s is not billed for zero deltas. (Hardening audit
+  // 2026-06-01, empty_result class.)
+  if (filtered.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -13054,7 +13070,7 @@ async function fetchProAnomalies(env, url) {
     return Math.abs(b.z_score || 0) - Math.abs(a.z_score || 0);
   });
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/anomalies',
     generated_at: new Date().toISOString(),
@@ -13077,6 +13093,11 @@ async function fetchProAnomalies(env, url) {
       { name: 'FRED.DGS10', status: dgs10Stats ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
     ])),
   };
+  // Valid-but-empty screen: nothing crossed a threshold. The observed readings
+  // still ship; no-charge so repeated calm-market polls are free rather than
+  // billing for a zero-anomaly result. (Hardening audit 2026-06-01, empty_result.)
+  if (anomalies.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 async function handleProRegime(request, env, url) {
