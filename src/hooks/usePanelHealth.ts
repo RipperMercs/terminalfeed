@@ -55,6 +55,14 @@ export function usePanelHealth() {
     return Date.now() - state.lastDataAt > 3 * 60_000;
   };
 
+  // When the panel last received data (epoch ms), or null if it never has.
+  // Returned even after the panel is flagged unhealthy, so the "as of" label can
+  // keep showing the aging timestamp rather than vanishing (the age IS the signal).
+  const lastDataAt = (panelId: string): number | null => {
+    const state = health[panelId];
+    return state && state.lastDataAt ? state.lastDataAt : null;
+  };
+
   // Get list of unhealthy panels
   const unhealthyPanels = Object.entries(health)
     .filter(([, state]) => !state.hasData && state.failCount >= 3)
@@ -77,5 +85,5 @@ export function usePanelHealth() {
     return () => clearInterval(id);
   }, []);
 
-  return { reportData, reportFail, isHealthy, isStale, unhealthyPanels };
+  return { reportData, reportFail, isHealthy, isStale, lastDataAt, unhealthyPanels };
 }
