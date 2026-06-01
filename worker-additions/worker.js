@@ -306,20 +306,33 @@ async function handleAdminAgentTraffic(request, env) {
 
 const _cache = {};
 
+// Freshness of the value most recently returned by a cache helper. Set
+// synchronously by getCached/getStale/setCache and read by jsonFreshAuto on the
+// very next line (no await between), so it is race-free across concurrent
+// requests and works regardless of the handler's cache-key variable name.
+var _lastCacheMeta = { ts: 0, stale: false };
+
 function getCached(key, ttlMs) {
   const entry = _cache[key];
   if (!entry) return null;
-  if (Date.now() - entry.ts < ttlMs) return entry.data;
+  if (Date.now() - entry.ts < ttlMs) {
+    _lastCacheMeta = { ts: entry.ts, stale: false };
+    return entry.data;
+  }
   return null;
 }
 
 function getStale(key) {
   const entry = _cache[key];
-  return entry ? entry.data : null;
+  if (!entry) return null;
+  _lastCacheMeta = { ts: entry.ts, stale: true };
+  return entry.data;
 }
 
 function setCache(key, data) {
-  _cache[key] = { data: data, ts: Date.now() };
+  var now = Date.now();
+  _cache[key] = { data: data, ts: now };
+  _lastCacheMeta = { ts: now, stale: false };
 }
 
 // =============================================================================
@@ -709,20 +722,20 @@ function jsonResponse(data, status, cacheSeconds, extraHeaders) {
   return new Response(body, { status: status, headers: headers });
 }
 
-// Wrap jsonResponse with freshness headers derived from the in-memory cache entry
-// for `key`:
+// Wrap jsonResponse with freshness headers derived from the value most recently
+// returned by a cache helper (see _lastCacheMeta):
 //   X-TF-As-Of : ISO timestamp of when the served data was fetched from upstream
 //   X-TF-Age   : age of that data in seconds
 //   X-TF-Stale : "true" when served as a fallback after an upstream failure
-// Body shape is unchanged, so this is safe for both array- and object-returning
-// feeds. Falls back to now() if the key has no cache entry yet.
-function jsonFresh(key, data, status, cacheSeconds, stale) {
-  var entry = _cache[key];
-  var ts = (entry && entry.ts) ? entry.ts : Date.now();
+// Call this on the line right after getCached/getStale/setCache. Body shape is
+// unchanged, so this is safe for both array- and object-returning feeds.
+function jsonFreshAuto(data, status, cacheSeconds) {
+  var m = _lastCacheMeta;
+  var ts = (m && m.ts) ? m.ts : Date.now();
   return jsonResponse(data, status, cacheSeconds, {
     'X-TF-As-Of': new Date(ts).toISOString(),
     'X-TF-Age': String(Math.max(0, Math.round((Date.now() - ts) / 1000))),
-    'X-TF-Stale': stale ? 'true' : 'false',
+    'X-TF-Stale': (m && m.stale) ? 'true' : 'false',
   });
 }
 
@@ -1142,7 +1155,7 @@ function handleIndex() {
 async function handleBtcPrice() {
   var KEY = 'btc-price';
   var cached = getCached(KEY, 15000);
-  if (cached) return jsonFresh(KEY, cached, 200, 15);
+  if (cached) return jsonFreshAuto(cached, 200, 15);
 
   try {
     var res = await fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT');
@@ -1157,10 +1170,10 @@ async function handleBtcPrice() {
       },
     };
     setCache(KEY, data);
-    return jsonFresh(KEY, data, 200, 15);
+    return jsonFreshAuto(data, 200, 15);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonFresh(KEY, stale, 200, 5, true);
+    if (stale) return jsonFreshAuto(stale, 200, 5);
     return jsonResponse({ data: { price_usd: 0, change_24h_percent: 0 } });
   }
 }
@@ -1190,12 +1203,12 @@ async function handleStocks(env, url) {
   // triggers up to 30 parallel upstream calls, so shorter TTLs risk blowing
   // the rate limit whenever traffic bursts.
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonFresh(KEY, cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
 
   try {
     if (!env || !env.FINNHUB_API_KEY) {
       var stale0 = getStale(KEY);
-      if (stale0) return jsonFresh(KEY, stale0, 200, 30, true);
+      if (stale0) return jsonFreshAuto(stale0, 200, 30);
       return jsonResponse({ data: [] });
     }
 
@@ -1226,16 +1239,16 @@ async function handleStocks(env, url) {
       // All upstream calls failed (likely rate-limited) — serve stale cache if we have one
       // and DON'T overwrite the cache with empty data.
       var stale1 = getStale(KEY);
-      if (stale1) return jsonFresh(KEY, stale1, 200, 120, true);
+      if (stale1) return jsonFreshAuto(stale1, 200, 120);
       return jsonResponse({ data: [] });
     }
 
     var data = { data: stocks, ts: Date.now() };
     setCache(KEY, data);
-    return jsonFresh(KEY, data, 200, 120);
+    return jsonFreshAuto(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonFresh(KEY, stale, 200, 120, true);
+    if (stale) return jsonFreshAuto(stale, 200, 120);
     return jsonResponse({ data: [] });
   }
 }
@@ -1246,7 +1259,7 @@ async function handleStocks(env, url) {
 async function handleCoingeckoMarkets() {
   var KEY = 'cg:markets';
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonFresh(KEY, cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
   try {
     var res = await fetchWithTimeout('https://api.coinlore.net/api/tickers/?limit=30');
     if (!res.ok) throw new Error('upstream ' + res.status);
@@ -1266,10 +1279,10 @@ async function handleCoingeckoMarkets() {
     });
     var data = { data: mapped, ts: Date.now() };
     setCache(KEY, data);
-    return jsonFresh(KEY, data, 200, 120);
+    return jsonFreshAuto(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonFresh(KEY, stale, 200, 120, true);
+    if (stale) return jsonFreshAuto(stale, 200, 120);
     return jsonResponse({ data: [] });
   }
 }
@@ -1279,7 +1292,7 @@ async function handleCoingeckoMarkets() {
 async function handleCoingeckoGlobal() {
   var KEY = 'cg:global';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonFresh(KEY, cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
   try {
     var res = await fetchWithTimeout('https://api.coinlore.net/api/global/');
     if (!res.ok) throw new Error('upstream ' + res.status);
@@ -1297,10 +1310,10 @@ async function handleCoingeckoGlobal() {
     };
     var data = { data: shaped, ts: Date.now() };
     setCache(KEY, data);
-    return jsonFresh(KEY, data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonFresh(KEY, stale, 200, 300, true);
+    if (stale) return jsonFreshAuto(stale, 200, 300);
     return jsonResponse({ data: null });
   }
 }
@@ -1310,7 +1323,7 @@ async function handleCoingeckoGlobal() {
 async function handleCoingeckoBtcChart() {
   var KEY = 'cg:btc-chart';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
   try {
     // 15-min candles (granularity=900). Coinbase returns newest-first.
     var res = await fetchWithTimeout(
@@ -1326,10 +1339,10 @@ async function handleCoingeckoBtcChart() {
       .filter(function(p) { return p[1] > 0; });
     var data = { prices: prices, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 300);
+    if (stale) return jsonFreshAuto(stale, 200, 300);
     return jsonResponse({ prices: [] });
   }
 }
@@ -1338,7 +1351,7 @@ async function handleCoingeckoBtcChart() {
 async function handleCoingeckoGold() {
   var KEY = 'cg:gold';
   var cached = getCached(KEY, 180000);
-  if (cached) return jsonResponse(cached, 200, 180);
+  if (cached) return jsonFreshAuto(cached, 200, 180);
   try {
     var res = await fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=PAXGUSD');
     if (!res.ok) throw new Error('upstream ' + res.status);
@@ -1357,10 +1370,10 @@ async function handleCoingeckoGold() {
     }];
     var data = { data: shaped, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 180);
+    return jsonFreshAuto(data, 200, 180);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 180);
+    if (stale) return jsonFreshAuto(stale, 200, 180);
     return jsonResponse({ data: [] });
   }
 }
@@ -1374,7 +1387,7 @@ async function handleCoingeckoGold() {
 async function handleCryptoMovers() {
   var KEY = 'crypto-movers';
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
 
   function fromCoingecko(coins) {
     return coins.slice(0, 15).map(function(c) {
@@ -1416,7 +1429,7 @@ async function handleCryptoMovers() {
         if (mapped.length > 0) {
           var data = { data: mapped, _source: 'coingecko' };
           setCache(KEY, data);
-          return jsonResponse(data, 200, 120);
+          return jsonFreshAuto(data, 200, 120);
         }
       }
     }
@@ -1431,10 +1444,10 @@ async function handleCryptoMovers() {
     if (lcoins.length === 0) throw new Error('coinlore-empty');
     var ldata = { data: fromCoinlore(lcoins), _source: 'coinlore' };
     setCache(KEY, ldata);
-    return jsonResponse(ldata, 200, 120);
+    return jsonFreshAuto(ldata, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -1444,7 +1457,7 @@ async function handleCryptoMovers() {
 async function handleFearGreed() {
   var KEY = 'fear-greed';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout('https://api.alternative.me/fng/?limit=1');
@@ -1452,10 +1465,10 @@ async function handleFearGreed() {
     var fg = d.data[0];
     var data = { data: { value: parseInt(fg.value), label: fg.value_classification, timestamp: fg.timestamp } };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: { value: 0, label: 'Unknown' } });
   }
 }
@@ -1465,7 +1478,7 @@ async function handleFearGreed() {
 async function handleEarthquake() {
   var KEY = 'earthquake';
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
 
   try {
     var res = await fetchWithTimeout(
@@ -1483,10 +1496,10 @@ async function handleEarthquake() {
     });
     var data = { data: quakes, count: d.features ? d.features.length : 0 };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    return jsonFreshAuto(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [], count: 0 });
   }
 }
@@ -1496,7 +1509,7 @@ async function handleEarthquake() {
 async function handlePredictions() {
   var KEY = 'predictions';
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
 
   try {
     var res = await fetchWithTimeout(
@@ -1512,10 +1525,10 @@ async function handlePredictions() {
       }).filter(function(m) { return m.question && m.yes_percent > 0 && m.yes_percent < 100; }),
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    return jsonFreshAuto(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -1543,7 +1556,7 @@ async function handleSportsScoreboard(url) {
   }
   var KEY = 'sports-sb-' + sport + '-' + league;
   var cached = getCached(KEY, 30000);
-  if (cached) return jsonResponse(cached, 200, 30);
+  if (cached) return jsonFreshAuto(cached, 200, 30);
   try {
     var res = await fetchWithTimeout(
       'https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/scoreboard'
@@ -1551,10 +1564,10 @@ async function handleSportsScoreboard(url) {
     if (!res.ok) throw new Error('espn ' + res.status);
     var data = await res.json();
     setCache(KEY, data);
-    return jsonResponse(data, 200, 30);
+    return jsonFreshAuto(data, 200, 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ events: [] });
   }
 }
@@ -1569,7 +1582,7 @@ async function handleSportsSummary(url) {
   }
   var KEY = 'sports-sum-' + sport + '-' + league + '-' + event;
   var cached = getCached(KEY, 20000);
-  if (cached) return jsonResponse(cached, 200, 20);
+  if (cached) return jsonFreshAuto(cached, 200, 20);
   try {
     var res = await fetchWithTimeout(
       'https://site.api.espn.com/apis/site/v2/sports/' + sport + '/' + league + '/summary?event=' + event
@@ -1577,10 +1590,10 @@ async function handleSportsSummary(url) {
     if (!res.ok) throw new Error('espn ' + res.status);
     var data = await res.json();
     setCache(KEY, data);
-    return jsonResponse(data, 200, 20);
+    return jsonFreshAuto(data, 200, 20);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({});
   }
 }
@@ -1602,7 +1615,7 @@ async function handleGhTrending(url, env) {
     : new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
   var KEY = 'gh-trending-' + since;
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
   try {
     var res = await fetchWithTimeout(
       'https://api.github.com/search/repositories?q=created:>' + since + '&sort=stars&order=desc&per_page=10',
@@ -1622,10 +1635,10 @@ async function handleGhTrending(url, env) {
     });
     var result = { data: items };
     setCache(KEY, result);
-    return jsonResponse(result, 200, 300);
+    return jsonFreshAuto(result, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -1635,7 +1648,7 @@ async function handleGhTrending(url, env) {
 async function handleHfTrending() {
   var KEY = 'hf-trending';
   var cached = getCached(KEY, 600000);
-  if (cached) return jsonResponse(cached, 200, 600);
+  if (cached) return jsonFreshAuto(cached, 200, 600);
   try {
     var res = await fetchWithTimeout(
       'https://huggingface.co/api/models?sort=likes7d&direction=-1&limit=15&full=false&config=false',
@@ -1661,10 +1674,10 @@ async function handleHfTrending() {
     });
     var result = { data: items };
     setCache(KEY, result);
-    return jsonResponse(result, 200, 600);
+    return jsonFreshAuto(result, 200, 600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -2137,7 +2150,7 @@ function _auroraVisibilityHint(kp) {
 async function handleSpaceWeather() {
   var KEY = 'space-weather';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var settled = await Promise.allSettled([
@@ -2181,7 +2194,7 @@ async function handleSpaceWeather() {
     return jsonResponse(result, 200, hasUsefulData ? 300 : 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({ data: { kp_index: null, error: 'upstream_unavailable' } });
   }
 }
@@ -2271,7 +2284,7 @@ function _approximateUsState(lat, lon) {
 async function handleWildfires(env) {
   var KEY = 'wildfires';
   var cached = getCached(KEY, 600000);
-  if (cached) return jsonResponse(cached, 200, 600);
+  if (cached) return jsonFreshAuto(cached, 200, 600);
 
   if (!env || !env.NASA_FIRMS_MAP_KEY) {
     return jsonResponse({
@@ -2311,10 +2324,10 @@ async function handleWildfires(env) {
       },
     };
     if (detections.length > 0) setCache(KEY, result);
-    return jsonResponse(result, 200, 600);
+    return jsonFreshAuto(result, 200, 600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     var msg = (e && e.message) ? String(e.message) : 'upstream_unavailable';
     return jsonResponse({
       source: 'terminalfeed.io',
@@ -2382,7 +2395,7 @@ function _eventCategory(eventName) {
 async function handleSevereWeather() {
   var KEY = 'severe-weather';
   var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
 
   try {
     var alerts = await fetchNwsActiveAlerts();
@@ -2420,10 +2433,10 @@ async function handleSevereWeather() {
       },
     };
     setCache(KEY, result);
-    return jsonResponse(result, 200, 60);
+    return jsonFreshAuto(result, 200, 60);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({ data: { top: [], total_active: 0, error: 'upstream_unavailable' } });
   }
 }
@@ -2454,7 +2467,7 @@ async function handleClimateEarthquakes(parsedUrl) {
   var ttlMs = USGS_TTL_MS_BY_PERIOD[period] || 120000;
   var ttlSec = Math.floor(ttlMs / 1000);
   var cached = getCached(KEY, ttlMs);
-  if (cached) return jsonResponse(cached, 200, ttlSec);
+  if (cached) return jsonFreshAuto(cached, 200, ttlSec);
 
   try {
     var feedUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/' + mag + '_' + period + '.geojson';
@@ -2493,7 +2506,7 @@ async function handleClimateEarthquakes(parsedUrl) {
     return jsonResponse(data, 200, ttlSec);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'climate/earthquakes',
@@ -2555,7 +2568,7 @@ async function handleClimateWeatherAlerts(parsedUrl) {
 
   var KEY = 'climate-weather-alerts-' + area + '-' + event + '-' + severity + '-' + urgency + '-' + status + '-' + limit;
   var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
 
   try {
     var u = 'https://api.weather.gov/alerts/active?' + qs.join('&');
@@ -2606,10 +2619,10 @@ async function handleClimateWeatherAlerts(parsedUrl) {
       },
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 60);
+    return jsonFreshAuto(data, 200, 60);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'climate/weather-alerts',
@@ -2741,7 +2754,7 @@ async function fetchHyperliquidFunding() {
 async function handleFundingRates() {
   var KEY = 'funding-rates';
   var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
 
   var settled = await Promise.allSettled([
     fetchBinanceFunding(),
@@ -2765,7 +2778,7 @@ async function handleFundingRates() {
 
   if (top.length === 0) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
   }
 
   var result = {
@@ -2775,14 +2788,14 @@ async function handleFundingRates() {
     data: { top: top, failed_venues: failed },
   };
   if (top.length > 0) setCache(KEY, result);
-  return jsonResponse(result, 200, 60);
+  return jsonFreshAuto(result, 200, 60);
 }
 
 // GET /api/gh-events
 async function handleGhEvents(env) {
   var KEY = 'gh-events';
   var cached = getCached(KEY, 30000);
-  if (cached) return jsonResponse(cached, 200, 30);
+  if (cached) return jsonFreshAuto(cached, 200, 30);
   try {
     var res = await fetchWithTimeout(
       'https://api.github.com/events?per_page=20',
@@ -2801,10 +2814,10 @@ async function handleGhEvents(env) {
     }) : [];
     var result = { data: items };
     setCache(KEY, result);
-    return jsonResponse(result, 200, 30);
+    return jsonFreshAuto(result, 200, 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -2922,7 +2935,7 @@ async function handleRss(url) {
   }
   var key = 'rss:' + target;
   var cached = getCached(key, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(target, {
@@ -2932,10 +2945,10 @@ async function handleRss(url) {
     var text = await res.text();
     var result = { status: 'ok', items: parseRssItems(text) };
     setCache(key, result);
-    return jsonResponse(result, 200, 300);
+    return jsonFreshAuto(result, 200, 300);
   } catch (e) {
     var stale = getStale(key);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ status: 'error', items: [] });
   }
 }
@@ -2944,15 +2957,15 @@ async function handleRss(url) {
 async function handleHackerNews() {
   var KEY = 'hackernews';
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
   try {
     var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/topstories.json', 15);
     var data = { data: items };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    return jsonFreshAuto(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -2962,15 +2975,15 @@ async function handleHnTopStories(url) {
   var limit = parseInt(url.searchParams.get('limit') || '50', 10);
   var KEY = 'hn-top-' + limit;
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
   try {
     var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/topstories.json', limit);
     var data = { data: items };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    return jsonFreshAuto(data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -2980,15 +2993,15 @@ async function handleHnShow(url) {
   var limit = parseInt(url.searchParams.get('limit') || '10', 10);
   var KEY = 'hn-show-' + limit;
   var cached = getCached(KEY, 180000);
-  if (cached) return jsonResponse(cached, 200, 180);
+  if (cached) return jsonFreshAuto(cached, 200, 180);
   try {
     var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/showstories.json', limit);
     var data = { data: items };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 180);
+    return jsonFreshAuto(data, 200, 180);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -2998,15 +3011,15 @@ async function handleHnAsk(url) {
   var limit = parseInt(url.searchParams.get('limit') || '10', 10);
   var KEY = 'hn-ask-' + limit;
   var cached = getCached(KEY, 180000);
-  if (cached) return jsonResponse(cached, 200, 180);
+  if (cached) return jsonFreshAuto(cached, 200, 180);
   try {
     var items = await fetchHnStories('https://hacker-news.firebaseio.com/v0/askstories.json', limit);
     var data = { data: items };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 180);
+    return jsonFreshAuto(data, 200, 180);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -3016,7 +3029,7 @@ async function handleHnAsk(url) {
 async function handleServiceStatus() {
   var KEY = 'service-status';
   var cached = getCached(KEY, 120000); // 2 min per spec
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
 
   var services = [
     { name: 'GitHub', url: 'https://www.githubstatus.com/api/v2/status.json' },
@@ -3064,23 +3077,23 @@ async function handleServiceStatus() {
 
   var data = { data: out, ts: Date.now() };
   setCache(KEY, data);
-  return jsonResponse(data, 200, 120);
+  return jsonFreshAuto(data, 200, 120);
 }
 
 // GET /api/claude-status — proxies status.claude.com summary.json
 async function handleClaudeStatus() {
   var KEY = 'claude-status';
   var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
   try {
     var res = await fetchWithTimeout('https://status.claude.com/api/v2/summary.json', {}, 6000);
     if (!res.ok) throw new Error('upstream ' + res.status);
     var json = await res.json();
     setCache(KEY, json);
-    return jsonResponse(json, 200, 60);
+    return jsonFreshAuto(json, 200, 60);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({ status: { indicator: 'unknown', description: 'Unreachable' }, components: [], incidents: [] });
   }
 }
@@ -3089,7 +3102,7 @@ async function handleClaudeStatus() {
 async function handleCloudStatus() {
   var KEY = 'cloud-status';
   var cached = getCached(KEY, 180000); // 3 min
-  if (cached) return jsonResponse(cached, 200, 180);
+  if (cached) return jsonFreshAuto(cached, 200, 180);
 
   async function fetchGCP() {
     try {
@@ -3159,7 +3172,7 @@ async function handleCloudStatus() {
   var providers = await Promise.all([fetchAWS(), fetchGCP(), fetchAzure()]);
   var data = { providers: providers, ts: Date.now() };
   setCache(KEY, data);
-  return jsonResponse(data, 200, 180);
+  return jsonFreshAuto(data, 200, 180);
 }
 
 
@@ -3188,7 +3201,7 @@ async function fetchCisaKev() {
 async function handleCyberThreats(env) {
   var KEY = 'cyber-threats';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var abuseHeaders = env && env.ABUSE_CH_AUTH_KEY ? { 'Auth-Key': env.ABUSE_CH_AUTH_KEY } : {};
@@ -3243,10 +3256,10 @@ async function handleCyberThreats(env) {
 
     var data = { data: threats };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -3256,7 +3269,7 @@ async function handleCyberThreats(env) {
 async function handleForex() {
   var KEY = 'forex';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var currencyList = 'EUR,GBP,JPY,CAD,AUD,CHF,CNY,INR,MXN,BRL,KRW,SGD,HKD,SEK,NOK,NZD';
@@ -3278,10 +3291,10 @@ async function handleForex() {
 
     var data = { data: { base: d.base || 'USD', date: d.date, rates: d.rates || {}, prevRates: prevRates } };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: { base: 'USD', date: '', rates: {}, prevRates: {} } });
   }
 }
@@ -3293,12 +3306,12 @@ async function handleForex() {
 async function handleTrendingMovies(env) {
   var KEY = 'trending-movies';
   var cached = getCached(KEY, 1800000); // 30 min
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   var token = env && env.TMDB_READ_TOKEN;
   if (!token) {
     var staleNoKey = getStale(KEY);
-    if (staleNoKey) return jsonResponse(staleNoKey, 200, 1800);
+    if (staleNoKey) return jsonFreshAuto(staleNoKey, 200, 1800);
     return jsonResponse({ data: [] }, 200, 300);
   }
 
@@ -3325,10 +3338,10 @@ async function handleTrendingMovies(env) {
     }
     var data = { data: items };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 1800);
+    if (stale) return jsonFreshAuto(stale, 200, 1800);
     return jsonResponse({ data: [] }, 200, 300);
   }
 }
@@ -3339,10 +3352,10 @@ async function handleTrendingMovies(env) {
 async function handleIpoCalendar(env) {
   var KEY = 'ipo-calendar';
   var cached = getCached(KEY, 3600000); // 1h
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
   if (!env || !env.FINNHUB_API_KEY) {
     var staleNoKey = getStale(KEY);
-    if (staleNoKey) return jsonResponse(staleNoKey, 200, 3600);
+    if (staleNoKey) return jsonFreshAuto(staleNoKey, 200, 3600);
     return jsonResponse({ data: [] }, 200, 600);
   }
   try {
@@ -3372,10 +3385,10 @@ async function handleIpoCalendar(env) {
     items.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
     var data = { data: items };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 3600);
+    if (stale) return jsonFreshAuto(stale, 200, 3600);
     return jsonResponse({ data: [] }, 200, 600);
   }
 }
@@ -3404,16 +3417,16 @@ async function fetchAstrosFromSpaceDevs() {
 async function handleHumansInSpace() {
   var KEY = 'humans-in-space';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var d = await fetchAstrosFromSpaceDevs();
     var data = { data: { count: d.number, people: d.people } };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: { count: 0, people: [] } });
   }
 }
@@ -3423,7 +3436,7 @@ async function handleHumansInSpace() {
 async function handleDisasterAlerts() {
   var KEY = 'disaster-alerts';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(
@@ -3441,10 +3454,10 @@ async function handleDisasterAlerts() {
     });
     var data = { data: events };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -3454,7 +3467,7 @@ async function handleDisasterAlerts() {
 async function handleLaunches() {
   var KEY = 'launches';
   var cached = getCached(KEY, 600000);
-  if (cached) return jsonResponse(cached, 200, 600);
+  if (cached) return jsonFreshAuto(cached, 200, 600);
 
   try {
     var res = await fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list');
@@ -3468,10 +3481,10 @@ async function handleLaunches() {
     });
     var data = { data: launches };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 600);
+    return jsonFreshAuto(data, 200, 600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -3481,7 +3494,7 @@ async function handleLaunches() {
 async function handleEconomicData(env) {
   var KEY = 'economic-data';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   if (!env || !env.FRED_API_KEY) return jsonResponse({ data: {} });
 
@@ -3526,10 +3539,10 @@ async function handleEconomicData(env) {
 
     var data = { data: econ };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: {} });
   }
 }
@@ -3539,7 +3552,7 @@ async function handleEconomicData(env) {
 async function handleSteam() {
   var KEY = 'steam';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout('https://steamspy.com/api.php?request=top100in2weeks');
@@ -3550,10 +3563,10 @@ async function handleSteam() {
       .slice(0, 15);
     var data = { data: games };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: [] });
   }
 }
@@ -3575,7 +3588,7 @@ async function handleWeather(parsedUrl) {
   lon = Math.round(lon * 100) / 100;
   var KEY = 'weather-' + lat + '-' + lon;
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(
@@ -3584,10 +3597,10 @@ async function handleWeather(parsedUrl) {
     var d = await res.json();
     var data = { data: d };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: {} });
   }
 }
@@ -3616,7 +3629,7 @@ async function handleAirQuality(parsedUrl) {
   lon = Math.round(lon * 100) / 100;
   var KEY = 'air-quality-' + lat + '-' + lon;
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   try {
     var hourly = 'us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone';
@@ -3651,10 +3664,10 @@ async function handleAirQuality(parsedUrl) {
       updated_at: new Date().toISOString(),
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: { lat: lat, lon: lon, snapshot: null, category: null, error: 'upstream_unavailable' } });
   }
 }
@@ -3716,22 +3729,22 @@ async function handleShodan(parsedUrl) {
     }
     var KEY1 = 'shodan-' + ipParam;
     var cached1 = getCached(KEY1, 3600000);
-    if (cached1) return jsonResponse(cached1, 200, 3600);
+    if (cached1) return jsonFreshAuto(cached1, 200, 3600);
     try {
       var single = await _shodanLookup(ipParam);
       var out1 = { data: { mode: 'single', result: single }, updated_at: new Date().toISOString() };
       setCache(KEY1, out1);
-      return jsonResponse(out1, 200, 3600);
+      return jsonFreshAuto(out1, 200, 3600);
     } catch (e) {
       var stale1 = getStale(KEY1);
-      if (stale1) return jsonResponse(stale1);
+      if (stale1) return jsonFreshAuto(stale1, 200, 0);
       return jsonResponse({ data: null, error: 'upstream_unavailable' });
     }
   }
 
   var KEY = 'shodan-demo';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
   try {
     var settled = await Promise.allSettled(SHODAN_DEMO_IPS.map(function(t) { return _shodanLookup(t.ip); }));
     var rows = settled.map(function(r, i) {
@@ -3743,10 +3756,10 @@ async function handleShodan(parsedUrl) {
     });
     var data = { data: { mode: 'demo', targets: rows }, updated_at: new Date().toISOString() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: { mode: 'demo', targets: [] } });
   }
 }
@@ -3757,7 +3770,7 @@ async function handleShodan(parsedUrl) {
 async function handleVolcanoes() {
   var KEY = 'volcanoes';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var res = await fetchWithTimeout('https://volcano.si.edu/news/WeeklyVolcanoRSS.xml', {
@@ -3796,10 +3809,10 @@ async function handleVolcanoes() {
       updated_at: new Date().toISOString(),
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ data: { count: 0, items: [] } });
   }
 }
@@ -3924,7 +3937,7 @@ async function handleHangryRecipes() {
 async function handleXkcd() {
   var KEY = 'xkcd';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout('https://xkcd.com/info.0.json', {
@@ -3932,10 +3945,10 @@ async function handleXkcd() {
     });
     var data = await res.json();
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ error: 'XKCD unavailable' }, 502);
   }
 }
@@ -3952,7 +3965,7 @@ async function handleXkcd() {
 async function handleSecFilings() {
   var KEY = 'sec-filings';
   var cached = getCached(KEY, 90000);
-  if (cached) return jsonResponse(cached, 200, 90);
+  if (cached) return jsonFreshAuto(cached, 200, 90);
 
   try {
     var res = await fetchWithTimeout(
@@ -3998,7 +4011,7 @@ async function handleSecFilings() {
     return jsonResponse(data, 200, entries.length > 0 ? 90 : 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({ data: [], error: 'sec_unavailable' }, 200, 30);
   }
 }
@@ -4013,7 +4026,7 @@ async function handleSecFilings() {
 async function handleTreasuryYields() {
   var KEY = 'treasury-yields';
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   function n(v) { var f = parseFloat(v); return Number.isFinite(f) ? f : null; }
   function delta(curr, prev) {
@@ -4119,10 +4132,10 @@ async function handleTreasuryYields() {
       },
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({ data: { curve: {}, error: 'treasury_unavailable' } }, 200, 60);
   }
 }
@@ -4143,7 +4156,7 @@ var NPM_TREND_PACKAGES = [
 async function handleNpmTrends() {
   var KEY = 'npm-trends';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var list = NPM_TREND_PACKAGES.join(',');
@@ -4173,10 +4186,10 @@ async function handleNpmTrends() {
       attribution: 'npmjs.org public downloads API',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'npm-trends',
@@ -4201,7 +4214,7 @@ async function handleNpmTrends() {
 async function handleCve() {
   var KEY = 'cve';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   function fetchKev() {
     return fetchWithTimeout(
@@ -4298,10 +4311,10 @@ async function handleCve() {
       attribution: 'CISA Known Exploited Vulnerabilities + NIST NVD (US public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'cve',
@@ -4323,7 +4336,7 @@ async function handleCve() {
 async function handleArxiv() {
   var KEY = 'arxiv';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var url = 'http://export.arxiv.org/api/query'
@@ -4387,10 +4400,10 @@ async function handleArxiv() {
       attribution: 'arXiv.org (CC0 / open access). Per arXiv API policy: cache responses, do not hammer.',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'arxiv',
@@ -4416,7 +4429,7 @@ async function handleArxiv() {
 async function handleLiquidations() {
   var KEY = 'liquidations';
   var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
 
   var assets = [
     { ul: 'BTC-USDT', sym: 'BTC', contractSize: 0.01 },
@@ -4506,7 +4519,7 @@ async function handleLiquidations() {
     return jsonResponse(data, 200, anyEmpty ? 15 : 60);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'liquidations',
@@ -4528,7 +4541,7 @@ async function handleLiquidations() {
 async function handleFederalRegister() {
   var KEY = 'federal-register';
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   function iso(d) { return d.toISOString().split('T')[0]; }
   var weekAgo = iso(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
@@ -4571,10 +4584,10 @@ async function handleFederalRegister() {
       attribution: 'federalregister.gov public API (US public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'federal-register',
@@ -4596,7 +4609,7 @@ async function handleFederalRegister() {
 async function handleOpenFdaRecalls() {
   var KEY = 'openfda-recalls';
   var cached = getCached(KEY, 21600000); // 6h
-  if (cached) return jsonResponse(cached, 200, 21600);
+  if (cached) return jsonFreshAuto(cached, 200, 21600);
 
   function formatYmd(s) {
     // FDA returns 'YYYYMMDD' as a string. Normalize to 'YYYY-MM-DD'.
@@ -4681,10 +4694,10 @@ async function handleOpenFdaRecalls() {
       attribution: 'openFDA enforcement reports (US public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 21600);
+    return jsonFreshAuto(data, 200, 21600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'openfda-recalls',
@@ -4721,7 +4734,7 @@ var GH_RELEASE_REPOS = [
 async function handleGhReleases(env) {
   var KEY = 'gh-releases';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   var headers = {
     'Accept': 'application/vnd.github+json',
@@ -4783,10 +4796,10 @@ async function handleGhReleases(env) {
       attribution: 'GitHub Releases API. Set GITHUB_TOKEN for higher rate limits.',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'gh-releases',
@@ -4817,7 +4830,7 @@ async function handlePypiTrends() {
   // 6h cache. pypistats.org rate-limits Worker egress IPs aggressively, so we
   // amortize the partial-response problem by holding the response longer.
   var cached = getCached(KEY, 21600000);
-  if (cached) return jsonResponse(cached, 200, 21600);
+  if (cached) return jsonFreshAuto(cached, 200, 21600);
 
   function fetchOne(pkg) {
     return fetchWithTimeout(
@@ -4863,10 +4876,10 @@ async function handlePypiTrends() {
       attribution: 'pypistats.org public API',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'pypi-trends',
@@ -4887,7 +4900,7 @@ async function handlePypiTrends() {
 async function handleWikiFeatured() {
   var KEY = 'wiki-featured';
   var cached = getCached(KEY, 21600000); // 6h
-  if (cached) return jsonResponse(cached, 200, 21600);
+  if (cached) return jsonFreshAuto(cached, 200, 21600);
 
   var now = new Date();
   var y = now.getUTCFullYear();
@@ -4947,10 +4960,10 @@ async function handleWikiFeatured() {
       attribution: 'en.wikipedia.org REST API / Creative Commons',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 21600);
+    return jsonFreshAuto(data, 200, 21600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'wiki-featured',
@@ -4971,7 +4984,7 @@ async function handleWikiFeatured() {
 async function handleNhcStorms() {
   var KEY = 'nhc-storms';
   var cached = getCached(KEY, 900000); // 15 min
-  if (cached) return jsonResponse(cached, 200, 900);
+  if (cached) return jsonFreshAuto(cached, 200, 900);
 
   try {
     var res = await fetchWithTimeout('https://www.nhc.noaa.gov/CurrentStorms.json', {
@@ -5016,10 +5029,10 @@ async function handleNhcStorms() {
       attribution: 'NOAA National Hurricane Center (US public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 900);
+    return jsonFreshAuto(data, 200, 900);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'nhc-storms',
@@ -5041,7 +5054,7 @@ async function handleNhcStorms() {
 async function handleBtcDifficulty() {
   var KEY = 'btc-difficulty';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(
@@ -5069,10 +5082,10 @@ async function handleBtcDifficulty() {
       attribution: 'mempool.space free API',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'btc-difficulty',
@@ -5096,7 +5109,7 @@ async function handleBtcDifficulty() {
 async function handleCongress() {
   var KEY = 'congress';
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   function fetchFeed(url) {
     return fetchWithTimeout(url, {
@@ -5178,10 +5191,10 @@ async function handleCongress() {
       attribution: 'congress.gov RSS feeds (US public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'congress',
@@ -5203,7 +5216,7 @@ async function handleCongress() {
 async function handleLightning() {
   var KEY = 'lightning';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var res = await fetchWithTimeout(
@@ -5252,10 +5265,10 @@ async function handleLightning() {
       attribution: 'mempool.space Lightning Network statistics',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     // 5s negative cache so transient mempool timeouts don't freeze the panel
     // for the full 60-min polling window.
     return jsonResponse({
@@ -5280,7 +5293,7 @@ async function handleLightning() {
 async function handleNeo(env) {
   var KEY = 'neo';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   var apiKey = (env && env.NASA_API_KEY) || 'DEMO_KEY';
   var today = new Date();
@@ -5344,10 +5357,10 @@ async function handleNeo(env) {
       attribution: 'NASA Near Earth Object Web Service (public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'neo',
@@ -5370,7 +5383,7 @@ async function handleNeo(env) {
 async function handleDefiTvlFree() {
   var KEY = 'defi-tvl-free';
   var cached = getCached(KEY, 900000);
-  if (cached) return jsonResponse(cached, 200, 900);
+  if (cached) return jsonFreshAuto(cached, 200, 900);
 
   try {
     var res = await fetchWithTimeout(
@@ -5422,10 +5435,10 @@ async function handleDefiTvlFree() {
       attribution: 'DefiLlama free API (api.llama.fi/protocols)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 900);
+    return jsonFreshAuto(data, 200, 900);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'defi-tvl-free',
@@ -5464,7 +5477,7 @@ function detectPhishingBrand(host) {
 async function handlePhishing() {
   var KEY = 'phishing';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var res = await fetchWithTimeout(
@@ -5517,10 +5530,10 @@ async function handlePhishing() {
       attribution: 'openphish.com community phishing feed',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'phishing',
@@ -5542,7 +5555,7 @@ async function handlePhishing() {
 async function handleVix(env) {
   var KEY = 'vix';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   if (!env || !env.FRED_API_KEY) {
     return jsonResponse({
@@ -5629,10 +5642,10 @@ async function handleVix(env) {
       attribution: 'FRED VIXCLS / VXNCLS (St. Louis Fed)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'vix',
@@ -5655,7 +5668,7 @@ async function handleVix(env) {
 async function handleTor() {
   var KEY = 'tor';
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   function fetchSummary(qs) {
     return fetchWithTimeout(
@@ -5707,10 +5720,10 @@ async function handleTor() {
       attribution: 'Tor Project Onionoo (onionoo.torproject.org)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'tor',
@@ -5733,7 +5746,7 @@ async function handleTor() {
 async function handleAurora() {
   var KEY = 'aurora';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(
@@ -5799,10 +5812,10 @@ async function handleAurora() {
       attribution: 'NOAA Space Weather Prediction Center OVATION model',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'aurora',
@@ -5824,7 +5837,7 @@ async function handleAurora() {
 async function handleHfPapers() {
   var KEY = 'hf-papers';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var res = await fetchWithTimeout(
@@ -5866,10 +5879,10 @@ async function handleHfPapers() {
       attribution: 'huggingface.co/papers community curation',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'hf-papers',
@@ -5890,7 +5903,7 @@ async function handleHfPapers() {
 async function handleEthStaking() {
   var KEY = 'eth-staking';
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   function fetchLidoApr() {
     return fetchWithTimeout(
@@ -5953,10 +5966,10 @@ async function handleEthStaking() {
       attribution: 'eth-api.lido.fi + api.llama.fi/protocol/lido',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'eth-staking',
@@ -5975,7 +5988,7 @@ async function handleEthStaking() {
 async function handleFedPress() {
   var KEY = 'fed-press';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var res = await fetchWithTimeout(
@@ -6018,10 +6031,10 @@ async function handleFedPress() {
       attribution: 'federalreserve.gov press release RSS (US public domain)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'fed-press',
@@ -6043,7 +6056,7 @@ async function handleFedPress() {
 async function handleCo2() {
   var KEY = 'co2';
   var cached = getCached(KEY, 21600000);
-  if (cached) return jsonResponse(cached, 200, 21600);
+  if (cached) return jsonFreshAuto(cached, 200, 21600);
 
   try {
     var res = await fetchWithTimeout(
@@ -6124,10 +6137,10 @@ async function handleCo2() {
       attribution: 'NOAA Global Monitoring Lab, Mauna Loa Observatory (preliminary)',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 21600);
+    return jsonFreshAuto(data, 200, 21600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 30);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'co2',
@@ -6148,7 +6161,7 @@ async function handleCo2() {
 async function handleProductHunt() {
   var KEY = 'producthunt';
   var cached = getCached(KEY, 3600000);
-  if (cached) return jsonResponse(cached, 200, 3600);
+  if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
     var res = await fetchWithTimeout(
@@ -6210,10 +6223,10 @@ async function handleProductHunt() {
       attribution: 'producthunt.com public RSS feed',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 3600);
+    return jsonFreshAuto(data, 200, 3600);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'producthunt',
@@ -6241,7 +6254,7 @@ async function handleProductHunt() {
 async function handleInternetPulse(env) {
   var KEY = 'radar';
   var cached = getCached(KEY, 1800000);
-  if (cached) return jsonResponse(cached, 200, 1800);
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
 
   if (!env || !env.CF_API_TOKEN) {
     return jsonResponse({
@@ -6326,10 +6339,10 @@ async function handleInternetPulse(env) {
       attribution: 'Cloudflare Radar: global internet aggregate stats',
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 1800);
+    return jsonFreshAuto(data, 200, 1800);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({
       source: 'terminalfeed.io',
       endpoint: 'radar',
@@ -6366,7 +6379,7 @@ var EONET_CATEGORY_GLYPH = {
 async function handleEonet() {
   var KEY = 'eonet';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(
@@ -6426,7 +6439,7 @@ async function handleEonet() {
     return jsonResponse(data, 200, raw.length > 0 ? 300 : 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 60);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
     return jsonResponse({ data: { total_open: 0, categories: [], recent: [], error: 'eonet_unavailable' } }, 200, 60);
   }
 }
@@ -6443,7 +6456,7 @@ function handleAiStats() {
 async function handleBriefing() {
   var KEY = 'briefing';
   var cached = getCached(KEY, 60000);
-  if (cached) return jsonResponse(cached, 200, 60);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
 
   var results = await Promise.allSettled([
     fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'),
@@ -6483,7 +6496,7 @@ async function handleBriefing() {
     },
   };
   setCache(KEY, data);
-  return jsonResponse(data, 200, 60);
+  return jsonFreshAuto(data, 200, 60);
 }
 
 
@@ -6626,7 +6639,7 @@ async function handleBtcAlertCheck(request, env) {
 // --- ETH Gas Tracker (Etherscan) ---
 async function handleGas(env) {
   var cached = getCached('gas_oracle', 15000);
-  if (cached) return jsonResponse(cached);
+  if (cached) return jsonFreshAuto(cached, 200, 0);
 
   try {
     var apiKey = env.ETHERSCAN_API_KEY || '';
@@ -6646,14 +6659,14 @@ async function handleGas(env) {
         ts: Date.now(),
       };
       setCache('gas_oracle', data);
-      return jsonResponse(data);
+      return jsonFreshAuto(data, 200, 0);
     }
   } catch (e) {
     console.error('Gas fetch failed:', e.message);
   }
 
   var stale = getStale('gas_oracle');
-  if (stale) return jsonResponse(stale);
+  if (stale) return jsonFreshAuto(stale, 200, 0);
   return jsonResponse({ low: 8, standard: 12, fast: 18, baseFee: 7, lastBlock: 0, ts: Date.now() });
 }
 
@@ -6663,7 +6676,7 @@ async function handleGas(env) {
 async function handleSolanaNetwork() {
   var KEY = 'solana_network';
   var cached = getCached(KEY, 30000);
-  if (cached) return jsonResponse(cached, 200, 30);
+  if (cached) return jsonFreshAuto(cached, 200, 30);
   try {
     // publicnode.com is server-friendly. mainnet-beta.solana.com blocks Cloudflare Worker IPs.
     var rpc = 'https://solana-rpc.publicnode.com';
@@ -6717,10 +6730,10 @@ async function handleSolanaNetwork() {
       ts: Date.now(),
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 30);
+    return jsonFreshAuto(data, 200, 30);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
     return jsonResponse({ tps: 0, tpsAvg: 0, slot: 0, slotMs: 0, epoch: 0, epochProgress: 0, ts: Date.now() });
   }
 }
@@ -6729,7 +6742,7 @@ async function handleSolanaNetwork() {
 // --- NASA APOD ---
 async function handleNasaApod() {
   var cached = getCached('nasa_apod', 3600000); // 1 hour
-  if (cached) return jsonResponse(cached);
+  if (cached) return jsonFreshAuto(cached, 200, 0);
 
   try {
     var today = new Date();
@@ -6762,7 +6775,7 @@ async function handleNasaApod() {
   }
 
   var stale = getStale('nasa_apod');
-  if (stale) return jsonResponse(stale);
+  if (stale) return jsonFreshAuto(stale, 200, 0);
   return jsonResponse({ error: 'No APOD available' }, 503);
 }
 
