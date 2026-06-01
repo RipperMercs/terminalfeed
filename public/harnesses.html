@@ -28,7 +28,7 @@
     "description": "Cross-harness, cross-model agentic-coding scores across SWE-bench Verified, Terminal-Bench, Aider Polyglot, and METR HCAST. Refreshed weekly.",
     "url": "https://terminalfeed.io/harnesses",
     "isPartOf": { "@type": "WebSite", "name": "TerminalFeed", "url": "https://terminalfeed.io" },
-    "dateModified": "2026-04-30",
+    "dateModified": "2026-06-01",
     "about": [
       { "@type": "Thing", "name": "Claude Code" },
       { "@type": "Thing", "name": "Cursor" },
@@ -182,7 +182,7 @@
     <div class="meta">cross-harness, cross-model agentic-coding scores</div>
 
     <p class="lede">
-      Same model, different harnesses, very different results. The harness owns context curation, tool design, retry policy, and verifier integration, so a Claude Opus 4.7 inside Claude Code can score 20+ points higher on Terminal-Bench than the same model called by Aider with default settings. <strong>This page tracks the harness gap as a first-class number.</strong> Snapshots are aggregated weekly from public leaderboards. We do not re-run benchmarks; each row links to the upstream report.
+      Same model, different harnesses, very different results. The harness owns context curation, tool design, retry policy, and verifier integration, so a Claude Opus 4.8 inside Claude Code can score 20+ points higher on Terminal-Bench than the same model called by Aider with default settings. <strong>This page tracks the harness gap as a first-class number.</strong> Snapshots are aggregated weekly from public leaderboards. We do not re-run benchmarks; each row links to the upstream report.
     </p>
 
     <div id="content">
@@ -407,6 +407,13 @@
         document.getElementById('generated-at').textContent = 'snapshot generated ' + (data.generatedAt || 'unknown');
 
         var html = '';
+        if (data.freshness && Array.isArray(data.freshness.flags) && data.freshness.flags.length > 0) {
+          var freshFlag = data.freshness.flags[0];
+          html += '<div style="border:1px solid #5a4a1e;background:rgba(239,159,39,0.08);color:#EF9F27;'
+            + 'padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:13px;line-height:1.5;">'
+            + '<strong>Refresh due.</strong> ' + escapeHtml(freshFlag.message)
+            + '</div>';
+        }
         var combined = computeCombined(data);
         html += renderCombined(combined);
         var gaps = computeGaps(data);

@@ -1,47 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 
-export interface HarnessSummaryRow {
-  harness: string;
-  model: string;
-  combinedScore: number;
-  benchmarks: number;
-}
-
-export interface HarnessGap {
-  model: string;
-  best: { harness: string; score: number };
-  worst: { harness: string; score: number };
-  delta: number;
-  benchmark: string;
-}
-
-export interface BenchmarkTop {
-  id: string;
+export interface LeaderboardModel {
+  rank: number;
   name: string;
-  unit: string;
-  top: { harness: string; model: string; score: number };
+  company: string;
+  elo: number;
 }
 
-export interface HarnessFreshnessFlag {
+export interface LeaderboardFreshnessFlag {
   model: string;
   released?: string | null;
-  boardVersion?: number;
-  catalogVersion?: number;
   message: string;
 }
 
-export interface HarnessFreshness {
+export interface LeaderboardFreshness {
   checkedAt?: number;
   catalogLastUpdated?: string | null;
-  flags: HarnessFreshnessFlag[];
+  flags: LeaderboardFreshnessFlag[];
 }
 
-export interface HarnessSummary {
+export interface AiLeaderboardData {
   generatedAt: string;
-  benchmarks: BenchmarkTop[];
-  topCombined: HarnessSummaryRow[];
-  biggestHarnessGaps: HarnessGap[];
-  freshness: HarnessFreshness | null;
+  leaderboard: LeaderboardModel[];
+  freshness: LeaderboardFreshness | null;
 }
 
 const POLL_MS = 6 * 60 * 60_000;
@@ -51,8 +32,11 @@ function isMobile(): boolean {
   return typeof window !== 'undefined' && window.innerWidth <= 768;
 }
 
-export function useHarnesses() {
-  const [data, setData] = useState<HarnessSummary | null>(null);
+// Fetches the ELO leaderboard + catalog-driven freshness from the Worker. Returns
+// null until the first successful fetch; the panel falls back to the bundled
+// snapshot in that window so it never renders blank (self-healing, rule #9).
+export function useAiLeaderboard() {
+  const [data, setData] = useState<AiLeaderboardData | null>(null);
   const mountedRef = useRef(true);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
@@ -62,17 +46,15 @@ export function useHarnesses() {
     const fetchData = async () => {
       if (!mountedRef.current) return;
       try {
-        const res = await fetch('/api/harnesses?view=summary', { signal: AbortSignal.timeout(8000) });
+        const res = await fetch('/api/ai-leaderboard', { signal: AbortSignal.timeout(8000) });
         if (!res.ok) return;
         const json = await res.json();
         if (!mountedRef.current) return;
-        if (json && Array.isArray(json.topCombined)) {
+        if (json && Array.isArray(json.leaderboard)) {
           const fresh = json.freshness;
           setData({
             generatedAt: json.generatedAt ?? '',
-            benchmarks: Array.isArray(json.benchmarks) ? json.benchmarks : [],
-            topCombined: json.topCombined,
-            biggestHarnessGaps: Array.isArray(json.biggestHarnessGaps) ? json.biggestHarnessGaps : [],
+            leaderboard: json.leaderboard,
             freshness: fresh && Array.isArray(fresh.flags)
               ? {
                   checkedAt: fresh.checkedAt,
@@ -82,7 +64,7 @@ export function useHarnesses() {
               : null,
           });
         }
-      } catch (e) { if (import.meta.env.DEV) console.warn('[Harnesses]', e); }
+      } catch (e) { if (import.meta.env.DEV) console.warn('[AiLeaderboard]', e); }
     };
 
     const poll = isMobile() ? MOBILE_POLL_MS : POLL_MS;

@@ -8,7 +8,7 @@
   </url>
   <url>
     <loc>https://terminalfeed.io/.well-known/ai-plugin.json</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -32,19 +32,19 @@
   </url>
   <url>
     <loc>https://terminalfeed.io/agents.txt</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://terminalfeed.io/api/for-agents</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://terminalfeed.io/api/usdc-payable</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -147,6 +147,12 @@
   <url>
     <loc>https://terminalfeed.io/blog/claude-mythos-project-glasswing</loc>
     <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://terminalfeed.io/blog/claude-opus-4-8-launch</loc>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -1646,7 +1652,7 @@
   </url>
   <url>
     <loc>https://terminalfeed.io/openapi.json</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1940,7 +1946,7 @@
   </url>
   <url>
     <loc>https://terminalfeed.io/widgets</loc>
-    <lastmod>2026-05-05</lastmod>
+    <lastmod>2026-05-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

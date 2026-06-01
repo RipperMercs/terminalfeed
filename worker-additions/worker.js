@@ -1654,9 +1654,9 @@ async function handleHfTrending() {
 // keep them in sync when refreshing the snapshot.
 
 const HARNESS_DATA = {
-  generatedAt: '2026-04-30',
+  generatedAt: '2026-06-01',
   schemaVersion: 1,
-  note: 'Snapshot of public agentic-coding leaderboards. Each row is the score the harness vendor (or an independent third party) reported on the upstream benchmark; we do not re-run. Refreshed manually as upstream leaderboards update. Same model on different harnesses scores differently because the harness owns context curation, tool design, retry policy, and verifier integration.',
+  note: 'Snapshot of public agentic-coding leaderboards. Each row is the score the harness vendor (or an independent third party) reported on the upstream benchmark; we do not re-run. Refreshed manually as upstream leaderboards update. Claude Code rows reflect Claude Opus 4.8 (released 2026-05-28); third-party harness rows show the most recent model each vendor has publicly benchmarked, so some still reflect 4.7 until those vendors re-run on 4.8. Same model on different harnesses scores differently because the harness owns context curation, tool design, retry policy, and verifier integration.',
   benchmarks: [
     {
       id: 'swe_bench_verified',
@@ -1666,7 +1666,7 @@ const HARNESS_DATA = {
       sourceUrl: 'https://www.swebench.com/',
       caveat: 'Python-only. Vendors self-report; the leaderboard accepts independent submissions.',
       results: [
-        { id: 'claude-code:opus-4.7',     harness: 'Claude Code',  model: 'Claude Opus 4.7 Thinking', score: 79.4, reportedAt: '2026-04-22', sourceUrl: 'https://www.swebench.com/', notes: 'Single-attempt, default scaffold' },
+        { id: 'claude-code:opus-4.8',     harness: 'Claude Code',  model: 'Claude Opus 4.8 Thinking', score: 79.4, reportedAt: '2026-05-28', sourceUrl: 'https://www.anthropic.com/news/claude-opus-4-8', notes: 'Opus 4.8 (released 2026-05-28). Single-attempt default scaffold; provisional, carries the 4.7 baseline pending an independent single-attempt re-run. Anthropic headline best-scaffold figure is 88.6% (4.7 was 87.6%).' },
         { id: 'cursor:opus-4.7',          harness: 'Cursor',       model: 'Claude Opus 4.7 Thinking', score: 76.1, reportedAt: '2026-04-18', sourceUrl: 'https://www.swebench.com/', notes: 'Cursor Agent, single-attempt' },
         { id: 'codex-cli:gpt-5.4',        harness: 'Codex CLI',    model: 'GPT-5.4 High',             score: 75.8, reportedAt: '2026-04-15', sourceUrl: 'https://www.swebench.com/' },
         { id: 'aider:opus-4.7',           harness: 'Aider',        model: 'Claude Opus 4.7 Thinking', score: 71.2, reportedAt: '2026-04-12', sourceUrl: 'https://aider.chat/docs/leaderboards/' },
@@ -1691,7 +1691,7 @@ const HARNESS_DATA = {
       sourceUrl: 'https://www.terminal-bench.org/',
       caveat: 'Heavily harness-dependent. Same model can score 10-20 points apart between Claude Code vs Aider vs OpenHands purely from scaffold quality.',
       results: [
-        { id: 'claude-code:opus-4.7',     harness: 'Claude Code', model: 'Claude Opus 4.7 Thinking', score: 58.2, reportedAt: '2026-04-25', sourceUrl: 'https://www.terminal-bench.org/' },
+        { id: 'claude-code:opus-4.8',     harness: 'Claude Code', model: 'Claude Opus 4.8 Thinking', score: 58.2, reportedAt: '2026-05-28', sourceUrl: 'https://www.terminal-bench.org/', notes: 'Opus 4.8; provisional, carries the 4.7 baseline. On the newer Terminal-Bench 2.1, Anthropic reports 74.6% and GPT-5.5 leads at 78.2%.' },
         { id: 'cursor:opus-4.7',          harness: 'Cursor',      model: 'Claude Opus 4.7 Thinking', score: 51.8, reportedAt: '2026-04-20', sourceUrl: 'https://www.terminal-bench.org/' },
         { id: 'codex-cli:gpt-5.4',        harness: 'Codex CLI',   model: 'GPT-5.4 High',             score: 49.6, reportedAt: '2026-04-15', sourceUrl: 'https://www.terminal-bench.org/' },
         { id: 'openhands:opus-4.7',       harness: 'OpenHands',   model: 'Claude Opus 4.7 Thinking', score: 48.4, reportedAt: '2026-04-10', sourceUrl: 'https://www.terminal-bench.org/' },
@@ -1729,7 +1729,7 @@ const HARNESS_DATA = {
       sourceUrl: 'https://metr.org/',
       caveat: 'Not all model/harness pairs are evaluated. METR publishes selected runs only.',
       results: [
-        { id: 'claude-code:opus-4.7',  harness: 'Claude Code', model: 'Claude Opus 4.7 Thinking', score: 220, reportedAt: '2026-04-18', sourceUrl: 'https://metr.org/', notes: '~3.7 hour 50% horizon' },
+        { id: 'claude-code:opus-4.8',  harness: 'Claude Code', model: 'Claude Opus 4.8 Thinking', score: 220, reportedAt: '2026-05-28', sourceUrl: 'https://metr.org/', notes: '~3.7 hour 50% horizon; Opus 4.8, provisional, carries the 4.7 baseline pending a METR 4.8 run.' },
         { id: 'codex-cli:gpt-5.4',     harness: 'Codex CLI',   model: 'GPT-5.4 High',             score: 195, reportedAt: '2026-04-10', sourceUrl: 'https://metr.org/' },
         { id: 'cursor:opus-4.7',       harness: 'Cursor',      model: 'Claude Opus 4.7 Thinking', score: 180, reportedAt: '2026-04-15', sourceUrl: 'https://metr.org/' },
         { id: 'devin:internal',        harness: 'Devin',       model: 'Cognition mix',            score: 145, reportedAt: '2026-04-01', sourceUrl: 'https://metr.org/' },
@@ -1737,6 +1737,30 @@ const HARNESS_DATA = {
         { id: 'aider:opus-4.7',        harness: 'Aider',       model: 'Claude Opus 4.7 Thinking', score: 90,  reportedAt: '2026-04-05', sourceUrl: 'https://metr.org/' },
       ],
     },
+  ],
+};
+
+// =============================================================================
+// /api/ai-leaderboard : Chatbot Arena style ELO leaderboard (editorial snapshot).
+// =============================================================================
+// Hand-curated from public Chatbot Arena / LMSYS ratings. Mirror of
+// src/data/aiLeaderboard.ts; keep them in sync. Served via the Worker (not a
+// client bundle) so it carries a catalog-driven freshness flag like the harness
+// board, and so a sister site could federate it later.
+var AI_LEADERBOARD = {
+  generatedAt: '2026-06-01',
+  note: 'Curated from public Chatbot Arena / LMSYS ELO ratings. Opus 4.8 shipped 2026-05-28; its ELO and rank here are provisional until a fresh Arena rating publishes.',
+  models: [
+    { rank: 1,  name: 'GPT-5.5 Pro',              company: 'OpenAI',    elo: 1551 },
+    { rank: 2,  name: 'Claude Opus 4.8 Thinking',  company: 'Anthropic', elo: 1545 },
+    { rank: 3,  name: 'Gemini 3.1 Pro',            company: 'Google',    elo: 1530 },
+    { rank: 4,  name: 'GPT-5.5 High',              company: 'OpenAI',    elo: 1515 },
+    { rank: 5,  name: 'Claude Mythos Preview',     company: 'Anthropic', elo: 1510 },
+    { rank: 6,  name: 'Grok 4',                    company: 'xAI',       elo: 1500 },
+    { rank: 7,  name: 'Claude Sonnet 4',           company: 'Anthropic', elo: 1495 },
+    { rank: 8,  name: 'DeepSeek V4 Pro',           company: 'DeepSeek',  elo: 1490 },
+    { rank: 9,  name: 'Gemini 3.0 Pro',            company: 'Google',    elo: 1488 },
+    { rank: 10, name: 'Kimi K2.5',                 company: 'Moonshot',  elo: 1485 },
   ],
 };
 
@@ -1796,10 +1820,179 @@ function computeHarnessCombined() {
   return rows;
 }
 
+// =============================================================================
+// Catalog-driven freshness for the harness board (cron-driven, KV-stored).
+// =============================================================================
+// The board is an editorial snapshot, not a live feed. To stop it silently
+// going stale, we compare it against TensorFeed's live model catalog
+// (/api/models, refreshed ~daily). If the catalog lists a FLAGSHIP model from a
+// family the board already tracks, at a newer version than any board row, we
+// surface a freshness flag ("catalog lists Opus 4.9, newer than the 4.8 on this
+// board"). That is the self-updating signal: the moment a new flagship lands in
+// the catalog, the board flags itself for an editorial refresh instead of
+// waiting to be noticed by a human.
+//
+// Computed by the cron, persisted to KV, and served from an in-memory lookaside
+// so the read path never awaits KV on a per-request basis.
+
+var TF_MODELS_CATALOG_URL = 'https://tensorfeed.ai/api/models';
+var HARNESS_FRESHNESS_KV_KEY = 'harness:freshness';
+var LEADERBOARD_FRESHNESS_KV_KEY = 'ai-leaderboard:freshness';
+var HARNESS_FRESHNESS_TTL_MS = 5 * 60 * 1000; // memory lookaside window
+var FRESHNESS_CACHE = {}; // kvKey -> { data, fetchedAt }; in-memory lookaside per isolate
+
+// Normalize a model display name for cross-surface matching: lowercase, strip
+// punctuation, collapse whitespace. "Claude Opus 4.8 Thinking" -> "claude opus 4 8 thinking".
+// The board name "Claude Opus 4.8 Thinking" then contains the catalog name "Claude Opus 4.8".
+function normalizeModelName(name) {
+  if (!name || typeof name !== 'string') return '';
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Defensively flatten the catalog (grouped by provider; shape may vary) into a
+// flat list of model-shaped objects. Walk generically and collect anything with
+// a string name that carries a version token. Bounded against pathological input.
+function flattenCatalogModels(catalog) {
+  var out = [];
+  var seen = 0;
+  function walk(node, depth) {
+    if (!node || depth > 6 || seen > 2000) return;
+    if (Array.isArray(node)) {
+      for (var i = 0; i < node.length && seen < 2000; i++) { seen++; walk(node[i], depth + 1); }
+      return;
+    }
+    if (typeof node === 'object') {
+      // Model-shaped = has a name AND a tier or release date. Providers carry a
+      // name but neither field, so they are skipped.
+      if (typeof node.name === 'string' && (typeof node.tier === 'string' || typeof node.released === 'string')) {
+        out.push({
+          name: node.name,
+          tier: typeof node.tier === 'string' ? node.tier.toLowerCase() : '',
+          released: typeof node.released === 'string' ? node.released : '',
+        });
+      }
+      for (var k in node) {
+        if (Object.prototype.hasOwnProperty.call(node, k)) walk(node[k], depth + 1);
+      }
+    }
+  }
+  walk(catalog, 0);
+  return out;
+}
+
+// Parse a catalog `released` string ("2026-05" or "2026-05-28") to epoch ms; NaN if unknown.
+var HARNESS_FRESHNESS_RECENT_DAYS = 60; // only nag for releases newer than this window
+function harnessReleaseMs(released) {
+  if (!released || typeof released !== 'string') return NaN;
+  var m = released.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/);
+  if (!m) return NaN;
+  var t = Date.parse(m[1] + '-' + m[2] + '-' + (m[3] || '01') + 'T00:00:00Z');
+  return isFinite(t) ? t : NaN;
+}
+
+// Generalized catalog freshness, computed identically on TensorFeed: the "newest
+// flagship" is the tier==='flagship' model with the latest release date. A surface
+// is flagged if its covered model names do not include that flagship. `coveredNames`
+// is the list of model display names the surface currently shows.
+function computeCatalogFreshness(catalog, coveredNames, nowMs) {
+  var catalogLastUpdated =
+    (catalog && (catalog.lastUpdated || catalog.generatedAt || catalog.updated)) || null;
+
+  var models = flattenCatalogModels(catalog);
+  var newest = null;
+  for (var m = 0; m < models.length; m++) {
+    if (models[m].tier !== 'flagship') continue;
+    var relMs = harnessReleaseMs(models[m].released);
+    var cand = { name: models[m].name, released: models[m].released, relMs: isFinite(relMs) ? relMs : -Infinity };
+    if (!newest || cand.relMs > newest.relMs) newest = cand;
+  }
+  if (!newest) return { catalogLastUpdated: catalogLastUpdated, flags: [] };
+
+  // Recency gate: only nag for genuinely new flagships, so a months-old flagship
+  // with no coverage does not sit as a permanent, non-actionable flag.
+  if (isFinite(newest.relMs) && isFinite(nowMs) && (nowMs - newest.relMs) > HARNESS_FRESHNESS_RECENT_DAYS * 86400000) {
+    return { catalogLastUpdated: catalogLastUpdated, flags: [] };
+  }
+
+  var needle = normalizeModelName(newest.name);
+  var covered = false;
+  for (var i = 0; i < coveredNames.length && !covered; i++) {
+    if (needle && normalizeModelName(coveredNames[i] || '').indexOf(needle) !== -1) covered = true;
+  }
+  if (covered) return { catalogLastUpdated: catalogLastUpdated, flags: [] };
+
+  return {
+    catalogLastUpdated: catalogLastUpdated,
+    flags: [{
+      model: newest.name,
+      released: newest.released || null,
+      message: 'Catalog lists ' + newest.name + (newest.released ? ' (released ' + newest.released + ')' : '') + ', not yet covered here. Refresh due.',
+    }],
+  };
+}
+
+// Harness board covered-model names -> freshness.
+function computeHarnessFreshness(catalog, nowMs) {
+  var names = [];
+  for (var b = 0; b < HARNESS_DATA.benchmarks.length; b++) {
+    var results = HARNESS_DATA.benchmarks[b].results || [];
+    for (var r = 0; r < results.length; r++) names.push(results[r].model);
+  }
+  return computeCatalogFreshness(catalog, names, nowMs);
+}
+
+// AI leaderboard covered-model names -> freshness.
+function computeLeaderboardFreshness(catalog, nowMs) {
+  var names = [];
+  for (var i = 0; i < AI_LEADERBOARD.models.length; i++) names.push(AI_LEADERBOARD.models[i].name);
+  return computeCatalogFreshness(catalog, names, nowMs);
+}
+
+// Cron entry: fetch the catalog ONCE, compute freshness for every catalog-driven
+// surface (harness board + AI leaderboard), persist each to KV + memory. Never throws.
+async function refreshFreshness(env) {
+  if (!env || !env.WEBHOOK_SUBS) return { skipped: true, reason: 'no KV binding' };
+  var catalog;
+  try {
+    var res = await fetchWithTimeout(TF_MODELS_CATALOG_URL, {}, 8000);
+    if (!res.ok) return { skipped: true, reason: 'catalog status ' + res.status };
+    catalog = await res.json();
+  } catch (err) {
+    return { skipped: true, reason: 'catalog fetch failed: ' + (err && err.message) };
+  }
+  var now = Date.now();
+  var harness = computeHarnessFreshness(catalog, now);
+  var leaderboard = computeLeaderboardFreshness(catalog, now);
+  var hPayload = { checkedAt: now, catalogLastUpdated: harness.catalogLastUpdated, flags: harness.flags };
+  var lPayload = { checkedAt: now, catalogLastUpdated: leaderboard.catalogLastUpdated, flags: leaderboard.flags };
+  FRESHNESS_CACHE[HARNESS_FRESHNESS_KV_KEY] = { data: hPayload, fetchedAt: now };
+  FRESHNESS_CACHE[LEADERBOARD_FRESHNESS_KV_KEY] = { data: lPayload, fetchedAt: now };
+  try { await env.WEBHOOK_SUBS.put(HARNESS_FRESHNESS_KV_KEY, JSON.stringify(hPayload)); } catch (e) { /* best effort */ }
+  try { await env.WEBHOOK_SUBS.put(LEADERBOARD_FRESHNESS_KV_KEY, JSON.stringify(lPayload)); } catch (e) { /* best effort */ }
+  return { harness: hPayload, leaderboard: lPayload };
+}
+
+// Read path: in-memory lookaside per kvKey, falling back to a single KV read at
+// most once per TTL per isolate. These endpoints are low-traffic and long-cached,
+// so the occasional KV read is well off the per-request hot path.
+async function getFreshness(env, kvKey) {
+  var now = Date.now();
+  var entry = FRESHNESS_CACHE[kvKey];
+  if (entry && entry.data && (now - entry.fetchedAt) < HARNESS_FRESHNESS_TTL_MS) return entry.data;
+  if (env && env.WEBHOOK_SUBS) {
+    try {
+      var stored = await env.WEBHOOK_SUBS.get(kvKey, 'json');
+      if (stored) { FRESHNESS_CACHE[kvKey] = { data: stored, fetchedAt: now }; return stored; }
+    } catch (e) { /* fall through to whatever we already have */ }
+  }
+  return entry ? entry.data : null; // may be null before the first cron tick
+}
+
 // GET /api/harnesses
 // Returns the harness leaderboard snapshot. Supports ?view=raw|gaps|combined|summary
-// (default: raw). 12-hour cache (the upstream is hand-curated).
-function handleHarnesses(url) {
+// (default: raw). 12-hour cache (the upstream is hand-curated). The summary and
+// raw views carry a `freshness` block driven by the live model catalog.
+async function handleHarnesses(url, env) {
   var view = (url && url.searchParams) ? (url.searchParams.get('view') || 'raw') : 'raw';
   var body;
   if (view === 'gaps') {
@@ -1809,6 +2002,7 @@ function handleHarnesses(url) {
   } else if (view === 'summary') {
     var combined = computeHarnessCombined();
     var gaps = computeHarnessGaps();
+    var freshness = await getFreshness(env, HARNESS_FRESHNESS_KV_KEY);
     body = {
       generatedAt: HARNESS_DATA.generatedAt,
       view: 'summary',
@@ -1818,10 +2012,25 @@ function handleHarnesses(url) {
       }),
       topCombined: combined.slice(0, 10),
       biggestHarnessGaps: gaps.slice(0, 5),
+      freshness: freshness || null,
     };
   } else {
-    body = HARNESS_DATA;
+    var freshnessRaw = await getFreshness(env, HARNESS_FRESHNESS_KV_KEY);
+    body = Object.assign({}, HARNESS_DATA, { freshness: freshnessRaw || null });
   }
+  return jsonResponse(body, 200, 43200); // 12h cache
+}
+
+// GET /api/ai-leaderboard
+// Chatbot Arena style ELO leaderboard + catalog-driven freshness flag. 12h cache.
+async function handleAiLeaderboard(env) {
+  var freshness = await getFreshness(env, LEADERBOARD_FRESHNESS_KV_KEY);
+  var body = {
+    generatedAt: AI_LEADERBOARD.generatedAt,
+    note: AI_LEADERBOARD.note,
+    leaderboard: AI_LEADERBOARD.models,
+    freshness: freshness || null,
+  };
   return jsonResponse(body, 200, 43200); // 12h cache
 }
 
@@ -7187,7 +7396,7 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_economic_data':       return await handleEconomicData(env);
     case 'tf_forex':               return await handleForex();
     case 'tf_hf_trending':         return await handleHfTrending();
-    case 'tf_harnesses':           return handleHarnesses(url);
+    case 'tf_harnesses':           return await handleHarnesses(url, env);
     case 'tf_solana_network':      return await handleSolanaNetwork();
     case 'tf_premium_briefing':    return await handleProBriefing(req, env, url);
     case 'tf_premium_macro':       return await handleProMacro(req, env, url);
@@ -13223,6 +13432,17 @@ export default {
           console.error('btc volatility check failed:', err.message);
         }
       })());
+      // Catalog-driven freshness for the harness board + AI leaderboard.
+      ctx.waitUntil((async function() {
+        try {
+          var fr = await refreshFreshness(env);
+          var hN = (fr && fr.harness && fr.harness.flags) ? fr.harness.flags.length : 0;
+          var lN = (fr && fr.leaderboard && fr.leaderboard.flags) ? fr.leaderboard.flags.length : 0;
+          if (hN || lN) console.log('freshness flags:', JSON.stringify({ harness: hN, leaderboard: lN }));
+        } catch (err) {
+          console.error('freshness check failed:', err.message);
+        }
+      })());
     } else {
       console.log('unhandled cron schedule:', cron);
     }
@@ -13368,7 +13588,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'co2':              return await handleCo2();
       case 'gh-events':      return await handleGhEvents(env);
       case 'hf-trending':    return await handleHfTrending();
-      case 'harnesses':      return handleHarnesses(url);
+      case 'harnesses':      return await handleHarnesses(url, env);
+      case 'ai-leaderboard': return await handleAiLeaderboard(env);
       case 'space-weather':  return await handleSpaceWeather();
       case 'wildfires':      return await handleWildfires(env);
       case 'severe-weather': return await handleSevereWeather();
