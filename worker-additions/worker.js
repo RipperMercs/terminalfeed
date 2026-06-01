@@ -8251,6 +8251,20 @@ function handleLLMTools(parsedUrl) {
 var AFTA_PUBLIC_KEY_URL = 'https://terminalfeed.io/.well-known/terminalfeed-receipt-key.json';
 var AFTA_VERIFY_DOC = 'https://terminalfeed.io/agent-fair-trade#receipts';
 var AFTA_DOC = 'https://terminalfeed.io/agent-fair-trade';
+
+// Receipt verifier key allowlist. Maps a receipt's key_id (JWK kid) to the
+// HARDCODED well-known URL that serves that key. The verifier selects the key
+// by the receipt's kid against THIS map, never a URL carried in the receipt
+// body, so a forged receipt cannot redirect the fetch to an attacker-controlled
+// key. Absent kid falls back to our own key (v1 receipts predate the kid field);
+// an unknown kid is rejected WITHOUT any fetch. TensorFeed's kid is pinned so
+// sister-site receipts verify here, since the credit pool is shared across the
+// federation and a TF-signed receipt is a valid AFTA receipt on TerminalFeed.
+// Re-pin if either side rotates. (Hardening audit 2026-06-01, key_id-aware verify.)
+var RECEIPT_KEY_ALLOWLIST = {
+  '512774f98d56bb02': AFTA_PUBLIC_KEY_URL,
+  'db1f1dc3dbf62c66': 'https://tensorfeed.ai/.well-known/tensorfeed-receipt-key.json',
+};
 var AFTA_MANIFEST_URL = 'https://terminalfeed.io/.well-known/agent-fair-trade.json';
 
 // === Canonical JSON (deterministic serialization shared with TensorFeed) ===
@@ -9370,10 +9384,31 @@ async function handleReceiptVerify(request) {
   if (!receipt || typeof receipt !== 'object') {
     return jsonResponse({ ok: false, error: 'receipt_required' }, 400);
   }
-  // Fetch our own public key. Static asset on the Pages frontend.
+  // Select the verification key by the receipt's key_id (kid) against the
+  // hardcoded allowlist. Absent kid -> our own key (v1 back-compat); known kid
+  // -> the mapped well-known URL (incl. TensorFeed's, so federation receipts
+  // verify); unknown kid -> reject WITHOUT any fetch. The URL is never read from
+  // the receipt body, so a forged receipt cannot point the verifier at an
+  // attacker-controlled key.
+  var receiptKid = (typeof receipt.key_id === 'string') ? receipt.key_id : null;
+  var keyUrl;
+  if (!receiptKid) {
+    keyUrl = AFTA_PUBLIC_KEY_URL;
+  } else if (Object.prototype.hasOwnProperty.call(RECEIPT_KEY_ALLOWLIST, receiptKid)) {
+    keyUrl = RECEIPT_KEY_ALLOWLIST[receiptKid];
+  } else {
+    return jsonResponse({
+      ok: true,
+      valid: false,
+      error: 'unknown_key_id',
+      key_id: receiptKid,
+      trusted_key_ids: Object.keys(RECEIPT_KEY_ALLOWLIST),
+      verify_doc: AFTA_VERIFY_DOC,
+    }, 200, 0);
+  }
   var publicJwk;
   try {
-    var keyRes = await fetchWithTimeout(AFTA_PUBLIC_KEY_URL, { headers: { Accept: 'application/json' } }, 5000);
+    var keyRes = await fetchWithTimeout(keyUrl, { headers: { Accept: 'application/json' } }, 5000);
     if (!keyRes.ok) return jsonResponse({ ok: false, error: 'public_key_unavailable' }, 503);
     publicJwk = await keyRes.json();
   } catch (e) { return jsonResponse({ ok: false, error: 'public_key_unavailable' }, 503); }
@@ -9384,7 +9419,7 @@ async function handleReceiptVerify(request) {
   return jsonResponse({
     ok: true,
     valid: !!valid,
-    key_id: publicJwk.kid || null,
+    key_id: publicJwk.kid || receiptKid || null,
     algorithm: 'EdDSA / Ed25519',
     canonical_form: 'tensorfeed-canonical-json-v1',
     verify_doc: AFTA_VERIFY_DOC,
