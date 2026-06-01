@@ -2229,6 +2229,26 @@ async function handleFeedHealth(env) {
   return jsonResponse(body, 200, 60);
 }
 
+// POST /api/feed-health-check (Bearer <ADMIN_SECRET>) — force a probe now, and
+// optionally send a test alert (?test=1) to verify the configured channel.
+async function handleFeedHealthCheck(request, env, url) {
+  var auth = request.headers.get('Authorization');
+  if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+  var wantTest = !!(url && url.searchParams && url.searchParams.get('test'));
+  if (wantTest) {
+    await dispatchFeedAlert(env, '[TerminalFeed] test alert',
+      'Test alert from /api/feed-health-check at ' + new Date().toISOString() + '. If you received this, the alert channel is working.');
+  }
+  try {
+    var result = await checkFeedHealth(env);
+    return jsonResponse({ ok: true, testAlertSent: wantTest, result: result });
+  } catch (err) {
+    return jsonResponse({ error: err.message }, 500);
+  }
+}
+
 // =============================================================================
 // /api/space-weather : NOAA SWPC geomagnetic + solar conditions
 // =============================================================================
@@ -3932,10 +3952,18 @@ async function handleVolcanoes() {
   if (cached) return jsonFreshAuto(cached, 200, 3600);
 
   try {
-    var res = await fetchWithTimeout('https://volcano.si.edu/news/WeeklyVolcanoRSS.xml', {
-      headers: { 'Accept': 'application/rss+xml,application/xml,text/xml,*/*' },
-    });
-    if (!res.ok) throw new Error('si-volcano ' + res.status);
+    // volcano.si.edu intermittently times out or throttles Worker IPs, so try
+    // twice with a longer timeout before giving up (then we serve stale cache).
+    var res = null;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        res = await fetchWithTimeout('https://volcano.si.edu/news/WeeklyVolcanoRSS.xml', {
+          headers: { 'Accept': 'application/rss+xml,application/xml,text/xml,*/*' },
+        }, 12000);
+        if (res.ok) break;
+      } catch (re) { res = null; }
+    }
+    if (!res || !res.ok) throw new Error('si-volcano fetch failed');
     var xml = await res.text();
     var items = [];
     var rxItem = /<item>([\s\S]*?)<\/item>/g;
@@ -6802,18 +6830,22 @@ async function handleGas(env) {
 
   try {
     var apiKey = env.ETHERSCAN_API_KEY || '';
+    // Etherscan V2 unified API (V1 was deprecated and returns NOTOK). chainid=1 = Ethereum mainnet.
     var res = await fetchWithTimeout(
-      'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=' + apiKey,
+      'https://api.etherscan.io/v2/api?chainid=1&module=gastracker&action=gasoracle&apikey=' + apiKey,
       {}, 8000
     );
     var json = await res.json();
 
     if (json.status === '1' && json.result) {
+      // Gas is routinely sub-1 gwei now, so parse as float (parseInt floors to 0)
+      // and round to 2 decimals for display.
+      var gwei = function(v) { var n = parseFloat(v); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
       var data = {
-        low: parseInt(json.result.SafeGasPrice) || 0,
-        standard: parseInt(json.result.ProposeGasPrice) || 0,
-        fast: parseInt(json.result.FastGasPrice) || 0,
-        baseFee: parseFloat(json.result.suggestBaseFee) || 0,
+        low: gwei(json.result.SafeGasPrice),
+        standard: gwei(json.result.ProposeGasPrice),
+        fast: gwei(json.result.FastGasPrice),
+        baseFee: gwei(json.result.suggestBaseFee),
         lastBlock: parseInt(json.result.LastBlock) || 0,
         ts: Date.now(),
       };
@@ -13797,6 +13829,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'harnesses':      return await handleHarnesses(url, env);
       case 'ai-leaderboard': return await handleAiLeaderboard(env);
       case 'feed-health':    return await handleFeedHealth(env);
+      case 'feed-health-check': return await handleFeedHealthCheck(request, env, url);
       case 'space-weather':  return await handleSpaceWeather();
       case 'wildfires':      return await handleWildfires(env);
       case 'severe-weather': return await handleSevereWeather();
