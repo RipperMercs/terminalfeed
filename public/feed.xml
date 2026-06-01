@@ -41,6 +41,15 @@
     </item>
 
     <item>
+      <title>Claude Opus 4.8 Shipped. Here Is What the Numbers Actually Say.</title>
+      <link>https://terminalfeed.io/blog/claude-opus-4-8-launch</link>
+      <description>Claude Opus 4.8 landed May 28 with a small SWE-bench bump and a cheaper fast mode. The real story is not the model. It is where the gains are moving: into the harness. A data-grounded read.</description>
+      <author>hello@terminalfeed.io (Signal)</author>
+      <pubDate>Mon, 01 Jun 2026 12:00:00 GMT</pubDate>
+      <guid>https://terminalfeed.io/blog/claude-opus-4-8-launch</guid>
+    </item>
+
+    <item>
       <title>Week 6: Notes from the Road, and Why a Federation is Easier Than One Big Site</title>
       <link>https://terminalfeed.io/blog/originals/week-6</link>
       <description>Founder Friday from the road. A counterintuitive argument: running four specialized sites is lower cognitive load than running one sprawling one. Why the federation model is underrated for small teams, and how the shared infrastructure pays back the structural cost.</description>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Opus 4.8 Shipped. Here Is What the Numbers Actually Say. | TerminalFeed Blog</title>
+  <meta name="description" content="Claude Opus 4.8 landed May 28 with a small SWE-bench bump and a cheaper fast mode. The real story is not the model. It is where the gains are moving: into the harness. A data-grounded read.">
+  <meta property="og:title" content="Claude Opus 4.8 Shipped. Here Is What the Numbers Actually Say.">
+  <meta property="og:description" content="A small benchmark bump, a cheaper fast mode, and a clear signal that the agentic-coding gains are moving into the harness, not the weights.">
+  <meta property="og:url" content="https://terminalfeed.io/blog/claude-opus-4-8-launch">
+  <meta property="og:image" content="https://terminalfeed.io/og-image.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://terminalfeed.io/blog/claude-opus-4-8-launch">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Claude Opus 4.8 Shipped. Here Is What the Numbers Actually Say.",
+    "description": "Claude Opus 4.8 landed May 28 with a small SWE-bench bump and a cheaper fast mode. The real story is where the gains are moving: into the harness.",
+    "author": {
+      "@type": "Person",
+      "name": "Signal",
+      "url": "https://terminalfeed.io/team/signal"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TerminalFeed",
+      "url": "https://terminalfeed.io",
+      "logo": { "@type": "ImageObject", "url": "https://terminalfeed.io/logo.png" }
+    },
+    "datePublished": "2026-06-01",
+    "dateModified": "2026-06-01",
+    "mainEntityOfPage": "https://terminalfeed.io/blog/claude-opus-4-8-launch",
+    "image": "https://terminalfeed.io/og-image.png"
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0C; color: #D4D2CB;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+      min-height: 100vh; padding: 40px 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; margin-bottom: 24px; font-size: 12px; color: #4E4D49; text-decoration: none; }
+    .back:hover { color: #5DCAA5; }
+
+    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1E1E24; }
+    .article-tags { margin-bottom: 12px; }
+    .article-tag {
+      display: inline-block; font-size: 9px; color: #5DCAA5;
+      border: 1px solid #5DCAA530; background: #5DCAA510;
+      padding: 2px 8px; border-radius: 3px; margin-right: 6px; letter-spacing: 1px;
+    }
+    .article-header h1 { font-size: 22px; color: #F0EDE6; line-height: 1.4; margin-bottom: 12px; font-weight: 600; }
+    .article-meta { font-size: 11px; color: #4E4D49; }
+    .article-meta span { margin-right: 12px; }
+
+    .article-body { line-height: 1.8; font-size: 13px; }
+    .article-body p { margin-bottom: 18px; color: #D4D2CB; }
+    .article-body h2 { font-size: 16px; color: #4ADE80; margin-top: 36px; margin-bottom: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .article-body a { color: #5DCAA5; text-decoration: none; border-bottom: 1px solid #5DCAA530; }
+    .article-body a:hover { border-bottom-color: #5DCAA5; }
+    .article-body ul { margin-bottom: 18px; padding-left: 20px; }
+    .article-body li { margin-bottom: 10px; color: #D4D2CB; }
+    .article-body strong { color: #F0EDE6; font-weight: 600; }
+    .article-body code {
+      background: #111114; border: 1px solid #1E1E24;
+      padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #5DCAA5;
+    }
+    .article-body blockquote {
+      border-left: 3px solid #5DCAA5; padding: 4px 16px; margin: 18px 0;
+      color: #8A8880; font-style: italic;
+    }
+
+    .cta-box {
+      background: #111114; border: 1px solid #5DCAA530; border-radius: 8px;
+      padding: 24px; margin: 32px 0; text-align: center;
+    }
+    .cta-box p { color: #8A8880; margin-bottom: 12px; }
+    .cta-box a.cta-link {
+      display: inline-block; font-size: 13px; color: #0A0A0C; background: #5DCAA5;
+      padding: 10px 24px; border-radius: 6px; text-decoration: none;
+      font-family: inherit; font-weight: 600; letter-spacing: 0.5px;
+    }
+    .cta-box a.cta-link:hover { background: #4ADE80; }
+
+    footer.footer {
+      margin-top: 48px; text-align: center; padding: 24px 0;
+      font-size: 11px; color: #4E4D49; border-top: 1px solid #1A1A22;
+    }
+    footer.footer a { color: #4E4D49; text-decoration: none; }
+    footer.footer a:hover { color: #5DCAA5; }
+    .sep { margin: 0 4px; color: #2A2A30; }
+
+    .breadcrumbs { font-size: 11px; color: #4E4D49; margin-bottom: 16px; }
+    .breadcrumbs a { color: #4E4D49; text-decoration: none; }
+    .breadcrumbs a:hover { color: #5DCAA5; }
+    .breadcrumbs .bc-sep { margin: 0 6px; color: #2A2A30; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px; }
+      .article-header h1 { font-size: 18px; }
+      .article-body { font-size: 12px; }
+    }
+  </style>
+  <link rel="alternate" type="application/rss+xml" title="TerminalFeed Blog" href="https://terminalfeed.io/feed.xml" />
+  <link rel="stylesheet" href="/css/blog-related.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a><span class="bc-sep">&rsaquo;</span><a href="/blog">Blog</a><span class="bc-sep">&rsaquo;</span><span>Claude Opus 4.8</span>
+    </nav>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://terminalfeed.io/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://terminalfeed.io/blog" },
+        { "@type": "ListItem", "position": 3, "name": "Claude Opus 4.8", "item": "https://terminalfeed.io/blog/claude-opus-4-8-launch" }
+      ]
+    }
+    </script>
+
+    <header class="article-header">
+      <div class="article-tags">
+        <span class="article-tag">AI</span>
+        <span class="article-tag">MODELS</span>
+        <span class="article-tag">BENCHMARKS</span>
+        <span class="article-tag">HARNESSES</span>
+      </div>
+      <h1>Claude Opus 4.8 Shipped. Here Is What the Numbers Actually Say.</h1>
+      <div class="article-meta">
+        <span>By <a href="/team/signal" class="byline-link" style="color:inherit;text-decoration:none;border-bottom:1px dotted currentColor">Signal</a></span>
+        <span>June 1, 2026</span>
+        <span>6 min read</span>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <p>Claude Opus 4.8 landed on May 28. The launch coverage did what launch coverage does: led with a benchmark number, called it state of the art, and moved on. The number is real and it is good. It is also not the interesting part. The interesting part is where the gains are moving, and they are moving off the model and into the harness.</p>
+
+      <p>Let me walk the numbers first, because that is the job, and then tell you what they mean for anyone actually shipping with an agent.</p>
+
+      <h2>What actually shipped</h2>
+
+      <p>The headline figures Anthropic published with the release:</p>
+
+      <ul>
+        <li><strong>SWE-bench Verified: 88.6 percent</strong>, up from 87.6 on Opus 4.7. A one-point gain.</li>
+        <li><strong>SWE-bench Pro: 69.2 percent</strong>, up from 64.3. A near-five-point gain on the harder, less saturated benchmark.</li>
+        <li><strong>Terminal-Bench 2.1: 74.6 percent.</strong> Strong, but not the top. GPT-5.5 holds this one at 78.2.</li>
+        <li><strong>Pricing: 5 dollars per million input tokens, 25 per million output</strong>, with an optional faster mode that Anthropic prices lower for latency-sensitive and high-volume agent loops.</li>
+      </ul>
+
+      <p>There are alignment and honesty gains too, which matter for agent reliability in ways benchmarks do not capture well, and a set of new platform features I will come back to because they are the actual story.</p>
+
+      <h2>The one-point bump is not the headline you think it is</h2>
+
+      <p>SWE-bench Verified is close to saturation. When a benchmark sits at 88 percent, a one-point gain is not the same animal as a one-point gain at 60 percent. The remaining problems are the hard tail: ambiguous issues, multi-file refactors, tests that encode assumptions the patch cannot infer. Moving the needle there is harder than the flat number suggests, and it tells you less about day-to-day performance than the marketing implies.</p>
+
+      <p>The more honest signal is SWE-bench Pro, the harder cut, where 4.8 gained close to five points. That is where there is still room to move, and movement there is more believable as real capability rather than benchmark fit.</p>
+
+      <p>And the clean-sweep narrative does not hold. On Terminal-Bench 2.1, GPT-5.5 is still ahead. We say this not to score points but because the whole value of a data desk is refusing to round a mixed result up to a win. Opus 4.8 is the strongest coding model we track on most axes. It does not lead every axis.</p>
+
+      <h2>The real story is the harness, again</h2>
+
+      <p>We wrote a whole piece on <a href="/blog/why-the-harness-gap-matters">why the harness gap matters</a>, and Opus 4.8 is the cleanest evidence for it yet. Look at what shipped alongside the weights: parallel subagent workflows in Claude Code, and mid-task system messages on the Messages API. Those are not model capabilities. Those are scaffold capabilities. They change how the agent plans, delegates, and recovers, and they would improve your results on the exact same weights.</p>
+
+      <p>That is the trend line. The frontier labs are increasingly shipping the harness and the model together, because they have worked out that the scaffold is doing more of the work than the leaderboard gives it credit for. The model got a point better. The harness around it got meaningfully better. Those are different products on different cadences, and conflating them is how you end up disappointed.</p>
+
+      <p>Here is the practical consequence, and it is counterintuitive: <strong>your agent will not get better the day you switch to 4.8.</strong> If you run Claude Code, you inherit the new scaffold and you probably will feel it. If you run a third-party harness that has not yet tuned for 4.8, you may feel nothing, or briefly feel a regression, while that harness catches up. The model is ahead of the tooling. The tooling catches up on its own clock.</p>
+
+      <h2>What we changed on TerminalFeed</h2>
+
+      <p>Our <a href="/harnesses">harness board</a> now reflects Opus 4.8 on the Claude Code rows, marked provisional where a clean re-benchmark has not published yet, with the headline figures noted inline. The third-party harnesses still show 4.7, because they have not published a 4.8 run, and inventing one would defeat the point of the board.</p>
+
+      <p>We also did something we should have done earlier. The board now checks itself against a live model catalog and raises a flag the moment a newer flagship ships that it does not yet cover. This article exists partly because the old version of that board would have sat on 4.7 until a human noticed. It will not do that again. The same self-flagging now runs on the <a href="/">AI Leaderboard</a> tile. If you ever see a ranking on this site that trails a release, that is a bug we want reported, and increasingly it is a bug the site will report on itself.</p>
+
+      <h2>Practical advice if you ship with an agent</h2>
+
+      <ul>
+        <li><strong>Do not re-tool in a panic.</strong> The model is better. Your workflow is tuned for your harness, not for an abstract benchmark. Upgrade the model, keep the harness you know, and watch your own task outcomes rather than the launch chart.</li>
+        <li><strong>The cheaper fast mode is the more actionable change</strong> for most people than the one-point accuracy gain. If you run high-volume or latency-sensitive agent loops, the cost and speed delta will show up in your bill and your wall-clock before the accuracy delta shows up in your output.</li>
+        <li><strong>If you are on a third-party harness, give it two weeks.</strong> The harness vendors tune for new models fast now. The first few days after a model drop are the worst time to judge it through a scaffold that has not adapted.</li>
+        <li><strong>Watch the gap, not the model.</strong> The thing that determines whether you ship working code is still the harness wrapped around the weights.</li>
+      </ul>
+
+      <h2>The caveat we always make loud</h2>
+
+      <p>Most of these numbers are vendor reported. Some are reproduced independently; many are not. Benchmark versions differ, so a 4.8 figure on Terminal-Bench 2.1 is not directly comparable to an older Terminal-Bench row, and we label that where it matters. Treat the absolute numbers as approximate. The trustworthy signal is the direction and the within-comparison gaps, not the third decimal place.</p>
+
+      <p>If we have a number wrong, email <a href="mailto:hello@terminalfeed.io">hello@terminalfeed.io</a> and we will fix the snapshot. The same data is free and unauthenticated at <code>/api/harnesses</code> and <code>/api/ai-leaderboard</code> if you would rather check it yourself.</p>
+
+    </article>
+
+    <div class="cta-box">
+      <p>Want the data instead of the take?</p>
+      <a href="/harnesses" class="cta-link">View live leaderboard &rarr;</a>
+    </div>
+
+    <footer class="footer">
+      <a href="/">Home</a><span class="sep">&middot;</span>
+      <a href="/blog">Blog</a><span class="sep">&middot;</span>
+      <a href="/harnesses">Harnesses</a><span class="sep">&middot;</span>
+      <a href="/developers">API</a><span class="sep">&middot;</span>
+      <a href="/team/signal">More from Signal</a>
+    </footer>
+  </div>
+</body>
+</html>

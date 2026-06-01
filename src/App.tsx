@@ -54,6 +54,7 @@ import { useTrendingBooks } from './hooks/useTrendingBooks';
 import { useWhaleWatch } from './hooks/useWhaleWatch';
 import { useWorldClock } from './hooks/useWorldClock';
 import { aiLeaderboard } from './data/aiLeaderboard';
+import { useAiLeaderboard } from './hooks/useAiLeaderboard';
 import { getTodayInTech } from './data/techHistory';
 import { getTodayTerm } from './data/techTerms';
 import { useWire } from './hooks/useWire';
@@ -212,6 +213,7 @@ function App() {
   const tcgMarket = useTCGMarket();
   const hfModels = useHuggingFace();
   const harnesses = useHarnesses();
+  const aiLeaderboardData = useAiLeaderboard();
   const spaceWeather = useSpaceWeather();
   const wildfires = useWildfires();
   const severeWeather = useSevereWeather();
@@ -1292,7 +1294,7 @@ function App() {
     'ai-leaderboard': (<>
       <PanelHead panelId="ai-leaderboard" isStale={panelHealth.isStale('ai-leaderboard')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">AI Leaderboard</span><span className="panelTag">ELO</span></div></PanelHead>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {aiLeaderboard.map((m) => (
+        {(aiLeaderboardData?.leaderboard ?? aiLeaderboard).map((m) => (
           <div key={m.rank} className="listRow">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, color: m.rank <= 3 ? 'var(--gold)' : 'var(--text-dim)', fontWeight: 700, minWidth: 16 }}>#{m.rank}</span>
@@ -1304,6 +1306,16 @@ function App() {
             <span style={{ fontSize: 11, color: 'var(--cyan)', fontWeight: 600 }}>{m.elo}</span>
           </div>
         ))}
+        {aiLeaderboardData?.freshness && aiLeaderboardData.freshness.flags.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 4, fontSize: 9, color: 'var(--amber)', lineHeight: 1.5 }}>
+            <span style={{ fontWeight: 700, letterSpacing: 0.5 }}>refresh due</span> &middot; {aiLeaderboardData.freshness.flags[0].message}
+          </div>
+        )}
+        {aiLeaderboardData?.generatedAt && (
+          <div style={{ fontSize: 8, color: 'var(--text-dim)', marginTop: 4, textAlign: 'right', letterSpacing: 0.5 }}>
+            as of {aiLeaderboardData.generatedAt}
+          </div>
+        )}
       </div>
     </>),
     'harnesses': (<>
@@ -1339,6 +1351,16 @@ function App() {
                 <span style={{ color: 'var(--amber)', fontWeight: 600 }}>+{(harnesses.biggestHarnessGaps[0].delta ?? 0).toFixed(1)}</span>
                 <span style={{ color: 'var(--text-dim)', fontSize: 9 }}> on {harnesses.biggestHarnessGaps[0].benchmark}</span>
               </div>
+            </div>
+          )}
+          {harnesses.freshness && harnesses.freshness.flags.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 4, fontSize: 9, color: 'var(--amber)', lineHeight: 1.5 }}>
+              <span style={{ fontWeight: 700, letterSpacing: 0.5 }}>refresh due</span> &middot; {harnesses.freshness.flags[0].message}
+            </div>
+          )}
+          {harnesses.generatedAt && (
+            <div style={{ fontSize: 8, color: 'var(--text-dim)', marginTop: 4, textAlign: 'right', letterSpacing: 0.5 }}>
+              snapshot as of {harnesses.generatedAt}
             </div>
           )}
         </div>
