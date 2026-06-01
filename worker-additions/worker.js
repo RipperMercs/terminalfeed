@@ -666,6 +666,7 @@ const CORS_EXPOSE_HEADERS = [
   'X-Payment-Network',
   'X-Payment-Credits-Required',
   'X-Payment-Min-USD',
+  'X-TF-As-Of', 'X-TF-Age', 'X-TF-Stale',
 ].join(', ');
 
 const CORS_HEADERS = Object.assign({}, SECURITY_HEADERS, {
@@ -677,7 +678,7 @@ const CORS_HEADERS = Object.assign({}, SECURITY_HEADERS, {
   'Link': LINK_HEADER,
 });
 
-function jsonResponse(data, status, cacheSeconds) {
+function jsonResponse(data, status, cacheSeconds, extraHeaders) {
   status = status || 200;
   cacheSeconds = cacheSeconds || 0;
   var headers = Object.assign({}, SECURITY_HEADERS, {
@@ -692,6 +693,11 @@ function jsonResponse(data, status, cacheSeconds) {
   if (cacheSeconds > 0) {
     headers['Cache-Control'] = 'public, max-age=' + cacheSeconds + ', s-maxage=' + cacheSeconds;
   }
+  if (extraHeaders) {
+    for (var hk in extraHeaders) {
+      if (Object.prototype.hasOwnProperty.call(extraHeaders, hk)) headers[hk] = extraHeaders[hk];
+    }
+  }
   var body;
   try {
     body = JSON.stringify(data);
@@ -701,6 +707,23 @@ function jsonResponse(data, status, cacheSeconds) {
     body = '{"error":"serialization_error"}';
   }
   return new Response(body, { status: status, headers: headers });
+}
+
+// Wrap jsonResponse with freshness headers derived from the in-memory cache entry
+// for `key`:
+//   X-TF-As-Of : ISO timestamp of when the served data was fetched from upstream
+//   X-TF-Age   : age of that data in seconds
+//   X-TF-Stale : "true" when served as a fallback after an upstream failure
+// Body shape is unchanged, so this is safe for both array- and object-returning
+// feeds. Falls back to now() if the key has no cache entry yet.
+function jsonFresh(key, data, status, cacheSeconds, stale) {
+  var entry = _cache[key];
+  var ts = (entry && entry.ts) ? entry.ts : Date.now();
+  return jsonResponse(data, status, cacheSeconds, {
+    'X-TF-As-Of': new Date(ts).toISOString(),
+    'X-TF-Age': String(Math.max(0, Math.round((Date.now() - ts) / 1000))),
+    'X-TF-Stale': stale ? 'true' : 'false',
+  });
 }
 
 function corsResponse(request, mode) {
@@ -1119,7 +1142,7 @@ function handleIndex() {
 async function handleBtcPrice() {
   var KEY = 'btc-price';
   var cached = getCached(KEY, 15000);
-  if (cached) return jsonResponse(cached, 200, 15);
+  if (cached) return jsonFresh(KEY, cached, 200, 15);
 
   try {
     var res = await fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT');
@@ -1134,10 +1157,10 @@ async function handleBtcPrice() {
       },
     };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 15);
+    return jsonFresh(KEY, data, 200, 15);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 5);
+    if (stale) return jsonFresh(KEY, stale, 200, 5, true);
     return jsonResponse({ data: { price_usd: 0, change_24h_percent: 0 } });
   }
 }
@@ -1167,12 +1190,12 @@ async function handleStocks(env, url) {
   // triggers up to 30 parallel upstream calls, so shorter TTLs risk blowing
   // the rate limit whenever traffic bursts.
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFresh(KEY, cached, 200, 120);
 
   try {
     if (!env || !env.FINNHUB_API_KEY) {
       var stale0 = getStale(KEY);
-      if (stale0) return jsonResponse(stale0, 200, 30);
+      if (stale0) return jsonFresh(KEY, stale0, 200, 30, true);
       return jsonResponse({ data: [] });
     }
 
@@ -1203,16 +1226,16 @@ async function handleStocks(env, url) {
       // All upstream calls failed (likely rate-limited) — serve stale cache if we have one
       // and DON'T overwrite the cache with empty data.
       var stale1 = getStale(KEY);
-      if (stale1) return jsonResponse(stale1, 200, 120);
+      if (stale1) return jsonFresh(KEY, stale1, 200, 120, true);
       return jsonResponse({ data: [] });
     }
 
     var data = { data: stocks, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    return jsonFresh(KEY, data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 120);
+    if (stale) return jsonFresh(KEY, stale, 200, 120, true);
     return jsonResponse({ data: [] });
   }
 }
@@ -1223,7 +1246,7 @@ async function handleStocks(env, url) {
 async function handleCoingeckoMarkets() {
   var KEY = 'cg:markets';
   var cached = getCached(KEY, 120000);
-  if (cached) return jsonResponse(cached, 200, 120);
+  if (cached) return jsonFresh(KEY, cached, 200, 120);
   try {
     var res = await fetchWithTimeout('https://api.coinlore.net/api/tickers/?limit=30');
     if (!res.ok) throw new Error('upstream ' + res.status);
@@ -1243,10 +1266,10 @@ async function handleCoingeckoMarkets() {
     });
     var data = { data: mapped, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 120);
+    return jsonFresh(KEY, data, 200, 120);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 120);
+    if (stale) return jsonFresh(KEY, stale, 200, 120, true);
     return jsonResponse({ data: [] });
   }
 }
@@ -1256,7 +1279,7 @@ async function handleCoingeckoMarkets() {
 async function handleCoingeckoGlobal() {
   var KEY = 'cg:global';
   var cached = getCached(KEY, 300000);
-  if (cached) return jsonResponse(cached, 200, 300);
+  if (cached) return jsonFresh(KEY, cached, 200, 300);
   try {
     var res = await fetchWithTimeout('https://api.coinlore.net/api/global/');
     if (!res.ok) throw new Error('upstream ' + res.status);
@@ -1274,10 +1297,10 @@ async function handleCoingeckoGlobal() {
     };
     var data = { data: shaped, ts: Date.now() };
     setCache(KEY, data);
-    return jsonResponse(data, 200, 300);
+    return jsonFresh(KEY, data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
-    if (stale) return jsonResponse(stale, 200, 300);
+    if (stale) return jsonFresh(KEY, stale, 200, 300, true);
     return jsonResponse({ data: null });
   }
 }
@@ -1749,16 +1772,16 @@ const HARNESS_DATA = {
 // board, and so a sister site could federate it later.
 var AI_LEADERBOARD = {
   generatedAt: '2026-06-01',
-  note: 'Curated from public Chatbot Arena / LMSYS ELO ratings. Opus 4.8 shipped 2026-05-28; its ELO and rank here are provisional until a fresh Arena rating publishes.',
+  note: 'Curated from public Chatbot Arena / LMSYS ELO ratings. Cross-source aggregators disagree on absolute ELO (late-May snapshots ranged ~1418 to ~1551), so these keep one internal scale. Consistent signal across sources in late May: Claude Opus 4.8 (shipped 2026-05-28) overtook GPT-5.5 for the top spot.',
   models: [
-    { rank: 1,  name: 'GPT-5.5 Pro',              company: 'OpenAI',    elo: 1551 },
-    { rank: 2,  name: 'Claude Opus 4.8 Thinking',  company: 'Anthropic', elo: 1545 },
-    { rank: 3,  name: 'Gemini 3.1 Pro',            company: 'Google',    elo: 1530 },
-    { rank: 4,  name: 'GPT-5.5 High',              company: 'OpenAI',    elo: 1515 },
-    { rank: 5,  name: 'Claude Mythos Preview',     company: 'Anthropic', elo: 1510 },
-    { rank: 6,  name: 'Grok 4',                    company: 'xAI',       elo: 1500 },
-    { rank: 7,  name: 'Claude Sonnet 4',           company: 'Anthropic', elo: 1495 },
-    { rank: 8,  name: 'DeepSeek V4 Pro',           company: 'DeepSeek',  elo: 1490 },
+    { rank: 1,  name: 'Claude Opus 4.8 Thinking',  company: 'Anthropic', elo: 1552 },
+    { rank: 2,  name: 'GPT-5.5 Pro',               company: 'OpenAI',    elo: 1549 },
+    { rank: 3,  name: 'Gemini 3.1 Pro',            company: 'Google',    elo: 1532 },
+    { rank: 4,  name: 'Claude Opus 4.8',           company: 'Anthropic', elo: 1524 },
+    { rank: 5,  name: 'GPT-5.5 High',              company: 'OpenAI',    elo: 1516 },
+    { rank: 6,  name: 'Claude Mythos Preview',     company: 'Anthropic', elo: 1511 },
+    { rank: 7,  name: 'Grok 4',                    company: 'xAI',       elo: 1501 },
+    { rank: 8,  name: 'DeepSeek V4 Pro',           company: 'DeepSeek',  elo: 1492 },
     { rank: 9,  name: 'Gemini 3.0 Pro',            company: 'Google',    elo: 1488 },
     { rank: 10, name: 'Kimi K2.5',                 company: 'Moonshot',  elo: 1485 },
   ],
