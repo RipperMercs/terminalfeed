@@ -151,6 +151,32 @@ class TerminalFeed:
         """GET /api/pro/anomalies (2 credits)."""
         return self._get("/api/pro/anomalies", auth=True)
 
+    def feed_reliability(self) -> dict[str, Any]:
+        """GET /api/pro/feed-reliability (2 credits).
+
+        Signed full reliability breakdown for every monitored feed. The free
+        top-line table is free_feed_reliability() (no auth).
+        """
+        return self._get("/api/pro/feed-reliability", auth=True)
+
+    def feed_reliability_history(
+        self,
+        feed: str,
+        frm: str | None = None,
+        to: str | None = None,
+    ) -> dict[str, Any]:
+        """GET /api/pro/feed-reliability/history (2 credits).
+
+        Daily reliability time-series for one feed (e.g. "btc-price"). Optional
+        frm/to bounds are YYYY-MM-DD; an empty range no-charges.
+        """
+        params: dict[str, str] = {"feed": feed}
+        if frm:
+            params["from"] = frm
+        if to:
+            params["to"] = to
+        return self._get("/api/pro/feed-reliability/history", auth=True, params=params)
+
     # ---------------------------- Free tier ------------------------------
     # The free tier requires no auth. These convenience wrappers are here
     # so an agent can exercise its HTTP plumbing before spending USDC.
@@ -179,6 +205,14 @@ class TerminalFeed:
         buy before spending.
         """
         return self._get("/api/meta/pro", auth=False)
+
+    def free_feed_reliability(self) -> dict[str, Any]:
+        """GET /api/feed-reliability (free, no auth).
+
+        Ranked feed-reliability table (composite scores + subscores). The signed
+        full breakdown is feed_reliability() (2 credits).
+        """
+        return self._get("/api/feed-reliability", auth=False)
 
     @property
     def credits_remaining(self) -> int | None:

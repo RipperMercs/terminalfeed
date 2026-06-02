@@ -7924,6 +7924,8 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_premium_defi_tvl':           path = '/api/pro/defi-tvl'; break;
     case 'tf_premium_stablecoin_flows':   path = '/api/pro/stablecoin-flows'; break;
     case 'tf_premium_github_velocity':    path = '/api/pro/github-velocity'; break;
+    case 'tf_premium_feed_reliability':         path = '/api/pro/feed-reliability'; break;
+    case 'tf_premium_feed_reliability_history': path = '/api/pro/feed-reliability/history'; break;
     case 'tf_preview_regime':             path = '/api/preview/regime'; break;
     case 'tf_premium_regime':             path = '/api/pro/regime'; break;
     case 'tf_premium_anomalies':          path = '/api/pro/anomalies'; break;
@@ -7993,6 +7995,8 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_premium_defi_tvl':           return await handleProDefiTvl(req, env, url);
     case 'tf_premium_stablecoin_flows':   return await handleProStablecoinFlows(req, env, url);
     case 'tf_premium_github_velocity':    return await handleProGithubVelocity(req, env, url);
+    case 'tf_premium_feed_reliability':         return await handleProFeedReliability(req, env, url);
+    case 'tf_premium_feed_reliability_history': return await handleProFeedReliabilityHistory(req, env, url);
     case 'tf_preview_regime':             return await handlePreviewRegime(req, env, url);
     case 'tf_premium_regime':             return await handleProRegime(req, env, url);
     case 'tf_premium_anomalies':          return await handleProAnomalies(req, env, url);
@@ -8343,6 +8347,32 @@ const LLM_TOOL_DEFINITIONS = [
     tier: 'premium',
     cost_credits: 2,
     parameters: {}
+  },
+  {
+    name: 'tf_premium_feed_reliability',
+    short_description: 'Signed reliability breakdown for every TerminalFeed data feed: composite + subscores + trust (2 credits).',
+    description: 'Premium reliability breakdown. For every monitored feed, a 0-100 composite reliability score with subscores (uptime, availability, staleness rate, dark rate), a sample-size trust tier, and a low_coverage flag, scored from rolling ok/stale/dark counts probed every 5 minutes. Ranked, with low-sample feeds parked separately. captured_at is the monitor real check time, so a stalled monitor (>48h) no-charges. The free preview is GET /api/feed-reliability (top-line table, no auth); this paid tier adds the signed receipt and the full per-feed breakdown. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
+    url: 'https://terminalfeed.io/api/pro/feed-reliability',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {}
+  },
+  {
+    name: 'tf_premium_feed_reliability_history',
+    short_description: 'Daily reliability time-series for one TerminalFeed feed (2 credits).',
+    description: 'Premium reliability history. Returns the daily composite-reliability time-series for one feed (param feed, e.g. btc-price), with optional from/to date bounds (YYYY-MM-DD, query window capped at 365 days). Immutable past data; an empty range no-charges. Use the free GET /api/feed-reliability for current feed ids. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
+    url: 'https://terminalfeed.io/api/pro/feed-reliability/history',
+    method: 'GET',
+    auth: 'bearer',
+    tier: 'premium',
+    cost_credits: 2,
+    parameters: {
+      feed: { type: 'string', description: 'feed id, e.g. btc-price' },
+      from: { type: 'string', description: 'lower bound YYYY-MM-DD (optional)' },
+      to: { type: 'string', description: 'upper bound YYYY-MM-DD (optional)' }
+    }
   },
   {
     name: 'tf_premium_stablecoin_flows',
