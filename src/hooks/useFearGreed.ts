@@ -6,7 +6,7 @@ export interface FearGreedData {
   timestamp: number;
 }
 
-const API_URL = 'https://api.alternative.me/fng/?limit=1';
+const API_URL = '/api/fear-greed'; // worker proxy (alternative.me), rule #6
 const POLL_MS = 2 * 60_000; // 2 min
 
 export function useFearGreed() {
@@ -21,12 +21,13 @@ export function useFearGreed() {
         const res = await fetch(API_URL);
         if (!res.ok) return;
         const json = await res.json();
-        const entry = json.data?.[0];
-        if (!entry || !mountedRef.current) return;
+        // Worker returns { data: { value:number, label, timestamp:seconds } }.
+        const entry = json.data;
+        if (!entry || typeof entry.value !== 'number' || !mountedRef.current) return;
         setData({
-          value: parseInt(entry.value, 10),
-          label: entry.value_classification,
-          timestamp: parseInt(entry.timestamp, 10) * 1000,
+          value: entry.value,
+          label: entry.label,
+          timestamp: entry.timestamp ? Number(entry.timestamp) * 1000 : Date.now(),
         });
       } catch (e) { if (import.meta.env.DEV) console.warn('[FearGreed]', e); }
     };

@@ -1561,6 +1561,7 @@ async function handleEarthquake() {
     var d = await res.json();
     var quakes = (d.features || []).slice(0, 20).map(function(f) {
       return {
+        id: f.id,
         magnitude: f.properties.mag,
         place: sanitizeForLLM(f.properties.place),
         time: f.properties.time,

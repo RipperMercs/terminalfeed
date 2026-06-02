@@ -7,8 +7,7 @@ export interface NpmPackage {
   downloads: number;
 }
 
-const PACKAGES = ['react', 'next', 'vue', 'svelte', 'typescript', 'tailwindcss', 'vite', 'express', 'axios', 'zod'];
-const API_URL = `https://api.npmjs.org/downloads/point/last-day/${PACKAGES.join(',')}`;
+const API_URL = '/api/npm-trends'; // worker proxy (npmjs), rule #6
 const CACHE_KEY = 'npm_trends';
 const POLL_MS = 60 * 60_000; // 1 hour
 
@@ -25,19 +24,21 @@ export function useNpmTrends(): NpmPackage[] {
       try {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(8000) });
         if (!res.ok || !mountedRef.current) return;
-        const data = await res.json();
+        const json = await res.json();
+        if (!Array.isArray(json.data)) return;
 
-        const results: NpmPackage[] = PACKAGES
-          .map(name => ({
-            name,
-            downloads: data[name]?.downloads ?? 0,
+        // Worker returns { data: [{ package, downloads, date }] }.
+        const results: NpmPackage[] = json.data
+          .map((p: { package: string; downloads: number | null }) => ({
+            name: p.package,
+            downloads: p.downloads ?? 0,
           }))
-          .filter(p => p.downloads > 0)
-          .sort((a, b) => b.downloads - a.downloads);
+          .filter((p: NpmPackage) => p.downloads > 0)
+          .sort((a: NpmPackage, b: NpmPackage) => b.downloads - a.downloads);
 
         if (results.length > 0) {
           setPackages(results);
-          setCache(CACHE_KEY, results, 'npmjs');
+          setCache(CACHE_KEY, results, 'npm-trends');
         }
       } catch (e) { if (import.meta.env.DEV) console.warn('[NpmTrends]', e); }
     };

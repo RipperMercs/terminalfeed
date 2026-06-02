@@ -10,7 +10,7 @@ export interface Earthquake {
   coordinates?: [number, number]; // [lng, lat] from USGS GeoJSON, depth dropped
 }
 
-const API_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
+const API_URL = '/api/earthquake'; // worker proxy (USGS), rule #6
 const CACHE_KEY = 'earthquakes';
 const POLL_MS = 2 * 60_000; // 2 min
 
@@ -28,28 +28,29 @@ export function useEarthquakes(): Earthquake[] {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok) return;
         const json = await res.json();
-        if (!json.features || !mountedRef.current) return;
+        if (!Array.isArray(json.data) || !mountedRef.current) return;
 
-        const results: Earthquake[] = json.features
+        // Worker already normalized the USGS GeoJSON to {id, magnitude, place, time, url, coordinates}.
+        const results: Earthquake[] = json.data
           .slice(0, 12)
-          .map((f: { id: string; properties: { mag: number; place: string; time: number; url: string }; geometry?: { coordinates?: number[] } }) => {
-            const coords = f.geometry?.coordinates;
+          .map((q: { id: string; magnitude: number; place: string; time: number; url: string; coordinates?: number[] }) => {
+            const c = q.coordinates;
             const lngLat: [number, number] | undefined =
-              Array.isArray(coords) && typeof coords[0] === 'number' && typeof coords[1] === 'number'
-                ? [coords[0], coords[1]]
+              Array.isArray(c) && typeof c[0] === 'number' && typeof c[1] === 'number'
+                ? [c[0], c[1]]
                 : undefined;
             return {
-              id: f.id,
-              magnitude: f.properties.mag,
-              place: f.properties.place,
-              time: f.properties.time,
-              url: f.properties.url,
+              id: q.id,
+              magnitude: q.magnitude,
+              place: q.place,
+              time: q.time,
+              url: q.url,
               coordinates: lngLat,
             };
           });
 
         setQuakes(results);
-        setCache(CACHE_KEY, results, 'usgs');
+        setCache(CACHE_KEY, results, 'earthquake');
       } catch (e) { if (import.meta.env.DEV) console.warn('[Earthquakes]', e); }
     };
 
