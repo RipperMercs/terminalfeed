@@ -3956,12 +3956,39 @@ async function handleHumansInSpace() {
 // raw states array is multi-MB and OpenSky CORS-blocks browsers, so the worker
 // fetches it and returns only the rollup the panel needs. (Migrated from a direct
 // browser fetch that CORS-failed, rule #6.)
-async function handleAviation() {
+// OpenSky migrated to OAuth2 client-credentials; the anonymous /states/all is
+// effectively dead. Mint + cache an access token from OPENSKY_CLIENT_ID/SECRET
+// (set via `wrangler secret put`). Token TTL ~30 min; refresh 60s early. Returns
+// null when the secrets are unset, in which case /api/aviation falls back to the
+// (failing) anonymous call and the panel hides.
+var _openskyToken = { token: null, exp: 0 };
+async function _openskyAccessToken(env) {
+  if (!env || !env.OPENSKY_CLIENT_ID || !env.OPENSKY_CLIENT_SECRET) return null;
+  var now = Date.now();
+  if (_openskyToken.token && now < _openskyToken.exp) return _openskyToken.token;
+  try {
+    var body = 'grant_type=client_credentials&client_id=' + encodeURIComponent(env.OPENSKY_CLIENT_ID) + '&client_secret=' + encodeURIComponent(env.OPENSKY_CLIENT_SECRET);
+    var res = await fetchWithTimeout('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body,
+    }, 6000);
+    if (!res.ok) return null;
+    var j = await res.json();
+    if (!j.access_token) return null;
+    _openskyToken = { token: j.access_token, exp: now + (((j.expires_in || 1800) - 60) * 1000) };
+    return j.access_token;
+  } catch (e) { return null; }
+}
+
+async function handleAviation(env) {
   var KEY = 'aviation';
   var cached = getCached(KEY, 120000);
   if (cached) return jsonFreshAuto(cached, 200, 120);
   try {
-    var res = await fetchWithTimeout('https://opensky-network.org/api/states/all', {}, 8000);
+    var _osToken = await _openskyAccessToken(env);
+    var _osOpts = _osToken ? { headers: { 'Authorization': 'Bearer ' + _osToken } } : {};
+    var res = await fetchWithTimeout('https://opensky-network.org/api/states/all', _osOpts, 8000);
     if (!res.ok) throw new Error('opensky ' + res.status);
     var json = await res.json();
     var states = Array.isArray(json.states) ? json.states : [];
@@ -15100,7 +15127,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'cyber-threats':  return await handleCyberThreats(env);
       case 'forex':          return await handleForex();
       case 'humans-in-space':return await handleHumansInSpace();
-      case 'aviation':       return await handleAviation();
+      case 'aviation':       return await handleAviation(env);
       case 'iss-position':   return await handleIssPosition();
       case 'quote':          return await handleQuote();
       case 'btc-network':    return await handleBtcNetwork();
