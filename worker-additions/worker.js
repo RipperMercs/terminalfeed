@@ -126,16 +126,10 @@ function _recordTrafficHit(env, path, hasBearer, ua) {
   _bumpKey(_traffic.by_user_agent_family, uaFam);
   if (hasBearer) _traffic.by_auth.with_bearer += 1;
   else _traffic.by_auth.no_bearer += 1;
-  // Tier 2: write to Analytics Engine if bound
-  if (env && env.AGENT_ANALYTICS) {
-    try {
-      env.AGENT_ANALYTICS.writeDataPoint({
-        blobs: ['/api/' + path, uaFam, hasBearer ? 'bearer' : 'no_bearer'],
-        doubles: [1],
-        indexes: ['/api/' + path],
-      });
-    } catch (e) {}
-  }
+  // Tier 2 (Analytics Engine) is written ONCE per request post-dispatch in
+  // _recordUsageEvent, where the status and the actual charge are known. Writing
+  // here too would double-count the funnel, so this pre-dispatch hook only keeps
+  // the in-memory Tier-1 counters above.
 }
 
 // Records the outcome of a request after dispatchRoute resolves: status code,
@@ -179,6 +173,67 @@ function _recordTrafficOutcome(env, path, status, durationMs) {
       } catch (e) {}
     }
   }
+}
+
+// === Agent usage funnel (Analytics Engine) ===
+// One enriched datapoint per tracked request, classified by the ACTUAL charge,
+// not by status: a free-trial response and a stale/empty no-charge premium
+// response both return 200, so status alone would over-count "paid". The charge
+// is carried on the Response via _chargeTag (a WeakMap, so it never serializes to
+// the wire and is GC'd with the Response) and read back in the post-dispatch hook,
+// where exactly ONE usage write happens per request. Telemetry only: every write
+// is best-effort and wrapped so it can never affect the response.
+//
+// AE blob layout: [path, ua_family, tier, outcome, payer_wallet, country, internal].
+// doubles: [credits_charged]. indexes: [path].
+var _chargeTag = new WeakMap();
+
+var USAGE_TRACKED_FREE = [
+  '/api/briefing', '/api/btc-price', '/api/stocks', '/api/crypto-movers',
+  '/api/fear-greed', '/api/service-status',
+];
+
+function deriveUsageEvent(path, status, credits) {
+  var full = '/api/' + path;
+  var isPremium = full.indexOf('/api/pro/') === 0;
+  var isPreview = full.indexOf('/api/preview/') === 0;
+  if (!isPremium && !isPreview && USAGE_TRACKED_FREE.indexOf(full) < 0) return null;
+  var outcome;
+  if (status === 402) outcome = 'unpaid_402';
+  else if (status >= 400) outcome = 'error';
+  else if (typeof credits === 'number' && credits > 0) outcome = 'paid';
+  else outcome = 'served_free';
+  return {
+    path: full,
+    tier: isPremium ? 'premium' : (isPreview ? 'preview' : 'free'),
+    outcome: outcome,
+    credits: (typeof credits === 'number' && credits > 0) ? credits : 0,
+  };
+}
+
+function _isInternalTraffic(request, env) {
+  // Tags nothing when the secret is unset, so an unconfigured deploy never
+  // mislabels real traffic as internal.
+  if (!env || !env.INTERNAL_TRAFFIC_KEY) return false;
+  return request.headers.get('X-TF-Internal') === env.INTERNAL_TRAFFIC_KEY;
+}
+
+function _recordUsageEvent(env, request, path, resp) {
+  try {
+    if (!env || !env.AGENT_ANALYTICS || !resp) return;
+    var tag = _chargeTag.get(resp);
+    var credits = tag ? tag.credits : 0;
+    var ev = deriveUsageEvent(path, resp.status, credits);
+    if (!ev) return;
+    var ua = request.headers.get('User-Agent') || '';
+    var cf = request.cf || {};
+    var country = (typeof cf.country === 'string') ? cf.country : '';
+    env.AGENT_ANALYTICS.writeDataPoint({
+      blobs: [ev.path, _uaFamily(ua), ev.tier, ev.outcome, (tag && tag.wallet) || '', country, _isInternalTraffic(request, env) ? '1' : '0'],
+      doubles: [ev.credits],
+      indexes: [ev.path],
+    });
+  } catch (e) {}
 }
 
 function _recordMcpMethod(method) {
@@ -9369,7 +9424,9 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
     if (trialSigned) trialHeaders['X-TerminalFeed-Receipt-Id'] = trialSigned.id;
     applyCorsHeaders(trialHeaders, request, 'premium');
 
-    return new Response(JSON.stringify(trialResponseBody), { status: status, headers: trialHeaders });
+    var _trialResp = new Response(JSON.stringify(trialResponseBody), { status: status, headers: trialHeaders });
+    _chargeTag.set(_trialResp, { credits: 0, wallet: null });
+    return _trialResp;
   }
 
   // Hash the request and response BEFORE committing the debit. aftaHashResponse
@@ -9476,7 +9533,9 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
   if (signed) headers['X-TerminalFeed-Receipt-Id'] = signed.id;
   applyCorsHeaders(headers, request, 'premium');
 
-  return new Response(JSON.stringify(responseBody), { status: status, headers: headers });
+  var _resp = new Response(JSON.stringify(responseBody), { status: status, headers: headers });
+  _chargeTag.set(_resp, { credits: creditsCharged, wallet: null });
+  return _resp;
 }
 
 async function aftaPremiumValidationFailure(errorBody, paymentCtx, request, env) {
@@ -13932,6 +13991,10 @@ export default {
     }
     var duration = Date.now() - t0;
     _recordTrafficOutcome(env, path, resp.status, duration);
+    // One enriched usage datapoint per request, classified by the charge tag on
+    // the Response. Read BEFORE withRateLimitHeaders rebuilds the Response (which
+    // would drop the WeakMap tag).
+    _recordUsageEvent(env, request, path, resp);
     if (rl) resp = withRateLimitHeaders(resp, rl);
     return resp;
   },
