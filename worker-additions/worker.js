@@ -2181,7 +2181,7 @@ var MONITORED_FEEDS = [
   { id: 'service-status', run: function(env) { return handleServiceStatus(); } },
   { id: 'steam',          run: function(env) { return handleSteam(); } },
   { id: 'volcanoes',      run: function(env) { return handleVolcanoes(); } },
-  { id: 'weather',        run: function(env) { return handleWeather(new URL(FEED_SELF_BASE + '/api/weather?lat=34.05&lon=-118.24')); } },
+  { id: 'weather',        run: function(env) { return handleWeather(new URL(FEED_SELF_BASE + '/api/weather?lat=34.05&lon=-118.24&city=Los%20Angeles')); } },
   { id: 'air-quality',    run: function(env) { return handleAirQuality(new URL(FEED_SELF_BASE + '/api/air-quality?lat=34.05&lon=-118.24')); } },
 ];
 
@@ -4718,35 +4718,45 @@ async function handleSteam() {
 
 
 // GET /api/weather?lat=...&lon=...
-async function handleWeather(parsedUrl) {
+async function handleWeather(parsedUrl, request) {
   // Coerce to float and bound to valid lat/lon ranges. Rejects URL-injection
   // attempts (e.g. lat=34.0&extra=bar) and out-of-range values that could
   // confuse the upstream cache or shape the cache key into anything weird.
   var rawLat = parsedUrl.searchParams.get('lat');
   var rawLon = parsedUrl.searchParams.get('lon');
+  var cityParam = parsedUrl.searchParams.get('city');
+  // No explicit coords: geolocate the visitor from the Cloudflare edge so the
+  // panel no longer needs a client-side IP lookup (rule #6). Falls back to LA.
+  var cf = (request && request.cf) || {};
   var lat = parseFloat(rawLat);
   var lon = parseFloat(rawLon);
+  if (!isFinite(lat) || lat < -90 || lat > 90) lat = parseFloat(cf.latitude);
+  if (!isFinite(lon) || lon < -180 || lon > 180) lon = parseFloat(cf.longitude);
   if (!isFinite(lat) || lat < -90 || lat > 90) lat = 34.05;
   if (!isFinite(lon) || lon < -180 || lon > 180) lon = -118.24;
   // Clamp precision so visitors at slightly different decimals share cache hits.
   lat = Math.round(lat * 100) / 100;
   lon = Math.round(lon * 100) / 100;
+  var city = cityParam || cf.city || 'Los Angeles';
   var KEY = 'weather-' + lat + '-' + lon;
   var cached = getCached(KEY, 300000);
   if (cached) return jsonFreshAuto(cached, 200, 300);
 
   try {
     var res = await fetchWithTimeout(
-      'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true&hourly=temperature_2m,weathercode&timezone=auto'
+      'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+      '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m' +
+      '&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset' +
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=7'
     );
     var d = await res.json();
-    var data = { data: d };
+    var data = { data: d, city: city };
     setCache(KEY, data);
     return jsonFreshAuto(data, 200, 300);
   } catch (e) {
     var stale = getStale(KEY);
     if (stale) return jsonFreshAuto(stale, 200, 0);
-    return jsonResponse({ data: {} });
+    return jsonResponse({ data: {}, city: city });
   }
 }
 
@@ -15578,7 +15588,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);
       case 'steam':          return await handleSteam();
-      case 'weather':        return await handleWeather(url);
+      case 'weather':        return await handleWeather(url, request);
       case 'air-quality':    return await handleAirQuality(url);
       case 'shodan':         return await handleShodan(url);
       case 'volcanoes':      return await handleVolcanoes();

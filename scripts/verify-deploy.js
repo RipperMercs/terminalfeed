@@ -70,21 +70,22 @@ try {
 //     errors, so the build is not blocked while the list is whittled down. Any
 //     NEW or keyed direct fetch outside this list is a hard error. Do NOT add
 //     keyed endpoints here; migrate those instead.
-const DIRECT_FETCH_DEBT = new Set([
-  // Migrated to the Worker (rule #6), removed from debt: useAstros (-> /api/humans-in-space),
-  // useFlightRadar (-> /api/aviation), useISSPosition (-> /api/iss-position + /api/humans-in-space),
-  // useFooterQuote (-> /api/quote), useBtcNetwork (-> /api/btc-network), useDonations
-  // (-> /api/donations), useWhaleWatch (-> /api/whale-watch), useEarthquakes (-> /api/earthquake),
-  // useFearGreed (-> /api/fear-greed), useNpmTrends (-> /api/npm-trends), useDevJoke
-  // (-> /api/dev-joke), useFunFact (-> /api/fun-fact), useTrendingBooks (-> /api/trending-books),
-  // useStackOverflow (-> /api/stackoverflow), useThisDay (-> /api/this-day), useMuseumArt
-  // (-> /api/museum-art), useWikipedia (-> /api/wiki-featured), useBluesky (-> /api/bluesky),
-  // useTCGMarket (-> /api/tcg-market), useSpaceLaunches (-> /api/launches, upgraded
-  // to thespacedevs 2.3.0 with id/provider/dateTs). 2026-06-02.
-  // Remaining: useWeather still needs a richer /api/weather (7-day daily forecast +
-  // request.cf geolocation) before it can move off direct fetch.
-  'src/hooks/useWeather.ts',
-]);
+// EMPTY as of 2026-06-02: the rule #6 migration is complete. Every keyless
+// public-API hook that used to fetch an external host directly from the browser
+// now routes through the Worker. Migrated this pass: useAstros (-> /api/humans-in-space),
+// useFlightRadar (-> /api/aviation), useISSPosition (-> /api/iss-position + /api/humans-in-space),
+// useFooterQuote (-> /api/quote), useBtcNetwork (-> /api/btc-network), useDonations
+// (-> /api/donations), useWhaleWatch (-> /api/whale-watch), useEarthquakes (-> /api/earthquake),
+// useFearGreed (-> /api/fear-greed), useNpmTrends (-> /api/npm-trends), useDevJoke
+// (-> /api/dev-joke), useFunFact (-> /api/fun-fact), useTrendingBooks (-> /api/trending-books),
+// useStackOverflow (-> /api/stackoverflow), useThisDay (-> /api/this-day), useMuseumArt
+// (-> /api/museum-art), useWikipedia (-> /api/wiki-featured), useBluesky (-> /api/bluesky),
+// useTCGMarket (-> /api/tcg-market), useSpaceLaunches (-> /api/launches), useWeather
+// (-> /api/weather, now with request.cf geolocation + 7-day forecast).
+// Keep this Set empty: any new external browser fetch is now a hard build error.
+// Genuine WebSocket/SSE streams the Worker cannot proxy use a line-level
+// `direct-fetch-exempt` marker instead of this list.
+const DIRECT_FETCH_DEBT = new Set([]);
 
 function stripComments(src) {
   // Replace block + line comments with same-length whitespace, preserving
