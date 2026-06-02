@@ -4104,15 +4104,18 @@ async function _aviationFromOpenSky(env) {
 
 async function handleAviation(env) {
   var KEY = 'aviation';
-  var cached = getCached(KEY, 120000);
-  if (cached) return jsonFreshAuto(cached, 200, 120);
+  // 5-min cache. OpenSky's global /states/all costs 4 credits/call against a
+  // 4000/day budget, so once-per-5-min keeps usage well under budget even across
+  // a few worker isolates (~288 calls/isolate/day). ADS-B (keyless) is unaffected.
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
   // OpenSky (global) is primary when credentials are set; keyless ADS-B (a regional
   // sample) is the always-available fallback so the panel is never empty.
   var out = await _aviationFromOpenSky(env);
   if (!out) out = await _aviationFromAdsb();
-  if (out) { setCache(KEY, out); return jsonFreshAuto(out, 200, 120); }
+  if (out) { setCache(KEY, out); return jsonFreshAuto(out, 200, 300); }
   var stale = getStale(KEY);
-  if (stale) return jsonFreshAuto(stale, 200, 120);
+  if (stale) return jsonFreshAuto(stale, 200, 300);
   return jsonResponse({ error: 'aviation_unavailable' }, 200, 60);
 }
 
