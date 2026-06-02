@@ -19,14 +19,8 @@ export function useThisDay(): HistoricalEvent[] {
 
     const fetch_ = async () => {
       try {
-        const now = new Date();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-
-        const res = await fetch(
-          `https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/events/${month}/${day}`,
-          { signal: AbortSignal.timeout(8000) }
-        );
+        // worker proxy (wikimedia onthisday), rule #6: worker computes today's date
+        const res = await fetch('/api/this-day', { signal: AbortSignal.timeout(8000) });
         if (!res.ok || !mountedRef.current) return;
         const data = await res.json();
 

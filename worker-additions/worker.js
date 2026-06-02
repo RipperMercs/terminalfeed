@@ -4283,6 +4283,68 @@ async function _transparentProxy(key, url, ttlMs) {
   }
 }
 
+// /api/this-day : Wikimedia "on this day" events for today's date (rule #6).
+// The worker computes today's month/day server-side and returns the upstream
+// JSON verbatim, so the panel keeps its existing { events: [...] } parse and
+// does its own random selection client-side. Daily content, cached 6h, keyed
+// by date so a new day busts the cache cleanly.
+async function handleThisDay() {
+  var now = new Date();
+  var month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  var day = String(now.getUTCDate()).padStart(2, '0');
+  var KEY = 'this-day-' + month + day;
+  var cached = getCached(KEY, 21600000); // 6h
+  if (cached) return jsonFreshAuto(cached, 200, 21600);
+  try {
+    var url = 'https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/events/' + month + '/' + day;
+    var res = await fetchWithTimeout(url, {
+      headers: {
+        // Wikimedia asks for a descriptive UA with contact info per policy.
+        'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)',
+        'Accept': 'application/json',
+      },
+    }, 8000);
+    if (!res.ok) throw new Error('this-day ' + res.status);
+    var data = await res.json();
+    if (data && Array.isArray(data.events) && data.events.length) setCache(KEY, data);
+    return jsonFreshAuto(data, 200, 21600);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 300);
+    return jsonResponse({ events: [], error: 'this_day_unavailable' }, 200, 30);
+  }
+}
+
+// /api/museum-art : random Art Institute of Chicago artwork (rule #6). The
+// worker picks a random page server-side and returns the upstream verbatim, so
+// the panel keeps its existing json.data[0] parse. Retries a few random pages
+// until one has an image so the panel is reliably populated. Cached 30 min,
+// which turns the hook's per-user hourly rotation into global rotation (fine,
+// and lighter on the upstream).
+async function handleMuseumArt() {
+  var KEY = 'museum-art';
+  var cached = getCached(KEY, 1800000); // 30 min
+  if (cached) return jsonFreshAuto(cached, 200, 1800);
+  try {
+    var data = null;
+    for (var i = 0; i < 4; i++) {
+      var page = Math.floor(Math.random() * 100) + 1;
+      var url = 'https://api.artic.edu/api/v1/artworks?limit=1&fields=id,title,artist_display,image_id,date_display&page=' + page;
+      var res = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } }, 8000);
+      if (!res.ok) continue;
+      var j = await res.json();
+      if (j && j.data && j.data[0] && j.data[0].image_id) { data = j; break; }
+    }
+    if (!data) throw new Error('museum-art no-image');
+    setCache(KEY, data);
+    return jsonFreshAuto(data, 200, 1800);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 300);
+    return jsonResponse({ data: [], error: 'museum_art_unavailable' }, 200, 30);
+  }
+}
+
 async function handleDonations() {
   var KEY = 'donations';
   var cached = getCached(KEY, 300000);
@@ -15315,6 +15377,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'fun-fact':       return await _transparentProxy('fun-fact', 'https://uselessfacts.jsph.pl/random.json?language=en', 600000);
       case 'trending-books': return await _transparentProxy('trending-books', 'https://openlibrary.org/trending/daily.json', 3600000);
       case 'stackoverflow':  return await _transparentProxy('stackoverflow', 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10&filter=withbody', 300000);
+      case 'this-day':       return await handleThisDay();
+      case 'museum-art':     return await handleMuseumArt();
       case 'disaster-alerts':return await handleDisasterAlerts();
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);

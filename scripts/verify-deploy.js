@@ -74,14 +74,15 @@ const DIRECT_FETCH_DEBT = new Set([
   // Migrated to the Worker (rule #6), removed from debt: useAstros (-> /api/humans-in-space),
   // useFlightRadar (-> /api/aviation), useISSPosition (-> /api/iss-position + /api/humans-in-space),
   // useFooterQuote (-> /api/quote), useBtcNetwork (-> /api/btc-network), useDonations
-  // (-> /api/donations), useWhaleWatch (-> /api/whale-watch). 2026-06-02.
+  // (-> /api/donations), useWhaleWatch (-> /api/whale-watch), useEarthquakes (-> /api/earthquake),
+  // useFearGreed (-> /api/fear-greed), useNpmTrends (-> /api/npm-trends), useDevJoke
+  // (-> /api/dev-joke), useFunFact (-> /api/fun-fact), useTrendingBooks (-> /api/trending-books),
+  // useStackOverflow (-> /api/stackoverflow), useThisDay (-> /api/this-day), useMuseumArt
+  // (-> /api/museum-art), useWikipedia (-> /api/wiki-featured). 2026-06-02.
   'src/hooks/useBluesky.ts',
-  'src/hooks/useMuseumArt.ts',
   'src/hooks/useSpaceLaunches.ts',
   'src/hooks/useTCGMarket.ts',
-  'src/hooks/useThisDay.ts',
   'src/hooks/useWeather.ts',
-  'src/hooks/useWikipedia.ts',
 ]);
 
 function stripComments(src) {
