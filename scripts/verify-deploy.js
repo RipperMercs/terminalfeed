@@ -76,14 +76,10 @@ const DIRECT_FETCH_DEBT = new Set([
   // useFooterQuote (-> /api/quote), useBtcNetwork (-> /api/btc-network), useDonations
   // (-> /api/donations), useWhaleWatch (-> /api/whale-watch). 2026-06-02.
   'src/hooks/useBluesky.ts',
-  'src/hooks/useDevJoke.ts',
-  'src/hooks/useFunFact.ts',
   'src/hooks/useMuseumArt.ts',
   'src/hooks/useSpaceLaunches.ts',
-  'src/hooks/useStackOverflow.ts',
   'src/hooks/useTCGMarket.ts',
   'src/hooks/useThisDay.ts',
-  'src/hooks/useTrendingBooks.ts',
   'src/hooks/useWeather.ts',
   'src/hooks/useWikipedia.ts',
 ]);

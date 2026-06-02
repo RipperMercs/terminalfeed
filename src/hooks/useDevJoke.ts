@@ -6,7 +6,7 @@ export interface DevJokeData {
   timestamp: number;
 }
 
-const API_URL = 'https://v2.jokeapi.dev/joke/Programming?type=single&blacklistFlags=nsfw,racist,sexist,explicit';
+const API_URL = '/api/dev-joke'; // worker proxy (jokeapi.dev), rule #6
 const CACHE_KEY = 'dev_joke';
 const REFRESH_MS = 2 * 60 * 60_000; // 2 hours
 

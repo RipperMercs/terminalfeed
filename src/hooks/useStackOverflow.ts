@@ -11,7 +11,7 @@ export interface SOQuestion {
   tags: string[];
 }
 
-const API_URL = 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10&filter=withbody';
+const API_URL = '/api/stackoverflow'; // worker proxy (stackexchange), rule #6
 const CACHE_KEY = 'stackoverflow';
 const POLL_MS = 3 * 60_000; // 3 min
 

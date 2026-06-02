@@ -4263,6 +4263,26 @@ async function handleWhaleWatch() {
 // mempool.space address txs server-side (no CORS). (rule #6)
 var DONATION_BTC_ADDRESS = '3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy';
 var _DONATION_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Thin caching pass-through for a keyless external GET. Returns the upstream JSON
+// verbatim (the panel keeps its existing parse; only its URL changes to /api/*),
+// adding server-side fetch (no CORS), caching, and a stale fallback. (rule #6)
+async function _transparentProxy(key, url, ttlMs) {
+  var ttlSec = Math.round(ttlMs / 1000);
+  var cached = getCached(key, ttlMs);
+  if (cached) return jsonFreshAuto(cached, 200, ttlSec);
+  try {
+    var res = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } }, 8000);
+    if (!res.ok) throw new Error(key + ' ' + res.status);
+    var data = await res.json();
+    setCache(key, data);
+    return jsonFreshAuto(data, 200, ttlSec);
+  } catch (e) {
+    var stale = getStale(key);
+    if (stale) return jsonFreshAuto(stale, 200, ttlSec);
+    return jsonResponse({ error: key + '_unavailable' }, 200, 30);
+  }
+}
+
 async function handleDonations() {
   var KEY = 'donations';
   var cached = getCached(KEY, 300000);
@@ -15291,6 +15311,10 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'btc-network':    return await handleBtcNetwork();
       case 'whale-watch':    return await handleWhaleWatch();
       case 'donations':      return await handleDonations();
+      case 'dev-joke':       return await _transparentProxy('dev-joke', 'https://v2.jokeapi.dev/joke/Programming?type=single&blacklistFlags=nsfw,racist,sexist,explicit', 600000);
+      case 'fun-fact':       return await _transparentProxy('fun-fact', 'https://uselessfacts.jsph.pl/random.json?language=en', 600000);
+      case 'trending-books': return await _transparentProxy('trending-books', 'https://openlibrary.org/trending/daily.json', 3600000);
+      case 'stackoverflow':  return await _transparentProxy('stackoverflow', 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10&filter=withbody', 300000);
       case 'disaster-alerts':return await handleDisasterAlerts();
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);
