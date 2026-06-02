@@ -40,14 +40,14 @@ function block(name) {
 // 1. Parse PRO_ENDPOINT_CREDITS { '/api/pro/x': N, ... }
 const creditsBlock = block('PRO_ENDPOINT_CREDITS');
 const priceMap = {};
-for (const m of creditsBlock.matchAll(/'(\/api\/pro\/[a-z-]+)':\s*(\d+)/g)) {
+for (const m of creditsBlock.matchAll(/'(\/api\/pro\/[a-z/-]+)':\s*(\d+)/g)) {
   priceMap[m[1]] = Number(m[2]);
 }
 if (Object.keys(priceMap).length === 0) fail.push('PRO_ENDPOINT_CREDITS parsed empty');
 
 // 2. Parse handlePremium cost args.
 const handlerCost = {};
-for (const m of src.matchAll(/handlePremium\(request,\s*env,\s*url,\s*'(\/api\/pro\/[a-z-]+)',\s*(\d+)/g)) {
+for (const m of src.matchAll(/handlePremium\(request,\s*env,\s*url,\s*'(\/api\/pro\/[a-z/-]+)',\s*(\d+)/g)) {
   handlerCost[m[1]] = Number(m[2]);
 }
 if (Object.keys(handlerCost).length === 0) fail.push('No handlePremium cost args parsed');
@@ -55,7 +55,7 @@ if (Object.keys(handlerCost).length === 0) fail.push('No handlePremium cost args
 // 3. Parse PRO_CATALOG_META keys.
 const metaBlock = block('PRO_CATALOG_META');
 const catalogKeys = new Set();
-for (const m of metaBlock.matchAll(/'(\/api\/pro\/[a-z-]+)':\s*\{/g)) catalogKeys.add(m[1]);
+for (const m of metaBlock.matchAll(/'(\/api\/pro\/[a-z/-]+)':\s*\{/g)) catalogKeys.add(m[1]);
 
 // --- Assertions ---
 for (const [p, cost] of Object.entries(handlerCost)) {
