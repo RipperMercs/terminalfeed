@@ -9684,10 +9684,32 @@ async function handleNoChargeStatsDates(request, env) {
 
 var AFTA_CERTIFY_FETCH_TIMEOUT_MS = 8000;
 
+// Authoritative federation roster. federation_verified is emitted from THIS map,
+// never from a target's self-declaration: a publisher claiming membership only
+// earns federation_verified if the host it names is in our roster AND that host's
+// roster lists the publisher. A self-declared claim alone yields only an
+// (unverified) federation_parent.
+var FEDERATION_ROSTER = {
+  'tensorfeed.ai': ['tensorfeed.ai', 'terminalfeed.io'],
+};
+
+// Real-key-material check for a fetched receipt key. A key-shaped-but-empty field
+// must fail: OKP/EC require a non-empty x, RSA a non-empty n, else a non-empty
+// generic publicKey.
+function looksLikeJwk(d) {
+  if (!d || typeof d !== 'object') return false;
+  if (d.kty === 'OKP' || d.kty === 'EC') return typeof d.x === 'string' && d.x.length > 0;
+  if (d.kty === 'RSA') return typeof d.n === 'string' && d.n.length > 0;
+  return typeof d.publicKey === 'string' && d.publicKey.length > 0;
+}
+
 async function _aftaCertifyFetch(url) {
   try {
     var res = await fetchWithTimeout(url, {
       method: 'GET',
+      // redirect:'manual' so a publisher cannot 30x our certifier fetch off to an
+      // attacker-chosen origin after passing the same-origin URL check.
+      redirect: 'manual',
       headers: { Accept: 'application/json', 'User-Agent': 'terminalfeed-afta-certifier/1.0' },
     }, AFTA_CERTIFY_FETCH_TIMEOUT_MS);
     if (!res.ok) return { ok: false, status: res.status, error: 'HTTP ' + res.status };
@@ -9702,12 +9724,30 @@ async function _aftaCertifyFetch(url) {
   }
 }
 
+var _AFTA_PRIVATE_SUFFIXES = ['.internal', '.local', '.localhost', '.localdomain', '.lan', '.intranet', '.corp', '.consul', '.home.arpa'];
+
 function _aftaCertifyNormalizeDomain(input) {
   if (!input) return null;
   var trimmed = String(input).trim().toLowerCase();
   if (!trimmed) return null;
-  var stripped = trimmed.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  // Reduce to a bare host: strip scheme, then everything from the first
+  // path/query/fragment char, then any user:pass@ credentials, then a :port.
+  // Credentials and port MUST be stripped or a value like evil.com#@target or
+  // host:1@127.0.0.1 could weaken the same-origin prefix check downstream.
+  var stripped = trimmed
+    .replace(/^https?:\/\//, '')
+    .replace(/[/#?].*$/, '')
+    .replace(/^[^@]*@/, '')
+    .replace(/:\d+$/, '');
+  // Require a real public hostname with an alphabetic TLD (this alone rejects
+  // bare IPv4 and IPv6), then explicitly reject IPv4 literals as belt-and-braces.
   if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(stripped)) return null;
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(stripped)) return null;
+  // Reject private-network / service-discovery suffixes (SSRF guard).
+  for (var i = 0; i < _AFTA_PRIVATE_SUFFIXES.length; i++) {
+    var suf = _AFTA_PRIVATE_SUFFIXES[i];
+    if (stripped.endsWith(suf) || stripped === suf.slice(1)) return null;
+  }
   return stripped;
 }
 
@@ -9830,27 +9870,39 @@ async function aftaCertifyDomain(domain) {
     fixUrl: 'https://terminalfeed.io/agent-fair-trade',
   });
 
-  // Check 6: published receipt public key at one of the common .well-known locations
+  // Check 6: receipt-signing public key, resolved manifest-first and same-origin.
+  // Read the publisher-declared receipts.public_key_url and accept it ONLY if it
+  // stays on this origin (anti-redirect/SSRF), then a brand-prefixed candidate
+  // derived from the first DNS label, then the generic well-known names. The
+  // fetched key must carry real material (looksLikeJwk), not just a key-shaped
+  // but empty field.
   var receiptKeyOk = false;
   var receiptKeyUrl = null;
-  for (var k = 0; k < receiptKeyCandidates.length; k++) {
-    var r = await _aftaCertifyFetch(receiptKeyCandidates[k]);
-    if (r.ok && r.data && typeof r.data === 'object') {
-      var d = r.data;
-      if (typeof d.kty === 'string' || typeof d.publicKey === 'string' || typeof d.x === 'string') {
-        receiptKeyOk = true;
-        receiptKeyUrl = receiptKeyCandidates[k];
-        break;
-      }
+  var slug = normalized.split('.')[0];
+  var keyResolution = [];
+  var declaredKeyUrl = (aftaData.receipts && typeof aftaData.receipts.public_key_url === 'string') ? aftaData.receipts.public_key_url : null;
+  if (declaredKeyUrl && declaredKeyUrl.indexOf(base + '/') === 0) keyResolution.push(declaredKeyUrl);
+  keyResolution.push(base + '/.well-known/' + slug + '-receipt-key.json');
+  for (var rc = 0; rc < receiptKeyCandidates.length; rc++) {
+    if (keyResolution.indexOf(receiptKeyCandidates[rc]) === -1) keyResolution.push(receiptKeyCandidates[rc]);
+  }
+  for (var k = 0; k < keyResolution.length; k++) {
+    var r = await _aftaCertifyFetch(keyResolution[k]);
+    if (r.ok && looksLikeJwk(r.data)) {
+      receiptKeyOk = true;
+      receiptKeyUrl = keyResolution[k];
+      break;
     }
   }
   checks.push({
     id: 'receipt_key_published',
-    name: 'Publishes a receipt-signing public key at /.well-known/',
+    name: 'Publishes a valid receipt-signing public key (manifest-declared, same-origin)',
     passed: receiptKeyOk,
     details: receiptKeyOk
-      ? 'Found a public key JWK at ' + receiptKeyUrl + '.'
-      : 'No public key found at any of: ' + receiptKeyCandidates.join(', ') + '. Publishers should expose a JWK so agents can verify response receipts.',
+      ? 'Found a public key JWK with real key material at ' + receiptKeyUrl + '.'
+      : (declaredKeyUrl && declaredKeyUrl.indexOf(base + '/') !== 0
+          ? 'receipts.public_key_url (' + declaredKeyUrl + ') is off-origin and was rejected; no same-origin key found. Declare a same-origin key URL and serve a JWK with real key material.'
+          : 'No valid public key found. Declare receipts.public_key_url (same-origin) and serve a JWK with real key material so agents can verify response receipts.'),
     fixUrl: 'https://terminalfeed.io/agent-fair-trade#receipts',
   });
 
@@ -9871,6 +9923,15 @@ async function aftaCertifyDomain(domain) {
     }
   }
 
+  // federation_verified comes from OUR authoritative roster, never the target's
+  // self-declaration: the named host must be in FEDERATION_ROSTER and that host's
+  // roster must list this domain. A self-declared claim alone stays unverified.
+  var federationVerified = false;
+  if (federationParent && Object.prototype.hasOwnProperty.call(FEDERATION_ROSTER, federationParent)) {
+    var roster = FEDERATION_ROSTER[federationParent];
+    federationVerified = roster.indexOf(normalized) !== -1 && federationParent !== normalized;
+  }
+
   var score = checks.filter(function(c) { return c.passed; }).length;
   var max = checks.length;
   var verdict;
@@ -9883,7 +9944,9 @@ async function aftaCertifyDomain(domain) {
   if (eligible) {
     nextStep = 'All AFTA checks pass. Email hello@terminalfeed.io with subject "AFTA Certification: ' + normalized + '" and your payTo wallet address to begin the listing review.';
   } else if (federationParent) {
-    nextStep = normalized + ' appears to be a federation member of ' + federationParent + ' per its agent-fair-trade.json. Federation members typically delegate the x402 manifest to the federation host and will not pass the manifest checks above on their own surface. For certification, email hello@terminalfeed.io with the federation host listed.';
+    nextStep = federationVerified
+      ? normalized + ' is a verified federation member of ' + federationParent + ' (confirmed against the TerminalFeed roster). Federation members delegate the x402 manifest to the host, so the manifest checks above do not apply to their own surface; they are routed to manual review. Email hello@terminalfeed.io with the host ' + federationParent + ' listed.'
+      : normalized + ' self-declares federation membership under ' + federationParent + ', but this is NOT verified against the TerminalFeed roster. If the claim is genuine, email hello@terminalfeed.io; otherwise complete the manifest checks above on your own surface.';
   } else {
     nextStep = (max - score) + ' check(s) need work. Fix the failing items above and re-run /api/afta-certify/check?domain=' + normalized + '. Re-checks are free and idempotent.';
   }
@@ -9901,6 +9964,7 @@ async function aftaCertifyDomain(domain) {
     applied_to_directory: false,
   };
   if (federationParent) result.federation_parent = federationParent;
+  result.federation_verified = federationVerified;
   return result;
 }
 
@@ -9916,10 +9980,14 @@ async function handleAftaCertifyCheck(request, env, url) {
     }, 400);
   }
   var clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
-  var rl = await checkRateLimit(env, 'cert', clientIp, 10, 60);
+  // Dedicated 25/day/IP limit (keyed by UTC date, 48h TTL): each call fans out
+  // ~5 outbound fetches, so it must not ride only the generic per-IP limit.
+  var rl = await checkRateLimit(env, 'afta-certify', clientIp, 25, 86400);
   if (!rl.allowed) return rateLimit429(rl);
   var result = await aftaCertifyDomain(domain);
-  return jsonResponse(result, 200, 60);
+  // Do NOT cache: publishers re-run immediately after fixing their manifest, and a
+  // cached not-eligible verdict would mislead them.
+  return jsonResponse(result, 200, 0);
 }
 
 // GET /api/free-tier/status
