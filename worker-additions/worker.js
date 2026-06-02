@@ -2241,6 +2241,25 @@ async function checkFeedHealth(env) {
     await dispatchFeedAlert(env, subject, text);
   }
 
+  // Rolling per-feed reliability counters, accumulated across ticks and persisted
+  // in the same record. ok = fresh, stale = served-from-cache after an upstream
+  // failure, dark = no data / handler threw. The reliability index scores over
+  // these; the daily snapshot (separate) freezes a point-in-time copy for history.
+  var prevRel = (prev && prev.reliability && typeof prev.reliability === 'object') ? prev.reliability : {};
+  var reliability = {};
+  results.forEach(function(r) {
+    var s = prevRel[r.id] || { checks: 0, ok: 0, stale: 0, dark: 0, first_checked_at: now };
+    reliability[r.id] = {
+      checks: (s.checks || 0) + 1,
+      ok: (s.ok || 0) + (r.status === 'ok' ? 1 : 0),
+      stale: (s.stale || 0) + (r.status === 'stale' ? 1 : 0),
+      dark: (s.dark || 0) + (r.status === 'dark' ? 1 : 0),
+      last_status: r.status,
+      last_checked_at: now,
+      first_checked_at: s.first_checked_at || now,
+    };
+  });
+
   var record = {
     checkedAt: now,
     checkedAtISO: new Date(now).toISOString(),
@@ -2248,6 +2267,7 @@ async function checkFeedHealth(env) {
     degradedIds: degradedIds,
     alertedIds: alertedIds,
     feeds: results,
+    reliability: reliability,
     lastAlertAt: shouldAlert ? now : lastAlertAt,
   };
   try { await env.WEBHOOK_SUBS.put(FEED_HEALTH_KV_KEY, JSON.stringify(record)); } catch (e) {}
@@ -2311,6 +2331,100 @@ async function handleFeedHealth(env) {
     } catch (e) {}
   }
   return jsonResponse(body, 200, 60);
+}
+
+// === Feed Reliability Index ===
+// A composite 0-100 reliability score per monitored feed, computed purely from the
+// rolling counters the feed-health monitor accumulates. Pure functions (no KV or
+// network) so the free table and any premium depth/history surface score the same
+// way and never disagree. Methodology is versioned; the public page discloses the
+// inputs but not the exact weights.
+var FEED_RELIABILITY_METHODOLOGY_VERSION = '1.0';
+var FEED_RELIABILITY_MIN_CHECKS = 12; // < ~1h of */5 ticks => low_coverage, unranked
+
+function computeFeedReliability(stats) {
+  var checks = (stats && stats.checks) || 0;
+  var ok = (stats && stats.ok) || 0;
+  var stale = (stats && stats.stale) || 0;
+  var dark = (stats && stats.dark) || 0;
+  if (checks <= 0) {
+    return { composite: 0, uptime_pct: 0, availability_pct: 0, staleness_rate_pct: 0, dark_rate_pct: 0, checks: 0, trust: 'low', low_coverage: true };
+  }
+  // Composite: full credit for fresh, half for stale-but-served, none for dark.
+  var composite = Math.round(100 * (ok + 0.5 * stale) / checks);
+  var trust = checks >= 288 ? 'high' : (checks >= FEED_RELIABILITY_MIN_CHECKS ? 'medium' : 'low'); // 288 = ~1 day of ticks
+  return {
+    composite: composite,
+    uptime_pct: Math.round(100 * ok / checks),
+    availability_pct: Math.round(100 * (ok + stale) / checks),
+    staleness_rate_pct: Math.round(100 * stale / checks),
+    dark_rate_pct: Math.round(100 * dark / checks),
+    checks: checks,
+    trust: trust,
+    low_coverage: checks < FEED_RELIABILITY_MIN_CHECKS,
+  };
+}
+
+// Build ranked reliability rows from a feed-health record. low_coverage feeds are
+// scored but excluded from the ranking (rank 0), so a feed with too few samples
+// never tops the board on noise.
+function buildFeedReliabilityRows(record) {
+  var rel = (record && record.reliability && typeof record.reliability === 'object') ? record.reliability : {};
+  var rows = Object.keys(rel).map(function(id) {
+    var score = computeFeedReliability(rel[id]);
+    return {
+      feed: id,
+      composite: score.composite,
+      subscores: {
+        uptime_pct: score.uptime_pct,
+        availability_pct: score.availability_pct,
+        staleness_rate_pct: score.staleness_rate_pct,
+        dark_rate_pct: score.dark_rate_pct,
+      },
+      trust: score.trust,
+      low_coverage: score.low_coverage,
+      checks: score.checks,
+      last_status: rel[id].last_status || null,
+      rank: 0,
+    };
+  });
+  var ranked = rows.filter(function(r) { return !r.low_coverage; }).sort(function(a, b) { return b.composite - a.composite; });
+  ranked.forEach(function(r, i) { r.rank = i + 1; });
+  var unranked = rows.filter(function(r) { return r.low_coverage; }).sort(function(a, b) { return b.composite - a.composite; });
+  return ranked.concat(unranked);
+}
+
+// GET /api/feed-reliability — free ranked reliability table. 60s cache.
+async function handleFeedReliability(env) {
+  var record = null;
+  if (env && env.WEBHOOK_SUBS) {
+    try { record = await env.WEBHOOK_SUBS.get(FEED_HEALTH_KV_KEY, 'json'); } catch (e) {}
+  }
+  if (!record || !record.reliability) {
+    return jsonResponse({
+      ok: true,
+      methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+      as_of: null,
+      ranked: [],
+      low_coverage: [],
+      note: 'No reliability data yet. The monitor accumulates per-feed counters every 5 minutes; check back shortly.',
+    }, 200, 60);
+  }
+  var rows = buildFeedReliabilityRows(record);
+  return jsonResponse({
+    ok: true,
+    source: 'terminalfeed',
+    methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+    as_of: record.checkedAtISO || (record.checkedAt ? new Date(record.checkedAt).toISOString() : null),
+    ranked: rows.filter(function(r) { return r.rank > 0; }),
+    low_coverage: rows.filter(function(r) { return r.rank === 0; }),
+    methodology: {
+      version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+      inputs: 'Per-feed rolling counts of ok (fresh), stale (served from cache after an upstream failure), and dark (no data) outcomes, probed every 5 minutes in-process from each feed handler.',
+      composite: 'A 0-100 score where fresh outcomes get full credit, stale-but-served get half, dark get none, over total checks. Feeds with fewer than ' + FEED_RELIABILITY_MIN_CHECKS + ' checks are flagged low_coverage and left unranked.',
+      note: 'Reliability of how TerminalFeed delivers its own data, not an endorsement of the underlying source.',
+    },
+  }, 200, 60);
 }
 
 // POST /api/feed-health-check (Bearer <ADMIN_SECRET>) — force a probe now, and
@@ -14599,6 +14713,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'ai-leaderboard': return await handleAiLeaderboard(env);
       case 'feed-health':    return await handleFeedHealth(env);
       case 'feed-health-check': return await handleFeedHealthCheck(request, env, url);
+      case 'feed-reliability': return await handleFeedReliability(env);
       case 'space-weather':  return await handleSpaceWeather();
       case 'wildfires':      return await handleWildfires(env);
       case 'severe-weather': return await handleSevereWeather();
