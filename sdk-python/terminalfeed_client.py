@@ -138,6 +138,19 @@ class TerminalFeed:
             params["history"] = history
         return self._get("/api/pro/crypto-deep", auth=True, params=params)
 
+    def regime(self) -> dict[str, Any]:
+        """GET /api/pro/regime (2 credits).
+
+        Full market-regime verdict: the label plus the ranked drivers with
+        weights and contributions, all raw inputs, and an Ed25519-signed receipt.
+        Use regime_preview() for a free, no-auth taste of the label first.
+        """
+        return self._get("/api/pro/regime", auth=True)
+
+    def anomalies(self) -> dict[str, Any]:
+        """GET /api/pro/anomalies (2 credits)."""
+        return self._get("/api/pro/anomalies", auth=True)
+
     # ---------------------------- Free tier ------------------------------
     # The free tier requires no auth. These convenience wrappers are here
     # so an agent can exercise its HTTP plumbing before spending USDC.
@@ -148,6 +161,24 @@ class TerminalFeed:
 
     def free_btc_price(self) -> dict[str, Any]:
         return self._get("/api/btc-price", auth=False)
+
+    def regime_preview(self) -> dict[str, Any]:
+        """GET /api/preview/regime (free, no auth, 10/IP/day).
+
+        Zero-setup preview of the paid regime() verdict: the single regime label,
+        the dominant driver, and a one-line why. The full ranked drivers, all raw
+        inputs, and the signed receipt are regime() (2 credits).
+        """
+        return self._get("/api/preview/regime", auth=False)
+
+    def pro_catalog(self) -> dict[str, Any]:
+        """GET /api/meta/pro (free, no auth).
+
+        Machine-readable catalog of every payable endpoint with its real credit
+        cost, params, free sibling, and freshness SLA. Use it to decide what to
+        buy before spending.
+        """
+        return self._get("/api/meta/pro", auth=False)
 
     @property
     def credits_remaining(self) -> int | None:
