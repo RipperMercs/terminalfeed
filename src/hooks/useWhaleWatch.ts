@@ -11,10 +11,9 @@ export interface WhaleTransaction {
   time: number;
 }
 
-const API_URL = 'https://mempool.space/api/mempool/recent';
+const API_URL = '/api/whale-watch'; // worker proxies + filters mempool.space (rule #6)
 const CACHE_KEY = 'whale_watch';
 const POLL_MS = 20_000; // 20 seconds
-const MIN_BTC = 1; // minimum 1 BTC to show
 
 export function useWhaleWatch(): WhaleTransaction[] {
   const [whales, setWhales] = useState<WhaleTransaction[]>(() => {
@@ -29,22 +28,13 @@ export function useWhaleWatch(): WhaleTransaction[] {
       try {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok || !mountedRef.current) return;
-        const txs = await res.json();
-        if (!Array.isArray(txs)) return;
+        const results = await res.json();
+        if (!Array.isArray(results)) return;
 
-        const results: WhaleTransaction[] = txs
-          .filter((tx: { value: number }) => tx.value && tx.value / 1e8 >= MIN_BTC)
-          .slice(0, 10)
-          .map((tx: { txid: string; value: number; fee: number }) => ({
-            txid: tx.txid,
-            btc: tx.value / 1e8,
-            fee: tx.fee || 0,
-            time: Date.now(),
-          }));
-
+        // Worker already filtered (>= 1 BTC) and shaped the rows.
         if (results.length > 0 && mountedRef.current) {
-          setWhales(results);
-          setCache(CACHE_KEY, results, 'mempool');
+          setWhales(results as WhaleTransaction[]);
+          setCache(CACHE_KEY, results, 'whale-watch');
         }
       } catch (e) { if (import.meta.env.DEV) console.warn('[WhaleWatch]', e); }
     };

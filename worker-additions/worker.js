@@ -4143,6 +4143,71 @@ async function handleBtcNetwork() {
   }
 }
 
+// GET /api/whale-watch — large recent BTC mempool transactions (>= 1 BTC) from
+// mempool.space, filtered server-side (mempool.space has no CORS). (rule #6)
+async function handleWhaleWatch() {
+  var KEY = 'whale-watch';
+  var cached = getCached(KEY, 20000);
+  if (cached) return jsonFreshAuto(cached, 200, 20);
+  try {
+    var res = await fetchWithTimeout('https://mempool.space/api/mempool/recent', {}, 6000);
+    if (!res.ok) throw new Error('mempool ' + res.status);
+    var txs = await res.json();
+    if (!Array.isArray(txs)) throw new Error('bad shape');
+    var whales = txs.filter(function(tx) { return tx && typeof tx.value === 'number' && tx.value / 1e8 >= 1; })
+      .slice(0, 10)
+      .map(function(tx) { return { txid: tx.txid, btc: tx.value / 1e8, fee: Number(tx.fee) || 0, time: Date.now() }; });
+    setCache(KEY, whales);
+    return jsonFreshAuto(whales, 200, 20);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 20);
+    return jsonResponse([], 200, 20);
+  }
+}
+
+// GET /api/donations — incoming BTC donations to the project address, parsed from
+// mempool.space address txs server-side (no CORS). (rule #6)
+var DONATION_BTC_ADDRESS = '3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy';
+var _DONATION_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+async function handleDonations() {
+  var KEY = 'donations';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
+  try {
+    var res = await fetchWithTimeout('https://mempool.space/api/address/' + DONATION_BTC_ADDRESS + '/txs', {}, 8000);
+    if (!res.ok) throw new Error('mempool ' + res.status);
+    var txs = await res.json();
+    if (!Array.isArray(txs)) throw new Error('bad shape');
+    var donations = [];
+    for (var i = 0; i < txs.length; i++) {
+      var tx = txs[i];
+      var vouts = (tx && tx.vout) || [];
+      for (var k = 0; k < vouts.length; k++) {
+        var vout = vouts[k];
+        if (vout && vout.scriptpubkey_address === DONATION_BTC_ADDRESS) {
+          var amountBtc = (Number(vout.value) || 0) / 1e8;
+          var senderAddr = (tx.vin && tx.vin[0] && tx.vin[0].prevout && tx.vin[0].prevout.scriptpubkey_address) || 'anonymous';
+          var shortened = senderAddr.length > 10 ? (senderAddr.slice(0, 6) + '...' + senderAddr.slice(-4)) : senderAddr;
+          var bt = tx.status && tx.status.block_time;
+          var dateStr = 'pending';
+          if (bt) { var dd = new Date(bt * 1000); dateStr = _DONATION_MONTHS[dd.getUTCMonth()] + ' ' + dd.getUTCDate(); }
+          donations.push({ txid: tx.txid, amount: amountBtc, address: shortened, date: dateStr, confirmed: (tx.status && tx.status.confirmed) || false });
+        }
+      }
+    }
+    donations.sort(function(a, b) { return b.amount - a.amount; });
+    var totalBtc = donations.reduce(function(s, d) { return s + d.amount; }, 0);
+    var out = { donations: donations.slice(0, 10), totalBtc: totalBtc, totalCount: donations.length };
+    setCache(KEY, out);
+    return jsonFreshAuto(out, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 300);
+    return jsonResponse({ donations: [], totalBtc: 0, totalCount: 0 }, 200, 60);
+  }
+}
+
 
 // GET /api/disaster-alerts
 async function handleDisasterAlerts() {
@@ -15131,6 +15196,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'iss-position':   return await handleIssPosition();
       case 'quote':          return await handleQuote();
       case 'btc-network':    return await handleBtcNetwork();
+      case 'whale-watch':    return await handleWhaleWatch();
+      case 'donations':      return await handleDonations();
       case 'disaster-alerts':return await handleDisasterAlerts();
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);

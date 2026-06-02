@@ -73,10 +73,10 @@ try {
 const DIRECT_FETCH_DEBT = new Set([
   // Migrated to the Worker (rule #6), removed from debt: useAstros (-> /api/humans-in-space),
   // useFlightRadar (-> /api/aviation), useISSPosition (-> /api/iss-position + /api/humans-in-space),
-  // useFooterQuote (-> /api/quote). 2026-06-02.
+  // useFooterQuote (-> /api/quote), useBtcNetwork (-> /api/btc-network), useDonations
+  // (-> /api/donations), useWhaleWatch (-> /api/whale-watch). 2026-06-02.
   'src/hooks/useBluesky.ts',
   'src/hooks/useDevJoke.ts',
-  'src/hooks/useDonations.ts',
   'src/hooks/useEarthquakes.ts',
   'src/hooks/useFearGreed.ts',
   'src/hooks/useFunFact.ts',
@@ -88,7 +88,6 @@ const DIRECT_FETCH_DEBT = new Set([
   'src/hooks/useThisDay.ts',
   'src/hooks/useTrendingBooks.ts',
   'src/hooks/useWeather.ts',
-  'src/hooks/useWhaleWatch.ts',
   'src/hooks/useWikipedia.ts',
 ]);
 
