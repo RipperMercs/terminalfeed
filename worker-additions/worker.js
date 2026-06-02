@@ -8543,6 +8543,70 @@ function proCreditsFor(path) {
   return Object.prototype.hasOwnProperty.call(PRO_ENDPOINT_CREDITS, path) ? PRO_ENDPOINT_CREDITS[path] : null;
 }
 
+// Catalog metadata for the machine-readable /api/meta/pro surface. params lists
+// ONLY query params the handler actually reads (verified against the fetchers),
+// so the catalog never advertises a param the worker ignores. free_sibling points
+// at a free preview/wedge where one exists. No /api/pro/* endpoint is strict
+// premium; all grant a small daily free-trial quota per IP before a 402.
+var PRO_CATALOG_META = {
+  '/api/pro/briefing':           { category: 'agent', returns: 'One-call world snapshot (BTC, Fear & Greed, earthquakes, HN, ISS, predictions).', params: [{ name: 'include', required: false, description: 'comma-separated sources to include' }, { name: 'history', required: false, description: "set to 24h for a history series" }] },
+  '/api/pro/macro':              { category: 'macro', returns: 'FRED + Finnhub + Frankfurter macro rollup.', params: [{ name: 'history', required: false, description: 'set to 30d for a 30-point history series' }] },
+  '/api/pro/crypto-deep':        { category: 'crypto', returns: 'Per-coin deep dive across CoinGecko + on-chain network stats.', params: [{ name: 'coins', required: false, description: 'comma-separated symbols' }, { name: 'history', required: false, description: 'set to 30d for a history series' }] },
+  '/api/pro/regime':             { category: 'market', returns: 'Composite risk-on/off/transition/stress regime verdict with weighted drivers.', params: [], free_sibling: '/api/preview/regime' },
+  '/api/pro/anomalies':          { category: 'market', returns: 'Ranked cross-feed statistical outlier screen (z-score + thresholds).', params: [] },
+  '/api/pro/sentiment':          { category: 'market', returns: 'Crypto Fear & Greed + trending symbols with regex sentiment scoring.', params: [] },
+  '/api/pro/world-deltas':       { category: 'agent', returns: 'Polling feed of world events newer than ?since.', params: [{ name: 'since', required: false, description: 'ISO timestamp; events newer than this' }] },
+  '/api/pro/agent-context':      { category: 'agent', returns: 'Curated paste-ready system_prompt of current world state.', params: [] },
+  '/api/pro/correlation-matrix': { category: 'market', returns: 'Computed correlations across 10 historical series.', params: [] },
+  '/api/pro/whales':             { category: 'onchain', returns: 'Large BTC/ETH/Solana transactions with attribution.', params: [] },
+  '/api/pro/exchange-flows':     { category: 'onchain', returns: 'Labeled-wallet exchange-controlled addresses + flows.', params: [] },
+  '/api/pro/defi-tvl':           { category: 'onchain', returns: 'Top-50 DeFi protocols + chain rollups, normalized.', params: [] },
+  '/api/pro/stablecoin-flows':   { category: 'onchain', returns: 'Top-20 stablecoins with 1d/7d/30d deltas + aggregate bias.', params: [] },
+  '/api/pro/github-velocity':    { category: 'dev', returns: 'GitHub trending repos with a computed velocity score.', params: [] },
+};
+
+function buildProCatalog() {
+  var rows = [];
+  Object.keys(PRO_ENDPOINT_CREDITS).forEach(function(path) {
+    var m = PRO_CATALOG_META[path] || {};
+    var sla = aftaResolveSLA(path);
+    rows.push({
+      path: path,
+      credits: PRO_ENDPOINT_CREDITS[path],
+      category: m.category || 'market',
+      returns: m.returns || '',
+      params: m.params || [],
+      free_sibling: m.free_sibling || null,
+      strict_premium: false,
+      signed: true,
+      freshness_sla_seconds: sla ? sla.maxAgeSeconds : null,
+    });
+  });
+  return rows;
+}
+
+async function handleMetaPro(request) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  return jsonResponse({
+    source: 'terminalfeed',
+    catalog: '/api/meta/pro',
+    generated_at: new Date().toISOString(),
+    currency: 'credits',
+    credit_price_usd: 0.02,
+    auth: 'Authorization: Bearer tf_live_<64-hex>. Tokens minted on TensorFeed are valid here too (shared credit pool).',
+    free_trial: 'Unauthenticated /api/pro/* calls get a small daily free-trial quota per IP before a 402.',
+    payment: {
+      chain: 'Base mainnet (USDC)',
+      buy_credits: '/api/payment/buy-credits',
+      balance: '/api/payment/balance',
+      docs: 'https://terminalfeed.io/developers/agent-payments',
+    },
+    no_charge_guarantees: ['5xx', 'circuit_breaker', 'stale_data', 'empty_result'],
+    endpoints: buildProCatalog(),
+    note: 'Every paid response carries an Ed25519-signed receipt (signed:true). The credits here are the single source of truth, asserted against the handlers by scripts/verify-pro-catalog.mjs.',
+  }, 200, 3600);
+}
+
 function aftaCheckStaleness(endpoint, capturedAt, now) {
   var sla = aftaResolveSLA(endpoint);
   if (!sla) {
@@ -14265,6 +14329,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
 
       // Premium decision wedge: free no-auth preview of a paid verdict.
       case 'preview/regime':  return await handlePreviewRegime(request, env, url, ctx);
+      // Machine-readable catalog of every payable endpoint (free, no auth).
+      case 'meta/pro':        return await handleMetaPro(request);
 
       // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
