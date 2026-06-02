@@ -2427,6 +2427,147 @@ async function handleFeedReliability(env) {
   }, 200, 60);
 }
 
+// Daily reliability snapshot for the history series. Hung off the */5 cron with a
+// UTC-midnight guard (never a new cron trigger). Writes reliability:latest, a dated
+// reliability:YYYY-MM-DD, and a bounded reliability:index (cap 400 dates).
+async function captureReliabilitySnapshot(env) {
+  if (!env || !env.WEBHOOK_SUBS) return null;
+  var record = null;
+  try { record = await env.WEBHOOK_SUBS.get(FEED_HEALTH_KV_KEY, 'json'); } catch (e) {}
+  if (!record || !record.reliability) return null;
+  var rows = buildFeedReliabilityRows(record);
+  var now = Date.now();
+  var date = new Date(now).toISOString().slice(0, 10);
+  var snap = {
+    date: date,
+    as_of: new Date(now).toISOString(),
+    methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+    feeds: rows.map(function(r) {
+      return { feed: r.feed, composite: r.composite, subscores: r.subscores, trust: r.trust, low_coverage: r.low_coverage, checks: r.checks };
+    }),
+  };
+  try {
+    await env.WEBHOOK_SUBS.put('reliability:latest', JSON.stringify(snap));
+    await env.WEBHOOK_SUBS.put('reliability:' + date, JSON.stringify(snap));
+    var idxRaw = await env.WEBHOOK_SUBS.get('reliability:index');
+    var idx = idxRaw ? JSON.parse(idxRaw) : [];
+    if (!Array.isArray(idx)) idx = [];
+    if (idx.indexOf(date) === -1) idx.unshift(date);
+    if (idx.length > 400) idx = idx.slice(0, 400);
+    await env.WEBHOOK_SUBS.put('reliability:index', JSON.stringify(idx));
+  } catch (e) {}
+  return snap;
+}
+
+// Premium signed reliability breakdown. Reflects the live feed-health monitor, so
+// captured_at is the monitor's real last-check time (drives the 48h stale-no-charge
+// if the monitor has stalled). No data yet => empty_result no-charge.
+async function fetchProFeedReliability(env) {
+  var record = null;
+  try { record = await env.WEBHOOK_SUBS.get(FEED_HEALTH_KV_KEY, 'json'); } catch (e) {}
+  if (!record || !record.reliability) {
+    return {
+      __no_charge: 'empty_result',
+      source: 'terminalfeed-pro',
+      endpoint: '/api/pro/feed-reliability',
+      generated_at: new Date().toISOString(),
+      methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+      ranked: [],
+      low_coverage: [],
+      note: 'No reliability data yet; the monitor accumulates counters every 5 minutes.',
+    };
+  }
+  var rows = buildFeedReliabilityRows(record);
+  var capturedAt = record.checkedAtISO || (record.checkedAt ? new Date(record.checkedAt).toISOString() : null);
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/feed-reliability',
+    generated_at: new Date().toISOString(),
+    captured_at: capturedAt,
+    methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+    ranked: rows.filter(function(r) { return r.rank > 0; }),
+    low_coverage: rows.filter(function(r) { return r.rank === 0; }),
+    methodology: {
+      version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+      inputs: 'Per-feed rolling ok/stale/dark counts probed every 5 minutes in-process.',
+      note: 'Reliability of TerminalFeed data delivery, not an endorsement of the underlying source.',
+    },
+    _meta: _premiumMeta('/api/pro/feed-reliability', [{ name: 'feed-health', status: 'live', fetched_at: capturedAt, latency_ms: 0 }]),
+  };
+}
+
+// Premium reliability history for one feed. Immutable past data: NULL_SLA, and a
+// no-charge empty_result on an empty range. Lenient input handling (a malformed
+// date defaults to an open bound, a missing feed yields empty_result, not a 400),
+// matching the lenient-default AFTA stance.
+async function fetchProFeedReliabilityHistory(env, url) {
+  var feedParam = (url.searchParams.get('feed') || '').trim().toLowerCase();
+  var fromP = url.searchParams.get('from') || '';
+  var toP = url.searchParams.get('to') || '';
+  var from = /^\d{4}-\d{2}-\d{2}$/.test(fromP) ? fromP : '0000-01-01';
+  var to = /^\d{4}-\d{2}-\d{2}$/.test(toP) ? toP : '9999-12-31';
+  if (from > to) { var swap = from; from = to; to = swap; }
+
+  var idx = [];
+  try { var ir = await env.WEBHOOK_SUBS.get('reliability:index'); idx = ir ? JSON.parse(ir) : []; } catch (e) {}
+  if (!Array.isArray(idx)) idx = [];
+  var dates = idx.filter(function(d) { return typeof d === 'string' && d >= from && d <= to; }).sort();
+  if (dates.length > 365) dates = dates.slice(dates.length - 365);
+
+  var series = [];
+  for (var i = 0; i < dates.length; i++) {
+    try {
+      var snap = await env.WEBHOOK_SUBS.get('reliability:' + dates[i], 'json');
+      if (snap && Array.isArray(snap.feeds)) {
+        var row = null;
+        for (var j = 0; j < snap.feeds.length; j++) {
+          if (String(snap.feeds[j].feed).toLowerCase() === feedParam) { row = snap.feeds[j]; break; }
+        }
+        if (row) series.push({ date: dates[i], composite: row.composite, subscores: row.subscores, trust: row.trust });
+      }
+    } catch (e) {}
+  }
+
+  if (!feedParam || series.length === 0) {
+    return {
+      __no_charge: 'empty_result',
+      source: 'terminalfeed-pro',
+      endpoint: '/api/pro/feed-reliability/history',
+      generated_at: new Date().toISOString(),
+      feed: feedParam || null,
+      series: [],
+      note: feedParam
+        ? 'No history for this feed/range yet. Daily snapshots accrue at 00:00 UTC.'
+        : 'Pass ?feed=<id> (see /api/feed-reliability for ids).',
+    };
+  }
+
+  return {
+    source: 'terminalfeed-pro',
+    endpoint: '/api/pro/feed-reliability/history',
+    generated_at: new Date().toISOString(),
+    feed: feedParam,
+    from: from,
+    to: to,
+    points: series.length,
+    series: series,
+    methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
+    _meta: _premiumMeta('/api/pro/feed-reliability/history', [{ name: 'reliability-snapshots', status: 'live', fetched_at: new Date().toISOString(), latency_ms: 0 }]),
+  };
+}
+
+async function handleProFeedReliability(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/feed-reliability', 2, async function(env2) {
+    return await fetchProFeedReliability(env2);
+  });
+}
+
+async function handleProFeedReliabilityHistory(request, env, url) {
+  return handlePremium(request, env, url, '/api/pro/feed-reliability/history', 2, async function(env2, url2) {
+    return await fetchProFeedReliabilityHistory(env2, url2);
+  });
+}
+
 // POST /api/feed-health-check (Bearer <ADMIN_SECRET>) — force a probe now, and
 // optionally send a test alert (?test=1) to verify the configured channel.
 async function handleFeedHealthCheck(request, env, url) {
@@ -8686,6 +8827,11 @@ var AFTA_ENDPOINT_FRESHNESS = {
   '/api/pro/github-velocity':    { maxAgeSeconds: 60 * 60 },
   '/api/pro/regime':             { maxAgeSeconds: 5 * 60 },
   '/api/pro/anomalies':          { maxAgeSeconds: 5 * 60 },
+  // The reliability breakdown reflects the feed-health monitor, which refreshes
+  // every 5 min; a 48h SLA no-charges only if the monitor itself has stalled.
+  // The /history endpoint is intentionally absent here (NULL_SLA: immutable past
+  // data has no wall-clock freshness; it no-charges on an empty range instead).
+  '/api/pro/feed-reliability':   { maxAgeSeconds: 48 * 60 * 60 },
 };
 
 var AFTA_FRESHNESS_REASONS = {
@@ -8733,6 +8879,8 @@ var PRO_ENDPOINT_CREDITS = {
   '/api/pro/defi-tvl': 2,
   '/api/pro/stablecoin-flows': 2,
   '/api/pro/github-velocity': 2,
+  '/api/pro/feed-reliability': 2,
+  '/api/pro/feed-reliability/history': 2,
 };
 
 function proCreditsFor(path) {
@@ -8759,6 +8907,8 @@ var PRO_CATALOG_META = {
   '/api/pro/defi-tvl':           { category: 'onchain', returns: 'Top-50 DeFi protocols + chain rollups, normalized.', params: [] },
   '/api/pro/stablecoin-flows':   { category: 'onchain', returns: 'Top-20 stablecoins with 1d/7d/30d deltas + aggregate bias.', params: [] },
   '/api/pro/github-velocity':    { category: 'dev', returns: 'GitHub trending repos with a computed velocity score.', params: [] },
+  '/api/pro/feed-reliability':   { category: 'infra', returns: 'Signed full reliability breakdown for every monitored feed (composite + subscores + trust).', params: [], free_sibling: '/api/feed-reliability' },
+  '/api/pro/feed-reliability/history': { category: 'infra', returns: 'Daily reliability time-series for one feed.', params: [{ name: 'feed', required: true, description: 'feed id, e.g. btc-price' }, { name: 'from', required: false, description: 'YYYY-MM-DD lower bound' }, { name: 'to', required: false, description: 'YYYY-MM-DD upper bound' }] },
 };
 
 function buildProCatalog() {
@@ -14227,6 +14377,19 @@ export default {
           console.error('feed-health check failed:', err.message);
         }
       })());
+      // Daily reliability snapshot for the history series, hung off this same */5
+      // tick with a UTC-midnight guard (no new cron trigger).
+      ctx.waitUntil((async function() {
+        try {
+          var d = new Date();
+          if (d.getUTCHours() === 0 && d.getUTCMinutes() < 5) {
+            var snap = await captureReliabilitySnapshot(env);
+            if (snap) console.log('reliability-snapshot:', snap.date);
+          }
+        } catch (err) {
+          console.error('reliability snapshot failed:', err.message);
+        }
+      })());
     } else if (cron === '17 9 * * *') {
       // Daily KV->R2 disaster-recovery backup. 09:17 UTC, a non-*/5 minute so it
       // never co-fires with the 5-minute tick above.
@@ -14788,6 +14951,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'pro/defi-tvl':       return await handleProDefiTvl(request, env, url);
       case 'pro/stablecoin-flows': return await handleProStablecoinFlows(request, env, url);
       case 'pro/github-velocity': return await handleProGithubVelocity(request, env, url);
+      case 'pro/feed-reliability': return await handleProFeedReliability(request, env, url);
+      case 'pro/feed-reliability/history': return await handleProFeedReliabilityHistory(request, env, url);
 
       // Webhook subscriptions
       case 'pro/subscribe':       return await handleSubscribeCreate(request, env);
