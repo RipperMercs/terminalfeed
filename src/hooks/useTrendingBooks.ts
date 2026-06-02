@@ -10,7 +10,7 @@ export interface TrendingBook {
   url: string;
 }
 
-const API_URL = 'https://openlibrary.org/trending/daily.json';
+const API_URL = '/api/trending-books'; // worker proxy (openlibrary), rule #6
 const CACHE_KEY = 'trending_books';
 const POLL_MS = 30 * 60_000; // 30 min
 

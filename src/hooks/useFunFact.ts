@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { getCache, setCache } from '../services/cache';
 
-const API_URL = 'https://uselessfacts.jsph.pl/random.json?language=en';
+const API_URL = '/api/fun-fact'; // worker proxy (uselessfacts), rule #6
 const CACHE_KEY = 'fun_fact';
 const POLL_MS = 30 * 60_000; // 30 min
 
