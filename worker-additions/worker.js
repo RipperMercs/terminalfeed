@@ -4564,24 +4564,74 @@ async function handleLaunches() {
   var cached = getCached(KEY, 600000);
   if (cached) return jsonFreshAuto(cached, 200, 600);
 
-  try {
-    var res = await fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list');
-    var d = await res.json();
-    var launches = (d.results || []).map(function(l) {
-      return {
-        name: l.name, status: (l.status && l.status.name) || '', net: l.net,
-        pad: (l.pad && l.pad.name) || '', location: (l.pad && l.pad.location && l.pad.location.name) || '',
-        mission: (l.mission && l.mission.name) || '',
-      };
-    });
+  // rocketlaunch.live is the primary: it carries provider + location and is not
+  // rate-limited. thespacedevs is the fallback (its free tier 429s aggressively
+  // and its list mode drops provider/location). Mirrors the old client behavior,
+  // now server-side for rule #6. Both normalize to one shape; legacy fields are
+  // preserved for existing /api/launches + briefing consumers.
+  var launches = await _launchesFromRocketLaunch();
+  if (!launches || !launches.length) launches = await _launchesFromSpaceDevs();
+
+  if (launches && launches.length) {
     var data = { data: launches };
     setCache(KEY, data);
     return jsonFreshAuto(data, 200, 600);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 0);
-    return jsonResponse({ data: [] });
   }
+  var stale = getStale(KEY);
+  if (stale) return jsonFreshAuto(stale, 200, 0);
+  return jsonResponse({ data: [] });
+}
+
+async function _launchesFromRocketLaunch() {
+  try {
+    var res = await fetchWithTimeout('https://fdo.rocketlaunch.live/json/launches/next/5', { headers: { Accept: 'application/json' } }, 8000);
+    if (!res.ok) return null;
+    var j = await res.json();
+    var rows = j.result || [];
+    if (!rows.length) return null;
+    return rows.map(function(l) {
+      return {
+        id: l.id != null ? String(l.id) : '',
+        provider: (l.provider && l.provider.name) || '',
+        date: l.date_str || 'TBD',
+        dateTs: l.t0 ? new Date(l.t0).getTime() : 0,
+        status_abbrev: 'Go',
+        name: l.name || l.launch_description || '',
+        status: 'Go',
+        net: l.t0 || '',
+        pad: (l.pad && l.pad.name) || '',
+        location: (l.pad && l.pad.location && l.pad.location.name) || '',
+        mission: l.launch_description || '',
+      };
+    });
+  } catch (e) { return null; }
+}
+
+async function _launchesFromSpaceDevs() {
+  try {
+    var res = await fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list', { headers: { Accept: 'application/json' } }, 8000);
+    if (!res.ok) return null;
+    var d = await res.json();
+    var rows = d.results || [];
+    if (!rows.length) return null;
+    return rows.map(function(l) {
+      var statusName = (l.status && l.status.name) || '';
+      var dateStr = l.net ? new Date(l.net).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
+      return {
+        id: l.id != null ? String(l.id) : '',
+        provider: (l.launch_service_provider && l.launch_service_provider.name) || '',
+        date: dateStr,
+        dateTs: l.net ? new Date(l.net).getTime() : 0,
+        status_abbrev: (l.status && l.status.abbrev) || statusName,
+        name: l.name || '',
+        status: statusName,
+        net: l.net || '',
+        pad: (l.pad && l.pad.name) || '',
+        location: (l.pad && l.pad.location && l.pad.location.name) || '',
+        mission: (l.mission && l.mission.name) || '',
+      };
+    });
+  } catch (e) { return null; }
 }
 
 
