@@ -22,19 +22,19 @@ export function useWikipedia(): WikiArticle | null {
 
     const fetch_ = async () => {
       try {
-        const now = new Date();
-        const url = `https://api.wikimedia.org/feed/v1/wikipedia/en/featured/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        // worker proxy (wikimedia featured), rule #6: worker computes the date
+        // and returns a normalized { data: { featured_article: {...} } } shape.
+        const res = await fetch('/api/wiki-featured', { signal: AbortSignal.timeout(8000) });
         if (!res.ok || !mountedRef.current) return;
-        const data = await res.json();
-        const tfa = data.tfa;
-        if (!tfa) return;
+        const json = await res.json();
+        const fa = json.data?.featured_article;
+        if (!fa || !fa.title) return;
 
         const result: WikiArticle = {
-          title: tfa.normalizedtitle || tfa.title || '',
-          extract: (tfa.extract || '').slice(0, 200),
-          thumbnail: tfa.thumbnail?.source || '',
-          url: tfa.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${tfa.title}`,
+          title: fa.title,
+          extract: (fa.extract || '').slice(0, 200),
+          thumbnail: fa.thumbnail || '',
+          url: fa.url || `https://en.wikipedia.org/wiki/${encodeURIComponent(fa.title)}`,
         };
 
         setArticle(result);

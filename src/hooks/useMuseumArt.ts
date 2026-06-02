@@ -24,11 +24,8 @@ export function useMuseumArt(): ArtworkData | null {
 
     const fetch_ = async () => {
       try {
-        const page = Math.floor(Math.random() * 100) + 1;
-        const res = await fetch(
-          `https://api.artic.edu/api/v1/artworks?limit=1&fields=id,title,artist_display,image_id,date_display&page=${page}`,
-          { signal: AbortSignal.timeout(8000) }
-        );
+        // worker proxy (artic.edu), rule #6: worker picks the random page
+        const res = await fetch('/api/museum-art', { signal: AbortSignal.timeout(8000) });
         if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
         const work = json.data?.[0];
