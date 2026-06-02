@@ -2465,7 +2465,7 @@ async function captureReliabilitySnapshot(env) {
 async function fetchProFeedReliability(env) {
   var record = null;
   try { record = await env.WEBHOOK_SUBS.get(FEED_HEALTH_KV_KEY, 'json'); } catch (e) {}
-  if (!record || !record.reliability) {
+  if (!record || !record.reliability || Object.keys(record.reliability).length === 0) {
     return {
       __no_charge: 'empty_result',
       source: 'terminalfeed-pro',
