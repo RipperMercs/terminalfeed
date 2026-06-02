@@ -7547,6 +7547,18 @@ var MCP_SERVER_INFO = {
 };
 
 function _toolToMCP(def) {
+  // Annotations drive client retry behavior. A paid tool has a billing
+  // side-effect, so a retried call double-charges: it is NOT idempotent and not
+  // read-only, and clients must not auto-retry it on a flaky network. POST tools
+  // mutate. Everything else is a safe, retryable read.
+  var isPaid = def.tier === 'premium' || /Costs \d+ credit/i.test(def.description || '');
+  var isMutation = def.method === 'POST';
+  var annotations;
+  if (isPaid || isMutation) {
+    annotations = { readOnlyHint: false, idempotentHint: false, openWorldHint: true };
+  } else {
+    annotations = { readOnlyHint: true, idempotentHint: true, openWorldHint: true };
+  }
   return {
     name: def.name,
     description: def.description,
@@ -7555,6 +7567,7 @@ function _toolToMCP(def) {
       properties: def.parameters || {},
       required: [],
     },
+    annotations: annotations,
   };
 }
 
@@ -7601,6 +7614,7 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_premium_defi_tvl':           path = '/api/pro/defi-tvl'; break;
     case 'tf_premium_stablecoin_flows':   path = '/api/pro/stablecoin-flows'; break;
     case 'tf_premium_github_velocity':    path = '/api/pro/github-velocity'; break;
+    case 'tf_preview_regime':             path = '/api/preview/regime'; break;
     case 'tf_premium_regime':             path = '/api/pro/regime'; break;
     case 'tf_premium_anomalies':          path = '/api/pro/anomalies'; break;
     case 'tf_payment_buy_credits':        path = '/api/payment/buy-credits'; method = 'POST'; body = JSON.stringify(args); break;
@@ -7669,6 +7683,7 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_premium_defi_tvl':           return await handleProDefiTvl(req, env, url);
     case 'tf_premium_stablecoin_flows':   return await handleProStablecoinFlows(req, env, url);
     case 'tf_premium_github_velocity':    return await handleProGithubVelocity(req, env, url);
+    case 'tf_preview_regime':             return await handlePreviewRegime(req, env, url);
     case 'tf_premium_regime':             return await handleProRegime(req, env, url);
     case 'tf_premium_anomalies':          return await handleProAnomalies(req, env, url);
     case 'tf_payment_buy_credits':        return await handleBuyCredits(req, env);
@@ -8110,9 +8125,19 @@ const LLM_TOOL_DEFINITIONS = [
     parameters: {}
   },
   {
+    name: 'tf_preview_regime',
+    short_description: 'Free preview of the market-regime verdict: top label + dominant driver + why (no auth, no credits).',
+    description: 'Free, zero-setup preview of the paid tf_premium_regime verdict. Returns the single regime label (risk_on / risk_off / transition / stress), the risk_score, the confidence, the one dominant driver, and a one-line why. Rate-limited to 10/IP/day and unsigned. Versus this preview, the paid tf_premium_regime (GET /api/pro/regime, 2 credits) adds the full ranked drivers with weights and contributions, all raw inputs (VIX + 30d z-score, 10y trend, BTC dominance, Fear and Greed), an Ed25519-signed receipt, and no rate limit. No auth required. Statistical heuristic, not investment advice.',
+    url: 'https://terminalfeed.io/api/preview/regime',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
     name: 'tf_premium_regime',
     short_description: 'Cross-asset market regime: risk_on / risk_off / transition / stress with rationale (2 credits).',
-    description: 'Premium regime classifier. Blends crypto Fear & Greed (alternative.me), VIX (FRED VIXCLS), 24h total crypto market-cap change (CoinLore), and the 10y treasury-yield trend (FRED DGS10) into a labeled regime (risk_on, risk_off, transition, or stress), a risk_score in [-1..+1], a 0-1 confidence, and a per-input drivers[] breakdown showing each signal value, weight, and contribution. A stress override fires when VIX>30 or (Fear&Greed<15 and 24h market cap <-3%). The documented, versioned weighting is the value; the upstreams are free. Saves an agent from fetching and normalizing four sources and designing its own blend. Statistical heuristic, not investment advice. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
+    description: 'Premium regime classifier. Blends crypto Fear & Greed (alternative.me), VIX (FRED VIXCLS), 24h total crypto market-cap change (CoinLore), and the 10y treasury-yield trend (FRED DGS10) into a labeled regime (risk_on, risk_off, transition, or stress), a risk_score in [-1..+1], a 0-1 confidence, and a per-input drivers[] breakdown showing each signal value, weight, and contribution. A stress override fires when VIX>30 or (Fear&Greed<15 and 24h market cap <-3%). Versus the free preview (tf_preview_regime / GET /api/preview/regime) it adds the full ranked drivers, all raw inputs, a signed receipt, and no rate limit. The documented, versioned weighting is the value; the upstreams are free. Statistical heuristic, not investment advice. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
     url: 'https://terminalfeed.io/api/pro/regime',
     method: 'GET',
     auth: 'bearer',
