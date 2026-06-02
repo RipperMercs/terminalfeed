@@ -77,11 +77,8 @@ const DIRECT_FETCH_DEBT = new Set([
   // (-> /api/donations), useWhaleWatch (-> /api/whale-watch). 2026-06-02.
   'src/hooks/useBluesky.ts',
   'src/hooks/useDevJoke.ts',
-  'src/hooks/useEarthquakes.ts',
-  'src/hooks/useFearGreed.ts',
   'src/hooks/useFunFact.ts',
   'src/hooks/useMuseumArt.ts',
-  'src/hooks/useNpmTrends.ts',
   'src/hooks/useSpaceLaunches.ts',
   'src/hooks/useStackOverflow.ts',
   'src/hooks/useTCGMarket.ts',
