@@ -6976,8 +6976,18 @@ async function handleEonet() {
 
 // GET /api/ai-stats
 function handleAiStats() {
-  hitCounter++;
-  return jsonResponse({ totalHits24h: hitCounter }, 200, 30);
+  // hitCounter is bumped once per request in the top-level fetch handler, so do
+  // NOT increment again here; the old extra bump double-counted every AI Hub poll.
+  return jsonResponse({
+    totalHits24h: hitCounter,        // kept for the AI Hub panel (back-compat field name)
+    responses_served: hitCounter,
+    label: 'responses served since worker cold start (free + premium)',
+    note: 'This is total responses served, not paid demand. Premium endpoints grant a free-trial quota and no-charge stale or empty results, so most served responses are free. Counter resets on each worker cold start.',
+    paid_demand: 'Real paid vs free vs 402 volume is tracked in the charge-classified usage funnel (Analytics Engine); USDC settlements settle on the shared TensorFeed credit ledger.',
+    no_charge_ledger: 'https://terminalfeed.io/api/payment/no-charge-stats',
+    pricing: 'https://terminalfeed.io/api/payment/info',
+    server_time: new Date().toISOString(),
+  }, 200, 30);
 }
 
 
