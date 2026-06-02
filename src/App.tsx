@@ -13,6 +13,7 @@ import { LegalModal } from './components/LegalModal';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { BtcHero } from './components/BtcHero';
 import { StatusWall } from './components/StatusWall';
+import { TopAlertBar } from './components/TopAlertBar';
 import { LiveNowPanel } from './components/LiveNowPanel';
 import { SeismicTimeline } from './components/SeismicTimeline';
 import { InternetScope } from './components/InternetScope';
@@ -2930,6 +2931,7 @@ function App() {
   return (
     <div className="app">
       <a href="#main-content" className="skip-link">Skip to dashboard</a>
+      <TopAlertBar />
       {/* ── Top Bar ── */}
       <div className="topBar">
         <div className="topBarLeft">
