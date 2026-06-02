@@ -8273,10 +8273,12 @@ function handleLLMTools(parsedUrl) {
 // =============================================================================
 //
 // AFTA pillars enforced here:
-//   1. Code-enforced no-charge guarantees (5xx, circuit_breaker,
-//      schema_validation_failure, stale_data). Each premium call runs the
-//      handler first and only commits the credit debit on success. Failures
-//      log a no-charge event to a public ledger.
+//   1. Code-enforced no-charge guarantees (5xx, circuit_breaker, stale_data,
+//      empty_result). Each premium call runs the handler first and only commits
+//      the credit debit on success. Failures, stale-served data, and valid-but-
+//      empty results log a no-charge event to a public ledger. (Input handling is
+//      lenient by default: bad params are clamped/defaulted, not rejected, so
+//      there is no schema-validation-failure charge to refund.)
 //   2. Ed25519-signed receipts on every premium response. Verifiable offline
 //      against the public key at /.well-known/terminalfeed-receipt-key.json.
 //   3. Public on-chain payment rail (USDC on Base) inherited from the shared
@@ -9901,7 +9903,7 @@ async function handleApiMeta(request, env) {
       certified: true,
       manifest: AFTA_MANIFEST_URL,
       manifesto: AFTA_DOC,
-      no_charge_guarantees: ['5xx', 'circuit_breaker', 'schema_validation_failure', 'stale_data'],
+      no_charge_guarantees: ['5xx', 'circuit_breaker', 'stale_data', 'empty_result'],
       no_charge_ledger: 'https://terminalfeed.io/api/payment/no-charge-stats',
       receipts: aftaReceiptStatus(env),
       freshness_slas: aftaDescribeSLAs(),
