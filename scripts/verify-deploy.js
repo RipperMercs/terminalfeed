@@ -79,10 +79,10 @@ const DIRECT_FETCH_DEBT = new Set([
   // (-> /api/dev-joke), useFunFact (-> /api/fun-fact), useTrendingBooks (-> /api/trending-books),
   // useStackOverflow (-> /api/stackoverflow), useThisDay (-> /api/this-day), useMuseumArt
   // (-> /api/museum-art), useWikipedia (-> /api/wiki-featured), useBluesky (-> /api/bluesky),
-  // useTCGMarket (-> /api/tcg-market). 2026-06-02.
-  // Remaining: useSpaceLaunches + useWeather need endpoint upgrades (provider/id
-  // fields, richer weather query) before they can move off direct fetch.
-  'src/hooks/useSpaceLaunches.ts',
+  // useTCGMarket (-> /api/tcg-market), useSpaceLaunches (-> /api/launches, upgraded
+  // to thespacedevs 2.3.0 with id/provider/dateTs). 2026-06-02.
+  // Remaining: useWeather still needs a richer /api/weather (7-day daily forecast +
+  // request.cf geolocation) before it can move off direct fetch.
   'src/hooks/useWeather.ts',
 ]);
 
