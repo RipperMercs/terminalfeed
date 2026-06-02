@@ -3982,17 +3982,100 @@ async function _openskyAccessToken(env) {
   } catch (e) { return null; }
 }
 
-async function handleAviation(env) {
-  var KEY = 'aviation';
-  var cached = getCached(KEY, 120000);
-  if (cached) return jsonFreshAuto(cached, 200, 120);
+// ICAO tail-number prefix -> country (compact; the major aviation nations). Keyless
+// ADS-B carries a registration (r) but no country field, so we derive it from the
+// prefix for the topCountries breakdown.
+function _regToCountry(r) {
+  if (!r || typeof r !== 'string') return null;
+  var R = r.toUpperCase();
+  var p2 = R.slice(0, 2);
+  var TWO = {
+    VH: 'Australia', ZK: 'New Zealand', JA: 'Japan', HL: 'South Korea', EI: 'Ireland',
+    EC: 'Spain', SE: 'Sweden', LN: 'Norway', OY: 'Denmark', OH: 'Finland', OE: 'Austria',
+    OO: 'Belgium', PH: 'Netherlands', HB: 'Switzerland', SP: 'Poland', OK: 'Czechia',
+    SX: 'Greece', TC: 'Turkey', HS: 'Thailand', VT: 'India', XA: 'Mexico', TF: 'Iceland',
+    LX: 'Luxembourg', CS: 'Portugal', LV: 'Argentina', CC: 'Chile', UR: 'Ukraine',
+    A6: 'UAE', A7: 'Qatar', A9: 'Bahrain', '9V': 'Singapore', '9M': 'Malaysia', '4X': 'Israel',
+    PP: 'Brazil', PR: 'Brazil', PT: 'Brazil',
+  };
+  if (TWO[p2]) return TWO[p2];
+  var c0 = R.charAt(0);
+  if (c0 === 'N') return 'United States';
+  if (c0 === 'D') return 'Germany';
+  if (c0 === 'G') return 'United Kingdom';
+  if (c0 === 'F') return 'France';
+  if (c0 === 'C') return 'Canada';
+  if (c0 === 'I') return 'Italy';
+  if (c0 === 'B') return 'China';
+  if (p2 === 'RA') return 'Russia';
+  return null;
+}
+
+var _ADSB_REGIONS = [[50, 8], [40, -82], [34, -118], [25, 55], [35, 139]]; // EU, US-E, US-W, Gulf, Japan
+var _ADSB_HOSTS = [
+  'https://api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/250',
+  'https://opendata.adsb.fi/api/v2/lat/{lat}/lon/{lon}/dist/250',
+  'https://api.airplanes.live/v2/point/{lat}/{lon}/250',
+];
+async function _adsbFetchRegion(lat, lon) {
+  for (var h = 0; h < _ADSB_HOSTS.length; h++) {
+    try {
+      var url = _ADSB_HOSTS[h].replace('{lat}', lat).replace('{lon}', lon);
+      var res = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } }, 6000);
+      if (!res.ok) continue;
+      var j = await res.json();
+      var ac = j.ac || j.aircraft || [];
+      if (Array.isArray(ac) && ac.length) return ac;
+    } catch (e) {}
+  }
+  return [];
+}
+
+// Keyless ADS-B fallback. Point-radius only, so we sample several busy regions and
+// dedup by hex. Not global like OpenSky, but real live data so the panel is never
+// empty. Units converted to match the OpenSky path: altitude metres, speed m/s.
+async function _aviationFromAdsb() {
+  var settled = await Promise.allSettled(_ADSB_REGIONS.map(function(rg) { return _adsbFetchRegion(rg[0], rg[1]); }));
+  var seen = {}, airborne = 0, onGround = 0, altSum = 0, altCount = 0, spdSum = 0, spdCount = 0, countryCounts = {}, any = false;
+  for (var i = 0; i < settled.length; i++) {
+    if (settled[i].status !== 'fulfilled') continue;
+    var ac = settled[i].value;
+    for (var k = 0; k < ac.length; k++) {
+      var a = ac[k];
+      if (!a || !a.hex || seen[a.hex]) continue;
+      seen[a.hex] = true; any = true;
+      if (a.alt_baro === 'ground') { onGround++; }
+      else {
+        airborne++;
+        if (typeof a.alt_baro === 'number') { altSum += a.alt_baro * 0.3048; altCount++; }
+        if (typeof a.gs === 'number') { spdSum += a.gs * 0.514444; spdCount++; }
+      }
+      var ctry = _regToCountry(a.r);
+      if (ctry) countryCounts[ctry] = (countryCounts[ctry] || 0) + 1;
+    }
+  }
+  if (!any) return null;
+  var topCountries = Object.keys(countryCounts)
+    .map(function(c) { return { country: c, count: countryCounts[c] }; })
+    .sort(function(a, b) { return b.count - a.count; }).slice(0, 6);
+  return {
+    totalAirborne: airborne, totalOnGround: onGround, topCountries: topCountries,
+    avgAltitude: altCount > 0 ? Math.round(altSum / altCount) : 0,
+    avgSpeed: spdCount > 0 ? Math.round(spdSum / spdCount) : 0,
+    timestamp: Math.floor(Date.now() / 1000),
+    source: 'adsb (regional sample)',
+  };
+}
+
+async function _aviationFromOpenSky(env) {
+  var token = await _openskyAccessToken(env);
+  if (!token) return null;
   try {
-    var _osToken = await _openskyAccessToken(env);
-    var _osOpts = _osToken ? { headers: { 'Authorization': 'Bearer ' + _osToken } } : {};
-    var res = await fetchWithTimeout('https://opensky-network.org/api/states/all', _osOpts, 8000);
-    if (!res.ok) throw new Error('opensky ' + res.status);
+    var res = await fetchWithTimeout('https://opensky-network.org/api/states/all', { headers: { 'Authorization': 'Bearer ' + token } }, 8000);
+    if (!res.ok) return null;
     var json = await res.json();
     var states = Array.isArray(json.states) ? json.states : [];
+    if (!states.length) return null;
     var airborne = 0, onGround = 0, altSum = 0, altCount = 0, spdSum = 0, spdCount = 0, countryCounts = {};
     for (var i = 0; i < states.length; i++) {
       var s = states[i];
@@ -4008,23 +4091,29 @@ async function handleAviation(env) {
     }
     var topCountries = Object.keys(countryCounts)
       .map(function(k) { return { country: k, count: countryCounts[k] }; })
-      .sort(function(a, b) { return b.count - a.count; })
-      .slice(0, 6);
-    var out = {
-      totalAirborne: airborne,
-      totalOnGround: onGround,
-      topCountries: topCountries,
+      .sort(function(a, b) { return b.count - a.count; }).slice(0, 6);
+    return {
+      totalAirborne: airborne, totalOnGround: onGround, topCountries: topCountries,
       avgAltitude: altCount > 0 ? Math.round(altSum / altCount) : 0,
       avgSpeed: spdCount > 0 ? Math.round(spdSum / spdCount) : 0,
       timestamp: json.time || Math.floor(Date.now() / 1000),
+      source: 'opensky (global)',
     };
-    setCache(KEY, out);
-    return jsonFreshAuto(out, 200, 120);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 120);
-    return jsonResponse({ error: 'aviation_unavailable' }, 200, 60);
-  }
+  } catch (e) { return null; }
+}
+
+async function handleAviation(env) {
+  var KEY = 'aviation';
+  var cached = getCached(KEY, 120000);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
+  // OpenSky (global) is primary when credentials are set; keyless ADS-B (a regional
+  // sample) is the always-available fallback so the panel is never empty.
+  var out = await _aviationFromOpenSky(env);
+  if (!out) out = await _aviationFromAdsb();
+  if (out) { setCache(KEY, out); return jsonFreshAuto(out, 200, 120); }
+  var stale = getStale(KEY);
+  if (stale) return jsonFreshAuto(stale, 200, 120);
+  return jsonResponse({ error: 'aviation_unavailable' }, 200, 60);
 }
 
 // GET /api/iss-position — ISS latitude/longitude via wheretheiss.at (reliable,
