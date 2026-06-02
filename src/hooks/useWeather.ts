@@ -55,35 +55,28 @@ export function weatherDescription(code: number): { desc: string; icon: string }
   return WMO_CODES[code] ?? { desc: 'Unknown', icon: '?' };
 }
 
-interface Location {
-  lat: number;
-  lon: number;
-  city: string;
-}
-
-
 export function useWeather(): WeatherData | null {
   const [data, setData] = useState<WeatherData | null>(() => {
     return getCache<WeatherData>(CACHE_KEY)?.data ?? null;
   });
   const mountedRef = useRef(true);
-  const locationRef = useRef<Location | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    const fetchWeather = async (lat: number, lon: number, city: string) => {
+    const fetchWeather = async () => {
       try {
-        const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=7`,
-          { signal: AbortSignal.timeout(5000) }
-        );
-        if (!res.ok) return;
+        // worker proxy (open-meteo), rule #6. The worker geolocates the visitor
+        // from the Cloudflare edge (request.cf), so no client-side IP lookup is
+        // needed and the response carries the resolved city.
+        const res = await fetch('/api/weather', { signal: AbortSignal.timeout(8000) });
+        if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
-        const c = json.current;
-        if (!c || !mountedRef.current) return;
+        const c = json.data?.current;
+        if (!c) return;
+        const city = json.city || 'Los Angeles';
 
-        const daily = json.daily;
+        const daily = json.data?.daily;
         const sunrise = daily?.sunrise?.[0] || '';
         const sunset = daily?.sunset?.[0] || '';
         const now = new Date();
@@ -122,46 +115,8 @@ export function useWeather(): WeatherData | null {
       } catch (e) { if (import.meta.env.DEV) console.warn('[Weather]', e); }
     };
 
-    const init = async () => {
-      // IP-based geolocation on every mount, no persistence, so the city
-      // tracks the user's current IP (handles travel, VPN changes, etc.)
-      let loc: Location | null = null;
-      const ipApis = [
-        'https://ipapi.co/json/',
-        'https://ip-api.com/json/',
-      ];
-      for (const url of ipApis) {
-        try {
-          const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-          if (!res.ok) continue;
-          const json = await res.json();
-          const lat = json.latitude ?? json.lat;
-          const lon = json.longitude ?? json.lon;
-          const city = json.city ?? 'Unknown';
-          if (lat && lon) {
-            loc = { lat, lon, city };
-            break;
-          }
-        } catch {
-          continue;
-        }
-      }
-      // Fallback only if both IP APIs failed this session (not persisted).
-      if (!loc) {
-        loc = { lat: 34.05, lon: -118.24, city: 'Los Angeles' };
-      }
-
-      locationRef.current = loc;
-      fetchWeather(loc.lat, loc.lon, loc.city);
-    };
-
-    init();
-
-    const id = setInterval(() => {
-      const loc = locationRef.current;
-      if (loc) fetchWeather(loc.lat, loc.lon, loc.city);
-    }, POLL_MS);
-
+    fetchWeather();
+    const id = setInterval(fetchWeather, POLL_MS);
     return () => { mountedRef.current = false; clearInterval(id); };
   }, []);
 
