@@ -4045,6 +4045,77 @@ async function handleQuote() {
   }
 }
 
+// GET /api/btc-network — aggregated Bitcoin network stats (latest block, fees,
+// mempool, difficulty, hashrate, recent + projected blocks) from mempool.space,
+// fetched server-side. mempool.space sends no CORS headers, so the panel's direct
+// REST + WebSocket both browser-failed; the panel now polls this. (rule #6)
+async function handleBtcNetwork() {
+  var KEY = 'btc-network';
+  var cached = getCached(KEY, 30000);
+  if (cached) return jsonFreshAuto(cached, 200, 30);
+  function n(x) { var v = Number(x); return isFinite(v) ? v : 0; }
+  try {
+    var B = 'https://mempool.space/api';
+    // Two waves of 3 rather than a 6-call burst: mempool.space throttles bursts
+    // from a shared egress IP, which intermittently timed out ~2 of 6 parallel calls.
+    var s = (await Promise.allSettled([
+      fetchWithTimeout(B + '/v1/fees/recommended', {}, 8000),
+      fetchWithTimeout(B + '/v1/difficulty-adjustment', {}, 8000),
+      fetchWithTimeout(B + '/v1/mining/hashrate/1m', {}, 8000),
+    ])).concat(await Promise.allSettled([
+      fetchWithTimeout(B + '/v1/blocks', {}, 8000),
+      fetchWithTimeout(B + '/mempool', {}, 8000),
+      fetchWithTimeout(B + '/v1/fees/mempool-blocks', {}, 8000),
+    ]));
+    async function body(r) { try { return (r.status === 'fulfilled' && r.value.ok) ? await r.value.json() : null; } catch (e) { return null; } }
+    var fees = await body(s[0]), diff = await body(s[1]), hr = await body(s[2]), blocks = await body(s[3]), mem = await body(s[4]), mpb = await body(s[5]);
+
+    var out = {
+      blockHeight: 0, blockTimestamp: 0, blockTxCount: 0, blockSize: 0, blockPool: '',
+      feeFastest: 0, feeHalfHour: 0, feeHour: 0, feeEconomy: 0, feeMinimum: 0,
+      mempoolCount: 0, mempoolVsize: 0,
+      diffProgress: 0, diffChange: 0, diffRemainingBlocks: 0, diffRetargetDate: 0,
+      hashrate: 0, difficulty: 0, recentBlocks: [], mempoolBlocks: [], connected: true,
+    };
+    if (fees) { out.feeFastest = n(fees.fastestFee); out.feeHalfHour = n(fees.halfHourFee); out.feeHour = n(fees.hourFee); out.feeEconomy = n(fees.economyFee); out.feeMinimum = n(fees.minimumFee); }
+    if (diff) { out.diffProgress = n(diff.progressPercent); out.diffChange = n(diff.difficultyChange); out.diffRemainingBlocks = n(diff.remainingBlocks); out.diffRetargetDate = n(diff.estimatedRetargetDate); }
+    if (hr) { out.hashrate = n(hr.currentHashrate); out.difficulty = n(hr.currentDifficulty); }
+    if (Array.isArray(blocks)) {
+      out.recentBlocks = blocks.slice(0, 8).map(function(b) {
+        return { height: n(b.height), timestamp: n(b.timestamp), txCount: n(b.tx_count), size: n(b.size), pool: (b.extras && b.extras.pool && b.extras.pool.name) || 'Unknown', totalFees: n(b.extras && b.extras.totalFees), medianFee: n(b.extras && b.extras.medianFee) };
+      });
+      if (blocks[0]) { out.blockHeight = n(blocks[0].height); out.blockTimestamp = n(blocks[0].timestamp); out.blockTxCount = n(blocks[0].tx_count); out.blockSize = n(blocks[0].size); out.blockPool = (blocks[0].extras && blocks[0].extras.pool && blocks[0].extras.pool.name) || 'Unknown'; }
+    }
+    if (mem) { out.mempoolCount = n(mem.count); out.mempoolVsize = n(mem.vsize); }
+    if (Array.isArray(mpb)) {
+      out.mempoolBlocks = mpb.slice(0, 8).map(function(b) {
+        return { medianFee: n(b.medianFee), nTx: n(b.nTx), blockVSize: n(b.blockVSize), totalFees: n(b.totalFees) };
+      });
+    }
+    // Only cache a result that actually carries data. If every upstream call
+    // failed (e.g. a rate-limited burst), do NOT cache the all-zero shape; serve
+    // the last good value if we have one, else the empty shape (uncached).
+    // Merge any field that failed this call from the last good value, so an
+    // intermittent upstream timeout never blanks a tile.
+    var prior = getStale(KEY);
+    if (prior) {
+      ['feeFastest', 'feeHalfHour', 'feeHour', 'feeEconomy', 'feeMinimum', 'hashrate', 'difficulty', 'blockHeight', 'blockTimestamp', 'blockTxCount', 'blockSize', 'diffProgress', 'diffChange', 'diffRemainingBlocks', 'diffRetargetDate', 'mempoolCount', 'mempoolVsize'].forEach(function(k) { if (!out[k] && prior[k]) out[k] = prior[k]; });
+      if (!out.blockPool && prior.blockPool) out.blockPool = prior.blockPool;
+      if (out.recentBlocks.length === 0 && Array.isArray(prior.recentBlocks) && prior.recentBlocks.length) out.recentBlocks = prior.recentBlocks;
+      if (out.mempoolBlocks.length === 0 && Array.isArray(prior.mempoolBlocks) && prior.mempoolBlocks.length) out.mempoolBlocks = prior.mempoolBlocks;
+    }
+    if (out.blockHeight > 0 || out.feeFastest > 0 || out.hashrate > 0) {
+      setCache(KEY, out);
+      return jsonFreshAuto(out, 200, 30);
+    }
+    return jsonResponse(out, 200, 15);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 30);
+    return jsonResponse({ error: 'btc_network_unavailable' }, 200, 15);
+  }
+}
+
 
 // GET /api/disaster-alerts
 async function handleDisasterAlerts() {
@@ -15032,6 +15103,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'aviation':       return await handleAviation();
       case 'iss-position':   return await handleIssPosition();
       case 'quote':          return await handleQuote();
+      case 'btc-network':    return await handleBtcNetwork();
       case 'disaster-alerts':return await handleDisasterAlerts();
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);
