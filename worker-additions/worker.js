@@ -8516,6 +8516,33 @@ function aftaResolveSLA(path) {
   return null;
 }
 
+// === Single source-of-truth for premium credit pricing ===
+// The price an /api/pro/* endpoint actually charges. The handler's
+// handlePremium(... , COST, ...) arg MUST equal the value here; the /api/meta/pro
+// catalog, the preview upgrade blocks, and (via the drift-guard test) every other
+// price surface derive from this map so the published price can never drift from
+// what settles. scripts/verify-pro-catalog.mjs asserts handler args == this map.
+var PRO_ENDPOINT_CREDITS = {
+  '/api/pro/briefing': 1,
+  '/api/pro/macro': 2,
+  '/api/pro/crypto-deep': 2,
+  '/api/pro/regime': 2,
+  '/api/pro/anomalies': 2,
+  '/api/pro/sentiment': 2,
+  '/api/pro/world-deltas': 2,
+  '/api/pro/agent-context': 2,
+  '/api/pro/correlation-matrix': 2,
+  '/api/pro/whales': 2,
+  '/api/pro/exchange-flows': 2,
+  '/api/pro/defi-tvl': 2,
+  '/api/pro/stablecoin-flows': 2,
+  '/api/pro/github-velocity': 2,
+};
+
+function proCreditsFor(path) {
+  return Object.prototype.hasOwnProperty.call(PRO_ENDPOINT_CREDITS, path) ? PRO_ENDPOINT_CREDITS[path] : null;
+}
+
 function aftaCheckStaleness(endpoint, capturedAt, now) {
   var sla = aftaResolveSLA(endpoint);
   if (!sla) {
@@ -13045,6 +13072,78 @@ async function fetchProRegime(env, url) {
   };
 }
 
+// === Premium decision wedge: free preview of the paid regime verdict ===
+// A zero-setup, no-auth taste of /api/pro/regime: the single top label, the one
+// dominant driver, and a one-line why, rate-limited and unsigned. The full ranked
+// drivers, all raw inputs, and the Ed25519-signed receipt are the paid tier. The
+// response names the paid upgrade so an agent can decide to spend.
+
+function _regimeWhy(regime, dominant) {
+  var base = {
+    risk_on: 'Risk-on: markets are leaning into risk.',
+    risk_off: 'Risk-off: markets are de-risking.',
+    transition: 'Transition: mixed signals, no clear risk regime.',
+    stress: 'Stress: acute risk-off conditions, volatility is elevated.',
+  }[regime] || ('Regime: ' + regime + '.');
+  if (dominant && dominant.signal) {
+    var name = {
+      crypto_fear_greed: 'crypto Fear and Greed',
+      vix: 'the VIX',
+      crypto_mcap_change_24h_pct: '24h crypto market-cap change',
+      treasury_10y_trend: 'the 10y treasury-yield trend',
+    }[dominant.signal] || dominant.signal;
+    base += ' Dominant signal: ' + name + (dominant.value != null ? ' (' + dominant.value + ')' : '') + '.';
+  }
+  return base;
+}
+
+async function handlePreviewRegime(request, env, url, ctx) {
+  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
+  // Zero-auth preview, rate-limited per IP so it cannot be used as a free regime
+  // feed. The paid /api/pro/regime has no such cap.
+  var clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
+  var rl = await checkRateLimit(env, 'preview', clientIp, 10, 86400, ctx);
+  if (!rl.allowed) return rateLimit429(rl);
+
+  var full;
+  try {
+    full = await cacheLookupOrFetch('pro:regime', 300000, function() { return fetchProRegime(env, url); });
+  } catch (e) {
+    return jsonResponse({ error: 'upstream_error', message: 'Could not compute the regime preview right now; retry shortly.' }, 503);
+  }
+
+  var drivers = Array.isArray(full.drivers) ? full.drivers : [];
+  var dominant = null, dominantMag = -1;
+  for (var i = 0; i < drivers.length; i++) {
+    var d = drivers[i];
+    var w = (typeof d.weight === 'number') ? d.weight : 0;
+    var c = (typeof d.contribution === 'number') ? d.contribution : 0;
+    var mag = Math.abs(w * c);
+    if (mag > dominantMag) { dominantMag = mag; dominant = d; }
+  }
+  var dominantOut = dominant ? { signal: dominant.signal || null, value: (dominant.value != null ? dominant.value : null), direction: dominant.direction || null } : null;
+
+  return jsonResponse({
+    source: 'terminalfeed-preview',
+    endpoint: '/api/preview/regime',
+    generated_at: new Date().toISOString(),
+    regime: full.regime,
+    risk_score: full.risk_score,
+    confidence: full.confidence,
+    dominant_driver: dominantOut,
+    why: _regimeWhy(full.regime, dominant),
+    upgrade: {
+      endpoint: '/api/pro/regime',
+      credits: proCreditsFor('/api/pro/regime'),
+      adds: 'Full ranked drivers with weights and contributions, all raw inputs (VIX + 30d z-score, 10y trend, BTC dominance, Fear and Greed), and an Ed25519-signed receipt. No rate limit.',
+      free_sibling_of: '/api/pro/regime',
+      docs: 'https://terminalfeed.io/developers/agent-payments',
+      catalog: 'https://terminalfeed.io/api/meta/pro',
+    },
+    notice: 'Free preview, rate-limited and unsigned. Statistical heuristic, not investment advice.',
+  }, 200, 60);
+}
+
 // /api/pro/anomalies — ranked cross-feed statistical outlier stream. z-score
 // outliers (|z|>2) over a trailing 30 daily-observation window for FRED series,
 // plus threshold flags for extreme sentiment, large 24h crypto moves, and
@@ -14163,6 +14262,9 @@ async function dispatchRoute(request, env, url, path, ctx) {
       // from /_internal/ since Pages can't serve files under /api/* directly.
       case 'for-agents':     return await proxyInternalPage('for-agents');
       case 'usdc-payable':   return await proxyInternalPage('usdc-payable');
+
+      // Premium decision wedge: free no-auth preview of a paid verdict.
+      case 'preview/regime':  return await handlePreviewRegime(request, env, url, ctx);
 
       // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
