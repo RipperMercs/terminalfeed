@@ -29,11 +29,11 @@ export function useFooterQuote(): Quote | null {
 
     const fetch_ = async () => {
       try {
-        const res = await fetch('https://zenquotes.io/api/random', { signal: AbortSignal.timeout(5000) }); // direct-fetch-exempt: keyless quote API; TODO migrate to worker
+        const res = await fetch('/api/quote', { signal: AbortSignal.timeout(5000) }); // worker proxy (rule #6)
         if (!res.ok || !mountedRef.current) return;
         const data = await res.json();
-        if (data && data[0]) {
-          setQuote({ text: data[0].q, author: data[0].a });
+        if (data && typeof data.text === 'string') {
+          setQuote({ text: data.text, author: data.author || 'Unknown' });
           return;
         }
       } catch (e) { if (import.meta.env.DEV) console.warn('[FooterQuote]', e); }

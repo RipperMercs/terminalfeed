@@ -71,15 +71,15 @@ try {
 //     NEW or keyed direct fetch outside this list is a hard error. Do NOT add
 //     keyed endpoints here; migrate those instead.
 const DIRECT_FETCH_DEBT = new Set([
-  'src/hooks/useAstros.ts',
+  // Migrated to the Worker (rule #6), removed from debt: useAstros (-> /api/humans-in-space),
+  // useFlightRadar (-> /api/aviation), useISSPosition (-> /api/iss-position + /api/humans-in-space),
+  // useFooterQuote (-> /api/quote). 2026-06-02.
   'src/hooks/useBluesky.ts',
   'src/hooks/useDevJoke.ts',
   'src/hooks/useDonations.ts',
   'src/hooks/useEarthquakes.ts',
   'src/hooks/useFearGreed.ts',
-  'src/hooks/useFlightRadar.ts',
   'src/hooks/useFunFact.ts',
-  'src/hooks/useISSPosition.ts',
   'src/hooks/useMuseumArt.ts',
   'src/hooks/useNpmTrends.ts',
   'src/hooks/useSpaceLaunches.ts',

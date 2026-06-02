@@ -7,7 +7,7 @@ export interface AstroData {
   people: { name: string; craft: string }[];
 }
 
-const API_URL = 'http://api.open-notify.org/astros.json';
+const API_URL = '/api/humans-in-space'; // worker proxy (SpaceDevs), rule #6
 const CACHE_KEY = 'astros';
 const POLL_MS = 30 * 60_000; // 30 min: crew doesn't change often
 
@@ -25,18 +25,19 @@ export function useAstros(): AstroData | null {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
-        if (json.message !== 'success') return;
+        const d = json.data;
+        if (!d || typeof d.count !== 'number') return;
 
         const result: AstroData = {
-          count: json.number ?? 0,
-          people: (json.people || []).map((p: { name: string; craft: string }) => ({
+          count: d.count,
+          people: (d.people || []).map((p: { name: string; craft: string }) => ({
             name: p.name,
             craft: p.craft,
           })),
         };
 
         setData(result);
-        setCache(CACHE_KEY, result, 'open-notify');
+        setCache(CACHE_KEY, result, 'humans-in-space');
       } catch (e) { if (import.meta.env.DEV) console.warn('[Astros]', e); }
     };
 

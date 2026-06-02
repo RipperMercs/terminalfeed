@@ -3952,6 +3952,99 @@ async function handleHumansInSpace() {
   }
 }
 
+// GET /api/aviation — OpenSky live air-traffic stats, computed server-side. The
+// raw states array is multi-MB and OpenSky CORS-blocks browsers, so the worker
+// fetches it and returns only the rollup the panel needs. (Migrated from a direct
+// browser fetch that CORS-failed, rule #6.)
+async function handleAviation() {
+  var KEY = 'aviation';
+  var cached = getCached(KEY, 120000);
+  if (cached) return jsonFreshAuto(cached, 200, 120);
+  try {
+    var res = await fetchWithTimeout('https://opensky-network.org/api/states/all', {}, 8000);
+    if (!res.ok) throw new Error('opensky ' + res.status);
+    var json = await res.json();
+    var states = Array.isArray(json.states) ? json.states : [];
+    var airborne = 0, onGround = 0, altSum = 0, altCount = 0, spdSum = 0, spdCount = 0, countryCounts = {};
+    for (var i = 0; i < states.length; i++) {
+      var s = states[i];
+      if (!Array.isArray(s)) continue;
+      if (s[8]) { onGround++; }
+      else {
+        airborne++;
+        if (typeof s[7] === 'number') { altSum += s[7]; altCount++; }
+        if (typeof s[9] === 'number') { spdSum += s[9]; spdCount++; }
+      }
+      var c = s[2];
+      if (c) countryCounts[c] = (countryCounts[c] || 0) + 1;
+    }
+    var topCountries = Object.keys(countryCounts)
+      .map(function(k) { return { country: k, count: countryCounts[k] }; })
+      .sort(function(a, b) { return b.count - a.count; })
+      .slice(0, 6);
+    var out = {
+      totalAirborne: airborne,
+      totalOnGround: onGround,
+      topCountries: topCountries,
+      avgAltitude: altCount > 0 ? Math.round(altSum / altCount) : 0,
+      avgSpeed: spdCount > 0 ? Math.round(spdSum / spdCount) : 0,
+      timestamp: json.time || Math.floor(Date.now() / 1000),
+    };
+    setCache(KEY, out);
+    return jsonFreshAuto(out, 200, 120);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 120);
+    return jsonResponse({ error: 'aviation_unavailable' }, 200, 60);
+  }
+}
+
+// GET /api/iss-position — ISS latitude/longitude via wheretheiss.at (reliable,
+// HTTPS, CORS-open, no key). The old source (open-notify) was http-only, which a
+// browser blocks as mixed content. (Migrated from a direct browser fetch, rule #6.)
+async function handleIssPosition() {
+  var KEY = 'iss-position';
+  var cached = getCached(KEY, 8000);
+  if (cached) return jsonFreshAuto(cached, 200, 8);
+  try {
+    var res = await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544', {}, 6000);
+    if (!res.ok) throw new Error('wtia ' + res.status);
+    var j = await res.json();
+    var lat = (typeof j.latitude === 'number') ? j.latitude : parseFloat(j.latitude);
+    var lon = (typeof j.longitude === 'number') ? j.longitude : parseFloat(j.longitude);
+    if (!isFinite(lat) || !isFinite(lon)) throw new Error('bad coords');
+    var out = { latitude: lat, longitude: lon, timestamp: (j.timestamp || Math.floor(Date.now() / 1000)) * 1000 };
+    setCache(KEY, out);
+    return jsonFreshAuto(out, 200, 8);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 8);
+    return jsonResponse({ error: 'iss_unavailable' }, 200, 30);
+  }
+}
+
+// GET /api/quote — a short rotating quote, proxied server-side because the
+// upstream (zenquotes) CORS-blocks browsers. (Migrated from a direct browser
+// fetch, rule #6.)
+async function handleQuote() {
+  var KEY = 'quote';
+  var cached = getCached(KEY, 300000);
+  if (cached) return jsonFreshAuto(cached, 200, 300);
+  try {
+    var res = await fetchWithTimeout('https://zenquotes.io/api/random', {}, 5000);
+    if (!res.ok) throw new Error('zenquotes ' + res.status);
+    var d = await res.json();
+    if (!Array.isArray(d) || !d[0] || typeof d[0].q !== 'string') throw new Error('bad shape');
+    var out = { text: d[0].q, author: d[0].a || 'Unknown' };
+    setCache(KEY, out);
+    return jsonFreshAuto(out, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 300);
+    return jsonResponse({ error: 'quote_unavailable' }, 200, 60);
+  }
+}
+
 
 // GET /api/disaster-alerts
 async function handleDisasterAlerts() {
@@ -14936,6 +15029,9 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'cyber-threats':  return await handleCyberThreats(env);
       case 'forex':          return await handleForex();
       case 'humans-in-space':return await handleHumansInSpace();
+      case 'aviation':       return await handleAviation();
+      case 'iss-position':   return await handleIssPosition();
+      case 'quote':          return await handleQuote();
       case 'disaster-alerts':return await handleDisasterAlerts();
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);
