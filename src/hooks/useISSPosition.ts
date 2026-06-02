@@ -7,8 +7,8 @@ export interface ISSData {
   location: string; // reverse geocoded approximate location
 }
 
-const API_URL = 'http://api.open-notify.org/iss-now.json';
-const CREW_URL = 'http://api.open-notify.org/astros.json';
+const API_URL = '/api/iss-position';       // worker proxy (wheretheiss.at), rule #6
+const CREW_URL = '/api/humans-in-space';   // worker proxy (SpaceDevs crew), rule #6
 const POLL_MS = 10_000; // 10 seconds
 
 function approxLocation(lat: number, lon: number): string {
@@ -50,16 +50,13 @@ export function useISSPosition() {
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
-        if (json.message !== 'success') return;
-
-        const lat = parseFloat(json.iss_position.latitude);
-        const lon = parseFloat(json.iss_position.longitude);
+        if (typeof json.latitude !== 'number' || typeof json.longitude !== 'number') return;
 
         setData({
-          latitude: lat,
-          longitude: lon,
-          timestamp: json.timestamp * 1000,
-          location: approxLocation(lat, lon),
+          latitude: json.latitude,
+          longitude: json.longitude,
+          timestamp: json.timestamp, // worker already returns ms
+          location: approxLocation(json.latitude, json.longitude),
         });
       } catch (e) { if (import.meta.env.DEV) console.warn('[ISSPosition]', e); }
     };
@@ -69,8 +66,8 @@ export function useISSPosition() {
         const res = await fetch(CREW_URL, { signal: AbortSignal.timeout(5000) });
         if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
-        if (json.message === 'success') {
-          setCrewCount(json.number ?? 0);
+        if (json.data && typeof json.data.count === 'number') {
+          setCrewCount(json.data.count);
         }
       } catch (e) { if (import.meta.env.DEV) console.warn('[ISSPosition]', e); }
     };

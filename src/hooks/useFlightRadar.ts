@@ -12,7 +12,7 @@ export interface FlightStats {
 
 export type FlightStatus = 'loading' | 'ready' | 'failed';
 
-const API_URL = 'https://opensky-network.org/api/states/all';
+const API_URL = '/api/aviation';
 const CACHE_KEY = 'flight_radar';
 const POLL_MS = 120_000; // 2 minutes: respectful to free API
 const FETCH_TIMEOUT_MS = 8_000;
@@ -36,51 +36,24 @@ export function useFlightRadar(): { stats: FlightStats | null; status: FlightSta
 
     const fetchFlights = async () => {
       try {
+        // Worker proxies OpenSky and returns the precomputed rollup (rule #6).
         const res = await fetch(API_URL, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
         if (!res.ok) return;
         const json = await res.json();
-        if (!mountedRef.current || !json.states) return;
-
-        const states: any[][] = json.states;
-        let airborne = 0;
-        let onGround = 0;
-        let altSum = 0;
-        let altCount = 0;
-        let spdSum = 0;
-        let spdCount = 0;
-        const countryCounts: Record<string, number> = {};
-
-        for (const s of states) {
-          const isOnGround = s[8];
-          if (isOnGround) { onGround++; } else { airborne++; }
-
-          const alt = s[7]; // baro altitude in meters
-          if (alt != null && !isOnGround) { altSum += alt; altCount++; }
-
-          const spd = s[9]; // velocity m/s
-          if (spd != null && !isOnGround) { spdSum += spd; spdCount++; }
-
-          const country = s[2] as string;
-          if (country) countryCounts[country] = (countryCounts[country] || 0) + 1;
-        }
-
-        const topCountries = Object.entries(countryCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 6)
-          .map(([country, count]) => ({ country, count }));
+        if (!mountedRef.current || typeof json.totalAirborne !== 'number') return;
 
         const result: FlightStats = {
-          totalAirborne: airborne,
-          totalOnGround: onGround,
-          topCountries,
-          avgAltitude: altCount > 0 ? Math.round(altSum / altCount) : 0,
-          avgSpeed: spdCount > 0 ? Math.round(spdSum / spdCount) : 0,
-          timestamp: json.time,
+          totalAirborne: json.totalAirborne,
+          totalOnGround: json.totalOnGround ?? 0,
+          topCountries: Array.isArray(json.topCountries) ? json.topCountries : [],
+          avgAltitude: json.avgAltitude ?? 0,
+          avgSpeed: json.avgSpeed ?? 0,
+          timestamp: json.timestamp ?? Math.floor(Date.now() / 1000),
         };
 
         setStats(result);
         setStatus('ready');
-        setCache(CACHE_KEY, result, 'opensky');
+        setCache(CACHE_KEY, result, 'aviation');
       } catch (e) { if (import.meta.env.DEV) console.warn('[FlightRadar]', e); }
     };
 
