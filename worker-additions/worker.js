@@ -14356,6 +14356,168 @@ async function handleBackupManifest(request, env, url) {
   return adminJsonResponse({ ok: true, manifest: manifest }, 200, request);
 }
 
+// === Breaking-alert banner ===
+// One operator-raised global alert for a market-moving event (exchange halt,
+// stablecoin depeg, major regulatory action) that no automated status poll would
+// catch. Public free cached GET /api/breaking; ADMIN_SECRET-only mutation at
+// /api/admin/breaking (gated centrally by the admin/ gate). The server is the
+// sole expiry authority. Writes go DIRECTLY to KV (no kill-switch wrapper exists
+// here, and a takedown must always work) and purge the edge cache.
+var BREAKING_KEY = 'breaking:current';
+var BREAKING_AUDIT_KEY = 'breaking:audit';
+var BREAKING_AUDIT_CAP = 100;
+var BREAKING_HEADLINE_MAX = 90;
+var BREAKING_TTL_MIN_HOURS = 1;
+var BREAKING_TTL_MAX_HOURS = 168;
+var BREAKING_TTL_DEFAULT_HOURS = 24;
+
+// charCodeAt scanners (not regex literals) so THIS source holds no banned
+// character while still rejecting them at runtime. A runtime KV value never
+// passes the build-time em-dash scan, so this is the only enforcement point.
+function _breakingHasControlChar(s) {
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charCodeAt(i);
+    if (c < 0x20 || c === 0x7f) return true;
+  }
+  return false;
+}
+function _breakingHasBannedDash(s) {
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charCodeAt(i);
+    if (c === 0x2014 || c === 0x2013) return true;            // em-dash, en-dash
+    if (c === 0x2d && s.charCodeAt(i + 1) === 0x2d) return true; // double hyphen
+  }
+  return false;
+}
+function _breakingValidHref(href) {
+  // Same-origin relative path only: leading slash then a NON-slash char (rejects
+  // protocol-relative //evil), no backslash, no scheme.
+  if (typeof href !== 'string' || !href) return false;
+  if (href.indexOf('\\') !== -1) return false;
+  return /^\/[^/]/.test(href);
+}
+
+// Pure: the server alone decides liveness. Returns the alert only if well-formed
+// and not past expires_at, else null. Date.parse on a bad value yields NaN, which
+// Number.isFinite rejects (so 'not-a-date' is never treated as live).
+function filterActiveAlert(raw, nowMs) {
+  if (!raw || typeof raw !== 'object') return null;
+  if (typeof raw.headline !== 'string' || !raw.headline) return null;
+  var exp = Date.parse(raw.expires_at);
+  if (!Number.isFinite(exp)) return null;
+  if (nowMs > exp) return null;
+  var out = {
+    id: raw.id || null,
+    headline: raw.headline,
+    severity: (raw.severity === 'critical' || raw.severity === 'warning') ? raw.severity : 'info',
+    created_at: raw.created_at || null,
+    expires_at: raw.expires_at,
+  };
+  if (typeof raw.href === 'string' && _breakingValidHref(raw.href)) out.href = raw.href;
+  return out;
+}
+
+// Cache-API read layer (15s) so steady-state homepage polling does not spend a KV
+// read op per hit. ONE key builder for read AND purge so a cleared alert cannot
+// keep serving from a drifted cache key.
+function _breakingCacheKey() {
+  return new Request('https://terminalfeed.io/__kv_cache/' + encodeURIComponent(BREAKING_KEY));
+}
+async function _breakingReadRaw(env, ctx) {
+  var cache = caches.default;
+  var ck = _breakingCacheKey();
+  try {
+    var hit = await cache.match(ck);
+    if (hit) { var cj = await hit.json(); return (cj && Object.prototype.hasOwnProperty.call(cj, '__raw')) ? cj.__raw : null; }
+  } catch (e) {}
+  var raw = null;
+  try { var s = await env.WEBHOOK_SUBS.get(BREAKING_KEY); raw = s ? JSON.parse(s) : null; } catch (e) {}
+  try {
+    var resp = new Response(JSON.stringify({ __raw: raw }), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=15' } });
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(cache.put(ck, resp));
+    else await cache.put(ck, resp);
+  } catch (e) {}
+  return raw;
+}
+async function _breakingPurgeCache() {
+  try { await caches.default.delete(_breakingCacheKey()); } catch (e) {}
+}
+async function _breakingAppendAudit(env, entry) {
+  try {
+    var s = await env.WEBHOOK_SUBS.get(BREAKING_AUDIT_KEY);
+    var arr = s ? JSON.parse(s) : [];
+    if (!Array.isArray(arr)) arr = [];
+    arr.push(entry);
+    if (arr.length > BREAKING_AUDIT_CAP) arr = arr.slice(arr.length - BREAKING_AUDIT_CAP);
+    await env.WEBHOOK_SUBS.put(BREAKING_AUDIT_KEY, JSON.stringify(arr));
+  } catch (e) {}
+}
+
+async function handleBreaking(request, env, ctx) {
+  if (request.method !== 'GET') return jsonResponse({ ok: false, error: 'GET only' }, 405);
+  var raw = await _breakingReadRaw(env, ctx);
+  var alert = filterActiveAlert(raw, Date.now());
+  return jsonResponse({ ok: true, source: 'terminalfeed', alert: alert }, 200, 15);
+}
+
+async function handleAdminBreaking(request, env) {
+  // Auth is enforced centrally by the admin/ gate (ADMIN_SECRET only).
+  if (request.method === 'GET') {
+    var rawG = null, auditG = [];
+    try { var sg = await env.WEBHOOK_SUBS.get(BREAKING_KEY); rawG = sg ? JSON.parse(sg) : null; } catch (e) {}
+    try { var ag = await env.WEBHOOK_SUBS.get(BREAKING_AUDIT_KEY); auditG = ag ? JSON.parse(ag) : []; } catch (e) {}
+    if (!Array.isArray(auditG)) auditG = [];
+    return adminJsonResponse({ ok: true, alert: rawG, is_live: !!filterActiveAlert(rawG, Date.now()), audit: auditG.slice(-10).reverse() }, 200, request);
+  }
+  if (request.method !== 'POST') return adminJsonResponse({ ok: false, error: 'GET or POST only' }, 405, request);
+
+  var parsed = await readBoundedJson(request, 4096);
+  if (parsed.error) return adminJsonResponse({ ok: false, error: parsed.error }, 400, request);
+  var body = parsed.data || {};
+
+  // Clear: direct delete + purge so a takedown is immediate.
+  if (body.clear === true) {
+    try { await env.WEBHOOK_SUBS.delete(BREAKING_KEY); } catch (e) {}
+    await _breakingPurgeCache();
+    await _breakingAppendAudit(env, { action: 'clear', at: new Date().toISOString() });
+    return adminJsonResponse({ ok: true, cleared: true }, 200, request);
+  }
+
+  var headline = (typeof body.headline === 'string') ? body.headline.trim() : '';
+  if (!headline) return adminJsonResponse({ ok: false, error: 'headline_required' }, 400, request);
+  if (headline.length > BREAKING_HEADLINE_MAX) return adminJsonResponse({ ok: false, error: 'headline_too_long', max: BREAKING_HEADLINE_MAX }, 400, request);
+  if (_breakingHasControlChar(headline)) return adminJsonResponse({ ok: false, error: 'headline_control_char' }, 400, request);
+  if (_breakingHasBannedDash(headline)) return adminJsonResponse({ ok: false, error: 'headline_banned_dash', detail: 'no em-dash, en-dash, or double-hyphen' }, 400, request);
+
+  var href = null;
+  if (body.href != null && body.href !== '') {
+    if (!_breakingValidHref(String(body.href))) return adminJsonResponse({ ok: false, error: 'href_must_be_same_origin_relative' }, 400, request);
+    href = String(body.href);
+  }
+
+  var ttlHours = parseInt(body.ttl_hours, 10);
+  if (!Number.isFinite(ttlHours)) ttlHours = BREAKING_TTL_DEFAULT_HOURS;
+  if (ttlHours < BREAKING_TTL_MIN_HOURS || ttlHours > BREAKING_TTL_MAX_HOURS) {
+    return adminJsonResponse({ ok: false, error: 'ttl_out_of_range', min_hours: BREAKING_TTL_MIN_HOURS, max_hours: BREAKING_TTL_MAX_HOURS }, 400, request);
+  }
+
+  var nowMs = Date.now();
+  var alert = {
+    id: 'brk_' + nowMs.toString(36),
+    headline: headline,
+    severity: (body.severity === 'critical' || body.severity === 'warning') ? body.severity : 'info',
+    created_at: new Date(nowMs).toISOString(),
+    expires_at: new Date(nowMs + ttlHours * 3600 * 1000).toISOString(),
+  };
+  if (href) alert.href = href;
+
+  try { await env.WEBHOOK_SUBS.put(BREAKING_KEY, JSON.stringify(alert)); }
+  catch (e) { return adminJsonResponse({ ok: false, error: 'kv_write_failed' }, 503, request); }
+  await _breakingPurgeCache();
+  await _breakingAppendAudit(env, { action: 'set', id: alert.id, headline: headline, at: alert.created_at });
+  return adminJsonResponse({ ok: true, alert: alert }, 200, request);
+}
+
 async function dispatchRoute(request, env, url, path, ctx) {
   // (route table moved here so the fetch() entry point can wrap the response
   // with rate-limit headers / breakers / etc. without touching every case.)
@@ -14489,6 +14651,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'preview/regime':  return await handlePreviewRegime(request, env, url, ctx);
       // Machine-readable catalog of every payable endpoint (free, no auth).
       case 'meta/pro':        return await handleMetaPro(request);
+      // Operator-raised global breaking-alert banner (public cached read).
+      case 'breaking':        return await handleBreaking(request, env, ctx);
 
       // Premium API tier (USDC micropayments via TensorFeed shared credit pool)
       case 'pro/briefing':    return await handleProBriefing(request, env, url);
@@ -14519,6 +14683,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'admin/backup/run':      return await handleBackupRun(request, env);
       case 'admin/backup/list':     return await handleBackupList(request, env, url);
       case 'admin/backup/manifest': return await handleBackupManifest(request, env, url);
+      case 'admin/breaking':        return await handleAdminBreaking(request, env);
       // Payment proxy (matches tensorfeed.ai's /api/payment/* path structure 1:1
       // so agent code is interchangeable between domains).
       case 'payment/info':       return await handlePaymentInfo(request, env);
