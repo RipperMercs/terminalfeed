@@ -4345,6 +4345,149 @@ async function handleMuseumArt() {
   }
 }
 
+// /api/bluesky : curated tech Bluesky posts (rule #6). Resolves each handle to a
+// DID and pulls its author feed server-side, merges, sorts newest first, returns
+// the final list so the panel just renders { data: [...] }. Cached 2 min.
+async function handleBluesky() {
+  var KEY = 'bluesky';
+  var cached = getCached(KEY, 120000); // 2 min
+  if (cached) return jsonFreshAuto(cached, 200, 120);
+
+  var HANDLES = ['jay.bsky.team', 'pfrazee.com', 'mackuba.eu'];
+
+  async function feedFor(handle) {
+    try {
+      var rr = await fetchWithTimeout(
+        'https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=' + encodeURIComponent(handle),
+        { headers: { Accept: 'application/json' } }, 6000);
+      if (!rr.ok) return [];
+      var did = (await rr.json()).did;
+      if (!did) return [];
+      var fr = await fetchWithTimeout(
+        'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=' + encodeURIComponent(did) + '&limit=3&filter=posts_no_replies',
+        { headers: { Accept: 'application/json' } }, 6000);
+      if (!fr.ok) return [];
+      var feed = (await fr.json()).feed || [];
+      return feed.map(function(item) {
+        var p = item.post || {};
+        var a = p.author || {};
+        var rec = p.record || {};
+        return {
+          uri: p.uri || '',
+          author: a.displayName || a.handle || 'anon',
+          handle: a.handle || '',
+          text: (rec.text || '').slice(0, 140),
+          createdAt: rec.createdAt || '',
+          likeCount: p.likeCount || 0,
+        };
+      });
+    } catch (e) { return []; }
+  }
+
+  try {
+    var results = await Promise.all(HANDLES.map(feedFor));
+    var all = [];
+    results.forEach(function(arr) { all = all.concat(arr); });
+    all.sort(function(a, b) { return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); });
+    var out = { data: all.slice(0, 8) };
+    if (out.data.length) setCache(KEY, out);
+    return jsonFreshAuto(out, 200, 120);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
+    return jsonResponse({ data: [] }, 200, 30);
+  }
+}
+
+// /api/tcg-market : trading-card market movers across Pokemon, MTG and Yu-Gi-Oh
+// (rule #6). Pulls all three upstreams server-side, maps to a common card shape,
+// interleaves by game, returns the final { cards, timestamp }. Cached 5 min.
+async function handleTcgMarket() {
+  var KEY = 'tcg-market';
+  var cached = getCached(KEY, 300000); // 5 min
+  if (cached) return jsonFreshAuto(cached, 200, 300);
+
+  async function pokemon() {
+    try {
+      var res = await fetchWithTimeout('https://api.pokemontcg.io/v2/cards?q=tcgplayer.prices.holofoil.market:[20 TO *]&orderBy=-tcgplayer.prices.holofoil.market&pageSize=8&select=id,name,set,rarity,tcgplayer,images', { headers: { Accept: 'application/json' } }, 10000);
+      if (!res.ok) return [];
+      var d = (await res.json()).data || [];
+      return d.map(function(c) {
+        var pr = (c.tcgplayer && c.tcgplayer.prices) || {};
+        var po = pr.holofoil || pr.reverseHolofoil || pr['1stEditionHolofoil'] || pr.normal || {};
+        return {
+          name: c.name, game: 'Pokemon',
+          price: po.market || po.mid || 0,
+          set: (c.set && c.set.name) || '',
+          rarity: c.rarity || '',
+          image: (c.images && c.images.small) || '',
+          url: c.tcgplayer && c.tcgplayer.url,
+        };
+      }).filter(function(c) { return c.price > 0; });
+    } catch (e) { return []; }
+  }
+  async function mtg() {
+    try {
+      var res = await fetchWithTimeout('https://api.scryfall.com/cards/search?q=usd>20&order=usd&dir=desc&page=1&unique=cards', { headers: { Accept: 'application/json' } }, 10000);
+      if (!res.ok) return [];
+      var d = (await res.json()).data || [];
+      return d.slice(0, 8).map(function(c) {
+        var p = c.prices || {};
+        var faces = c.card_faces || [];
+        return {
+          name: c.name, game: 'MTG',
+          price: parseFloat(p.usd || '0') || parseFloat(p.usd_foil || '0') || 0,
+          set: c.set_name || '',
+          rarity: c.rarity || '',
+          image: (c.image_uris && c.image_uris.small) || (faces[0] && faces[0].image_uris && faces[0].image_uris.small) || '',
+          url: c.scryfall_uri,
+        };
+      }).filter(function(c) { return c.price > 0; });
+    } catch (e) { return []; }
+  }
+  async function ygo() {
+    try {
+      var res = await fetchWithTimeout('https://db.ygoprodeck.com/api/v7/cardinfo.php?staple=yes&num=60&offset=0', { headers: { Accept: 'application/json' } }, 10000);
+      if (!res.ok) return [];
+      var d = (await res.json()).data || [];
+      return d.map(function(c) {
+        var pr = (c.card_prices && c.card_prices[0]) || {};
+        var price = parseFloat(pr.tcgplayer_price || '0') || parseFloat(pr.cardmarket_price || '0') || 0;
+        var sets = c.card_sets || [];
+        return {
+          name: c.name, game: 'Yu-Gi-Oh',
+          price: price,
+          set: (sets[0] && sets[0].set_name) || c.archetype || '',
+          rarity: (sets[0] && sets[0].set_rarity_code) || c.race || '',
+          image: (c.card_images && c.card_images[0] && c.card_images[0].image_url_small) || '',
+          url: c.ygoprodeck_url,
+        };
+      }).filter(function(c) { return c.price > 1; })
+        .sort(function(a, b) { return b.price - a.price; })
+        .slice(0, 8);
+    } catch (e) { return []; }
+  }
+
+  try {
+    var parts = await Promise.all([pokemon(), mtg(), ygo()]);
+    var pk = parts[0], mt = parts[1], yg = parts[2];
+    var combined = [];
+    var maxLen = Math.max(pk.length, mt.length, yg.length);
+    for (var i = 0; i < maxLen && combined.length < 15; i++) {
+      if (pk[i]) combined.push(pk[i]);
+      if (mt[i]) combined.push(mt[i]);
+      if (yg[i]) combined.push(yg[i]);
+    }
+    var out = { cards: combined, timestamp: Date.now() };
+    if (combined.length) setCache(KEY, out);
+    return jsonFreshAuto(out, 200, 300);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 60);
+    return jsonResponse({ cards: [], timestamp: Date.now() }, 200, 30);
+  }
+}
+
 async function handleDonations() {
   var KEY = 'donations';
   var cached = getCached(KEY, 300000);
@@ -15379,6 +15522,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'stackoverflow':  return await _transparentProxy('stackoverflow', 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10&filter=withbody', 300000);
       case 'this-day':       return await handleThisDay();
       case 'museum-art':     return await handleMuseumArt();
+      case 'bluesky':        return await handleBluesky();
+      case 'tcg-market':     return await handleTcgMarket();
       case 'disaster-alerts':return await handleDisasterAlerts();
       case 'launches':       return await handleLaunches();
       case 'economic-data':  return await handleEconomicData(env);
