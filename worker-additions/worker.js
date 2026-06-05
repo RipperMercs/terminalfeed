@@ -7794,10 +7794,13 @@ async function handleBtcAlert(env) {
   });
 }
 
-// POST /api/btc-alert-check (Bearer ADMIN_SECRET) — force a check now.
+// POST /api/btc-alert-check (auth: Bearer <ADMIN_SECRET>), force a check now.
 async function handleBtcAlertCheck(request, env) {
   var auth = request.headers.get('Authorization');
-  if (!auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
+  // Fail closed when ADMIN_SECRET is unset: otherwise the compare degrades to
+  // 'Bearer undefined', which a request sending exactly that would satisfy.
+  // Matches the other admin handlers (handleAdminAgentTraffic, the admin/ gate).
+  if (!env || !env.ADMIN_SECRET || !auth || auth !== 'Bearer ' + env.ADMIN_SECRET) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
   }
   try {
