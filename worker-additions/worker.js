@@ -12238,7 +12238,7 @@ async function fetchProExchangeFlows(env, url) {
   var totalInflow = transfers.filter(function(t) { return t.direction === 'inflow'; }).reduce(function(s, t) { return s + t.value_eth; }, 0);
   var totalOutflow = transfers.filter(function(t) { return t.direction === 'outflow'; }).reduce(function(s, t) { return s + t.value_eth; }, 0);
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/exchange-flows',
     generated_at: new Date().toISOString(),
@@ -12271,6 +12271,12 @@ async function fetchProExchangeFlows(env, url) {
     },
     _meta: _premiumMeta('/api/pro/exchange-flows', _buildSourcesMeta(firstResults, sourceMeta).concat([ethBlocksSourceMeta])),
   };
+  // Valid-but-empty: no tracked-exchange transfers >= 5 ETH in the scanned
+  // blocks. This is the common case in a quiet window, so no-charge it rather
+  // than bill for an empty flow list. (Propagated from TensorFeed money-path
+  // audit 2026-06-04, empty_result class.)
+  if (transfers.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -12439,6 +12445,10 @@ async function fetchProStablecoinFlows(env, url) {
       endpoint: '/api/pro/stablecoin-flows',
       generated_at: new Date().toISOString(),
       error: 'upstream_unavailable',
+      // DefiLlama unreachable: valid request, no data. No-charge (advertised
+      // empty_result guarantee). Stripped before the signed body reaches the
+      // wire. (Propagated from TensorFeed money-path audit 2026-06-04.)
+      __no_charge: 'empty_result',
       stablecoins: [],
       aggregate: null,
       notes: { source_attribution: 'DefiLlama stablecoins API', cache_ttl: '1 hour' },
@@ -12531,7 +12541,7 @@ async function fetchProStablecoinFlows(env, url) {
       });
   }
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/stablecoin-flows',
     generated_at: new Date().toISOString(),
@@ -12568,6 +12578,11 @@ async function fetchProStablecoinFlows(env, url) {
       latency_ms: _scLatency,
     }]),
   };
+  // Valid-but-empty: DefiLlama responded but yielded no stablecoins over the
+  // dust threshold. No-charge rather than bill for an empty list. (Propagated
+  // from TensorFeed money-path audit 2026-06-04, empty_result class.)
+  if (stablecoins.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -12664,7 +12679,7 @@ async function fetchProDefiTvl(env, url) {
       });
   }
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/defi-tvl',
     generated_at: new Date().toISOString(),
@@ -12689,6 +12704,11 @@ async function fetchProDefiTvl(env, url) {
     },
     _meta: _premiumMeta('/api/pro/defi-tvl', _buildSourcesMeta(sources, sourceMeta)),
   };
+  // Valid-but-empty: both DefiLlama upstreams (protocols + chains) returned
+  // nothing. No-charge rather than bill for an empty snapshot. (Propagated from
+  // TensorFeed money-path audit 2026-06-04, empty_result class.)
+  if (protocols.length === 0 && chains.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -12877,7 +12897,7 @@ async function fetchProWhales(env, url) {
   var btcTotalUsd = btcWhales.reduce(function(s, w) { return s + (w.value_usd || 0); }, 0);
   var ethTotalUsd = ethWhales.reduce(function(s, w) { return s + (w.value_usd || 0); }, 0);
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/whales',
     generated_at: new Date().toISOString(),
@@ -12912,6 +12932,13 @@ async function fetchProWhales(env, url) {
     },
     _meta: _premiumMeta('/api/pro/whales', _buildSourcesMeta(firstResults, sourceMeta).concat([ethBlocksSourceMeta])),
   };
+  // Valid-but-empty: no whale-scale transactions in the mempool snapshot or the
+  // last three ETH blocks. This is the normal state during a quiet on-chain
+  // window, so no-charge it; an agent polling for flow signal is not billed for
+  // zero whales. (Propagated from TensorFeed money-path audit 2026-06-04,
+  // empty_result class.)
+  if (btcWhales.length === 0 && ethWhales.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -13091,7 +13118,7 @@ async function fetchProCorrelationMatrix(env, url) {
   var dataAvailability = {};
   fetched.forEach(function(x) { dataAvailability[x.symbol] = x.closes.length; });
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/correlation-matrix',
     generated_at: new Date().toISOString(),
@@ -13115,6 +13142,12 @@ async function fetchProCorrelationMatrix(env, url) {
     },
     _meta: _premiumMeta('/api/pro/correlation-matrix', sourcesMeta),
   };
+  // Valid-but-empty: fewer than two assets returned enough observations to
+  // compute a single correlation pair (total upstream outage of Coinbase + FRED).
+  // No-charge rather than bill for an empty matrix. (Propagated from TensorFeed
+  // money-path audit 2026-06-04, empty_result class.)
+  if (pairs.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
