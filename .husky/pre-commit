@@ -8,19 +8,36 @@
 # whitespace, quote, =, etc.), never embedded in a word. The (^|[^A-Za-z0-9])
 # prefix below kills false positives like CDN URLs matching the re_ pattern
 # (e.g. Wikimedia 'Sapphire_Pulse_...' matching 're_Pulse_...').
-PATTERNS="(^|[^A-Za-z0-9])(sk-ant-[a-zA-Z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|re_[a-zA-Z0-9_-]{20,}|xoxb-[a-zA-Z0-9-]{20,}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36})"
+PATTERNS="(^|[^A-Za-z0-9])(sk-ant-[a-zA-Z0-9_-]{20,}|sk-proj-[a-zA-Z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|re_[a-zA-Z0-9_-]{20,}|xoxb-[a-zA-Z0-9-]{20,}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{20,})"
 if git diff --cached | grep -qE "$PATTERNS"; then
   echo "COMMIT BLOCKED: possible API key detected in staged changes."
   echo "Remove the key from the diff, move it behind process.env / wrangler secret put, then retry."
   exit 1
 fi
-# Raw JWTs and quoted "Bearer <token>" literals. Added 2026-05-29 after a live
-# TMDB v4 read token (a JWT) shipped in the client bundle, slipping past the
-# prefix patterns above. A template like `Bearer ${VAR}` is allowed because the
-# char after the space is $, not a token char.
-JWT_PATTERNS="eyJ[A-Za-z0-9_=-]{10,}\.[A-Za-z0-9_=-]{10,}|Bearer [A-Za-z0-9][A-Za-z0-9._-]{11,}"
-if git diff --cached | grep -qE "$JWT_PATTERNS"; then
-  echo "COMMIT BLOCKED: possible JWT or Bearer token literal detected in staged changes."
+# PEM private-key blocks (any flavor: RSA, EC, OPENSSH, generic).
+if git diff --cached | grep -qE -- "-----BEGIN [A-Z ]*PRIVATE KEY-----"; then
+  echo "COMMIT BLOCKED: private key block detected in staged changes."
+  echo "Remove the key material; store it as a Worker secret (wrangler secret put) instead."
+  exit 1
+fi
+# Raw JWTs. Added 2026-05-29 after a live TMDB v4 read token (a JWT) shipped in
+# the client bundle, slipping past the prefix patterns above.
+if git diff --cached | grep -qE "eyJ[A-Za-z0-9_=-]{10,}\.[A-Za-z0-9_=-]{10,}"; then
+  echo "COMMIT BLOCKED: possible JWT detected in staged changes."
+  echo "Move it behind a Worker secret (wrangler secret put) and proxy via /api/*, then retry."
+  exit 1
+fi
+# Bearer token literals. A real token carries entropy (a lowercase letter or a
+# digit). An UPPER_SNAKE env-var name in a comment or string (e.g. the literal
+# Bearer followed by ADMIN_SECRET) or a <PLACEHOLDER> is NOT a secret and must
+# not block the commit, otherwise any edit near such a doc reference is stuck.
+# So: extract every "Bearer <12+ char token>", strip the Bearer prefix, and
+# block only if a token actually contains a lowercase letter or a digit. A
+# template like `Bearer ${VAR}` is still allowed (char after the space is not a
+# token char, so nothing is extracted).
+BEARER_TOKENS=$(git diff --cached | grep -oE "Bearer [A-Za-z0-9][A-Za-z0-9._-]{11,}" | sed "s/^Bearer //")
+if [ -n "$BEARER_TOKENS" ] && printf "%s\n" "$BEARER_TOKENS" | grep -qE "[a-z0-9]"; then
+  echo "COMMIT BLOCKED: possible Bearer token literal detected in staged changes."
   echo "Move it behind a Worker secret (wrangler secret put) and proxy via /api/*, then retry."
   exit 1
 fi
