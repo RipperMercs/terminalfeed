@@ -567,6 +567,10 @@ async function cacheLookupOrFetch(key, ttlMs, fetchFn) {
     return Object.assign({}, entry.data, {
       _cached: true,
       _cache_age_seconds: ageSec,
+      // Real capture time = when this entry was fetched from upstream, NOT now.
+      // aftaPremiumResponse promotes this to captured_at so the receipt and the
+      // staleness SLA reflect the data's true age. (Provenance, 2026-06-04.)
+      _captured_at: new Date(entry.ts).toISOString(),
     });
   }
   try {
@@ -576,6 +580,7 @@ async function cacheLookupOrFetch(key, ttlMs, fetchFn) {
     return Object.assign({}, data, {
       _cached: false,
       _cache_age_seconds: 0,
+      _captured_at: new Date((_cache[key] && _cache[key].ts) || Date.now()).toISOString(),
     });
   } catch (e) {
     _recordEndpointError(key, e && e.message);
@@ -590,6 +595,7 @@ async function cacheLookupOrFetch(key, ttlMs, fetchFn) {
         _cached: true,
         _cache_age_seconds: Math.floor((Date.now() - staleEntry.ts) / 1000),
         _stale_serve: true,
+        _captured_at: new Date(staleEntry.ts).toISOString(),
       });
     }
     throw e;
@@ -10318,6 +10324,19 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
       delete bodyResult.__no_charge;
     }
 
+    // Anchor captured_at to the real upstream capture time. cacheLookupOrFetch
+    // tags every response with _captured_at: the cache-entry write time for a
+    // cached or stale serve, the fetch time for a fresh one. If the fetcher did
+    // not set its own (more specific) captured_at, promote that real time so the
+    // staleness SLA below and the signed receipt reflect the data's true age,
+    // not the moment we composed the JSON. generated_at stays compose time, which
+    // is what it means. (Propagated from TensorFeed money-path audit 2026-06-04,
+    // provenance class.)
+    if (typeof bodyResult.captured_at !== 'string' && typeof bodyResult._captured_at === 'string') {
+      bodyResult.captured_at = bodyResult._captured_at;
+    }
+    if ('_captured_at' in bodyResult) delete bodyResult._captured_at;
+
     // Degraded serve: cacheLookupOrFetch returned a stale cache entry because the
     // upstream refresh failed. No-charge it as stale_data and flag the body so the
     // agent sees the data is stale and is not billed for a degraded answer. This
@@ -10332,9 +10351,10 @@ async function aftaPremiumResponse(handlerResult, paymentCtx, request, env) {
       if (staleServeSla) bodyResult.stale_sla_seconds = staleServeSla.maxAgeSeconds;
     }
 
-    // Staleness check. Premium fetchers expose freshness via _meta.generated_at
-    // (per _premiumMeta) which is the moment we composed the response. For
-    // endpoints with stale data the captured_at is older than the SLA and we
+    // Staleness check. captured_at now reflects the real upstream capture time
+    // (promoted from cacheLookupOrFetch above); generated_at / _meta.generated_at
+    // are compose-time fallbacks for any response that did not flow through the
+    // cache. When the data backing the response is older than the endpoint SLA,
     // skip the debit.
     var capturedAt = null;
     if (typeof bodyResult.captured_at === 'string') capturedAt = bodyResult.captured_at;
@@ -14176,8 +14196,10 @@ async function handleProBriefingAfta(request, env, url) {
       // Surface captured_at so the library's staleness check has something
       // to read. The legacy /api/pro/briefing carries this in _meta; copy
       // it up for the library's reach.
-      var capturedAt = (result && result._meta && result._meta.captured_at) || new Date().toISOString();
-      return Object.assign({}, result, { captured_at: capturedAt });
+      var capturedAt = (result && result._meta && result._meta.captured_at) || (result && result._captured_at) || new Date().toISOString();
+      var body = Object.assign({}, result, { captured_at: capturedAt });
+      delete body._captured_at;
+      return body;
     },
   });
 }
