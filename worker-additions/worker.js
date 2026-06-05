@@ -8042,27 +8042,84 @@ var WEBHOOK_ALLOWED_ENDPOINTS = {
   'anomalies': 'tf_premium_anomalies',
 };
 
+// Parse a host as an IPv4 literal in any encoding inet_aton accepts: dotted
+// decimal (127.0.0.1), a single 32-bit integer (2130706433), hex (0x7f000001),
+// octal (017700000001), or dotted forms with hex/octal octets (0x7f.0.0.1).
+// Returns the canonical [a,b,c,d] octets, or null if it is not an IPv4 literal.
+// A dotted-decimal-only regex misses 2130706433 and 0x7f000001, which a browser
+// and fetch() both resolve to 127.0.0.1 just the same; that gap is the SSRF.
+function _parseFlexibleIPv4(host) {
+  if (!host || host[0] === '[') return null;
+  function parseField(p) {
+    if (!/^(0x[0-9a-f]+|0[0-7]+|[1-9][0-9]*|0)$/i.test(p)) return NaN;
+    if (/^0x/i.test(p)) return parseInt(p, 16);
+    if (/^0[0-7]+$/.test(p)) return parseInt(p, 8);
+    return parseInt(p, 10);
+  }
+  var parts = host.split('.');
+  if (parts.length < 1 || parts.length > 4) return null;
+  var nums = [];
+  for (var i = 0; i < parts.length; i++) {
+    var n = parseField(parts[i]);
+    if (!isFinite(n) || n < 0) return null;
+    nums.push(n);
+  }
+  // inet_aton semantics: every leading field is a single octet (0..255); the
+  // final field absorbs all remaining low-order bytes. So 127.1 => 127.0.0.1
+  // and a bare 2130706433 => 127.0.0.1, both of which a dotted-quad regex misses.
+  var lead = parts.length - 1;
+  for (var j = 0; j < lead; j++) { if (nums[j] > 255) return null; }
+  if (nums[lead] > Math.pow(256, 4 - lead) - 1) return null;
+  var value = nums[lead];
+  for (var k = 0; k < lead; k++) value += nums[k] * Math.pow(256, 3 - k);
+  value = value >>> 0;
+  return [(value >>> 24) & 255, (value >>> 16) & 255, (value >>> 8) & 255, value & 255];
+}
+
+function _ipv4OctetsArePrivate(o) {
+  var a = o[0], b = o[1], c = o[2];
+  if (a === 0) return true;                          // 0.0.0.0/8
+  if (a === 10) return true;                         // 10.0.0.0/8
+  if (a === 127) return true;                        // loopback 127/8
+  if (a === 169 && b === 254) return true;           // link-local + cloud metadata 169.254.169.254
+  if (a === 172 && b >= 16 && b <= 31) return true;  // 172.16.0.0/12
+  if (a === 192 && b === 168) return true;           // 192.168.0.0/16
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
+  if (a === 192 && b === 0 && c === 0) return true;  // 192.0.0.0/24 IETF protocol assignments
+  if (a >= 224) return true;                         // multicast 224/4 + reserved 240/4
+  return false;
+}
+
 function _isPrivateOrLocalHostname(hostname) {
   if (!hostname) return true;
   var h = hostname.toLowerCase();
+  // String-name blocklist + private / service-discovery TLD suffixes.
   if (h === 'localhost' || h.endsWith('.localhost')) return true;
-  if (h === '0.0.0.0' || h === '::' || h === '::1' || h === '[::1]') return true;
-  // IPv4 dotted-quad checks
-  var parts = h.split('.');
-  if (parts.length === 4 && parts.every(function(p) { return /^\d+$/.test(p); })) {
-    var a = parseInt(parts[0], 10), b = parseInt(parts[1], 10);
-    if (a === 10) return true;                                   // 10.0.0.0/8
-    if (a === 127) return true;                                  // loopback
-    if (a === 169 && b === 254) return true;                     // link-local
-    if (a === 172 && b >= 16 && b <= 31) return true;            // 172.16.0.0/12
-    if (a === 192 && b === 168) return true;                     // 192.168.0.0/16
-    if (a === 100 && b >= 64 && b <= 127) return true;           // CGNAT 100.64.0.0/10
-    if (a === 0) return true;                                    // 0.0.0.0/8
+  if (h === 'metadata.google.internal') return true;
+  if (/\.(internal|local|localdomain|lan|intranet|corp|consul)$/.test(h)) return true;
+  if (h === 'home.arpa' || h.endsWith('.home.arpa')) return true;
+  // IPv4 in any encoding (dotted-decimal, single integer, hex, octal).
+  var v4 = _parseFlexibleIPv4(h);
+  if (v4) return _ipv4OctetsArePrivate(v4);
+  // IPv6 (possibly bracketed, possibly with a %zone id). Block loopback,
+  // unspecified, link-local (fe80::/10), ULA (fc00::/7), and IPv4-mapped forms
+  // whose embedded v4 is private (e.g. [::ffff:127.0.0.1]). Other global v6
+  // literals are allowed through; Cloudflare egress filtering backstops any
+  // private form expressed purely in hextets that this does not canonicalize.
+  var h6 = h.replace(/^\[/, '').replace(/\]$/, '');
+  var zone = h6.indexOf('%');
+  if (zone !== -1) h6 = h6.slice(0, zone);
+  if (h6.indexOf(':') !== -1) {
+    if (h6 === '::1' || h6 === '::') return true;            // loopback / unspecified
+    if (/^fe[89ab][0-9a-f]:/.test(h6)) return true;         // link-local fe80::/10
+    if (/^f[cd][0-9a-f]{2}:/.test(h6)) return true;         // ULA fc00::/7
+    var embedded = h6.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+    if (embedded) {
+      var eo = _parseFlexibleIPv4(embedded[1]);
+      if (eo && _ipv4OctetsArePrivate(eo)) return true;
+    }
+    return false;
   }
-  // IPv6 link-local fe80::/10
-  if (h.startsWith('fe80:') || h.startsWith('[fe80:')) return true;
-  // Cloudflare-internal / metadata endpoints
-  if (h === 'metadata.google.internal' || h === '169.254.169.254') return true;
   return false;
 }
 
@@ -8425,6 +8482,13 @@ async function deliverWebhooksTick(env) {
     try {
       var resp = await fetchWithTimeout(rec.webhook_url, {
         method: 'POST',
+        // redirect:'manual' so a callback host that passed the registration-time
+        // SSRF check cannot 30x the delivery off to an internal target (cloud
+        // metadata, a peer service) afterward. A 3xx is recorded as a failed
+        // delivery, never followed; legitimate receivers do not redirect a signed
+        // POST. Closes the redirect-based SSRF on this path. (Propagated from the
+        // TensorFeed money-path audit, 2026-06-04.)
+        redirect: 'manual',
         headers: {
           'Content-Type': 'application/json',
           'X-TerminalFeed-Signature': 'sha256=' + signature,
@@ -8441,7 +8505,9 @@ async function deliverWebhooksTick(env) {
         delivered += 1;
       } else {
         rec.fail_count = (rec.fail_count || 0) + 1;
-        rec.last_error = 'http_' + resp.status;
+        rec.last_error = (resp.status >= 300 && resp.status < 400)
+          ? 'redirect_blocked_' + resp.status
+          : 'http_' + resp.status;
         errors += 1;
       }
     } catch (e) {
