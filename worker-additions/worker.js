@@ -9630,8 +9630,9 @@ function proCreditsFor(path) {
 // Catalog metadata for the machine-readable /api/meta/pro surface. params lists
 // ONLY query params the handler actually reads (verified against the fetchers),
 // so the catalog never advertises a param the worker ignores. free_sibling points
-// at a free preview/wedge where one exists. No /api/pro/* endpoint is strict
-// premium; all grant a small daily free-trial quota per IP before a 402.
+// at a free preview/wedge where one exists. Bazaar-pilot paths (see
+// STRICT_PREMIUM_PATHS) are strict premium and 402 anonymous callers; all other
+// /api/pro/* paths grant a small daily free-trial quota per IP before a 402.
 var PRO_CATALOG_META = {
   '/api/pro/briefing':           { category: 'agent', returns: 'One-call world snapshot (BTC, Fear & Greed, earthquakes, HN, ISS, predictions).', params: [{ name: 'include', required: false, description: 'comma-separated sources to include' }, { name: 'history', required: false, description: "set to 24h for a history series" }] },
   '/api/pro/macro':              { category: 'macro', returns: 'FRED + Finnhub + Frankfurter macro rollup.', params: [{ name: 'history', required: false, description: 'set to 30d for a 30-point history series' }] },
