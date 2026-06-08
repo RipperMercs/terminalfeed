@@ -7,7 +7,15 @@ interface StockItem {
   name: string;
   price: number;
   change: number;
+  // True when this quote was not refreshed this cycle (absent from the API
+  // response, or the API flagged it past its freshness window). Drives the
+  // per-symbol "stale" treatment so a frozen value is never shown as live.
+  stale?: boolean;
 }
+
+// A localStorage seed older than this is shown dimmed/stale until the first
+// live fetch lands (which happens on mount, so this is a brief safety net).
+const SEED_STALE_MS = 10 * 60 * 1000;
 
 const POLL_MS = 30000;
 const POLL_MS_MOBILE = 60000;
@@ -33,7 +41,7 @@ const DEFAULT_SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: 'AVGO', name: 'Broadcom' },
   { symbol: 'CRM', name: 'Salesforce' },
   { symbol: 'NFLX', name: 'Netflix' },
-  { symbol: 'SQ', name: 'Block' },
+  { symbol: 'XYZ', name: 'Block' },
   { symbol: 'SHOP', name: 'Shopify' },
   { symbol: 'HOOD', name: 'Robinhood' },
   { symbol: 'SOFI', name: 'SoFi' },
@@ -54,6 +62,8 @@ interface WorkerQuote {
   change: number;
   change_percent: number;
   prev_close?: number;
+  stale?: boolean;
+  age_seconds?: number;
 }
 
 export function useSimStocks(customSymbols: string[] = []) {
@@ -67,14 +77,17 @@ export function useSimStocks(customSymbols: string[] = []) {
   const [stocks, setStocks] = useState<StockItem[]>(() => {
     const cached = getCache<StockItem[]>('stock_prices');
     const cachedBySymbol: Record<string, StockItem> = {};
+    // A cache older than SEED_STALE_MS is shown stale until the first live fetch.
+    const seedStale = cached ? cached.age > SEED_STALE_MS : false;
     if (cached) {
       for (const c of cached.data) cachedBySymbol[c.symbol] = c;
     }
     return SYMBOLS.map((s) => {
       const c = cachedBySymbol[s.symbol];
-      if (c) return c;
+      if (c) return { ...c, stale: seedStale || !!c.stale };
+      // Static fallbacks are last-resort placeholders: always flag them stale.
       const fb = STATIC_FALLBACKS.stocks.find((f) => f.symbol === s.symbol);
-      return fb ? { ...fb } : { ...s, price: 0, change: 0 };
+      return fb ? { ...fb, stale: true } : { ...s, price: 0, change: 0, stale: false };
     });
   });
 
@@ -111,12 +124,14 @@ export function useSimStocks(customSymbols: string[] = []) {
           const next = SYMBOLS.map((sym) => {
             const existing = prevBySymbol[sym.symbol] ?? { ...sym, price: 0, change: 0 };
             const q = quoteMap[sym.symbol];
-            if (!q) return existing;
+            // Not in this response: keep the last value but flag it stale (only
+            // meaningful once we actually had data, i.e. price > 0).
+            if (!q) return { ...existing, stale: (existing.price ?? 0) > 0 };
             const prevClose = q.prev_close ?? 0;
             const change = prevClose > 0
               ? ((q.price - prevClose) / prevClose) * 100
               : q.change_percent ?? 0;
-            return { ...existing, price: q.price, change };
+            return { ...existing, price: q.price, change, stale: !!q.stale };
           });
           setCache('stock_prices', next, 'worker');
           return next;

@@ -1259,12 +1259,169 @@ async function handleBtcPrice() {
 }
 
 
+// =============================================================================
+// /api/stocks — KV-backed per-symbol store, cron is the single writer
+// =============================================================================
+//
+// Why this isn't a plain "fetch all symbols on request, cache the array":
+//
+// Finnhub's free tier throttles burst traffic. Firing ~30 quote calls in one
+// parallel blast got most of them rejected, so each refresh returned a RANDOM
+// 6-10 symbols and silently dropped the rest. The old code cached that partial
+// array, and the frontend then froze every missing symbol at its last-seen
+// value forever (no staleness signal). That is how CRCL got stuck at a stale
+// snapshot while the live quote was actually available.
+//
+// A per-isolate in-memory store did not fix it either: Cloudflare spreads
+// requests across many isolates, each with its own partial store, so the symbol
+// set the panel saw oscillated and CRCL flickered in and out.
+//
+// Fix: ONE writer, the */5 cron, gently fetches all symbols (small batches,
+// no latency pressure, so the free tier does not throttle), MERGES with the
+// last-good map (a symbol Finnhub misses keeps its prior value), and persists
+// the whole map to KV. The request path (handleStocks) is a fast KV reader with
+// a per-isolate memory lookaside, so it never burns Finnhub quota or races. Every
+// returned quote carries as_of / age_seconds / stale so the frontend can show
+// staleness instead of lying. A cold isolate before the first cron tick fills
+// once on demand (guarded + throttled) so the panel is never blank after deploy.
+
+// Canonical panel symbol set (mirrors src/hooks/useSimStocks.ts DEFAULT_SYMBOLS).
+var STOCK_SYMBOLS = ['SPY', 'QQQ', 'DIA', 'IWM', 'NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META',
+  'TSLA', 'AMD', 'COIN', 'CRCL', 'PLTR', 'MSTR', 'SMCI', 'AVGO', 'CRM', 'NFLX',
+  'XYZ', 'SHOP', 'HOOD', 'SOFI', 'MARA', 'RIOT', 'UBER', 'ARM', 'SNOW', 'RBLX', 'RIVN'];
+
+var STOCKS_KV_KEY = 'cache:stocks:v1';        // KV key holding the symbol -> quote map
+var STOCK_LOOKASIDE_MS = 25000;               // memory lookaside window before a KV re-read
+var STOCK_STALE_MS = 12 * 60 * 1000;          // flag a quote stale past 12 min (2+ missed cron ticks)
+var STOCK_SYNC_MIN_INTERVAL_MS = 60000;       // min gap between on-demand (non-cron) sync attempts
+
+var _stockStore = null;        // { map: { symbol -> quote }, fetchedAt } — per-isolate lookaside of the KV map
+var _stockSyncInflight = null; // shared promise so concurrent callers dedup onto one sync
+var _stocksLastSyncAt = 0;     // timestamp of the last completed sync (throttles on-demand attempts)
+var _stockNegCache = {};       // symbol -> ts of last failed on-demand fetch (suppresses dead-ticker hammering)
+var _stockOnDemandInflight = false; // guards the targeted on-demand fetch against concurrent-request stampedes
+var STOCK_NEG_TTL_MS = 5 * 60 * 1000; // how long a failed symbol is suppressed before re-attempt
+
+// Fetch one Finnhub quote. Returns a normalized quote or null on ANY failure
+// (non-2xx, timeout, missing/zero price). Never throws.
+async function fetchFinnhubQuote(env, sym) {
+  try {
+    var res = await fetchWithTimeout(
+      'https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent(sym) + '&token=' + env.FINNHUB_API_KEY, {}, 6000
+    );
+    if (!res || !res.ok) return null;
+    var d = await res.json();
+    var price = (d && typeof d.c === 'number') ? d.c : 0;
+    if (!(price > 0)) return null;
+    return {
+      symbol: sym,
+      price: price,
+      change: d.d || 0,
+      change_percent: d.dp || 0,
+      high: d.h || 0,
+      low: d.l || 0,
+      prev_close: d.pc || 0,
+      asOf: Date.now(),
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Run tasks in small sequential batches with a short gap between batches, so a
+// burst of quote calls stays under Finnhub free-tier throttling. A thrown task
+// resolves to null rather than rejecting the whole run.
+async function runBatched(items, batchSize, gapMs, worker) {
+  var out = [];
+  for (var i = 0; i < items.length; i += batchSize) {
+    var slice = items.slice(i, i + batchSize);
+    var settled = await Promise.all(slice.map(function(it) {
+      return Promise.resolve().then(function() { return worker(it); }).catch(function() { return null; });
+    }));
+    for (var j = 0; j < settled.length; j++) out.push(settled[j]);
+    if (gapMs > 0 && i + batchSize < items.length) {
+      await new Promise(function(r) { setTimeout(r, gapMs); });
+    }
+  }
+  return out;
+}
+
+// Read path: per-isolate memory lookaside, falling back to a single KV read at
+// most once per STOCK_LOOKASIDE_MS per isolate. Returns the symbol -> quote map
+// (possibly {} before the first sync). Never throws.
+async function getStockStore(env) {
+  var now = Date.now();
+  if (_stockStore && _stockStore.map && (now - _stockStore.fetchedAt) < STOCK_LOOKASIDE_MS) {
+    return _stockStore.map;
+  }
+  if (env && env.WEBHOOK_SUBS) {
+    try {
+      var stored = await env.WEBHOOK_SUBS.get(STOCKS_KV_KEY, 'json');
+      if (stored && typeof stored === 'object') {
+        _stockStore = { map: stored, fetchedAt: now };
+        return stored;
+      }
+    } catch (e) { /* fall through to whatever we already have */ }
+  }
+  return _stockStore ? _stockStore.map : {};
+}
+
+// Writer: fetch every STOCK_SYMBOLS quote, merge with the last-good map (a symbol
+// Finnhub misses this run keeps its prior value), and persist to KV + memory
+// lookaside. Single-flight across concurrent callers.
+//
+// The cron calls this with force=true, gentle=true every 5 minutes: gentle uses
+// small batches with a wide gap (well under the free-tier rate) plus a retry
+// sweep of any stragglers, so almost every symbol refreshes each run and no
+// symbol drifts far past one cron interval. The request path calls it
+// (force=false, gentle=false) only to fill a cold store: faster batches, partial
+// result accepted, throttled to once per STOCK_SYNC_MIN_INTERVAL_MS so a Finnhub
+// outage cannot turn every request into a fresh upstream burst. Never throws.
+async function syncStocksToKv(env, force, gentle) {
+  if (!env || !env.FINNHUB_API_KEY) return null;
+  if (_stockSyncInflight) { try { return await _stockSyncInflight; } catch (e) { return null; } }
+  var now = Date.now();
+  if (!force && (now - _stocksLastSyncAt) < STOCK_SYNC_MIN_INTERVAL_MS) {
+    return _stockStore ? _stockStore.map : null;
+  }
+  _stockSyncInflight = (async function() {
+    try {
+      var base = await getStockStore(env);
+      var merged = Object.assign({}, base);
+      var bs = gentle ? 2 : 3;
+      var gap = gentle ? 900 : 250;
+      var fn = function(sym) { return fetchFinnhubQuote(env, sym); };
+      var got = {};
+      var fetched = await runBatched(STOCK_SYMBOLS, bs, gap, fn);
+      for (var i = 0; i < fetched.length; i++) {
+        if (fetched[i]) { merged[fetched[i].symbol] = fetched[i]; got[fetched[i].symbol] = 1; }
+      }
+      // Gentle (cron) runs sweep stragglers once more so an occasional throttle
+      // does not leave a symbol stuck at its prior timestamp for multiple ticks.
+      if (gentle) {
+        var missed = STOCK_SYMBOLS.filter(function(s) { return !got[s]; });
+        if (missed.length) {
+          var retry = await runBatched(missed, 2, 900, fn);
+          for (var r = 0; r < retry.length; r++) {
+            if (retry[r]) merged[retry[r].symbol] = retry[r];
+          }
+        }
+      }
+      _stockStore = { map: merged, fetchedAt: Date.now() };
+      if (env.WEBHOOK_SUBS) {
+        try { await env.WEBHOOK_SUBS.put(STOCKS_KV_KEY, JSON.stringify(merged)); } catch (e) { /* best effort */ }
+      }
+      return merged;
+    } finally {
+      _stocksLastSyncAt = Date.now();
+      _stockSyncInflight = null;
+    }
+  })();
+  try { return await _stockSyncInflight; } catch (e) { return null; }
+}
+
 // GET /api/stocks
 async function handleStocks(env, url) {
-  var DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'AMD', 'NFLX', 'CRM',
-    'COIN', 'CRCL', 'INTC', 'PYPL', 'SQ', 'SHOP', 'UBER', 'PLTR', 'SNOW', 'NET',
-    'CRWD', 'MSTR', 'RIOT', 'MARA', 'HOOD', 'SOFI'];
-
   var requested = null;
   if (url && url.searchParams) {
     var q = url.searchParams.get('symbols');
@@ -1272,65 +1429,80 @@ async function handleStocks(env, url) {
       requested = q.split(',')
         .map(function(s) { return s.trim().toUpperCase(); })
         .filter(function(s) { return /^[A-Z][A-Z0-9.-]{0,9}$/.test(s); })
-        .slice(0, 30);
+        .slice(0, 35);
       requested = Array.from(new Set(requested));
     }
   }
 
-  var symbols = (requested && requested.length > 0) ? requested : DEFAULT_SYMBOLS.slice(0, 15);
-  var KEY = 'stocks:' + symbols.join(',');
-  // 2-minute cache. Finnhub free tier is 60 calls/min; each cache miss
-  // triggers up to 30 parallel upstream calls, so shorter TTLs risk blowing
-  // the rate limit whenever traffic bursts.
-  var cached = getCached(KEY, 120000);
-  if (cached) return jsonFreshAuto(cached, 200, 120);
+  var symbols = (requested && requested.length > 0) ? requested : STOCK_SYMBOLS;
 
-  try {
-    if (!env || !env.FINNHUB_API_KEY) {
-      var stale0 = getStale(KEY);
-      if (stale0) return jsonFreshAuto(stale0, 200, 30);
-      return jsonResponse({ data: [] });
-    }
+  var store = await getStockStore(env);
 
-    var results = await Promise.allSettled(
-      symbols.map(function(sym) {
-        return fetchWithTimeout(
-          'https://finnhub.io/api/v1/quote?symbol=' + sym + '&token=' + env.FINNHUB_API_KEY, {}, 6000
-        ).then(function(res) { return res.json(); })
-         .then(function(d) {
-           return {
-             symbol: sym,
-             price: d.c || 0,
-             change: d.d || 0,
-             change_percent: d.dp || 0,
-             high: d.h || 0,
-             low: d.l || 0,
-             prev_close: d.pc || 0,
-           };
-         });
-      })
-    );
-
-    var stocks = results
-      .filter(function(r) { return r.status === 'fulfilled' && r.value.price > 0; })
-      .map(function(r) { return r.value; });
-
-    if (stocks.length === 0) {
-      // All upstream calls failed (likely rate-limited) — serve stale cache if we have one
-      // and DON'T overwrite the cache with empty data.
-      var stale1 = getStale(KEY);
-      if (stale1) return jsonFreshAuto(stale1, 200, 120);
-      return jsonResponse({ data: [] });
-    }
-
-    var data = { data: stocks, ts: Date.now() };
-    setCache(KEY, data);
-    return jsonFreshAuto(data, 200, 120);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 120);
-    return jsonResponse({ data: [] });
+  // Cold start: if the canonical set is entirely absent (e.g. a fresh isolate
+  // before the first cron tick after deploy), fill it once via the writer so KV
+  // is populated for every isolate. Guarded + throttled inside syncStocksToKv.
+  var canonicalCold = !STOCK_SYMBOLS.some(function(s) { return !!store[s]; });
+  if (canonicalCold && env && env.FINNHUB_API_KEY) {
+    var filled = await syncStocksToKv(env, false);
+    if (filled) store = filled;
   }
+
+  // On-demand fill for requested symbols the cron store does not cover or no
+  // longer has fresh: custom tickers via ?symbols= (a documented feature), or a
+  // canonical symbol Finnhub is currently failing. Negative-cached so a dead
+  // ticker can't hammer upstream, and single-flighted per isolate. Results go to
+  // the per-isolate memory store only (the cron owns KV); the steady-state panel
+  // never reaches here because its canonical symbols are already fresh from KV.
+  var nowR = Date.now();
+  var missing = symbols.filter(function(s) {
+    var q = store[s];
+    if (q && (nowR - (q.asOf || 0)) <= STOCK_STALE_MS) return false;
+    var neg = _stockNegCache[s];
+    if (neg && (nowR - neg) < STOCK_NEG_TTL_MS) return false;
+    return true;
+  });
+  if (missing.length && env && env.FINNHUB_API_KEY && !_stockOnDemandInflight) {
+    _stockOnDemandInflight = true;
+    try {
+      var got = await runBatched(missing.slice(0, 35), 3, 250, function(sym) { return fetchFinnhubQuote(env, sym); });
+      var mutated = false;
+      for (var gi = 0; gi < missing.length; gi++) {
+        if (got[gi]) { store[got[gi].symbol] = got[gi]; mutated = true; }
+        else { _stockNegCache[missing[gi]] = nowR; }
+      }
+      if (mutated) _stockStore = { map: store, fetchedAt: (_stockStore ? _stockStore.fetchedAt : nowR) };
+    } finally {
+      _stockOnDemandInflight = false;
+    }
+  }
+
+  var now = Date.now();
+  var oldestTs = now;
+  var stocks = symbols.map(function(s) {
+    var qq = store[s];
+    if (!qq) return null;
+    var asOf = qq.asOf || now;
+    if (asOf < oldestTs) oldestTs = asOf;
+    var ageSec = Math.max(0, Math.round((now - asOf) / 1000));
+    return {
+      symbol: qq.symbol,
+      price: qq.price,
+      change: qq.change,
+      change_percent: qq.change_percent,
+      high: qq.high,
+      low: qq.low,
+      prev_close: qq.prev_close,
+      as_of: new Date(asOf).toISOString(),
+      age_seconds: ageSec,
+      stale: (now - asOf) > STOCK_STALE_MS,
+    };
+  }).filter(Boolean);
+
+  // Drive jsonFreshAuto's X-TF-* headers off the oldest symbol we are returning.
+  // Set synchronously here with no await before jsonFreshAuto (race-free, same
+  // pattern as getCached/setCache).
+  _lastCacheMeta = { ts: oldestTs, stale: (now - oldestTs) > STOCK_STALE_MS };
+  return jsonFreshAuto({ data: stocks, ts: now }, 200, 30);
 }
 
 
@@ -15163,6 +15335,17 @@ export default {
           if (hN || lN) console.log('freshness flags:', JSON.stringify({ harness: hN, leaderboard: lN }));
         } catch (err) {
           console.error('freshness check failed:', err.message);
+        }
+      })());
+      // Stocks: the cron is the SINGLE writer for /api/stocks. Gently refresh all
+      // symbols and persist the merged last-good map to KV so the request path is
+      // a pure KV reader (no per-request Finnhub bursts, no cross-isolate flicker).
+      ctx.waitUntil((async function() {
+        try {
+          var sm = await syncStocksToKv(env, true, true);
+          if (sm) console.log('stocks sync:', JSON.stringify({ symbols: Object.keys(sm).length }));
+        } catch (err) {
+          console.error('stocks sync failed:', err.message);
         }
       })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
