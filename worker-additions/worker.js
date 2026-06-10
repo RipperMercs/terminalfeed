@@ -15982,6 +15982,21 @@ async function dispatchRoute(request, env, url, path, ctx) {
 
       default: {
         var hint = smartNotFound(path);
+        // Unknown /api/pro/* paths divert to the premium catalog instead of the
+        // free directory: agents are observed probing hallucinated pro paths
+        // (e.g. HEAD /api/pro/Not%20documented%20in%20available%20sources), and
+        // /api/meta/pro is the surface that self-corrects them into the funnel.
+        if (path.indexOf('pro/') === 0) {
+          var proBody = {
+            error: 'unknown_premium_endpoint',
+            path: '/api/' + path,
+            catalog: 'https://terminalfeed.io/api/meta/pro',
+            docs: 'https://terminalfeed.io/developers/agent-payments',
+            message: 'This premium endpoint does not exist. GET /api/meta/pro is the machine-readable catalog of every payable endpoint with real credit costs, params, free siblings, and freshness SLAs. No credits were charged for this request.',
+          };
+          if (hint && hint.suggested) proBody.did_you_mean = '/api/' + hint.suggested;
+          return jsonResponse(proBody, 404);
+        }
         var body = {
           error: 'Not found',
           path: '/api/' + path,
