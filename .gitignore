@@ -27,6 +27,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Python bytecode (sdk-python)
+__pycache__/
+
 # wrangler files
 .wrangler
 .dev.vars*
@@ -45,7 +48,7 @@ plans/
 
 # Claude Code local context (per-user / per-project, not public)
 CLAUDE.md
-.claude/settings.local.json
+.claude/
 
 # Internal design v2 mockups and screenshots
 design-spec-v2/
