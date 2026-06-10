@@ -23,6 +23,11 @@ interface BtcPriceData {
 // Binance 24hr ticker: fires every ~1s with full daily stats
 const BINANCE_WS = 'wss://stream.binance.com:9443/ws/btcusdt@ticker';
 
+// Coinbase ticker: fires per-trade (sub-second). US-reachable, so this is the
+// real-time source when Binance's WS is geo-blocked (most US visitors). Without
+// it the panel falls back to REST polling, whose source only refreshes ~1x/min.
+const COINBASE_WS = 'wss://ws-feed.exchange.coinbase.com';
+
 // Fallback REST (Worker handles upstream)
 const BTC_REST_URL = '/api/btc-price';
 const BTC_CHART_URL = '/api/coingecko/btc-chart';
@@ -47,6 +52,7 @@ export function useBtcPrice() {
   // `connected` = fresh data flowing from any source (WS or HTTP) in the last FRESH_WINDOW_MS
   const [connected, setConnected] = useState(false);
   const wsOpenRef = useRef(false);
+  const coinbaseOpenRef = useRef(false);
   const lastDataAtRef = useRef(0);
   const [priceHistory, setPriceHistory] = useState<PriceTick[]>(() => {
     // Seed with cached price so chart has at least 1 point immediately
@@ -64,11 +70,13 @@ export function useBtcPrice() {
   const mountedRef = useRef(true);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cbWsRef = useRef<WebSocket | null>(null);
+  const cbReconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastPushRef = useRef(0);
   const wsFailCount = useRef(0);
 
   // Push a new price update
-  const pushPrice = useCallback((price: number, change: number, high: number, low: number, source: string) => {
+  const pushPrice = useCallback((price: number, change: number, high: number, low: number, source: string, volumeUsd?: number) => {
     if (!mountedRef.current) return;
     const now = Date.now();
     if (now - lastPushRef.current < THROTTLE_MS) return;
@@ -84,7 +92,7 @@ export function useBtcPrice() {
         changePercent24h: change,
         high24h: high,
         low24h: low,
-        volume24h: prev?.volume24h ?? 0,
+        volume24h: (volumeUsd && volumeUsd > 0) ? volumeUsd : (prev?.volume24h ?? 0),
         marketCap: prev?.marketCap ?? 0,
         lastUpdate: now,
         source,
@@ -139,6 +147,62 @@ export function useBtcPrice() {
     } catch {
       wsFailCount.current++;
       reconnectTimer.current = setTimeout(connectWS, 5000);
+    }
+  }, [pushPrice]);
+
+  // Secondary real-time WS: Coinbase ticker. Binance's WS is geo-blocked for
+  // most US visitors, so without this the panel falls back to slow REST polling.
+  // Coinbase is US-reachable and streams sub-second, restoring the fast-ticking
+  // price. Both sockets feed the same throttled pushPrice; whichever is
+  // reachable drives the price.
+  const connectCoinbaseWS = useCallback(() => {
+    if (!mountedRef.current) return;
+    if (cbWsRef.current?.readyState === WebSocket.OPEN) return;
+
+    try {
+      const ws = new WebSocket(COINBASE_WS); // direct-fetch-exempt: persistent Coinbase ticker WS, not Worker-proxiable
+      cbWsRef.current = ws;
+
+      ws.onopen = () => {
+        if (!mountedRef.current) return;
+        coinbaseOpenRef.current = true;
+        try {
+          ws.send(JSON.stringify({ type: 'subscribe', product_ids: ['BTC-USD'], channels: ['ticker'] }));
+        } catch { /* socket closed between open and send */ }
+      };
+
+      ws.onmessage = (event) => {
+        if (!mountedRef.current) return;
+        try {
+          const d = JSON.parse(event.data);
+          if (d.type !== 'ticker') return;
+          const price = parseFloat(d.price);
+          if (!(price > 0)) return;
+          const open = parseFloat(d.open_24h);   // 24h open
+          const high = parseFloat(d.high_24h);
+          const low = parseFloat(d.low_24h);
+          const volBtc = parseFloat(d.volume_24h); // volume is in BTC
+          const change = open > 0 ? ((price - open) / open) * 100 : 0;
+          pushPrice(
+            price,
+            change,
+            high > 0 ? high : price,
+            low > 0 ? low : price,
+            'coinbase',
+            volBtc > 0 ? volBtc * price : undefined,
+          );
+        } catch (e) { if (import.meta.env.DEV) console.warn('[BtcPrice/coinbase]', e); }
+      };
+
+      ws.onclose = () => {
+        if (!mountedRef.current) return;
+        coinbaseOpenRef.current = false;
+        cbReconnectTimer.current = setTimeout(connectCoinbaseWS, RECONNECT_MS);
+      };
+
+      ws.onerror = () => { ws.close(); };
+    } catch {
+      cbReconnectTimer.current = setTimeout(connectCoinbaseWS, 5000);
     }
   }, [pushPrice]);
 
@@ -219,6 +283,7 @@ export function useBtcPrice() {
 
     seedChart();
     connectWS();
+    connectCoinbaseWS(); // US-reachable real-time source (Binance WS is often geo-blocked)
     fetchREST(); // immediate first HTTP fetch: covers ad-blocked / blocked-WS users
 
     // Adaptive polling: fast while WS isn't open, slow once it is.
@@ -226,7 +291,7 @@ export function useBtcPrice() {
     let statsInterval: ReturnType<typeof setInterval> | null = null;
     let currentRate: number | null = null;
     const schedule = () => {
-      const desired = wsOpenRef.current ? STATS_POLL_MS_SLOW : STATS_POLL_MS_FAST;
+      const desired = (wsOpenRef.current || coinbaseOpenRef.current) ? STATS_POLL_MS_SLOW : STATS_POLL_MS_FAST;
       if (currentRate === desired) return;
       currentRate = desired;
       if (statsInterval) clearInterval(statsInterval);
@@ -236,7 +301,7 @@ export function useBtcPrice() {
         schedule();
         // Drop `connected` if nothing fresh recently
         if (!mountedRef.current) return;
-        if (Date.now() - lastDataAtRef.current > FRESH_WINDOW_MS && !wsOpenRef.current) {
+        if (Date.now() - lastDataAtRef.current > FRESH_WINDOW_MS && !wsOpenRef.current && !coinbaseOpenRef.current) {
           setConnected(false);
         }
       }, desired);
@@ -247,17 +312,19 @@ export function useBtcPrice() {
     const freshnessTimer = setInterval(() => {
       if (!mountedRef.current) return;
       const stale = Date.now() - lastDataAtRef.current > FRESH_WINDOW_MS;
-      if (stale && !wsOpenRef.current) setConnected(false);
+      if (stale && !wsOpenRef.current && !coinbaseOpenRef.current) setConnected(false);
     }, 5000);
 
     return () => {
       mountedRef.current = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(); }
+      if (cbReconnectTimer.current) clearTimeout(cbReconnectTimer.current);
+      if (cbWsRef.current) { cbWsRef.current.onclose = null; cbWsRef.current.close(); }
       if (statsInterval) clearInterval(statsInterval);
       clearInterval(freshnessTimer);
     };
-  }, [connectWS, fetchREST, seedChart]);
+  }, [connectWS, connectCoinbaseWS, fetchREST, seedChart]);
 
   return { data, connected, priceHistory };
 }
