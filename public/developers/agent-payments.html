@@ -758,11 +758,9 @@ resp = client.messages.create(
 
   <h2>SDK</h2>
 
-  <p>No PyPI release in v1. Bearer tokens minted by the TensorFeed payment Worker work on TerminalFeed too (shared credit pool), so any agent that has <a href="https://pypi.org/project/tensorfeed" rel="external"><span class="inline-code">pip install tensorfeed</span></a> already has a token format that authenticates here. Pass it in <span class="inline-code">requests.get(..., headers={"Authorization": f"Bearer {token}"})</span> and you are done.</p>
+  <p>The official Python client is on PyPI: <a href="https://pypi.org/project/terminalfeed" rel="external"><span class="inline-code">pip install terminalfeed</span></a>. It is a single dependency-light module (only <span class="inline-code">requests</span>) covering the free tier, the full premium tier, and the USDC payment loop.</p>
 
-  <p>For agents that prefer typed methods, a single-file Python reference client lives in the public repo at <a href="https://github.com/RipperMercs/terminalfeed/blob/master/sdk-python/terminalfeed_client.py" rel="external"><span class="inline-code">sdk-python/terminalfeed_client.py</span></a>. Copy it into your codebase. It depends only on <span class="inline-code">requests</span>.</p>
-
-  <pre><code>from terminalfeed_client import TerminalFeed
+  <pre><code>from terminalfeed import TerminalFeed
 
 tf = TerminalFeed()
 quote = tf.buy_credits(amount_usd=1.00)            # $1 = 50 credits
@@ -774,7 +772,9 @@ print(tf.crypto_deep(coins=["btc", "eth"]))        # 2 credits
 print(tf.briefing(include=["btc", "predictions"])) # 1 credit
 print("balance:", tf.balance())</code></pre>
 
-  <p>When the integration sees real traffic, this file is the seed for either an extension to the <span class="inline-code">tensorfeed</span> PyPI package or a standalone <span class="inline-code">terminalfeed</span> package. TypeScript and Rust wrappers welcome; share yours and we will link from this section.</p>
+  <p>Prefer vendoring over a dependency? The same module is one copy-paste file at <a href="https://github.com/RipperMercs/terminalfeed/blob/master/sdk-python/terminalfeed.py" rel="external"><span class="inline-code">sdk-python/terminalfeed.py</span></a>.</p>
+
+  <p>Bearer tokens minted by the TensorFeed payment Worker work on TerminalFeed too (shared credit pool), so any agent that has <a href="https://pypi.org/project/tensorfeed" rel="external"><span class="inline-code">pip install tensorfeed</span></a> already has a token that authenticates here. With or without the SDK, a plain <span class="inline-code">requests.get(..., headers={"Authorization": f"Bearer {token}"})</span> works. TypeScript and Rust wrappers welcome; share yours and we will link from this section.</p>
 
   <h2>FAQ</h2>
 
