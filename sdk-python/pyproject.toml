@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terminalfeed"
+version = "0.1.0"
+description = "Python client for the TerminalFeed real-time data API: live markets, crypto, macro, and world data for humans and AI agents"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ripper", email = "hello@terminalfeed.io" }]
+keywords = [
+  "terminalfeed",
+  "market-data",
+  "crypto",
+  "bitcoin",
+  "macro",
+  "real-time",
+  "ai-agents",
+  "mcp",
+  "api-client",
+  "usdc",
+  "x402",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Office/Business :: Financial",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = ["requests>=2.25"]
+
+[project.urls]
+Homepage = "https://terminalfeed.io"
+Documentation = "https://terminalfeed.io/developers/agent-payments"
+"API Catalog" = "https://terminalfeed.io/api/meta/pro"
+Source = "https://github.com/RipperMercs/terminalfeed/tree/master/sdk-python"
+
+[tool.setuptools]
+py-modules = ["terminalfeed"]

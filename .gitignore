@@ -27,8 +27,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Python bytecode (sdk-python)
+# Python bytecode + packaging artifacts (sdk-python)
 __pycache__/
+*.egg-info/
+sdk-python/build/
 
 # wrangler files
 .wrangler
