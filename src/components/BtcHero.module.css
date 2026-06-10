@@ -95,6 +95,11 @@
   height: 180px;
   position: relative;
   min-width: 0;
+  /* Fade the chart's left edge into the panel so the gold line/area emerges
+     out of the dark instead of starting on a hard vertical seam against the
+     info column. Background-agnostic (reveals whatever sits behind). */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 20%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 20%);
 }
 .chart svg { width: 100%; height: 100%; display: block; }
 
