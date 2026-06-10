@@ -1231,98 +1231,137 @@ function handleIndex() {
 }
 
 
+// =============================================================================
+// Resilient BTC / ETH price fetchers (shared)
+//
+// data-api.binance.vision is reachable from residential IPs but BLOCKED from the
+// Worker's Cloudflare egress, so every binance.vision caller must carry a keyless,
+// datacenter-friendly fallback. CoinGecko is intentionally avoided: its free tier
+// rate-limits the shared Worker egress (crypto-movers only survives it via a 120s
+// cache). Coinlore and Kraken are reliable from datacenters and already trusted
+// elsewhere in this Worker. See the June 10, 2026 incident note.
+// =============================================================================
+
+// Full 24h BTC stats. Returns { price, change_24h, high_24h, low_24h,
+// volume_24h, market_cap, source } or null. Tries Binance -> Coinlore -> Kraken.
+async function fetchBtcStats() {
+  // Primary: Binance Vision (richest 24h stats)
+  try {
+    var r = await fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT');
+    if (r.ok) {
+      var d = await r.json();
+      var p = parseFloat(d.lastPrice);
+      if (p > 0) return { price: p, change_24h: parseFloat(d.priceChangePercent), high_24h: parseFloat(d.highPrice), low_24h: parseFloat(d.lowPrice), volume_24h: parseFloat(d.quoteVolume), market_cap: 0, source: 'binance' };
+    }
+  } catch (e) { /* fall through */ }
+  // Fallback: Coinlore (true 24h change + market cap; no high/low). id 90 = BTC.
+  try {
+    var r2 = await fetchWithTimeout('https://api.coinlore.com/api/ticker/?id=90', {}, 6000);
+    if (r2.ok) {
+      var a = await r2.json();
+      var c = Array.isArray(a) ? a[0] : null;
+      var p2 = c ? parseFloat(c.price_usd) : 0;
+      if (p2 > 0) return { price: p2, change_24h: parseFloat(c.percent_change_24h) || 0, high_24h: p2, low_24h: p2, volume_24h: parseFloat(c.volume24) || 0, market_cap: parseFloat(c.market_cap_usd) || 0, source: 'coinlore' };
+    }
+  } catch (e) { /* fall through */ }
+  // Fallback: Kraken (real high/low; change derived from today's UTC open).
+  try {
+    var r3 = await fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', {}, 6000);
+    if (r3.ok) {
+      var j = await r3.json();
+      var k = j && j.result ? j.result[Object.keys(j.result)[0]] : null;
+      var p3 = k && k.c ? parseFloat(k.c[0]) : 0;
+      if (p3 > 0) {
+        var o = k.o ? parseFloat(k.o) : p3;
+        return { price: p3, change_24h: o > 0 ? ((p3 - o) / o) * 100 : 0, high_24h: k.h ? parseFloat(k.h[1]) : p3, low_24h: k.l ? parseFloat(k.l[1]) : p3, volume_24h: (k.v ? parseFloat(k.v[1]) : 0) * p3, market_cap: 0, source: 'kraken' };
+      }
+    }
+  } catch (e) { /* fall through */ }
+  return null;
+}
+
+// Simple USD spot price for 'BTC' or 'ETH'. Returns a number or null.
+// Tries Binance -> Coinbase -> Coinlore -> Kraken (all keyless).
+async function fetchSpotUsd(symbol) {
+  var sym = (symbol || 'BTC').toUpperCase();
+  var coinloreId = sym === 'ETH' ? 80 : 90;
+  var krakenPair = sym === 'ETH' ? 'ETHUSD' : 'XBTUSD';
+  // Primary: Binance Vision
+  try {
+    var r = await fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=' + sym + 'USDT', {}, 6000);
+    if (r.ok) { var d = await r.json(); var p = parseFloat(d.price); if (p > 0) return p; }
+  } catch (e) { /* fall through */ }
+  // Fallback: Coinbase spot (very reliable from datacenters)
+  try {
+    var rc = await fetchWithTimeout('https://api.coinbase.com/v2/prices/' + sym + '-USD/spot', {}, 6000);
+    if (rc.ok) { var jc = await rc.json(); var pc = jc && jc.data ? parseFloat(jc.data.amount) : 0; if (pc > 0) return pc; }
+  } catch (e) { /* fall through */ }
+  // Fallback: Coinlore
+  try {
+    var r2 = await fetchWithTimeout('https://api.coinlore.com/api/ticker/?id=' + coinloreId, {}, 6000);
+    if (r2.ok) { var a = await r2.json(); var c = Array.isArray(a) ? a[0] : null; var p2 = c ? parseFloat(c.price_usd) : 0; if (p2 > 0) return p2; }
+  } catch (e) { /* fall through */ }
+  // Fallback: Kraken
+  try {
+    var r3 = await fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=' + krakenPair, {}, 6000);
+    if (r3.ok) { var j = await r3.json(); var k = j && j.result ? j.result[Object.keys(j.result)[0]] : null; var p3 = k && k.c ? parseFloat(k.c[0]) : 0; if (p3 > 0) return p3; }
+  } catch (e) { /* fall through */ }
+  return null;
+}
+
+// Last two 1h BTC closes (prev, current) for the volatility alert.
+// Returns { prevClose, currClose, source } or null. Binance klines -> Kraken OHLC.
+async function fetchBtc1hCloses() {
+  // Primary: Binance Vision klines (interval 1h, last 2)
+  try {
+    var r = await fetchWithTimeout('https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=2', {}, 8000);
+    if (r.ok) {
+      var k = await r.json();
+      if (Array.isArray(k) && k.length >= 2) {
+        var pc = parseFloat(k[0][4]); var cc = parseFloat(k[1][4]); // index 4 = close
+        if (pc > 0 && cc > 0) return { prevClose: pc, currClose: cc, source: 'binance' };
+      }
+    }
+  } catch (e) { /* fall through */ }
+  // Fallback: Kraken OHLC (hourly candles)
+  try {
+    var r2 = await fetchWithTimeout('https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60', {}, 8000);
+    if (r2.ok) {
+      var j = await r2.json();
+      var keyName = j && j.result ? Object.keys(j.result).filter(function (kk) { return kk !== 'last'; })[0] : null;
+      var rows = keyName ? j.result[keyName] : null;
+      if (Array.isArray(rows) && rows.length >= 2) {
+        // each row: [time, open, high, low, close, vwap, volume, count]
+        var prev = rows[rows.length - 2]; var curr = rows[rows.length - 1];
+        var pc2 = parseFloat(prev[4]); var cc2 = parseFloat(curr[4]);
+        if (pc2 > 0 && cc2 > 0) return { prevClose: pc2, currClose: cc2, source: 'kraken' };
+      }
+    }
+  } catch (e) { /* fall through */ }
+  return null;
+}
+
 // GET /api/btc-price
 async function handleBtcPrice() {
   var KEY = 'btc-price';
   var cached = getCached(KEY, 15000);
   if (cached) return jsonFreshAuto(cached, 200, 15);
 
-  // Primary: Binance Vision (full 24h stats). Binance blocks some datacenter
-  // egress ranges, so this can fail from the Worker even while it works from
-  // residential IPs. When it does, fall through to CoinGecko below (the same
-  // source crypto-movers uses, proven reachable from Workers). Never let this
-  // endpoint return price_usd:0 while any live source is up: a 0 freezes the
-  // BTC hero panel for WS-blocked (US) users who depend on this REST fallback.
-  try {
-    var res = await fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT');
-    if (res.ok) {
-      var d = await res.json();
-      var price = parseFloat(d.lastPrice);
-      if (price > 0) {
-        var data = {
-          data: {
-            price_usd: price,
-            change_24h_percent: parseFloat(d.priceChangePercent),
-            high_24h: parseFloat(d.highPrice),
-            low_24h: parseFloat(d.lowPrice),
-            volume_24h: parseFloat(d.quoteVolume),
-          },
-        };
-        setCache(KEY, data);
-        return jsonFreshAuto(data, 200, 15);
-      }
-    }
-  } catch (e) { /* fall through to CoinGecko */ }
-
-  // Fallback 1: Coinlore (keyless, datacenter-friendly, true 24h change +
-  // market cap). CoinGecko is intentionally NOT used here: its free tier
-  // rate-limits the Worker's shared egress hard at btc-price's 15s cadence,
-  // which is exactly what left this endpoint returning 0. Coinlore is the
-  // same backstop crypto-movers already trusts. id 90 = bitcoin.
-  try {
-    var clRes = await fetchWithTimeout('https://api.coinlore.com/api/ticker/?id=90', {}, 6000);
-    if (clRes.ok) {
-      var clArr = await clRes.json();
-      var cl = Array.isArray(clArr) ? clArr[0] : null;
-      var clPrice = cl ? parseFloat(cl.price_usd) : 0;
-      if (clPrice > 0) {
-        var data2 = {
-          data: {
-            price_usd: clPrice,
-            change_24h_percent: parseFloat(cl.percent_change_24h) || 0,
-            // Coinlore carries no 24h high/low; default to price so the hero
-            // range bar stays valid (it moves with price until a richer
-            // source returns).
-            high_24h: clPrice,
-            low_24h: clPrice,
-            volume_24h: parseFloat(cl.volume24) || 0,
-            market_cap: parseFloat(cl.market_cap_usd) || 0,
-          },
-        };
-        setCache(KEY, data2);
-        return jsonFreshAuto(data2, 200, 15);
-      }
-    }
-  } catch (e2) { /* fall through to Kraken */ }
-
-  // Fallback 2: Kraken (keyless, datacenter-friendly, carries real 24h
-  // high/low). Change is derived from today's opening price (UTC), an
-  // approximation of the trailing-24h figure but good enough for a backstop.
-  try {
-    var krRes = await fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', {}, 6000);
-    if (krRes.ok) {
-      var krJson = await krRes.json();
-      var krResult = krJson && krJson.result;
-      var krKey = krResult ? Object.keys(krResult)[0] : null;
-      var kr = krKey ? krResult[krKey] : null;
-      var krLast = kr && kr.c ? parseFloat(kr.c[0]) : 0;
-      if (krLast > 0) {
-        var krOpen = kr.o ? parseFloat(kr.o) : krLast;
-        var krVolBtc = kr.v ? parseFloat(kr.v[1]) : 0;
-        var data3 = {
-          data: {
-            price_usd: krLast,
-            change_24h_percent: krOpen > 0 ? ((krLast - krOpen) / krOpen) * 100 : 0,
-            high_24h: kr.h ? parseFloat(kr.h[1]) : krLast,
-            low_24h: kr.l ? parseFloat(kr.l[1]) : krLast,
-            volume_24h: krVolBtc * krLast, // Kraken volume is in BTC; convert to USD
-          },
-        };
-        setCache(KEY, data3);
-        return jsonFreshAuto(data3, 200, 15);
-      }
-    }
-  } catch (e3) { /* fall through to stale */ }
+  var stats = await fetchBtcStats();
+  if (stats) {
+    var data = {
+      data: {
+        price_usd: stats.price,
+        change_24h_percent: stats.change_24h,
+        high_24h: stats.high_24h,
+        low_24h: stats.low_24h,
+        volume_24h: stats.volume_24h,
+      },
+    };
+    if (stats.market_cap) data.data.market_cap = stats.market_cap;
+    setCache(KEY, data);
+    return jsonFreshAuto(data, 200, 15);
+  }
 
   // All upstreams failed: serve last good value if we have one.
   var stale = getStale(KEY);
@@ -7882,7 +7921,7 @@ async function handleBriefing() {
   if (cached) return jsonFreshAuto(cached, 200, 60);
 
   var results = await Promise.allSettled([
-    fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'),
+    fetchBtcStats(), // resilient BTC (Binance -> Coinlore -> Kraken); returns a parsed object, not a Response
     fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),
     fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'),
     fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'),
@@ -7891,8 +7930,9 @@ async function handleBriefing() {
 
   var sections = {};
 
-  if (results[0].status === 'fulfilled') {
-    try { var d = await results[0].value.json(); sections.crypto = { price_usd: parseFloat(d.lastPrice), change_24h_percent: parseFloat(d.priceChangePercent), volume_24h: parseFloat(d.quoteVolume) }; } catch (e) {}
+  if (results[0].status === 'fulfilled' && results[0].value && results[0].value.price > 0) {
+    var d = results[0].value;
+    sections.crypto = { price_usd: d.price, change_24h_percent: d.change_24h, volume_24h: d.volume_24h };
   }
   if (results[1].status === 'fulfilled') {
     try { var d2 = await results[1].value.json(); var fg = d2.data[0]; sections.fear_greed = { value: parseInt(fg.value), label: fg.value_classification }; } catch (e) {}
@@ -7945,29 +7985,12 @@ async function checkBtcVolatilityAndAlert(env) {
     return { skipped: true, reason: 'no KV binding' };
   }
 
-  var res;
-  try {
-    res = await fetchWithTimeout(
-      'https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=2',
-      {}, 8000
-    );
-  } catch (err) {
-    return { skipped: true, reason: 'klines fetch failed: ' + err.message };
+  var closes = await fetchBtc1hCloses();
+  if (!closes) {
+    return { skipped: true, reason: 'no 1h closes from any source (Binance klines / Kraken OHLC)' };
   }
-  if (!res.ok) {
-    return { skipped: true, reason: 'klines status ' + res.status };
-  }
-  var klines = await res.json();
-  if (!Array.isArray(klines) || klines.length < 2) {
-    return { skipped: true, reason: 'klines shape unexpected' };
-  }
-
-  // Each kline: [openTime, open, high, low, close, volume, closeTime, ...]
-  var prevClose = parseFloat(klines[0][4]);
-  var currClose = parseFloat(klines[1][4]);
-  if (!(prevClose > 0) || !(currClose > 0)) {
-    return { skipped: true, reason: 'invalid prices' };
-  }
+  var prevClose = closes.prevClose;
+  var currClose = closes.currClose;
   var changePct = ((currClose - prevClose) / prevClose) * 100;
   var absChange = Math.abs(changePct);
   var direction = changePct >= 0 ? 'up' : 'down';
@@ -11988,7 +12011,7 @@ async function fetchProBriefing(env, url) {
     sourceMeta.push({ name: name, start: Date.now() });
   }
 
-  add(want('btc'), 'btc', 'Binance.BTCUSDT', fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'));
+  add(want('btc'), 'btc', 'Binance.BTCUSDT', fetchBtcStats()); // resilient BTC; resolves to a parsed object, not a Response
   add(want('fear-greed'), 'fear_greed', 'AlternativeMe.fng', fetchWithTimeout('https://api.alternative.me/fng/?limit=1'));
   add(want('earthquakes'), 'earthquakes', 'USGS.earthquakes_2_5_day', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'));
   add(want('hackernews'), 'hackernews', 'HackerNews.topstories', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'));
@@ -12012,16 +12035,22 @@ async function fetchProBriefing(env, url) {
         };
         continue;
       }
-      var d = await r.value.json();
       if (key === 'btc') {
-        sections.btc = {
-          price_usd: parseFloat(d.lastPrice) || 0,
-          change_24h_percent: parseFloat(d.priceChangePercent) || 0,
-          volume_24h: parseFloat(d.quoteVolume) || 0,
-          high_24h: parseFloat(d.highPrice) || 0,
-          low_24h: parseFloat(d.lowPrice) || 0,
-        };
-      } else if (key === 'fear_greed' && d && d.data && d.data[0]) {
+        // fetchBtcStats resolves to a parsed object (not a Response).
+        var bp = r.value;
+        if (bp && bp.price > 0) {
+          sections.btc = {
+            price_usd: bp.price,
+            change_24h_percent: bp.change_24h || 0,
+            volume_24h: bp.volume_24h || 0,
+            high_24h: bp.high_24h || 0,
+            low_24h: bp.low_24h || 0,
+          };
+        }
+        continue;
+      }
+      var d = await r.value.json();
+      if (key === 'fear_greed' && d && d.data && d.data[0]) {
         sections.fear_greed = {
           value: parseInt(d.data[0].value) || 0,
           label: d.data[0].value_classification || '',
@@ -12420,10 +12449,10 @@ var ETH_EXCHANGE_ADDRESSES = {
 var ETH_FLOW_WEI_THRESHOLD = 5n * 1000000000000000000n;  // 5 ETH (~$11K at $2,300/ETH)
 
 async function fetchProExchangeFlows(env, url) {
-  // Spot price for USD-tagging
-  var ethPriceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT', {}, 6000)
-    .then(function(r) { return r.json(); })
-    .catch(function() { return null; });
+  // Spot price for USD-tagging. Resilient (Binance -> Coinbase -> Coinlore ->
+  // Kraken), shaped as { price } so the consumer (firstResults[0].value.price)
+  // is unchanged.
+  var ethPriceFetch = fetchSpotUsd('ETH').then(function(p) { return { price: p }; });
 
   // Latest block number
   var blockNumFetch = fetchWithTimeout(
@@ -13080,13 +13109,10 @@ function _weiToEth(wei) {
 }
 
 async function fetchProWhales(env, url) {
-  var btcPriceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT', {}, 6000)
-    .then(function(r) { return r.json(); })
-    .catch(function() { return null; });
-
-  var ethPriceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT', {}, 6000)
-    .then(function(r) { return r.json(); })
-    .catch(function() { return null; });
+  // Resilient spot prices (Binance -> Coinbase -> Coinlore -> Kraken), shaped as
+  // { price } so the consumers (firstResults[n].value.price) are unchanged.
+  var btcPriceFetch = fetchSpotUsd('BTC').then(function(p) { return { price: p }; });
+  var ethPriceFetch = fetchSpotUsd('ETH').then(function(p) { return { price: p }; });
 
   // BTC: mempool.space recent mempool txs (last 10 by default)
   var btcMempoolFetch = fetchWithTimeout('https://mempool.space/api/mempool/recent', {}, 6000)
@@ -13541,7 +13567,7 @@ async function fetchProAgentContext(env, url) {
     { name: 'AnthropicStatus.summary', start: _ctxStart },
   ];
   var sources = await Promise.allSettled([
-    fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT'),  // 0
+    fetchBtcStats(),  // 0 — resilient BTC (Binance -> Coinlore -> Kraken); parsed object, not a Response
     fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),                              // 1
     (env && env.FINNHUB_API_KEY)
       ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
@@ -13562,15 +13588,14 @@ async function fetchProAgentContext(env, url) {
 
   // ---- Parse each source independently ----
   var btc = null;
-  if (sources[0].status === 'fulfilled' && sources[0].value) {
-    try {
-      var b = await sources[0].value.json();
-      btc = {
-        price_usd: parseFloat(b.lastPrice) || 0,
-        change_24h_percent: parseFloat(b.priceChangePercent) || 0,
-        volume_24h: parseFloat(b.quoteVolume) || 0,
-      };
-    } catch (e) {}
+  if (sources[0].status === 'fulfilled' && sources[0].value && sources[0].value.price > 0) {
+    // fetchBtcStats resolves to a parsed object (not a Response).
+    var b = sources[0].value;
+    btc = {
+      price_usd: b.price,
+      change_24h_percent: b.change_24h || 0,
+      volume_24h: b.volume_24h || 0,
+    };
   }
 
   var fearGreed = null;
