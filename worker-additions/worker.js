@@ -1237,25 +1237,97 @@ async function handleBtcPrice() {
   var cached = getCached(KEY, 15000);
   if (cached) return jsonFreshAuto(cached, 200, 15);
 
+  // Primary: Binance Vision (full 24h stats). Binance blocks some datacenter
+  // egress ranges, so this can fail from the Worker even while it works from
+  // residential IPs. When it does, fall through to CoinGecko below (the same
+  // source crypto-movers uses, proven reachable from Workers). Never let this
+  // endpoint return price_usd:0 while any live source is up: a 0 freezes the
+  // BTC hero panel for WS-blocked (US) users who depend on this REST fallback.
   try {
     var res = await fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT');
-    var d = await res.json();
-    var data = {
-      data: {
-        price_usd: parseFloat(d.lastPrice),
-        change_24h_percent: parseFloat(d.priceChangePercent),
-        high_24h: parseFloat(d.highPrice),
-        low_24h: parseFloat(d.lowPrice),
-        volume_24h: parseFloat(d.quoteVolume),
-      },
-    };
-    setCache(KEY, data);
-    return jsonFreshAuto(data, 200, 15);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 5);
-    return jsonResponse({ data: { price_usd: 0, change_24h_percent: 0 } });
-  }
+    if (res.ok) {
+      var d = await res.json();
+      var price = parseFloat(d.lastPrice);
+      if (price > 0) {
+        var data = {
+          data: {
+            price_usd: price,
+            change_24h_percent: parseFloat(d.priceChangePercent),
+            high_24h: parseFloat(d.highPrice),
+            low_24h: parseFloat(d.lowPrice),
+            volume_24h: parseFloat(d.quoteVolume),
+          },
+        };
+        setCache(KEY, data);
+        return jsonFreshAuto(data, 200, 15);
+      }
+    }
+  } catch (e) { /* fall through to CoinGecko */ }
+
+  // Fallback 1: Coinlore (keyless, datacenter-friendly, true 24h change +
+  // market cap). CoinGecko is intentionally NOT used here: its free tier
+  // rate-limits the Worker's shared egress hard at btc-price's 15s cadence,
+  // which is exactly what left this endpoint returning 0. Coinlore is the
+  // same backstop crypto-movers already trusts. id 90 = bitcoin.
+  try {
+    var clRes = await fetchWithTimeout('https://api.coinlore.com/api/ticker/?id=90', {}, 6000);
+    if (clRes.ok) {
+      var clArr = await clRes.json();
+      var cl = Array.isArray(clArr) ? clArr[0] : null;
+      var clPrice = cl ? parseFloat(cl.price_usd) : 0;
+      if (clPrice > 0) {
+        var data2 = {
+          data: {
+            price_usd: clPrice,
+            change_24h_percent: parseFloat(cl.percent_change_24h) || 0,
+            // Coinlore carries no 24h high/low; default to price so the hero
+            // range bar stays valid (it moves with price until a richer
+            // source returns).
+            high_24h: clPrice,
+            low_24h: clPrice,
+            volume_24h: parseFloat(cl.volume24) || 0,
+            market_cap: parseFloat(cl.market_cap_usd) || 0,
+          },
+        };
+        setCache(KEY, data2);
+        return jsonFreshAuto(data2, 200, 15);
+      }
+    }
+  } catch (e2) { /* fall through to Kraken */ }
+
+  // Fallback 2: Kraken (keyless, datacenter-friendly, carries real 24h
+  // high/low). Change is derived from today's opening price (UTC), an
+  // approximation of the trailing-24h figure but good enough for a backstop.
+  try {
+    var krRes = await fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=XBTUSD', {}, 6000);
+    if (krRes.ok) {
+      var krJson = await krRes.json();
+      var krResult = krJson && krJson.result;
+      var krKey = krResult ? Object.keys(krResult)[0] : null;
+      var kr = krKey ? krResult[krKey] : null;
+      var krLast = kr && kr.c ? parseFloat(kr.c[0]) : 0;
+      if (krLast > 0) {
+        var krOpen = kr.o ? parseFloat(kr.o) : krLast;
+        var krVolBtc = kr.v ? parseFloat(kr.v[1]) : 0;
+        var data3 = {
+          data: {
+            price_usd: krLast,
+            change_24h_percent: krOpen > 0 ? ((krLast - krOpen) / krOpen) * 100 : 0,
+            high_24h: kr.h ? parseFloat(kr.h[1]) : krLast,
+            low_24h: kr.l ? parseFloat(kr.l[1]) : krLast,
+            volume_24h: krVolBtc * krLast, // Kraken volume is in BTC; convert to USD
+          },
+        };
+        setCache(KEY, data3);
+        return jsonFreshAuto(data3, 200, 15);
+      }
+    }
+  } catch (e3) { /* fall through to stale */ }
+
+  // All upstreams failed: serve last good value if we have one.
+  var stale = getStale(KEY);
+  if (stale) return jsonFreshAuto(stale, 200, 5);
+  return jsonResponse({ data: { price_usd: 0, change_24h_percent: 0 } });
 }
 
 
