@@ -2966,48 +2966,6 @@
   color: var(--cyan);
 }
 
-/* ── Recipe ── */
-.recipeContent {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  padding: 4px 0;
-  border-radius: 3px;
-  transition: background 0.15s;
-}
-
-.recipeContent:hover {
-  background: var(--bg-hover);
-}
-
-.recipeThumbnail {
-  width: 64px;
-  height: 64px;
-  border-radius: 4px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid var(--border);
-}
-
-.recipeInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.recipeName {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 3px;
-}
-
-.recipeMeta {
-  font-size: 9px;
-  color: var(--text-dim);
-}
-
 /* ── Daily Learn (History + Term) ── */
 .dailySectionTitle {
   font-size: 8px;
