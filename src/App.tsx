@@ -27,7 +27,6 @@ import { useCryptoGlobal } from './hooks/useCryptoGlobal';
 import { useEarthquakes } from './hooks/useEarthquakes';
 import { useWeather, weatherDescription } from './hooks/useWeather';
 import { useSpaceLaunches } from './hooks/useSpaceLaunches';
-import { useRecipe } from './hooks/useRecipe';
 import { useStackOverflow } from './hooks/useStackOverflow';
 import { useBtcNetwork } from './hooks/useBtcNetwork';
 import { useLayoutManager, ALL_PANELS } from './hooks/useLayoutManager';
@@ -173,7 +172,6 @@ function App() {
   const earthquakes = useEarthquakes();
   const weather = useWeather();
   const spaceLaunches = useSpaceLaunches();
-  const recipes = useRecipe();
   const soQuestions = useStackOverflow();
   const btcNet = useBtcNetwork();
   const internetPulse = useInternetPulse();
@@ -256,7 +254,6 @@ function App() {
   // them rather than wedge the viewer on a placeholder. Resets if data
   // eventually arrives.
   const hideLaunches = useLoadingTimeout(spaceLaunches.length > 0, 15000);
-  const hideRecipes = useLoadingTimeout(recipes.length > 0, 12000);
   const hidePodcasts = useLoadingTimeout(podcastEpisodes.length > 0, 12000);
   const hideTcgMarket = useLoadingTimeout(!!(tcgMarket && tcgMarket.cards && tcgMarket.cards.length > 0), 12000);
 
@@ -390,7 +387,6 @@ function App() {
     if (podcastEpisodes.length > 0) panelHealth.reportData('podcasts');
     if (bskyPosts.length > 0) panelHealth.reportData('bluesky');
     if (internetPulse.length > 0) panelHealth.reportData('internet-pulse');
-    if (recipes.length > 0) panelHealth.reportData('recipe');
     if (humansInSpace) panelHealth.reportData('humans-in-space');
     if (thisDayEvents.length > 0) panelHealth.reportData('this-day');
     if (airQuality?.snapshot?.usAqi != null) panelHealth.reportData('air-quality');
@@ -982,10 +978,6 @@ function App() {
           {paw.breed || (paw.type === 'cat' ? 'a very good cat' : 'a very good dog')}
         </div>
       )}
-    </>),
-    'recipe': hideRecipes ? null : (<>
-      <PanelHead panelId="recipe" isStale={panelHealth.isStale('recipe')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Tonight</span><span className="panelTag">HANGRYHQ</span></div></PanelHead>
-      {recipes.length > 0 ? (<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recipes.map((r, i) => (<a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="recipeContent">{r.thumbnail ? <img src={r.thumbnail} alt={r.name} className="recipeThumbnail" loading="lazy" /> : null}<div className="recipeInfo"><div className="recipeName">{r.name}</div><div className="recipeMeta">{[r.area, r.category, r.timeMinutes ? `${r.timeMinutes}m` : ''].filter(Boolean).join(' · ')}</div></div></a>))}<a href="https://hangryhq.com/recipes" target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: 'var(--cyan)', textAlign: 'right', textDecoration: 'none', paddingTop: 2 }}>more recipes at HangryHQ &rarr;</a></div>) : <div style={{ textAlign: 'center', padding: 16, fontSize: 10, color: 'var(--text-dim)' }}>loading recipes...</div>}
     </>),
     'daily-learn': (<>
       <PanelHead panelId="daily-learn" isStale={panelHealth.isStale('daily-learn')} layout={layout} getGridCols={getGridCols}><div className="panelHeaderLeft"><span className="panelTitle">Daily</span><span className="panelTag">LEARN</span></div></PanelHead>

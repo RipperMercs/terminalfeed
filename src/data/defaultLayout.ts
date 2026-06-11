@@ -59,7 +59,6 @@ export const DEFAULT_LAYOUT = {
     'github',
     'hn-community',
     'npm-trends',
-    'recipe',
     'support',
     'daily-paws',
   ],

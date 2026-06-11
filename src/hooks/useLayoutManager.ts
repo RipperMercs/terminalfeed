@@ -100,7 +100,6 @@ export const ALL_PANELS = [
   { id: 'npm-trends', label: 'NPM Trends', defaultSpan: 1 },
   { id: 'museum-art', label: 'Museum Art', defaultSpan: 1 },
 { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
-  { id: 'recipe', label: 'Recipes (HangryHQ)', defaultSpan: 1 },
   { id: 'humans-in-space', label: 'Humans In Space', defaultSpan: 1 },
   { id: 'this-day', label: 'This Day In History', defaultSpan: 1 },
   { id: 'originals', label: 'TF Originals', defaultSpan: 1 },
@@ -113,7 +112,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '55'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '56'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
@@ -146,16 +145,16 @@ export const PRESETS: Record<string, { label: string; hidden: string[] }> = {
   everything: { label: 'Everything', hidden: [] },
   trader: {
     label: 'Trader',
-    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'huggingface', 'status-wall'],
+    hidden: ['steam', 'stackoverflow', 'daily-learn', 'reddit', 'github', 'huggingface', 'status-wall'],
   },
   // developer: swaps in the unified status-wall and hides the 3 granular status tiles
   developer: {
     label: 'Developer',
-    hidden: ['recipe', 'seismic', 'launches', 'steam', 'quick-stats', 'claude-status', 'cloud-status', 'dev-status'],
+    hidden: ['seismic', 'launches', 'steam', 'quick-stats', 'claude-status', 'cloud-status', 'dev-status'],
   },
   crypto: {
     label: 'Crypto',
-    hidden: ['steam', 'stackoverflow', 'recipe', 'daily-learn', 'reddit', 'github', 'huggingface', 'weather', 'seismic', 'launches', 'status-wall'],
+    hidden: ['steam', 'stackoverflow', 'daily-learn', 'reddit', 'github', 'huggingface', 'weather', 'seismic', 'launches', 'status-wall'],
   },
 };
 

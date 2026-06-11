@@ -30,7 +30,6 @@ const BASE_PRIORITY: Record<string, number> = {
   'bluesky': 35,        // Social
   'internet-pulse': 30, // Network health
   'uap': 25,            // Novelty
-  'recipe': 20,         // Fun
   'daily-learn': 20,    // Educational
   'ai-image': 15,       // Interactive toy
   'support': 5,         // Always last
