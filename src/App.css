@@ -730,6 +730,8 @@
 /* Premium / sponsor slots → gold */
 .panel[data-panel-id="sponsor-slot"],
 .panel[data-panel-id="premium-api"]       { --panel-accent: #F9CB42; }
+/* StockFloc house ad → amber (fire/hot brand) */
+.panel[data-panel-id="stockfloc-ad"]      { --panel-accent: #EF9F27; }
 
 /* Gaming → green */
 .panel[data-panel-id="steam"]             { --panel-accent: #4ADE80; }
