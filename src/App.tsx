@@ -596,9 +596,9 @@ function App() {
         ))}
       </div>
       <div>
-        {!newsFilter && sisterOriginals.map((s, i) => { const sc = s.source === 'VR.ORG' ? 'var(--cyan)' : 'var(--purple)'; return (
-          <a key={`sis-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title={`${s.source === 'VR.ORG' ? 'VR.org' : 'TensorFeed'} original`}>
-            <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>{s.source === 'VR.ORG' ? 'VR.ORG' : 'TF'}</span>
+        {!newsFilter && sisterOriginals.filter((s) => s.source === 'TENSORFEED').map((s, i) => { const sc = 'var(--purple)'; return (
+          <a key={`sis-tf-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title="TensorFeed original">
+            <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>TF</span>
             <span className="newsTitle">{s.title}</span>
             <span className="newsMeta">{timeAgo(s.time)}</span>
           </a>); })}
@@ -608,6 +608,12 @@ function App() {
             <span className="newsTag" style={{ color: tc, background: `${tc}15` }}>{tag}</span>
             <span className="newsTitle">{story.title}</span>
             <span className="newsMeta">{timeAgo(story.time)}</span>
+          </a>); })}
+        {!newsFilter && sisterOriginals.filter((s) => s.source === 'VR.ORG').map((s, i) => { const sc = 'var(--cyan)'; return (
+          <a key={`sis-vr-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title="VR.org original">
+            <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>VR.ORG</span>
+            <span className="newsTitle">{s.title}</span>
+            <span className="newsMeta">{timeAgo(s.time)}</span>
           </a>); })}
       </div>
     </>),
