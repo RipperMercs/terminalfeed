@@ -20,10 +20,12 @@ const FEEDS: { source: SisterItem['source']; url: string; host: string }[] = [
 
 const CACHE_KEY = 'sister_originals_1';
 const POLL_MS = 15 * 60_000; // 15 min; editorial changes slowly
-// Keep owned rows light so HN still leads the feed: at most 2 per site,
-// 3 total stacked at the top.
+// Keep owned rows light: at most 2 per site. App.tsx splits these by source,
+// stacking TensorFeed rows at the top of the Tech/AI feed (on-topic AI/tech)
+// and anchoring VR.org rows at the bottom (less relevant to this tab), so VR.org
+// no longer floats to the top just because it publishes most often.
 const PER_FEED = 2;
-const MAX_ITEMS = 3;
+const MAX_ITEMS = 4;
 
 export function useSisterOriginals(): SisterItem[] {
   const [items, setItems] = useState<SisterItem[]>(() => {
