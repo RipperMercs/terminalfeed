@@ -20,6 +20,7 @@ export const DEFAULT_LAYOUT = {
     'air-quality',
     'shodan',
     'sponsor-slot',
+    'stockfloc-ad',
     'premium-api',
     'space-weather',
     'bitcoin',
