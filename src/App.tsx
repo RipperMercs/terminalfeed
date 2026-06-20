@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useBtcPrice } from './hooks/useBtcPrice';
 import { useFearGreed } from './hooks/useFearGreed';
 import { useHackerNews } from './hooks/useHackerNews';
@@ -118,6 +118,16 @@ import { useFedPress } from './hooks/useFedPress';
 import { useCo2 } from './hooks/useCo2';
 import { useLoadingTimeout } from './hooks/useLoadingTimeout';
 import './App.css';
+
+// Number of masonry columns for the dashboard grid at a given viewport width.
+// Mirrors the responsive breakpoints used by organize mode (.gridOrganizing
+// .panel widths: 25% / 33% / 50% / 100%) so normal and organize views match.
+function colsForWidth(w: number): number {
+  if (w <= 900) return 1;
+  if (w <= 1100) return 2;
+  if (w <= 1400) return 3;
+  return 4;
+}
 
 function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
@@ -474,6 +484,63 @@ function App() {
     if (w <= 1100) return 2;
     return Math.max(1, Math.floor(w / 320));
   }, []);
+
+  // Number of fixed masonry columns for normal (non-organize) viewing. Panels
+  // are dealt into these columns in JS so a live panel resizing only nudges
+  // its own column and can never cause a cross-column reflow/oscillation
+  // (the balanced CSS multi-column layout we replaced did exactly that).
+  const [numCols, setNumCols] = useState<number>(() =>
+    typeof window === 'undefined' ? 4 : colsForWidth(window.innerWidth)
+  );
+  useEffect(() => {
+    let raf = 0;
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setNumCols(colsForWidth(window.innerWidth)));
+    };
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+  }, []);
+
+  // Height-balanced column assignment: panelId -> column index. Greedy
+  // shortest-column packing keeps the fixed columns evenly filled. It is
+  // recomputed ONLY when the visible panel set or column count changes (the
+  // `visibleKey`/`numCols` deps), never on data/height ticks, plus one resettle
+  // after feeds finish loading. Panel heights are column-independent (all
+  // columns are equal width), so re-running on stable heights reaches the same
+  // assignment and the equality guard returns prev: provably no render loop.
+  const visibleKey = layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support').join('|');
+  const [colAssign, setColAssign] = useState<Map<string, number>>(() => new Map());
+  useLayoutEffect(() => {
+    const run = () => setColAssign(prev => {
+      const heights = new Map<string, number>();
+      document.querySelectorAll('.grid .panel[data-panel-id]').forEach(el => {
+        const id = el.getAttribute('data-panel-id');
+        if (id) heights.set(id, (el as HTMLElement).getBoundingClientRect().height);
+      });
+      const ids = visibleKey ? visibleKey.split('|') : [];
+      const next = new Map<string, number>();
+      let colH: number[] = new Array(numCols).fill(0);
+      for (const id of ids) {
+        const def = ALL_PANELS.find(p => p.id === id);
+        if (def && (def.defaultSpan ?? 1) > 1) { colH = new Array(numCols).fill(0); continue; } // hero breaks the segment
+        if (!heights.has(id)) continue; // not rendered
+        let c = 0;
+        for (let k = 1; k < numCols; k++) if (colH[k] < colH[c]) c = k;
+        next.set(id, c);
+        colH[c] += (heights.get(id) as number) + 4;
+      }
+      if (prev.size === next.size) {
+        let same = true;
+        for (const [k, v] of next) { if (prev.get(k) !== v) { same = false; break; } }
+        if (same) return prev;
+      }
+      return next;
+    });
+    run();
+    const t = setTimeout(run, 6500); // resettle once after the staggered feed loads settle
+    return () => clearTimeout(t);
+  }, [visibleKey, numCols]);
 
   // Panel registry: maps panel IDs to their JSX content
   // This enables dynamic rendering from panelOrder array
@@ -1155,11 +1222,15 @@ function App() {
         <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{wire.index + 1}/{wire.total}</span>
       </PanelHead>
       <div style={{ padding: '4px 0' }}>
+        {/* Reserve height for ~3 lines so rotating through variable-length
+            quotes (and the per-char Typewriter reveal) never resizes the
+            panel and shoves the rest of its column. */}
         <div style={{
           fontSize: wire.item.type === 'quote' ? 12 : 11,
           color: wire.item.type === 'meta' ? 'var(--cyan)' : wire.item.type === 'quote' ? 'var(--text)' : wire.item.type === 'history' ? 'var(--amber)' : 'var(--text-mid)',
           fontStyle: wire.item.type === 'quote' ? 'italic' : 'normal',
           lineHeight: 1.6,
+          minHeight: 58,
         }}>
           {wire.item.type === 'history' && <span style={{ color: 'var(--cyan)' }}>+ </span>}
           {wire.item.type === 'fact' && <span style={{ color: 'var(--purple)' }}>+ </span>}
@@ -3079,63 +3150,117 @@ function App() {
             layout.isVisible(id) && id !== 'support'
           );
 
-          return userPanels.map((id, idx) => {
+          const makeDragProps = (id: string) => layout.isOrganizing ? {
+            draggable: true,
+            onDragStart: (e: React.DragEvent) => {
+              e.dataTransfer.setData('text/plain', id);
+              e.dataTransfer.effectAllowed = 'move';
+              (e.currentTarget as HTMLElement).classList.add('panelDragging');
+            },
+            onDragEnd: (e: React.DragEvent) => {
+              (e.currentTarget as HTMLElement).classList.remove('panelDragging');
+              document.querySelectorAll('.panelDragOver').forEach(el => el.classList.remove('panelDragOver'));
+            },
+            onDragOver: (e: React.DragEvent) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              (e.currentTarget as HTMLElement).classList.add('panelDragOver');
+            },
+            onDragLeave: (e: React.DragEvent) => {
+              (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
+            },
+            onDrop: (e: React.DragEvent) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
+              const fromId = e.dataTransfer.getData('text/plain');
+              if (!fromId || fromId === id) return;
+              const order = [...layout.panelOrder];
+              const fromIdx = order.indexOf(fromId);
+              const toIdx = order.indexOf(id);
+              if (fromIdx === -1 || toIdx === -1) return;
+              order.splice(fromIdx, 1);
+              order.splice(toIdx, 0, fromId);
+              layout.setPanelOrder(order);
+            },
+          } : {};
+
+          // Render one panel exactly as before: first 6 eager, rest lazy.
+          const renderPanel = (id: string, idx: number) => {
             const panelDef = ALL_PANELS.find(p => p.id === id);
             if (!panelDef) return null;
             const span = panelDef.defaultSpan > 1 ? 'hero2' : '';
             const content = panelRegistry[id as keyof typeof panelRegistry];
             if (!content) return null;
-
-            const dragProps = layout.isOrganizing ? {
-              draggable: true,
-              onDragStart: (e: React.DragEvent) => {
-                e.dataTransfer.setData('text/plain', id);
-                e.dataTransfer.effectAllowed = 'move';
-                (e.currentTarget as HTMLElement).classList.add('panelDragging');
-              },
-              onDragEnd: (e: React.DragEvent) => {
-                (e.currentTarget as HTMLElement).classList.remove('panelDragging');
-                document.querySelectorAll('.panelDragOver').forEach(el => el.classList.remove('panelDragOver'));
-              },
-              onDragOver: (e: React.DragEvent) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                (e.currentTarget as HTMLElement).classList.add('panelDragOver');
-              },
-              onDragLeave: (e: React.DragEvent) => {
-                (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
-              },
-              onDrop: (e: React.DragEvent) => {
-                e.preventDefault();
-                (e.currentTarget as HTMLElement).classList.remove('panelDragOver');
-                const fromId = e.dataTransfer.getData('text/plain');
-                if (!fromId || fromId === id) return;
-                const order = [...layout.panelOrder];
-                const fromIdx = order.indexOf(fromId);
-                const toIdx = order.indexOf(id);
-                if (fromIdx === -1 || toIdx === -1) return;
-                order.splice(fromIdx, 1);
-                order.splice(toIdx, 0, fromId);
-                layout.setPanelOrder(order);
-              },
-            } : {};
-
-            // First 6 panels load immediately, rest are lazy
+            const dragProps = makeDragProps(id);
+            const inner = (
+              <>
+                <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
+                <PanelAsOf ts={panelHealth.lastDataAt(id)} stale={panelHealth.isStale(id)} />
+              </>
+            );
             if (idx < 6) {
               return (
                 <div key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
-                  <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
-                  <PanelAsOf ts={panelHealth.lastDataAt(id)} stale={panelHealth.isStale(id)} />
+                  {inner}
                 </div>
               );
             }
             return (
               <LazyPanel key={id} className={`panel ${span}`} data-panel-id={id} role="region" aria-label={`${panelDef.label} panel`} {...dragProps}>
-                <PanelErrorBoundary panelId={id}>{content}</PanelErrorBoundary>
-                <PanelAsOf ts={panelHealth.lastDataAt(id)} stale={panelHealth.isStale(id)} />
+                {inner}
               </LazyPanel>
             );
-          });
+          };
+
+          // Organize mode keeps the original flat flex-wrap layout: drag
+          // reordering relies on panels being direct children of .gridOrganizing.
+          if (layout.isOrganizing) {
+            return userPanels.map((id, idx) => renderPanel(id, idx));
+          }
+
+          // Normal viewing: deal panels into fixed columns so nothing can ever
+          // jump columns. A live panel resizing only nudges its own column.
+          // Full-width hero panels (defaultSpan > 1) break the column flow into
+          // independent segments, exactly like the old `column-span: all`.
+          const renderable = userPanels
+            .map((id, idx) => ({ id, idx, def: ALL_PANELS.find(p => p.id === id) }))
+            .filter(p => p.def && panelRegistry[p.id as keyof typeof panelRegistry]);
+
+          const out: React.ReactNode[] = [];
+          let group: { id: string; idx: number }[] = [];
+          let segKey = 0;
+          const flushGroup = () => {
+            if (group.length === 0) return;
+            const cols: { id: string; idx: number }[][] = Array.from({ length: numCols }, () => []);
+            // Use the height-balanced assignment; fall back to round-robin for
+            // the brief first paint before useLayoutEffect measures (and for any
+            // panel not yet measured).
+            group.forEach((p, i) => {
+              const a = colAssign.get(p.id);
+              const c = (a == null || a >= numCols) ? (i % numCols) : a;
+              cols[c].push(p);
+            });
+            out.push(
+              <div className="gridRow" key={`seg-${segKey++}`}>
+                {cols.map((colItems, c) => (
+                  <div className="gridCol" key={c}>
+                    {colItems.map(p => renderPanel(p.id, p.idx))}
+                  </div>
+                ))}
+              </div>
+            );
+            group = [];
+          };
+          for (const p of renderable) {
+            if ((p.def?.defaultSpan ?? 1) > 1) {
+              flushGroup();
+              out.push(renderPanel(p.id, p.idx));
+            } else {
+              group.push({ id: p.id, idx: p.idx });
+            }
+          }
+          flushGroup();
+          return out;
         })()}
       </div>
 

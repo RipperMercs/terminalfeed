@@ -609,14 +609,38 @@
   color: var(--text-dim);
 }
 
-/* ── Main Grid — CSS columns for masonry-like packing ── */
+/* ── Main Grid — fixed JS-assigned columns for STABLE masonry packing ──
+   Was `column-count: 4` (balanced CSS multi-column). That layout rebalanced
+   ALL columns whenever any panel changed height, so live panels made tiles
+   jump between columns in a perpetual loop. We now deal panels into fixed
+   flex columns in JS (.gridRow > .gridCol): a panel resizing only nudges its
+   own column and can never cause a cross-column reflow. Organize mode still
+   overrides this with .gridOrganizing below. */
 .grid {
-  column-count: 4;
-  column-gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 4px;
   background: var(--bg);
   max-width: 100%;
   width: 100%;
+}
+
+/* One horizontal band of fixed columns (a masonry "segment"). Hero panels
+   that span full width sit between bands as direct children of .grid. */
+.gridRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* A single fixed column: an independent vertical stack of panels. */
+.gridCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* ── Panel — terminal window style ── */
@@ -633,8 +657,8 @@
   height: auto;
   min-height: 0;
   overflow: hidden;
-  break-inside: avoid;
-  margin-bottom: 4px;
+  break-inside: avoid; /* legacy: harmless no-op under flex columns */
+  margin-bottom: 0; /* inter-panel spacing now comes from .gridCol gap */
   /* Sharp 1px colored edge + tight 3px halo. No animation: box-shadow
      animations force repaints and felt laggy in the lab. The static
      glow plus per-panel color is what carries the "alive" feeling. */
@@ -3115,6 +3139,7 @@
 .gridOrganizing {
   column-count: unset !important;
   display: flex !important;
+  flex-direction: row !important; /* override .grid's column direction */
   flex-wrap: wrap;
   gap: 4px;
   outline: 1px solid rgba(79, 209, 197, 0.15);
