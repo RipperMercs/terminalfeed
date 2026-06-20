@@ -1185,6 +1185,7 @@ function handleIndex() {
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
       '/api/air-quality', '/api/shodan', '/api/volcanoes',
+      '/api/fireballs', '/api/rivers', '/api/tides', '/api/volcano-alerts',
       '/api/hf-trending', '/api/solana-network',
       '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
       '/api/sec-filings', '/api/treasury-yields',
@@ -5271,6 +5272,308 @@ async function handleVolcanoes() {
     return jsonResponse({ data: { count: 0, items: [] } });
   }
 }
+
+
+// =============================================================================
+// Planetary Ops cluster: Fireballs, Rivers, Tides, US Volcano alerts
+// =============================================================================
+//
+// Shared cron-writer + KV-reader plumbing. The */5 cron is the SINGLE writer
+// for each feed (one upstream fetch per interval total, respecting JPL/USGS/NOAA
+// fair-use), and every browser request is served from KV. Mirrors the /api/stocks
+// pattern (the June 8 2026 incident lesson): never fan out upstream per visitor.
+// Each KV record is { data, as_of(ms) }; the response adds age_seconds + stale.
+
+var KV_FEED_LOOKASIDE_MS = 25000;     // per-isolate memory window before a KV re-read
+var _kvFeedStore = {};                // kvKey -> { record, fetchedAt }
+var _kvFeedInflight = {};             // kvKey -> promise (cold-start single-flight)
+
+var KV_FIREBALLS = 'cache:fireballs:v1';
+var KV_RIVERS = 'cache:rivers:v1';
+var KV_TIDES = 'cache:tides:v2';
+var KV_VOLCANO_ALERTS = 'cache:volcano-alerts:v1';
+
+// Reader: per-isolate memory lookaside, then a single KV read. Never throws.
+async function feedReadFromKv(env, kvKey) {
+  var now = Date.now();
+  var mem = _kvFeedStore[kvKey];
+  if (mem && (now - mem.fetchedAt) < KV_FEED_LOOKASIDE_MS) return mem.record;
+  if (env && env.WEBHOOK_SUBS) {
+    try {
+      var stored = await env.WEBHOOK_SUBS.get(kvKey, 'json');
+      if (stored && stored.data != null && stored.as_of) {
+        _kvFeedStore[kvKey] = { record: stored, fetchedAt: now };
+        return stored;
+      }
+    } catch (e) { /* fall through to whatever we have */ }
+  }
+  return mem ? mem.record : null;
+}
+
+// Writer: fetch fresh via fetcher(env, priorData), persist { data, as_of } to KV
+// + memory. Never throws; on failure the prior KV record stays intact so the
+// reader keeps serving last-good. Returns the new record or null.
+async function feedWriteToKv(env, kvKey, fetcher) {
+  try {
+    var prior = await feedReadFromKv(env, kvKey);
+    var data = await fetcher(env, prior ? prior.data : null);
+    if (data == null) return null;
+    var record = { data: data, as_of: Date.now() };
+    _kvFeedStore[kvKey] = { record: record, fetchedAt: Date.now() };
+    if (env && env.WEBHOOK_SUBS) {
+      try { await env.WEBHOOK_SUBS.put(kvKey, JSON.stringify(record)); } catch (e) { /* best effort */ }
+    }
+    return record;
+  } catch (e) { return null; }
+}
+
+// Writer that only refetches when the stored record is older than minAgeMs.
+// For slow feeds (fireballs ~6h, volcano alerts ~30min) so a 5-min cron does not
+// hammer a source that changes hourly. Cheap no-op when still fresh.
+async function feedWriteIfStale(env, kvKey, fetcher, minAgeMs) {
+  var rec = await feedReadFromKv(env, kvKey);
+  if (rec && rec.as_of && (Date.now() - rec.as_of) < minAgeMs) return rec;
+  return await feedWriteToKv(env, kvKey, fetcher);
+}
+
+// Request handler: serve from KV; on a cold isolate (before the first cron tick
+// after deploy) do one single-flighted warm so early requests are not blank.
+// Stamps as_of / age_seconds / stale. Always 200 (self-healing rule).
+async function handleKvFeed(env, kvKey, fetcher, staleSeconds, cacheSeconds) {
+  var rec = await feedReadFromKv(env, kvKey);
+  if (!rec) {
+    if (_kvFeedInflight[kvKey]) {
+      try { rec = await _kvFeedInflight[kvKey]; } catch (e) { rec = null; }
+    } else {
+      _kvFeedInflight[kvKey] = feedWriteToKv(env, kvKey, fetcher);
+      try { rec = await _kvFeedInflight[kvKey]; } catch (e) { rec = null; } finally { _kvFeedInflight[kvKey] = null; }
+    }
+  }
+  if (!rec || rec.data == null) {
+    return jsonResponse({ data: null, as_of: null, age_seconds: null, stale: true, warming: true }, 200, 15);
+  }
+  var ageS = Math.max(0, Math.round((Date.now() - rec.as_of) / 1000));
+  return jsonResponse({
+    data: rec.data,
+    as_of: new Date(rec.as_of).toISOString(),
+    age_seconds: ageS,
+    stale: ageS > staleSeconds,
+  }, 200, cacheSeconds || 60);
+}
+
+// --- Fetchers (one upstream call set each; called by the cron writer) ---------
+
+// JPL CNEOS Fireball API. Positional fields[]+data[][] table; map by field NAME
+// (JPL warns the layout can change). Only date/energy/impact-e are guaranteed;
+// lat/lon are all-or-nothing nullable. All values arrive as strings.
+async function fetchFireballs(env) {
+  var res = await fetchWithTimeout('https://ssd-api.jpl.nasa.gov/fireball.api?limit=12&sort=-date', { headers: { 'Accept': 'application/json' } }, 8000);
+  if (!res || !res.ok) throw new Error('fireball ' + (res && res.status));
+  var j = await res.json();
+  var fields = (j && Array.isArray(j.fields)) ? j.fields : [];
+  var rows = (j && Array.isArray(j.data)) ? j.data : [];
+  if (!fields.length || !rows.length) throw new Error('fireball empty');
+  var idx = {};
+  for (var i = 0; i < fields.length; i++) idx[fields[i]] = i;
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : null; }
+  function at(row, name) { return (idx[name] != null) ? row[idx[name]] : null; }
+  var out = [];
+  for (var r = 0; r < rows.length && out.length < 12; r++) {
+    var row = rows[r];
+    var date = at(row, 'date');
+    var kt = num(at(row, 'impact-e'));
+    if (!date || kt == null) continue; // guaranteed fields; skip if somehow absent
+    var latV = at(row, 'lat'), lonV = at(row, 'lon');
+    var lat = null, lon = null;
+    if (latV != null && lonV != null) {
+      var la = num(latV), lo = num(lonV);
+      if (la != null) lat = (at(row, 'lat-dir') === 'S') ? -la : la;
+      if (lo != null) lon = (at(row, 'lon-dir') === 'W') ? -lo : lo;
+    }
+    out.push({
+      date: String(date),
+      energy_kt: kt,
+      lat: lat,
+      lon: lon,
+      alt_km: num(at(row, 'alt')),
+      vel_kms: num(at(row, 'vel')),
+    });
+  }
+  if (!out.length) throw new Error('fireball no usable rows');
+  return { count: out.length, events: out, source: 'NASA/JPL CNEOS Fireball Data' };
+}
+
+// USGS HANS elevated-volcano alerts. Bare array; an empty array is the valid
+// all-clear state (NOT an error). Sorted RED>ORANGE>YELLOW>GREEN then recency.
+async function fetchVolcanoAlerts(env) {
+  var res = await fetchWithTimeout('https://volcanoes.usgs.gov/hans-public/api/volcano/getElevatedVolcanoes', { headers: { 'Accept': 'application/json' } }, 8000);
+  if (!res || !res.ok) throw new Error('hans ' + (res && res.status));
+  var arr = await res.json();
+  if (!Array.isArray(arr)) arr = [];
+  var sev = { RED: 4, ORANGE: 3, YELLOW: 2, GREEN: 1 };
+  var items = arr.map(function(v) {
+    return {
+      volcano: (v && v.volcano_name) ? String(v.volcano_name) : 'Unknown',
+      vnum: (v && v.vnum) ? String(v.vnum) : '',
+      color: (v && v.color_code) ? String(v.color_code).toUpperCase() : '',
+      alert: (v && v.alert_level) ? String(v.alert_level).toUpperCase() : '',
+      obs: (v && v.obs_abbr) ? String(v.obs_abbr).toUpperCase() : '',
+      sent_unixtime: (v && typeof v.sent_unixtime === 'number') ? v.sent_unixtime : null,
+      url: (v && v.notice_url) ? String(v.notice_url) : '',
+    };
+  });
+  items.sort(function(a, b) {
+    var d = (sev[b.color] || 0) - (sev[a.color] || 0);
+    if (d !== 0) return d;
+    return (b.sent_unixtime || 0) - (a.sent_unixtime || 0);
+  });
+  return { count: items.length, elevated: items, all_clear: items.length === 0, source: 'USGS HANS' };
+}
+
+// USGS Water Data OGC latest-continuous. One batched keyless call for all sites
+// x both params. Flat GeoJSON; properties.value is a string. Delta is computed
+// vs the prior KV payload; flood flag vs a hardcoded NWS flood stage per site.
+var RIVER_SITES = [
+  { id: 'USGS-07010000', name: 'Mississippi @ St. Louis', flood_ft: 30 },
+  { id: 'USGS-01646500', name: 'Potomac @ Washington DC', flood_ft: 10 },
+  { id: 'USGS-09380000', name: 'Colorado @ Lees Ferry', flood_ft: null },
+  { id: 'USGS-11425500', name: 'Sacramento @ Verona', flood_ft: 33 },
+  { id: 'USGS-11447650', name: 'Sacramento @ Freeport', flood_ft: null },
+];
+async function fetchRivers(env, prior) {
+  var ids = RIVER_SITES.map(function(s) { return s.id; }).join(',');
+  var url = 'https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?monitoring_location_id=' + ids + '&parameter_code=00060,00065&f=json&limit=50';
+  var res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } }, 8000);
+  if (!res || !res.ok) throw new Error('usgs-water ' + (res && res.status));
+  var j = await res.json();
+  var feats = (j && Array.isArray(j.features)) ? j.features : [];
+  var latest = {}; // siteId -> { flow, gage, time }
+  for (var i = 0; i < feats.length; i++) {
+    var p = feats[i] && feats[i].properties;
+    if (!p || !p.monitoring_location_id) continue;
+    var val = parseFloat(p.value);
+    if (!isFinite(val) || val <= -999998) continue; // USGS missing-data sentinel
+    var sid = p.monitoring_location_id;
+    if (!latest[sid]) latest[sid] = { flow: null, gage: null, time: null };
+    if (p.parameter_code === '00060') latest[sid].flow = val;
+    else if (p.parameter_code === '00065') latest[sid].gage = val;
+    if (p.time) latest[sid].time = p.time;
+  }
+  var priorMap = {};
+  if (prior && Array.isArray(prior.sites)) {
+    for (var q = 0; q < prior.sites.length; q++) priorMap[prior.sites[q].id] = prior.sites[q];
+  }
+  var anyData = false;
+  var sites = RIVER_SITES.map(function(s) {
+    var cur = latest[s.id];
+    var pr = priorMap[s.id];
+    if (!cur) {
+      // momentary gap: keep the prior reading rather than blanking the row
+      return pr ? Object.assign({}, pr, { stale_site: true }) : { id: s.id, name: s.name, flow: null, gage: null, time: null, flow_delta: null, gage_delta: null, flood_ft: s.flood_ft, flooding: false };
+    }
+    anyData = true;
+    var flowDelta = (pr && typeof pr.flow === 'number' && typeof cur.flow === 'number') ? (cur.flow - pr.flow) : null;
+    var gageDelta = (pr && typeof pr.gage === 'number' && typeof cur.gage === 'number') ? (cur.gage - pr.gage) : null;
+    var flooding = (s.flood_ft != null && typeof cur.gage === 'number') ? (cur.gage >= s.flood_ft) : false;
+    return { id: s.id, name: s.name, flow: cur.flow, gage: cur.gage, time: cur.time, flow_delta: flowDelta, gage_delta: gageDelta, flood_ft: s.flood_ft, flooding: flooding, stale_site: false };
+  });
+  if (!anyData && !prior) throw new Error('rivers empty');
+  return { count: sites.length, sites: sites, source: 'USGS Water Data' };
+}
+
+// NOAA CO-OPS tide gauges. Per station: observed water level + next hi/lo + the
+// 6-min prediction at the observed timestamp for the residual (storm-surge signal).
+var TIDE_STATIONS = [
+  { id: '8518750', label: 'The Battery, NYC' },
+  { id: '9414290', label: 'San Francisco' },
+  { id: '1612340', label: 'Honolulu' },
+];
+function _tideYmdUTC(dayOffset) {
+  var d = new Date(Date.now() + (dayOffset || 0) * 86400000);
+  return '' + d.getUTCFullYear() + ('0' + (d.getUTCMonth() + 1)).slice(-2) + ('0' + d.getUTCDate()).slice(-2);
+}
+// Parse a CO-OPS 'YYYY-MM-DD HH:MM' string to a comparable epoch. Treated as UTC
+// for ALL values so same-station differences are correct (absolute offset cancels).
+function _tideTimeMs(t) {
+  if (!t || typeof t !== 'string') return NaN;
+  return new Date(t.replace(' ', 'T') + ':00Z').getTime();
+}
+async function _tideCall(qs) {
+  try {
+    var res = await fetchWithTimeout('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?' + qs + '&application=terminalfeed.io', { headers: { 'Accept': 'application/json' } }, 8000);
+    if (!res || !res.ok) return null;
+    var j = await res.json();
+    if (j && j.error) return null;
+    return j;
+  } catch (e) { return null; }
+}
+async function fetchTides(env) {
+  // "next hi/lo" needs a window that covers now + the next day, robust to the
+  // station-local date trailing the UTC date (west coast / Hawaii). Yesterday + 48h.
+  var hiloBegin = _tideYmdUTC(-1);
+  var stations = await Promise.all(TIDE_STATIONS.map(async function(st) {
+    var base = 'station=' + st.id + '&datum=MLLW&time_zone=lst_ldt&units=english&format=json';
+    // Wave 1: observed level + hi/lo predictions (keeps peak concurrency at 6, not 9).
+    var pair = await Promise.all([
+      _tideCall('product=water_level&date=latest&' + base),
+      _tideCall('product=predictions&interval=hilo&begin_date=' + hiloBegin + '&range=48&' + base),
+    ]);
+    var obsJ = pair[0], hiloJ = pair[1];
+    var obs = (obsJ && Array.isArray(obsJ.data) && obsJ.data[0]) ? obsJ.data[0] : null;
+    var level = obs ? parseFloat(obs.v) : null;
+    if (level != null && !isFinite(level)) level = null;
+    var obsTime = obs ? obs.t : null;
+
+    // Wave 2: 6-min predictions over the observation's OWN local day (tz-correct,
+    // ~240 pts not 481). Residual = observed - predicted at the matching 6-min mark,
+    // exact if present else nearest within 6 minutes.
+    var residual = null;
+    if (obsTime && level != null) {
+      var dpart = obsTime.slice(0, 10).replace(/-/g, '');
+      var predJ = await _tideCall('product=predictions&interval=6&begin_date=' + dpart + '&range=24&' + base);
+      if (predJ && Array.isArray(predJ.predictions) && predJ.predictions.length) {
+        var preds = predJ.predictions;
+        var obsMs = _tideTimeMs(obsTime);
+        var best = null, bestDiff = Infinity;
+        for (var k = 0; k < preds.length; k++) {
+          if (preds[k].t === obsTime) { best = preds[k]; bestDiff = 0; break; }
+          var diff = Math.abs(_tideTimeMs(preds[k].t) - obsMs);
+          if (diff < bestDiff) { bestDiff = diff; best = preds[k]; }
+        }
+        if (best && bestDiff <= 6 * 60000) {
+          var pv = parseFloat(best.v);
+          if (isFinite(pv)) residual = Math.round((level - pv) * 100) / 100;
+        }
+      }
+    }
+    var nextHigh = null, nextLow = null;
+    if (hiloJ && Array.isArray(hiloJ.predictions)) {
+      for (var h = 0; h < hiloJ.predictions.length; h++) {
+        var prd = hiloJ.predictions[h];
+        if (obsTime && prd.t <= obsTime) continue; // 'YYYY-MM-DD HH:MM' sorts lexicographically
+        var pvv = parseFloat(prd.v);
+        if (prd.type === 'H' && !nextHigh) nextHigh = { t: prd.t, v: isFinite(pvv) ? pvv : null };
+        else if (prd.type === 'L' && !nextLow) nextLow = { t: prd.t, v: isFinite(pvv) ? pvv : null };
+        if (nextHigh && nextLow) break;
+      }
+    }
+    var name = (obsJ && obsJ.metadata && obsJ.metadata.name) ? obsJ.metadata.name : st.label;
+    return { id: st.id, name: name, label: st.label, level: level, time: obsTime, residual: residual, next_high: nextHigh, next_low: nextLow };
+  }));
+  var anyData = stations.some(function(s) { return s.level != null; });
+  if (!anyData) throw new Error('tides empty');
+  return { count: stations.length, stations: stations, source: 'NOAA CO-OPS' };
+}
+
+// --- Route handlers (KV readers) ---------------------------------------------
+// GET /api/fireballs
+function handleFireballs(env) { return handleKvFeed(env, KV_FIREBALLS, fetchFireballs, 21600, 600); }
+// GET /api/rivers
+function handleRivers(env) { return handleKvFeed(env, KV_RIVERS, fetchRivers, 1800, 120); }
+// GET /api/tides
+function handleTides(env) { return handleKvFeed(env, KV_TIDES, fetchTides, 1800, 120); }
+// GET /api/volcano-alerts
+function handleVolcanoAlerts(env) { return handleKvFeed(env, KV_VOLCANO_ALERTS, fetchVolcanoAlerts, 5400, 600); }
 
 
 // GET /api/xkcd
@@ -15333,6 +15636,21 @@ export default {
           console.error('stocks sync failed:', err.message);
         }
       })());
+      // Planetary Ops feeds: the cron is the SINGLE writer; browsers read KV only.
+      // Rivers + Tides refresh every tick; Volcano alerts (~30m) and Fireballs
+      // (~6h) only refetch when their KV record has aged past their cadence.
+      ctx.waitUntil((async function() {
+        try { await feedWriteToKv(env, KV_RIVERS, fetchRivers); } catch (err) { console.error('rivers warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteToKv(env, KV_TIDES, fetchTides); } catch (err) { console.error('tides warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_VOLCANO_ALERTS, fetchVolcanoAlerts, 1800000); } catch (err) { console.error('volcano-alerts warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_FIREBALLS, fetchFireballs, 21600000); } catch (err) { console.error('fireballs warm failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
@@ -15885,6 +16203,10 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'air-quality':    return await handleAirQuality(url);
       case 'shodan':         return await handleShodan(url);
       case 'volcanoes':      return await handleVolcanoes();
+      case 'fireballs':      return await handleFireballs(env);
+      case 'rivers':         return await handleRivers(env);
+      case 'tides':          return await handleTides(env);
+      case 'volcano-alerts': return await handleVolcanoAlerts(env);
       case 'trending-movies':return await handleTrendingMovies(env);
       case 'ipo-calendar':   return await handleIpoCalendar(env);
       case 'xkcd':           return await handleXkcd();

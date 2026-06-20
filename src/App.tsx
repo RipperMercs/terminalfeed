@@ -113,6 +113,10 @@ import { useVix } from './hooks/useVix';
 import { useTor } from './hooks/useTor';
 import { useAurora } from './hooks/useAurora';
 import { useHfPapers } from './hooks/useHfPapers';
+import { useFireballs } from './hooks/useFireballs';
+import { useRivers } from './hooks/useRivers';
+import { useTides } from './hooks/useTides';
+import { useVolcanoAlerts } from './hooks/useVolcanoAlerts';
 import { useEthStaking } from './hooks/useEthStaking';
 import { useFedPress } from './hooks/useFedPress';
 import { useCo2 } from './hooks/useCo2';
@@ -247,6 +251,10 @@ function App() {
   const lightning = useLightning();
   const blueskyFirehose = useBlueskyFirehose();
   const neo = useNeo();
+  const fireballs = useFireballs();
+  const rivers = useRivers();
+  const tides = useTides();
+  const volcanoAlerts = useVolcanoAlerts();
   const defiTvl = useDefiTvl();
   const phishing = usePhishing();
   const vix = useVix();
@@ -434,6 +442,10 @@ function App() {
     if (secFilings && secFilings.length > 0) panelHealth.reportData('sec-filings');
     if (treasuryYields && treasuryYields.curve.y10 != null) panelHealth.reportData('treasury-yields');
     if (eonet && eonet.totalOpen > 0) panelHealth.reportData('eonet');
+    if (fireballs && fireballs.events.length > 0) panelHealth.reportData('fireballs');
+    if (rivers && rivers.sites.length > 0) panelHealth.reportData('rivers');
+    if (tides && tides.stations.length > 0) panelHealth.reportData('tides');
+    if (volcanoAlerts) panelHealth.reportData('volcano-alerts');
   });
 
   // Bump a key whenever a new block lands so the mempool queue replays its entry animation
@@ -2554,6 +2566,121 @@ function App() {
         })}
       </div>
       <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>huggingface.co/papers · upvote rank</div>
+    </>),
+    'fireballs': (<>
+      <PanelHead panelId="fireballs" isStale={panelHealth.isStale('fireballs')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Fireball Log</span><span className="panelTag" style={{ color: 'var(--amber)', background: 'rgba(239,159,39,0.1)' }}>CNEOS</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>impacts</span>
+      </PanelHead>
+      {!fireballs && <LoadingOrHide label="loading fireballs..." />}
+      {fireballs && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {fireballs.events.slice(0, 8).map((e, i) => {
+            const kt = e.energy_kt ?? 0;
+            const loc = (e.lat != null && e.lon != null)
+              ? `${Math.abs(e.lat).toFixed(1)}${e.lat >= 0 ? 'N' : 'S'} ${Math.abs(e.lon).toFixed(1)}${e.lon >= 0 ? 'E' : 'W'}`
+              : 'location unreported';
+            return (
+              <div key={`${e.date}-${i}`} className="listRow" style={{ display: 'flex', alignItems: 'center', gap: 8, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 64, flexShrink: 0 }}>{(e.date ?? '').slice(0, 10)}</span>
+                <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 700, minWidth: 52, flexShrink: 0 }}>{kt < 1 ? kt.toFixed(2) : kt.toFixed(1)} kt</span>
+                <span style={{ fontSize: 9, color: 'var(--text-mid)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loc}</span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>nasa/jpl cneos · Hiroshima ~15 kt for scale</div>
+        </div>
+      )}
+    </>),
+    'rivers': (<>
+      <PanelHead panelId="rivers" isStale={panelHealth.isStale('rivers')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">River Watch</span><span className="panelTag" style={{ color: 'var(--blue)', background: 'rgba(96,165,250,0.1)' }}>USGS</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>cfs</span>
+      </PanelHead>
+      {!rivers && <LoadingOrHide label="loading rivers..." />}
+      {rivers && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {rivers.sites.map((s) => {
+            const delta = s.flow_delta;
+            const arrow = delta == null ? '·' : delta > 0 ? '▲' : delta < 0 ? '▼' : '·';
+            const arrowColor = delta == null || delta === 0 ? 'var(--text-dim)' : delta > 0 ? 'var(--green)' : 'var(--red)';
+            return (
+              <div key={s.id} className="listRow" style={{ display: 'flex', alignItems: 'center', gap: 8, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 10, color: s.flooding ? 'var(--red)' : 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: s.flooding ? 700 : 400 }}>{s.flooding ? '⚠ ' : ''}{s.name}</span>
+                <span style={{ fontSize: 10, color: 'var(--text)', minWidth: 64, textAlign: 'right', flexShrink: 0 }}>{s.flow != null ? s.flow.toLocaleString('en-US') : 'n/a'}</span>
+                <span style={{ fontSize: 9, color: arrowColor, minWidth: 9, flexShrink: 0, textAlign: 'center' }}>{arrow}</span>
+                <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 46, textAlign: 'right', flexShrink: 0 }}>{s.gage != null ? `${s.gage.toFixed(1)}ft` : 'n/a'}</span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>usgs water data · discharge / gage height</div>
+        </div>
+      )}
+    </>),
+    'tides': (<>
+      <PanelHead panelId="tides" isStale={panelHealth.isStale('tides')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Tide Gauge</span><span className="panelTag" style={{ color: 'var(--teal)', background: 'rgba(93,202,165,0.1)' }}>NOAA</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>ft MLLW</span>
+      </PanelHead>
+      {!tides && <LoadingOrHide label="loading tides..." />}
+      {tides && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {tides.stations.map((s) => {
+            const res = s.residual;
+            const resColor = res == null ? 'var(--text-dim)' : Math.abs(res) > 1 ? 'var(--red)' : Math.abs(res) > 0.5 ? 'var(--amber)' : 'var(--teal)';
+            const nh = s.next_high, nl = s.next_low;
+            let next: { label: string; t: string } | null = null;
+            if (nh && nl) next = nh.t <= nl.t ? { label: 'H', t: nh.t } : { label: 'L', t: nl.t };
+            else if (nh) next = { label: 'H', t: nh.t };
+            else if (nl) next = { label: 'L', t: nl.t };
+            const nextTime = next ? (next.t.split(' ')[1] ?? '') : '';
+            return (
+              <div key={s.id} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 700, minWidth: 44, textAlign: 'right' }}>{s.level != null ? s.level.toFixed(2) : 'n/a'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 9, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ color: resColor, fontWeight: 600 }}>{res != null ? `${res >= 0 ? '+' : ''}${res.toFixed(2)} ft surge` : 'no surge data'}</span>
+                  <span style={{ marginLeft: 'auto' }}>{next ? `next ${next.label} ${nextTime}` : ''}</span>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 2 }}>noaa co-ops · surge = observed minus predicted</div>
+        </div>
+      )}
+    </>),
+    'volcano-alerts': (<>
+      <PanelHead panelId="volcano-alerts" isStale={panelHealth.isStale('volcano-alerts')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">US Volcanoes</span><span className="panelTag" style={{ color: 'var(--blue)', background: 'rgba(96,165,250,0.1)' }}>HANS</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>USGS</span>
+      </PanelHead>
+      {!volcanoAlerts && <LoadingOrHide label="loading volcanoes..." />}
+      {volcanoAlerts && (volcanoAlerts.elevated.length === 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 4px' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: 'var(--green)' }}>All US volcanoes at Normal / Green</span>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {volcanoAlerts.elevated.slice(0, 8).map((v) => {
+            const colorMap: Record<string, string> = { RED: 'var(--red)', ORANGE: '#EF9F27', YELLOW: 'var(--gold)', GREEN: 'var(--green)' };
+            const dot = colorMap[v.color] ?? 'var(--text-dim)';
+            const alertLabel = v.alert ? v.alert.charAt(0) + v.alert.slice(1).toLowerCase() : '';
+            return (
+              <a key={v.vnum || v.volcano} href={v.url || '#'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{v.volcano}</span>
+                <span style={{ fontSize: 9, color: 'var(--text-mid)', flexShrink: 0 }}>{alertLabel}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0 }}>{v.obs}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{v.sent_unixtime ? timeAgo(v.sent_unixtime) : ''}</span>
+              </a>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>usgs hans · aviation color code</div>
+        </div>
+      ))}
     </>),
     'eth-staking': (() => {
       function fmtBig(n: number | null): string {
