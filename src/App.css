@@ -725,18 +725,22 @@
 .panel[data-panel-id="seismic-timeline"],
 .panel[data-panel-id="disasters"],
 .panel[data-panel-id="wildfires"],
-.panel[data-panel-id="volcanoes"]         { --panel-accent: #60A5FA; }
+.panel[data-panel-id="volcanoes"],
+.panel[data-panel-id="volcano-alerts"],
+.panel[data-panel-id="rivers"]            { --panel-accent: #60A5FA; }
 
 /* Weather / atmosphere → teal */
 .panel[data-panel-id="weather"],
 .panel[data-panel-id="severe-weather"],
 .panel[data-panel-id="air-quality"],
-.panel[data-panel-id="space-weather"]     { --panel-accent: #5DCAA5; }
+.panel[data-panel-id="space-weather"],
+.panel[data-panel-id="tides"]             { --panel-accent: #5DCAA5; }
 
 /* Space / launches / sky → purple */
 .panel[data-panel-id="launches"],
 .panel[data-panel-id="flight-radar"],
-.panel[data-panel-id="uap"]               { --panel-accent: #A78BFA; }
+.panel[data-panel-id="uap"],
+.panel[data-panel-id="fireballs"]         { --panel-accent: #A78BFA; }
 
 /* Predictions / markets-of-belief → amber */
 .panel[data-panel-id="predictions"],
