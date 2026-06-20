@@ -718,7 +718,8 @@
 .panel[data-panel-id="ai-hub"],
 .panel[data-panel-id="ai-leaderboard"],
 .panel[data-panel-id="huggingface"],
-.panel[data-panel-id="claude-status"]     { --panel-accent: #A78BFA; }
+.panel[data-panel-id="claude-status"],
+.panel[data-panel-id="supply-chain"]      { --panel-accent: #A78BFA; }
 
 /* Geo / hazards → blue */
 .panel[data-panel-id="seismic"],
@@ -750,14 +751,17 @@
 .panel[data-panel-id="status-wall"],
 .panel[data-panel-id="dev-status"],
 .panel[data-panel-id="cloud-status"],
-.panel[data-panel-id="live-now"]          { --panel-accent: #60A5FA; }
+.panel[data-panel-id="live-now"],
+.panel[data-panel-id="bgp"]               { --panel-accent: #60A5FA; }
 
 /* Security / exposure → red */
-.panel[data-panel-id="shodan"]            { --panel-accent: #F87171; }
+.panel[data-panel-id="shodan"],
+.panel[data-panel-id="outages"]           { --panel-accent: #F87171; }
 
 /* Premium / sponsor slots → gold */
 .panel[data-panel-id="sponsor-slot"],
-.panel[data-panel-id="premium-api"]       { --panel-accent: #F9CB42; }
+.panel[data-panel-id="premium-api"],
+.panel[data-panel-id="mev"]               { --panel-accent: #F9CB42; }
 /* StockFloc house ad → amber (fire/hot brand) */
 .panel[data-panel-id="stockfloc-ad"]      { --panel-accent: #EF9F27; }
 
