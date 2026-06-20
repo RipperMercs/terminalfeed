@@ -1186,6 +1186,7 @@ function handleIndex() {
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
       '/api/air-quality', '/api/shodan', '/api/volcanoes',
       '/api/fireballs', '/api/rivers', '/api/tides', '/api/volcano-alerts',
+      '/api/outages', '/api/bgp', '/api/supply-chain', '/api/mev',
       '/api/hf-trending', '/api/solana-network',
       '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
       '/api/sec-filings', '/api/treasury-yields',
@@ -5574,6 +5575,206 @@ function handleRivers(env) { return handleKvFeed(env, KV_RIVERS, fetchRivers, 18
 function handleTides(env) { return handleKvFeed(env, KV_TIDES, fetchTides, 1800, 120); }
 // GET /api/volcano-alerts
 function handleVolcanoAlerts(env) { return handleKvFeed(env, KV_VOLCANO_ALERTS, fetchVolcanoAlerts, 5400, 600); }
+
+
+// =============================================================================
+// Net Infra cluster: Internet outages, BGP route watch, supply-chain advisories,
+// MEV block-builder share. Same cron-writer + KV-reader helper as above.
+// =============================================================================
+
+var KV_OUTAGES = 'cache:outages:v1';
+var KV_BGP = 'cache:bgp:v2';
+var KV_OSV = 'cache:osv:v1';
+var KV_MEV = 'cache:mev:v1';
+
+// IODA country-level internet outages, trailing 24h. The `level` filter is NOT
+// honored server-side, so we keep level==='critical' here; dedupe by country.
+async function fetchOutages(env) {
+  var until = Math.floor(Date.now() / 1000);
+  var from = until - 86400;
+  var res = await fetchWithTimeout('https://api.ioda.inetintel.cc.gatech.edu/v2/outages/alerts?entityType=country&from=' + from + '&until=' + until + '&limit=500', { headers: { 'Accept': 'application/json' } }, 8000);
+  if (!res || !res.ok) throw new Error('ioda ' + (res && res.status));
+  var j = await res.json();
+  var rows = (j && Array.isArray(j.data)) ? j.data : [];
+  var byCountry = {};
+  for (var i = 0; i < rows.length; i++) {
+    var a = rows[i];
+    if (!a || a.level !== 'critical') continue;
+    var code = (a.entity && a.entity.code) ? a.entity.code : null;
+    if (!code) continue;
+    var t = (typeof a.time === 'number') ? a.time : 0;
+    if (!byCountry[code] || t > byCountry[code].time) {
+      byCountry[code] = {
+        code: code,
+        name: (a.entity && a.entity.name) ? a.entity.name : code,
+        datasource: a.datasource || '',
+        time: t,
+        value: (typeof a.value === 'number') ? a.value : null,
+        history_value: (typeof a.historyValue === 'number') ? a.historyValue : null,
+      };
+    }
+  }
+  var list = Object.keys(byCountry).map(function(k) { return byCountry[k]; });
+  list.sort(function(a, b) { return b.time - a.time; });
+  return { count: list.length, outages: list.slice(0, 14), source: 'IODA / Georgia Tech' };
+}
+
+// RIPEstat routing-status per watched ASN. RIS updates every 8h; the endpoint is
+// flaky, so on a per-ASN failure we keep the prior reading. Delta is vs the prior
+// KV payload (the timestamp param snaps to RIS boundaries and is unreliable for
+// arbitrary history). A sharp move in EITHER direction trips the flag.
+var BGP_ASNS = [
+  { asn: '13335', name: 'Cloudflare' },
+  { asn: '16509', name: 'AWS' },
+  { asn: '15169', name: 'Google' },
+  { asn: '20940', name: 'Akamai' },
+];
+async function _ripeRoutingStatus(asn) {
+  var lastErr = '';
+  for (var attempt = 0; attempt < 2; attempt++) {
+    try {
+      var res = await fetchWithTimeout('https://stat.ripe.net/data/routing-status/data.json?resource=AS' + asn + '&sourceapp=terminalfeed_io', { headers: { 'Accept': 'application/json' } }, 15000);
+      if (!res) { lastErr = 'no-response'; continue; }
+      if (!res.ok) { lastErr = 'http-' + res.status; continue; }
+      var j = await res.json();
+      if (j && j.status === 'ok' && j.data && j.data.announced_space) return j.data;
+      lastErr = 'bad-status-' + (j && j.status);
+    } catch (e) { lastErr = (e && e.message) ? e.message : 'throw'; }
+  }
+  console.warn('ripe ' + asn + ' failed: ' + lastErr);
+  return null;
+}
+async function fetchBgp(env, prior) {
+  var priorMap = {};
+  if (prior && Array.isArray(prior.networks)) {
+    for (var p = 0; p < prior.networks.length; p++) priorMap[prior.networks[p].asn] = prior.networks[p];
+  }
+  var networks = [];
+  for (var i = 0; i < BGP_ASNS.length; i++) {
+    var a = BGP_ASNS[i];
+    var pr = priorMap[a.asn];
+    var data = await _ripeRoutingStatus(a.asn);
+    if (!data) { if (pr) networks.push(Object.assign({}, pr, { stale_net: true })); continue; }
+    var sp = data.announced_space || {};
+    var v4 = (sp.v4 && typeof sp.v4.prefixes === 'number') ? sp.v4.prefixes : null;
+    var v6 = (sp.v6 && typeof sp.v6.prefixes === 'number') ? sp.v6.prefixes : null;
+    var neighbours = (typeof data.observed_neighbours === 'number') ? data.observed_neighbours : null;
+    var v4d = (pr && typeof pr.v4 === 'number' && typeof v4 === 'number') ? (v4 - pr.v4) : null;
+    var v6d = (pr && typeof pr.v6 === 'number' && typeof v6 === 'number') ? (v6 - pr.v6) : null;
+    var flag = false;
+    if (v4d != null && pr && pr.v4 > 0 && (Math.abs(v4d) >= 50 || Math.abs(v4d) / pr.v4 >= 0.05)) flag = true;
+    if (v6d != null && pr && pr.v6 > 0 && (Math.abs(v6d) >= 50 || Math.abs(v6d) / pr.v6 >= 0.05)) flag = true;
+    networks.push({ asn: a.asn, name: a.name, v4: v4, v6: v6, neighbours: neighbours, v4_delta: v4d, v6_delta: v6d, flag: flag, query_time: data.query_time || null, stale_net: false });
+  }
+  if (!networks.length) { console.warn('bgp: all ASN fetches failed'); throw new Error('bgp empty'); }
+  return { count: networks.length, networks: networks, source: 'RIPEstat / RIPE NCC' };
+}
+
+// OSV.dev recent advisories. REST is lookup-only; the recent feed is the public
+// GCS bucket. Range-read the first 4KB of each ecosystem's newest-first
+// modified_id.csv, take the newest ids, batch-fetch the records.
+var OSV_ECOSYSTEMS = ['PyPI', 'npm', 'Go', 'crates.io'];
+async function fetchSupplyChain(env) {
+  var ids = [];
+  for (var e = 0; e < OSV_ECOSYSTEMS.length; e++) {
+    var eco = OSV_ECOSYSTEMS[e];
+    try {
+      var idxRes = await fetchWithTimeout('https://storage.googleapis.com/osv-vulnerabilities/' + encodeURIComponent(eco) + '/modified_id.csv', { headers: { 'Range': 'bytes=0-4000', 'Accept': 'text/csv' } }, 8000);
+      if (!idxRes || !idxRes.ok) continue;
+      var text = await idxRes.text();
+      var lines = text.split('\n');
+      var taken = 0;
+      for (var li = 0; li < lines.length && taken < 6; li++) {
+        var line = lines[li].trim();
+        var comma = line.indexOf(',');
+        if (comma < 0) continue;
+        var id = line.slice(comma + 1).trim();
+        if (!id) continue;
+        ids.push({ eco: eco, id: id, modified: line.slice(0, comma) });
+        taken++;
+      }
+    } catch (e2) { /* skip ecosystem */ }
+  }
+  if (!ids.length) throw new Error('osv no index');
+  var records = await runBatched(ids, 4, 120, async function(item) {
+    var r = await fetchWithTimeout('https://storage.googleapis.com/osv-vulnerabilities/' + encodeURIComponent(item.eco) + '/' + encodeURIComponent(item.id) + '.json', { headers: { 'Accept': 'application/json' } }, 8000);
+    if (!r || !r.ok) return null;
+    var rec = await r.json();
+    if (!rec || !rec.id) return null;
+    var aff = (Array.isArray(rec.affected) && rec.affected[0] && rec.affected[0].package) ? rec.affected[0].package : null;
+    var isMal = String(rec.id).indexOf('MAL-') === 0;
+    return {
+      id: rec.id,
+      ecosystem: (aff && aff.ecosystem) ? aff.ecosystem : item.eco,
+      package: (aff && aff.name) ? aff.name : '(unspecified)',
+      malicious: isMal,
+      severity: (rec.database_specific && rec.database_specific.severity) ? String(rec.database_specific.severity).toUpperCase() : null,
+      summary: rec.summary || (isMal ? 'Malicious package' : 'Advisory'),
+      modified: rec.modified || item.modified,
+    };
+  });
+  var clean = records.filter(Boolean);
+  clean.sort(function(a, b) { return String(b.modified || '').localeCompare(String(a.modified || '')); });
+  if (!clean.length) throw new Error('osv no records');
+  return { count: clean.length, advisories: clean.slice(0, 24), source: 'OSV.dev / Google' };
+}
+
+// relayscan.io MEV-Boost: 24h builder + relay market share, plus optional
+// per-builder profit. No grand-total fields exist; sum in-Worker. extra_data
+// names carry padding, so trim before display and before joining on name.
+async function fetchMev(env) {
+  var res = await fetchWithTimeout('https://www.relayscan.io/overview/json', { headers: { 'Accept': 'application/json', 'User-Agent': 'terminalfeed-bot' } }, 8000);
+  if (!res || !res.ok) throw new Error('relayscan ' + (res && res.status));
+  var ov = await res.json();
+  var buildersRaw = (ov && Array.isArray(ov.builders)) ? ov.builders : [];
+  var relaysRaw = (ov && Array.isArray(ov.relays)) ? ov.relays : [];
+  if (!buildersRaw.length) throw new Error('mev empty');
+  var profitMap = {};
+  var totalMevEth = null;
+  try {
+    var pres = await fetchWithTimeout('https://www.relayscan.io/builder-profit/json', { headers: { 'Accept': 'application/json', 'User-Agent': 'terminalfeed-bot' } }, 8000);
+    if (pres && pres.ok) {
+      var pj = await pres.json();
+      var bp = (pj && Array.isArray(pj.builder_profits)) ? pj.builder_profits : [];
+      var sum = 0, any = false;
+      for (var i = 0; i < bp.length; i++) {
+        var nm = (bp[i].extra_data || '').trim() || 'unknown';
+        var pt = parseFloat(bp[i].profit_total);
+        if (isFinite(pt)) { profitMap[nm] = pt; sum += pt; any = true; }
+      }
+      if (any) totalMevEth = Math.round(sum * 100) / 100;
+    }
+  } catch (e) { /* profit is optional */ }
+  var builders = buildersRaw.slice(0, 6).map(function(b) {
+    var info = b.info || {};
+    var nm = (info.extra_data || '').trim() || 'unknown';
+    return { name: nm, pct: parseFloat(info.percent) || 0, blocks: (typeof info.num_blocks === 'number') ? info.num_blocks : 0, profit_eth: (profitMap[nm] != null) ? profitMap[nm] : null };
+  });
+  var relays = relaysRaw.slice(0, 5).map(function(r) {
+    return { name: r.relay || 'unknown', pct: parseFloat(r.percent) || 0, payloads: (typeof r.num_payloads === 'number') ? r.num_payloads : 0 };
+  });
+  var totalBlocks = buildersRaw.reduce(function(acc, b) { return acc + ((b.info && typeof b.info.num_blocks === 'number') ? b.info.num_blocks : 0); }, 0);
+  var topPct = builders.length ? builders[0].pct : 0;
+  return {
+    builders: builders,
+    relays: relays,
+    total_blocks: totalBlocks,
+    total_mev_eth: totalMevEth,
+    top_builder_pct: topPct,
+    centralized: topPct >= 50,
+    window: (ov && ov.timespan) ? ov.timespan : '24h',
+    source: 'relayscan.io / Flashbots',
+  };
+}
+
+// GET /api/outages
+function handleOutages(env) { return handleKvFeed(env, KV_OUTAGES, fetchOutages, 1800, 300); }
+// GET /api/bgp
+function handleBgp(env) { return handleKvFeed(env, KV_BGP, fetchBgp, 7200, 600); }
+// GET /api/supply-chain
+function handleSupplyChain(env) { return handleKvFeed(env, KV_OSV, fetchSupplyChain, 7200, 600); }
+// GET /api/mev
+function handleMev(env) { return handleKvFeed(env, KV_MEV, fetchMev, 3600, 300); }
 
 
 // GET /api/xkcd
@@ -15651,6 +15852,22 @@ export default {
       ctx.waitUntil((async function() {
         try { await feedWriteIfStale(env, KV_FIREBALLS, fetchFireballs, 21600000); } catch (err) { console.error('fireballs warm failed:', err.message); }
       })());
+      // Net Infra feeds: outages 10m, BGP/OSV 30m, MEV 20m. Single KV writer.
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_OUTAGES, fetchOutages, 600000); } catch (err) { console.error('outages warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        // Refetch every tick: RIPEstat is flaky so each run keeps prior values for
+        // any ASN that fails, accumulating to all 4 and self-healing. Steady-state
+        // calls are RIPEstat-cache hits (cheap); only cold/uncached ones are slow.
+        try { await feedWriteToKv(env, KV_BGP, fetchBgp); } catch (err) { console.error('bgp warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_OSV, fetchSupplyChain, 1800000); } catch (err) { console.error('osv warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_MEV, fetchMev, 1200000); } catch (err) { console.error('mev warm failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
@@ -16207,6 +16424,10 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'rivers':         return await handleRivers(env);
       case 'tides':          return await handleTides(env);
       case 'volcano-alerts': return await handleVolcanoAlerts(env);
+      case 'outages':        return await handleOutages(env);
+      case 'bgp':            return await handleBgp(env);
+      case 'supply-chain':   return await handleSupplyChain(env);
+      case 'mev':            return await handleMev(env);
       case 'trending-movies':return await handleTrendingMovies(env);
       case 'ipo-calendar':   return await handleIpoCalendar(env);
       case 'xkcd':           return await handleXkcd();

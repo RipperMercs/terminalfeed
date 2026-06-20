@@ -117,6 +117,10 @@ import { useFireballs } from './hooks/useFireballs';
 import { useRivers } from './hooks/useRivers';
 import { useTides } from './hooks/useTides';
 import { useVolcanoAlerts } from './hooks/useVolcanoAlerts';
+import { useOutages } from './hooks/useOutages';
+import { useBgp } from './hooks/useBgp';
+import { useSupplyChain } from './hooks/useSupplyChain';
+import { useMev } from './hooks/useMev';
 import { useEthStaking } from './hooks/useEthStaking';
 import { useFedPress } from './hooks/useFedPress';
 import { useCo2 } from './hooks/useCo2';
@@ -255,6 +259,10 @@ function App() {
   const rivers = useRivers();
   const tides = useTides();
   const volcanoAlerts = useVolcanoAlerts();
+  const outages = useOutages();
+  const bgp = useBgp();
+  const supplyChain = useSupplyChain();
+  const mev = useMev();
   const defiTvl = useDefiTvl();
   const phishing = usePhishing();
   const vix = useVix();
@@ -446,6 +454,10 @@ function App() {
     if (rivers && rivers.sites.length > 0) panelHealth.reportData('rivers');
     if (tides && tides.stations.length > 0) panelHealth.reportData('tides');
     if (volcanoAlerts) panelHealth.reportData('volcano-alerts');
+    if (outages) panelHealth.reportData('outages');
+    if (bgp && bgp.networks.length > 0) panelHealth.reportData('bgp');
+    if (supplyChain && supplyChain.advisories.length > 0) panelHealth.reportData('supply-chain');
+    if (mev && mev.builders.length > 0) panelHealth.reportData('mev');
   });
 
   // Bump a key whenever a new block lands so the mempool queue replays its entry animation
@@ -2681,6 +2693,114 @@ function App() {
           <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>usgs hans · aviation color code</div>
         </div>
       ))}
+    </>),
+    'outages': (<>
+      <PanelHead panelId="outages" isStale={panelHealth.isStale('outages')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Internet Outages</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>IODA</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>24h</span>
+      </PanelHead>
+      {!outages && <LoadingOrHide label="loading outages..." />}
+      {outages && (outages.outages.length === 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 4px' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: 'var(--green)' }}>No country-level outages</span>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {outages.outages.slice(0, 10).map((o) => {
+            const dsMap: Record<string, string> = { 'bgp': 'BGP', 'merit-nt': 'Telescope', 'ping-slash24': 'Probe' };
+            const ds = dsMap[o.datasource] ?? o.datasource;
+            const flag = (o.code && o.code.length === 2) ? String.fromCodePoint(...[...o.code.toUpperCase()].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)) : '';
+            return (
+              <div key={o.code} className="listRow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--red)', flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{flag} {o.name}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0 }}>{ds}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{o.time ? timeAgo(o.time) : ''}</span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>ioda.inetintel · country-level critical</div>
+        </div>
+      ))}
+    </>),
+    'bgp': (<>
+      <PanelHead panelId="bgp" isStale={panelHealth.isStale('bgp')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">BGP Routes</span><span className="panelTag" style={{ color: 'var(--blue)', background: 'rgba(96,165,250,0.1)' }}>RIPE</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>prefixes</span>
+      </PanelHead>
+      {!bgp && <LoadingOrHide label="loading routes..." />}
+      {bgp && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {bgp.networks.map((n) => {
+            const d = n.v4_delta;
+            const arrow = (d == null || d === 0) ? '' : d > 0 ? `+${d}` : `${d}`;
+            const arrowColor = n.flag ? 'var(--red)' : (d && d !== 0) ? 'var(--amber)' : 'var(--text-dim)';
+            return (
+              <div key={n.asn} className="listRow" style={{ display: 'flex', alignItems: 'center', gap: 8, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 10, color: n.flag ? 'var(--red)' : 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: n.flag ? 700 : 400 }}>{n.flag ? '⚠ ' : ''}{n.name}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0 }}>AS{n.asn}</span>
+                <span style={{ fontSize: 10, color: 'var(--text)', minWidth: 50, textAlign: 'right', flexShrink: 0 }}>{n.v4 != null ? n.v4.toLocaleString('en-US') : 'n/a'}</span>
+                <span style={{ fontSize: 9, color: arrowColor, minWidth: 30, textAlign: 'right', flexShrink: 0 }}>{arrow}</span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>ripestat · announced ipv4 prefixes</div>
+        </div>
+      )}
+    </>),
+    'supply-chain': (<>
+      <PanelHead panelId="supply-chain" isStale={panelHealth.isStale('supply-chain')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Supply Chain</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>OSV</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>advisories</span>
+      </PanelHead>
+      {!supplyChain && <LoadingOrHide label="loading advisories..." />}
+      {supplyChain && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {supplyChain.advisories.slice(0, 9).map((a) => {
+            const sevColor: Record<string, string> = { CRITICAL: 'var(--red)', HIGH: '#f59e0b', MODERATE: 'var(--amber)', MEDIUM: 'var(--amber)', LOW: 'var(--text-dim)' };
+            const badge = a.malicious ? 'MAL' : (a.severity ? a.severity.slice(0, 4) : '');
+            const badgeColor = a.malicious ? 'var(--red)' : (a.severity ? (sevColor[a.severity] ?? 'var(--text-dim)') : 'var(--text-dim)');
+            return (
+              <div key={a.id} className="listRow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 8, color: badgeColor, fontWeight: 700, minWidth: 30, flexShrink: 0 }}>{badge}</span>
+                <span style={{ fontSize: 10, color: a.malicious ? 'var(--red)' : 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: a.malicious ? 600 : 400 }}>{a.package}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0 }}>{a.ecosystem}</span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>osv.dev · MAL = malicious package</div>
+        </div>
+      )}
+    </>),
+    'mev': (<>
+      <PanelHead panelId="mev" isStale={panelHealth.isStale('mev')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">MEV Builders</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>FLASHBOTS</span></div>
+        <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{mev ? mev.window : '24h'}</span>
+      </PanelHead>
+      {!mev && <LoadingOrHide label="loading builders..." />}
+      {mev && (<>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 4 }}>
+          {mev.builders.slice(0, 5).map((b) => {
+            const pct = b.pct ?? 0;
+            return (
+              <div key={b.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: '0 0 38%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name.replace(/\s*\(.*\)\s*/, '')}</span>
+                <div style={{ flex: 1, height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: 'var(--gold)' }} />
+                </div>
+                <span style={{ fontSize: 9, color: 'var(--text-mid)', minWidth: 34, textAlign: 'right' }}>{pct.toFixed(1)}%</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', borderTop: '1px solid var(--border)', paddingTop: 3 }}>
+          <span>{mev.total_blocks ? mev.total_blocks.toLocaleString('en-US') : '0'} blocks</span>
+          {mev.total_mev_eth != null && <span style={{ color: 'var(--gold)' }}>{mev.total_mev_eth.toFixed(1)} ETH</span>}
+        </div>
+        {mev.centralized && <div style={{ fontSize: 9, color: 'var(--amber)', marginTop: 3 }}>top builder &gt;50% of blocks</div>}
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 3 }}>relayscan.io · builder market share</div>
+      </>)}
     </>),
     'eth-staking': (() => {
       function fmtBig(n: number | null): string {
