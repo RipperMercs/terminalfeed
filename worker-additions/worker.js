@@ -2774,13 +2774,14 @@ async function fetchProFeedReliability(env) {
   }
   var rows = buildFeedReliabilityRows(record);
   var capturedAt = record.checkedAtISO || (record.checkedAt ? new Date(record.checkedAt).toISOString() : null);
-  return {
+  var rankedRows = rows.filter(function(r) { return r.rank > 0; });
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/feed-reliability',
     generated_at: new Date().toISOString(),
     captured_at: capturedAt,
     methodology_version: FEED_RELIABILITY_METHODOLOGY_VERSION,
-    ranked: rows.filter(function(r) { return r.rank > 0; }),
+    ranked: rankedRows,
     low_coverage: rows.filter(function(r) { return r.rank === 0; }),
     methodology: {
       version: FEED_RELIABILITY_METHODOLOGY_VERSION,
@@ -2789,6 +2790,12 @@ async function fetchProFeedReliability(env) {
     },
     _meta: _premiumMeta('/api/pro/feed-reliability', [{ name: 'feed-health', status: 'live', fetched_at: capturedAt, latency_ms: 0 }]),
   };
+  // Feeds are tracked but none has enough checks to be rankable yet (cold start
+  // or counter reset): the ranked table is the primary paid payload, so no-charge
+  // an empty ranking. Honors the function's stated "No data yet => empty_result"
+  // intent, which the zero-keys guard above misses once any feed key exists.
+  if (rankedRows.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 // Premium reliability history for one feed. Immutable past data: NULL_SLA, and a
@@ -12487,6 +12494,12 @@ async function fetchProBriefing(env, url) {
     sections: sections,
   };
 
+  // Every upstream dropped out (or an ?include= selected only failed sources):
+  // sections is the primary paid payload, so no-charge an empty briefing. Sources
+  // are fail-soft (allSettled + swallowed per-source catch), so the fetcher never
+  // throws and the 5xx no-charge cannot cover this; the handler must declare it.
+  if (Object.keys(sections).length === 0) out.__no_charge = 'empty_result';
+
   if (wantHistory) {
     var historyStart = Date.now();
     sourceMeta.push({ name: 'CoinbaseExchange.BTCUSD_candles_3600', start: historyStart });
@@ -12721,6 +12734,14 @@ async function fetchProMacro(env, url) {
     out.forex.series = fxSeries;
   }
 
+  // Every upstream degenerate (FRED/Finnhub keys missing, or all upstreams
+  // failed): no real economic, forex, commodity, or market data. No-charge the
+  // empty rollup rather than bill 2 credits for an all-null macro snapshot.
+  var macroHasData = Object.keys(econ).some(function(k) { return econ[k] && econ[k].value != null; })
+    || (forex && forex.rates && Object.keys(forex.rates).length > 0)
+    || ['gold', 'silver', 'oil', 'nat_gas'].some(function(k) { return commodities[k] != null; })
+    || Object.keys(markets).length > 0;
+  if (!macroHasData) out.__no_charge = 'empty_result';
   out._meta = _premiumMeta('/api/pro/macro', _buildSourcesMeta(all, sourceMeta));
   return out;
 }
@@ -13149,7 +13170,7 @@ async function fetchProGithubVelocity(env, url) {
 
   var totalStars = trendingRepos.reduce(function(s, r) { return s + (r.stars || 0); }, 0);
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/github-velocity',
     generated_at: new Date().toISOString(),
@@ -13176,6 +13197,11 @@ async function fetchProGithubVelocity(env, url) {
     },
     _meta: _premiumMeta('/api/pro/github-velocity', _buildSourcesMeta(sources, sourceMeta)),
   };
+  // Both GitHub Search calls failed (e.g. unauthenticated 60 req/hr rate-limit):
+  // trending_repos and ai_ml_repos are the primary paid payload, so no-charge an
+  // all-empty result. The fetcher never throws, so the handler must declare it.
+  if (trendingRepos.length === 0 && aiMlRepos.length === 0) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -13459,10 +13485,12 @@ async function fetchProDefiTvl(env, url) {
     },
     _meta: _premiumMeta('/api/pro/defi-tvl', _buildSourcesMeta(sources, sourceMeta)),
   };
-  // Valid-but-empty: both DefiLlama upstreams (protocols + chains) returned
-  // nothing. No-charge rather than bill for an empty snapshot. (Propagated from
-  // TensorFeed money-path audit 2026-06-04, empty_result class.)
-  if (protocols.length === 0 && chains.length === 0) out.__no_charge = 'empty_result';
+  // Valid-but-empty: top_protocols is the advertised primary payload, and
+  // by_category, all four movers, and the aggregate totals derive solely from it.
+  // No-charge whenever protocols is empty (e.g. the heavier /protocols upstream
+  // timed out while /v2/chains succeeded), not only when BOTH upstreams are empty.
+  // (Propagated from TensorFeed money-path audit 2026-06-04 + 2026-06-22, empty_result class.)
+  if (protocols.length === 0) out.__no_charge = 'empty_result';
   return out;
 }
 
@@ -14197,7 +14225,7 @@ async function fetchProAgentContext(env, url) {
   // Rough token estimate: 1 token ~= 4 chars in English
   var approxTokens = Math.ceil(systemPrompt.length / 4);
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/agent-context',
     generated_at: nowISO,
@@ -14232,6 +14260,15 @@ async function fetchProAgentContext(env, url) {
     },
     _meta: _premiumMeta('/api/pro/agent-context', _buildSourcesMeta(sources, sourceMeta)),
   };
+  // Every one of the 13 upstreams dropped out (broad outage / cold cache):
+  // system_prompt collapses to static boilerplate and context is all-null. No
+  // real-world data to sell, so no-charge it. Mirrors the world-deltas guard.
+  var anySignal = !!(btc || fearGreed || vix || fedRate
+    || (forex && Object.keys(forex).some(function(k) { return k !== 'date'; }))
+    || hnTop.length || significantQuakes.length || upcomingLaunches.length || predictionMarkets.length
+    || ['github', 'cloudflare', 'openai', 'anthropic'].some(function(k) { return infra[k] !== 'unknown'; }));
+  if (!anySignal) out.__no_charge = 'empty_result';
+  return out;
 }
 
 
@@ -14643,7 +14680,7 @@ async function fetchProSentiment(env, url) {
     } catch (e) {}
   }
 
-  return {
+  var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/sentiment',
     generated_at: new Date().toISOString(),
@@ -14667,6 +14704,12 @@ async function fetchProSentiment(env, url) {
     },
     _meta: _premiumMeta('/api/pro/sentiment', _buildSourcesMeta(sources, sourceMeta)),
   };
+  // No signal at all: both indices null, no trending tickers, no prediction
+  // markets. No-charge the empty sentiment read, mirroring the sibling guards.
+  if (!cryptoFG && !vix && trending.length === 0 && predictionMarkets.length === 0) {
+    out.__no_charge = 'empty_result';
+  }
+  return out;
 }
 
 
@@ -14816,6 +14859,14 @@ async function fetchProCryptoDeep(env, url) {
     };
   }
 
+  // All upstreams failed (empty primary payload), or a coins= filter matched no
+  // tracked coin (the per-coin deep dive is the product the agent paid for):
+  // no-charge it, mirroring the sibling empty_result guards.
+  if (topCoins.length === 0 && binanceTickers.length === 0 && Object.keys(network).length === 0 && gas == null) {
+    out.__no_charge = 'empty_result';
+  } else if (coinFilter && topCoins.length === 0) {
+    out.__no_charge = 'empty_result';
+  }
   out._meta = _premiumMeta('/api/pro/crypto-deep', _buildSourcesMeta(all, sourceMeta));
   return out;
 }
@@ -14985,7 +15036,7 @@ async function fetchProRegime(env, url) {
     regime = 'transition'; confidence = _proClamp(1 - Math.abs(score), 0.3, 0.7);
   }
 
-  return {
+  var regimeOut = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/regime',
     generated_at: new Date().toISOString(),
@@ -15012,6 +15063,11 @@ async function fetchProRegime(env, url) {
       { name: 'FRED.DGS10', status: dgs10Series.length ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
     ])),
   };
+  // All input signals dropped out (every driver absent): the regime is computed
+  // from zero real inputs (a fail-open transition verdict), so no-charge it.
+  // Mirrors the fetchProAnomalies empty_result guard.
+  if (drivers.length === 0) regimeOut.__no_charge = 'empty_result';
+  return regimeOut;
 }
 
 // === Premium decision wedge: free preview of the paid regime verdict ===
