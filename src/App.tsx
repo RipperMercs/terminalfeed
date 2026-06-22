@@ -2924,12 +2924,14 @@ function App() {
       <PanelHead panelId="stockfloc-ad" isStale={false} layout={layout} getGridCols={getGridCols}>
         <div className="panelHeaderLeft"><span className="panelTitle">StockFloc</span><span className="panelTag" style={{ color: 'var(--amber)', background: 'rgba(239,159,39,0.1)' }}>SPONSORED</span></div>
       </PanelHead>
-      <a href="https://stockfloc.com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', gap: 10, textDecoration: 'none' }}>
-        <img src="/ads/stockfloc.png" alt="StockFloc app: a stock watchlist that reads winners as fire and losers as ice" loading="lazy" style={{ width: '100%', height: 'auto', borderRadius: 8, display: 'block', border: '1px solid var(--border)' }} />
-        <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.6 }}>
-          StockFloc reads your stocks as temperature: winners ignite, losers freeze over. Free, no brokerage account, no subscription.
+      <a href="https://stockfloc.com" target="_blank" rel="noopener noreferrer" className="stockflocAd">
+        <img src="/ads/stockfloc.png" alt="StockFloc app: a stock watchlist that reads winners as fire and losers as ice" loading="lazy" className="stockflocAdImg" />
+        <div className="stockflocAdBody">
+          <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.6 }}>
+            StockFloc reads your stocks as temperature: winners ignite, losers freeze over. Free, no brokerage account, no subscription.
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>Get StockFloc &rarr;</span>
         </div>
-        <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>Get StockFloc &rarr;</span>
       </a>
     </>),
     'premium-api': (<>

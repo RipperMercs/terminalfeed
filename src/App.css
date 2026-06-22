@@ -765,6 +765,37 @@
 /* StockFloc house ad → amber (fire/hot brand) */
 .panel[data-panel-id="stockfloc-ad"]      { --panel-accent: #EF9F27; }
 
+/* StockFloc house ad layout.
+   Default (desktop narrow columns + portrait phone, column ~380px): a stacked
+   card, image fills the card. The tall portrait screenshot is fine here. */
+.stockflocAd {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-decoration: none;
+  max-width: 380px;
+}
+.stockflocAdImg {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  border: 1px solid var(--border);
+}
+.stockflocAdBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* Landscape phone / tablet: the panel goes full-width in the 1-2 column grid,
+   so a stacked card balloons the screenshot. Switch to a horizontal banner so
+   the ad fills the wide column like a normal tab and the screenshot shrinks. */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .stockflocAd { flex-direction: row; align-items: center; max-width: none; gap: 16px; }
+  .stockflocAdImg { width: auto; max-height: 200px; flex-shrink: 0; }
+  .stockflocAdBody { flex: 1 1 auto; min-width: 0; }
+}
+
 /* Gaming → green */
 .panel[data-panel-id="steam"]             { --panel-accent: #4ADE80; }
 
