@@ -137,6 +137,14 @@ function colsForWidth(w: number): number {
   return 4;
 }
 
+// Sponsored ad locked to the TOP of the rightmost column (the highest-traffic,
+// most-visible spot), independent of the greedy column packing, saved layouts,
+// and heat reordering. It is pulled out of the normal flow and force-placed
+// every render so it can never drift to the bottom. "for now at least, lock it
+// top right for more visibility." It still lives in panelOrder, so it stays
+// draggable/hideable in organize mode.
+const PINNED_AD_ID = 'stockfloc-ad';
+
 function App() {
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const [newsFilter, setNewsFilter] = useState<string | null>(() => {
@@ -533,7 +541,7 @@ function App() {
   // after feeds finish loading. Panel heights are column-independent (all
   // columns are equal width), so re-running on stable heights reaches the same
   // assignment and the equality guard returns prev: provably no render loop.
-  const visibleKey = layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support').join('|');
+  const visibleKey = layout.panelOrder.filter(id => layout.isVisible(id) && id !== 'support' && id !== PINNED_AD_ID).join('|');
   const [colAssign, setColAssign] = useState<Map<string, number>>(() => new Map());
   useLayoutEffect(() => {
     const run = () => setColAssign(prev => {
@@ -3469,13 +3477,28 @@ function App() {
           // jump columns. A live panel resizing only nudges its own column.
           // Full-width hero panels (defaultSpan > 1) break the column flow into
           // independent segments, exactly like the old `column-span: all`.
+          // The sponsored ad is locked top-right (see PINNED_AD_ID): exclude it
+          // from the greedy flow so it never drifts, then force-place it below.
+          const pinAd = layout.isVisible(PINNED_AD_ID) && !!panelRegistry[PINNED_AD_ID as keyof typeof panelRegistry];
           const renderable = userPanels
             .map((id, idx) => ({ id, idx, def: ALL_PANELS.find(p => p.id === id) }))
-            .filter(p => p.def && panelRegistry[p.id as keyof typeof panelRegistry]);
+            .filter(p => p.def && panelRegistry[p.id as keyof typeof panelRegistry] && p.id !== PINNED_AD_ID);
 
           const out: React.ReactNode[] = [];
           let group: { id: string; idx: number }[] = [];
           let segKey = 0;
+          let pinnedPlaced = false;
+          const pushRow = (cols: { id: string; idx: number }[][]) => {
+            out.push(
+              <div className="gridRow" key={`seg-${segKey++}`}>
+                {cols.map((colItems, c) => (
+                  <div className="gridCol" key={c}>
+                    {colItems.map(p => renderPanel(p.id, p.idx))}
+                  </div>
+                ))}
+              </div>
+            );
+          };
           const flushGroup = () => {
             if (group.length === 0) return;
             const cols: { id: string; idx: number }[][] = Array.from({ length: numCols }, () => []);
@@ -3487,15 +3510,14 @@ function App() {
               const c = (a == null || a >= numCols) ? (i % numCols) : a;
               cols[c].push(p);
             });
-            out.push(
-              <div className="gridRow" key={`seg-${segKey++}`}>
-                {cols.map((colItems, c) => (
-                  <div className="gridCol" key={c}>
-                    {colItems.map(p => renderPanel(p.id, p.idx))}
-                  </div>
-                ))}
-              </div>
-            );
+            // Lock the ad to the TOP of the rightmost column of the first band
+            // (top-right, directly under the BTC hero when it leads the order).
+            // idx 0 => eager render, no lazy flicker in the prime slot.
+            if (pinAd && !pinnedPlaced) {
+              cols[numCols - 1].unshift({ id: PINNED_AD_ID, idx: 0 });
+              pinnedPlaced = true;
+            }
+            pushRow(cols);
             group = [];
           };
           for (const p of renderable) {
@@ -3507,6 +3529,13 @@ function App() {
             }
           }
           flushGroup();
+          // Fallback: if no normal band rendered (e.g., only hero panels visible),
+          // still surface the pinned ad in its own top-right slot.
+          if (pinAd && !pinnedPlaced) {
+            const cols: { id: string; idx: number }[][] = Array.from({ length: numCols }, () => []);
+            cols[numCols - 1].push({ id: PINNED_AD_ID, idx: 0 });
+            pushRow(cols);
+          }
           return out;
         })()}
       </div>
