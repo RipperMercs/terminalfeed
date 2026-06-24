@@ -2024,6 +2024,28 @@
         "security": []
       }
     },
+    "/api/ai-stack-cves": {
+      "get": {
+        "tags": [
+          "free"
+        ],
+        "summary": "AI-software-stack CVE summary mirrored from tensorfeed.ai",
+        "description": "CVE counts, exploited-in-wild flags, severity and category breakdown, and the top CVE for popular AI-stack packages (Python, ML frameworks, container runtimes, cloud CLI tools). Mirrored from tensorfeed.ai every 3 hours. Full per-CVE list is premium on tensorfeed.ai. 3-hour cache.",
+        "responses": {
+          "200": {
+            "description": "AI-stack CVE summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/harnesses": {
       "get": {
         "tags": [
