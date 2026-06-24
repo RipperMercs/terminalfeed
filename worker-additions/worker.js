@@ -9380,6 +9380,7 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_hf_trending':         path = '/api/hf-trending'; break;
     case 'tf_harnesses':           path = '/api/harnesses'; break;
     case 'tf_solana_network':      path = '/api/solana-network'; break;
+    case 'tf_ai_stack_cves':       path = '/api/ai-stack-cves'; break;
     case 'tf_premium_briefing':    path = '/api/pro/briefing'; break;
     case 'tf_premium_macro':       path = '/api/pro/macro'; break;
     case 'tf_premium_crypto_deep': path = '/api/pro/crypto-deep'; break;
@@ -9451,6 +9452,7 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_hf_trending':         return await handleHfTrending();
     case 'tf_harnesses':           return await handleHarnesses(url, env);
     case 'tf_solana_network':      return await handleSolanaNetwork();
+    case 'tf_ai_stack_cves':       return await handleAiStackCves(env);
     case 'tf_premium_briefing':    return await handleProBriefing(req, env, url);
     case 'tf_premium_macro':       return await handleProMacro(req, env, url);
     case 'tf_premium_crypto_deep': return await handleProCryptoDeep(req, env, url);
@@ -9759,6 +9761,16 @@ const LLM_TOOL_DEFINITIONS = [
     short_description: 'Live Solana network health (TPS, slot, epoch).',
     description: 'Fetches live Solana mainnet network metrics: current transactions-per-second (most recent 60s sample), 3-sample average TPS, current slot, average slot time in ms, and epoch progress percentage. Source: solana-rpc.publicnode.com (getRecentPerformanceSamples + getSlot + getEpochInfo). Cache TTL 30s. Use when the agent needs to assess Solana network throughput or congestion.',
     url: 'https://terminalfeed.io/api/solana-network',
+    method: 'GET',
+    auth: 'none',
+    tier: 'free',
+    parameters: {}
+  },
+  {
+    name: 'tf_ai_stack_cves',
+    short_description: 'Current AI-software-stack CVE pulse.',
+    description: 'Current AI-software-stack CVE pulse: total advisories, exploited-in-the-wild count, severity and category breakdown, and the single top CVE headline, filtered to the AI stack (inference servers, agent frameworks, training libs, vector DBs, model gateways and SDKs, MCP tools). The full per-CVE list (affected version ranges, fixed versions, advisory source URLs) is premium on tensorfeed.ai at 1 credit; credits are cross-redeemable with terminalfeed.io. Source: GitHub Advisory Database plus vendor advisories, CC BY 4.0.',
+    url: 'https://terminalfeed.io/api/ai-stack-cves',
     method: 'GET',
     auth: 'none',
     tier: 'free',
