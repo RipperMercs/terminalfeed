@@ -16007,6 +16007,13 @@ export default {
       ctx.waitUntil((async function() {
         try { await feedWriteIfStale(env, KV_MEV, fetchMev, 1200000); } catch (err) { console.error('mev warm failed:', err.message); }
       })());
+      ctx.waitUntil((async function() {
+        // AI-stack CVE summary mirrored from tensorfeed.ai. 3h cadence keeps us under
+        // the upstream preview's 10/IP/day cap; the batch only changes ~weekly. On any
+        // 429/error the fetcher throws and feedWriteIfStale keeps the prior record.
+        try { await feedWriteIfStale(env, KV_AI_CVES, fetchAiStackCves, 10800000); }
+        catch (err) { console.error('ai-stack-cves warm failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
