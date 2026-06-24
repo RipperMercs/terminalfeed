@@ -1185,7 +1185,7 @@ function handleIndex() {
       '/api/economic-data', '/api/steam', '/api/weather', '/api/ai-stats',
       '/api/xkcd', '/api/gas', '/api/nasa-apod',
       '/api/air-quality', '/api/shodan', '/api/volcanoes',
-      '/api/fireballs', '/api/rivers', '/api/tides', '/api/volcano-alerts',
+      '/api/fireballs', '/api/rivers', '/api/tides', '/api/volcano-alerts', '/api/ai-stack-cves',
       '/api/outages', '/api/bgp', '/api/supply-chain', '/api/mev',
       '/api/hf-trending', '/api/solana-network',
       '/api/gh-trending', '/api/github-trending', '/api/npm-trends',
@@ -5300,6 +5300,9 @@ var KV_FIREBALLS = 'cache:fireballs:v1';
 var KV_RIVERS = 'cache:rivers:v1';
 var KV_TIDES = 'cache:tides:v2';
 var KV_VOLCANO_ALERTS = 'cache:volcano-alerts:v1';
+var KV_AI_CVES = 'cache:ai-stack-cves:v1';
+var AI_CVES_UPSTREAM  = 'https://tensorfeed.ai/api/preview/ai-cves/ai-stack-cves';
+var AI_CVES_FULL_FEED = 'https://tensorfeed.ai/api/premium/ai-cves/ai-stack-cves';
 
 // Reader: per-isolate memory lookaside, then a single KV read. Never throws.
 async function feedReadFromKv(env, kvKey) {
@@ -5436,6 +5439,40 @@ async function fetchVolcanoAlerts(env) {
     return (b.sent_unixtime || 0) - (a.sent_unixtime || 0);
   });
   return { count: items.length, elevated: items, all_clear: items.length === 0, source: 'USGS HANS' };
+}
+
+// Pulls TensorFeed's free AI-stack CVE summary (counts + top CVE) and normalizes
+// it. Throws on a non-OK upstream so the cron writer keeps the prior KV record
+// (last-good). The full per-CVE list is TensorFeed's paid product; we only mirror
+// the summary and funnel to it. Credits are cross-redeemable across the sister sites.
+async function fetchAiStackCves(env) {
+  var res = await fetchWithTimeout(AI_CVES_UPSTREAM, {
+    headers: { 'User-Agent': 'terminalfeed-sister/1.0 (+https://terminalfeed.io)' },
+  }, 8000);
+  if (!res.ok) throw new Error('ai-cves upstream ' + res.status);
+  var j = await res.json();
+  if (!j || j.ok !== true) return null;
+  var s = j.by_severity || {};
+  return {
+    total: j.total ?? 0,
+    exploited_in_wild_count: j.exploited_in_wild_count ?? 0,
+    by_severity: {
+      critical: s.critical ?? 0, high: s.high ?? 0, medium: s.medium ?? 0,
+      low: s.low ?? 0, unstated: s.unstated ?? 0,
+    },
+    by_category: j.by_category || {},
+    top_cve: j.top_cve ?? null,
+    extracted_at: j.extracted_at ?? null,
+    batch_id: j.batch_id ?? null,
+    source_license: j.source_license ?? 'CC BY 4.0',
+    source_attribution: j.source_attribution ?? 'GitHub Advisory Database + vendor advisories',
+    full_feed: {
+      url: AI_CVES_FULL_FEED,
+      cost: '1 credit ($0.02)',
+      note: 'Full AI-stack-filtered list with per-CVE affected version ranges, fixed versions, and advisory source URLs. Premium on tensorfeed.ai; credits are cross-redeemable with terminalfeed.io.',
+    },
+    source: 'tensorfeed.ai',
+  };
 }
 
 // USGS Water Data OGC latest-continuous. One batched keyless call for all sites
@@ -5582,6 +5619,52 @@ function handleRivers(env) { return handleKvFeed(env, KV_RIVERS, fetchRivers, 18
 function handleTides(env) { return handleKvFeed(env, KV_TIDES, fetchTides, 1800, 120); }
 // GET /api/volcano-alerts
 function handleVolcanoAlerts(env) { return handleKvFeed(env, KV_VOLCANO_ALERTS, fetchVolcanoAlerts, 5400, 600); }
+
+// GET /api/ai-stack-cves  (free, KV reader, always 200, self-healing)
+async function handleAiStackCves(env) {
+  var rec = await feedReadFromKv(env, KV_AI_CVES);
+  if (!rec) {
+    if (_kvFeedInflight[KV_AI_CVES]) {
+      try { rec = await _kvFeedInflight[KV_AI_CVES]; } catch (e) { rec = null; }
+    } else {
+      _kvFeedInflight[KV_AI_CVES] = feedWriteToKv(env, KV_AI_CVES, fetchAiStackCves);
+      try { rec = await _kvFeedInflight[KV_AI_CVES]; } catch (e) { rec = null; }
+      finally { _kvFeedInflight[KV_AI_CVES] = null; }
+    }
+  }
+  if (!rec || rec.data == null) {
+    return jsonResponse({ data: null, as_of: null, age_seconds: null, stale: true, warming: true }, 200, 60);
+  }
+  var d = rec.data;
+  var cacheAgeS = Math.max(0, Math.round((Date.now() - rec.as_of) / 1000));
+  var batchAgeDays = null, batchStale = null;
+  if (d.extracted_at) {
+    var t = Date.parse(d.extracted_at);
+    if (!isNaN(t)) {
+      batchAgeDays = Math.max(0, Math.round((Date.now() - t) / 86400000));
+      batchStale = batchAgeDays > 10; // mirrors TensorFeed's 10-day freshness SLA
+    }
+  }
+  return jsonResponse({
+    data: {
+      total: d.total,
+      exploited_in_wild_count: d.exploited_in_wild_count,
+      by_severity: d.by_severity,
+      by_category: d.by_category,
+      top_cve: d.top_cve,
+      source_license: d.source_license,
+      source_attribution: d.source_attribution,
+    },
+    as_of: new Date(rec.as_of).toISOString(),
+    age_seconds: cacheAgeS,
+    stale: cacheAgeS > 86400,
+    extracted_at: d.extracted_at,
+    batch_age_days: batchAgeDays,
+    batch_stale: batchStale,
+    full_feed: d.full_feed,
+    source: d.source,
+  }, 200, 600);
+}
 
 
 // =============================================================================
@@ -16480,6 +16563,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'rivers':         return await handleRivers(env);
       case 'tides':          return await handleTides(env);
       case 'volcano-alerts': return await handleVolcanoAlerts(env);
+      case 'ai-stack-cves': return await handleAiStackCves(env);
       case 'outages':        return await handleOutages(env);
       case 'bgp':            return await handleBgp(env);
       case 'supply-chain':   return await handleSupplyChain(env);
