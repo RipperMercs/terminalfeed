@@ -16,6 +16,10 @@
 // X bot (auto-tweeting from @terminalfeed) was removed 2026-05-03. The
 // account got flagged for sustained auto-posting. The handle is kept
 // for occasional manual posts but the Worker no longer posts to X.
+//
+// 2026-07-06: Output hardening. Caller-supplied identifiers echoed in tool
+// messages are now stripped of markup and length-capped (defense in depth).
+// No behavior change for valid inputs. See sanitize-reflected.js.
 // =============================================================================
 
 
@@ -37,6 +41,10 @@ import {
 // CDP x402 facilitator client. Used by handlePremium when an X-PAYMENT header
 // arrives on a Bazaar pilot path. Inert when env.CDP_API_KEY_ID is missing.
 import { cdpVerify, cdpSettle } from "./cdp-facilitator.js";
+
+// Narrow output hardening for caller-supplied identifiers echoed back into a
+// response message (defense in depth, runs alongside sanitizeForLLM). 2026-07-06.
+import { sanitizeReflectedValue } from "./sanitize-reflected.js";
 
 // Expose the registry to the stubs in this file. Both stubs check for these
 // globals at call time, so importing them lazily here is fine even though
@@ -3381,6 +3389,12 @@ async function handleClimateWeatherAlerts(parsedUrl) {
   if (status   && NWS_STATUS_VALUES.indexOf(status)    < 0) status   = '';
   if (area && !/^[A-Z]{2}$/.test(area)) area = '';
 
+  // event is free-form caller text (no allowlist, unlike area/severity/urgency/
+  // status). Strip markup and length-cap the copy that gets echoed back in
+  // data.filters.event so reflected input cannot ride the response verbatim.
+  // The matching, upstream-URL, and cache-key copies keep the raw value.
+  var eventEcho = sanitizeReflectedValue(event);
+
   var qs = [];
   if (area)     qs.push('area=' + area);
   if (event)    qs.push('event=' + encodeURIComponent(event));
@@ -3430,7 +3444,7 @@ async function handleClimateWeatherAlerts(parsedUrl) {
       data: {
         filters: {
           area: area || null,
-          event: event || null,
+          event: eventEcho || null,
           severity: severity || null,
           urgency: urgency || null,
           status: status || null,
@@ -3453,7 +3467,7 @@ async function handleClimateWeatherAlerts(parsedUrl) {
       data: {
         filters: {
           area: area || null,
-          event: event || null,
+          event: eventEcho || null,
           severity: severity || null,
           urgency: urgency || null,
           status: status || null,
