@@ -45,6 +45,13 @@
   <p style="font-size:12px;color:#4E4D49;margin-bottom:32px;line-height:1.7;">A running log of everything shipped on TerminalFeed. New panels, tools, API endpoints, and improvements. The site is updated almost daily. For the full story behind the project, read <a href="/blog/building-terminalfeed">how TerminalFeed was built</a>.</p>
 
   <div class="entry">
+    <div class="date">July 6, 2026</div>
+    <ul class="items">
+      <li>MCP server hardening (server version 1.1.1). Tool errors now pass through the same output scrub as tool results, with any secret or bearer token redacted and the error text length-capped before it reaches the calling agent. All free-text tool parameters gained schema-level maximum lengths. No behavior change for valid inputs.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
     <div class="date">April 29, 2026</div>
     <ul class="items">
       <li>Rebuilt <a href="/live">/live</a> as a real briefing page. Now fetches 14 free endpoints in parallel (BTC, Fear &amp; Greed, ETH gas, Solana TPS, top stocks, forex, US macro indicators, earthquakes, humans in space, Hacker News, HuggingFace trending, Polymarket predictions, Steam top games, service status) instead of relying on the slim <span style="color:#5DCAA5">/api/briefing</span> shape. Each section renders independently and degrades gracefully.</li>

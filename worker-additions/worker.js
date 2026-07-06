@@ -46,6 +46,12 @@ import { cdpVerify, cdpSettle } from "./cdp-facilitator.js";
 // response message (defense in depth, runs alongside sanitizeForLLM). 2026-07-06.
 import { sanitizeReflectedValue } from "./sanitize-reflected.js";
 
+// Error-path hardening for the MCP tool wrapper. When a tool callback throws,
+// sanitizeErrorText scrubs the Error.message (secret + token redaction, the
+// same injection scrub as tool results, length cap) before it reaches the host
+// LLM. See sanitize-error.js. 2026-07-06.
+import { sanitizeErrorText } from "./sanitize-error.js";
+
 // Expose the registry to the stubs in this file. Both stubs check for these
 // globals at call time, so importing them lazily here is fine even though
 // json402 is declared further down.
@@ -9335,7 +9341,9 @@ var MCP_SERVER_INFO = {
   // Bump on tool-metadata changes so agents that cache /list responses pick
   // up the new descriptions. 1.1.0 = strict-premium flag + USD prices in
   // tool descriptions for the Bazaar pilot (tf_premium_briefing).
-  version: '1.1.0',
+  // 1.1.1 = error-path hardening (scrubbed tool errors) + schema-level
+  // maxLength caps on all free-text tool parameters.
+  version: '1.1.1',
 };
 
 function _toolToMCP(def) {
@@ -9368,6 +9376,47 @@ function _toolRequiresBearer(toolName) {
   return toolName.indexOf('tf_premium_') === 0
     || toolName === 'tf_payment_balance'
     || toolName === 'tf_payment_history';
+}
+
+// Secret env values that could surface inside an upstream error string. Passed
+// to sanitizeErrorText so a leaked key/token is redacted before the message
+// reaches the host LLM. sanitizeErrorText ignores non-string / missing / short
+// entries, so listing a binding that happens to be unset is harmless.
+function _mcpSecretsFromEnv(env) {
+  if (!env) return [];
+  return [
+    env.FINNHUB_API_KEY, env.FRED_API_KEY, env.ETHERSCAN_API_KEY, env.ADMIN_SECRET,
+    env.GITHUB_TOKEN, env.RESEND_API_KEY, env.NASA_API_KEY, env.NASA_FIRMS_MAP_KEY,
+    env.ABUSE_CH_AUTH_KEY, env.TMDB_READ_TOKEN, env.OPENSKY_CLIENT_ID, env.OPENSKY_CLIENT_SECRET,
+    env.CF_API_TOKEN, env.CDP_API_KEY_ID, env.INTERNAL_TRAFFIC_KEY, env.SHARED_INTERNAL_SECRET,
+    env.RECEIPT_PRIVATE_KEY_JWK,
+  ];
+}
+
+function _toolDefByName(toolName) {
+  for (var i = 0; i < LLM_TOOL_DEFINITIONS.length; i++) {
+    if (LLM_TOOL_DEFINITIONS[i].name === toolName) return LLM_TOOL_DEFINITIONS[i];
+  }
+  return null;
+}
+
+// Enforce the declared maxLength on string tool args: the server-side half of
+// the schema-level input caps (a JSON-Schema maxLength is otherwise advisory).
+// Mirrors a Zod .max() rejection. Returns an error string when a string arg
+// exceeds its cap, else null. Number args and params without a maxLength are
+// left alone, so any valid input passes untouched.
+function _validateToolArgs(def, args) {
+  if (!def || !def.parameters || !args) return null;
+  for (var key in args) {
+    if (!Object.prototype.hasOwnProperty.call(args, key)) continue;
+    var spec = def.parameters[key];
+    if (!spec || spec.type !== 'string' || typeof spec.maxLength !== 'number') continue;
+    var val = args[key];
+    if (typeof val === 'string' && val.length > spec.maxLength) {
+      return 'Parameter "' + sanitizeReflectedValue(key) + '" exceeds the maximum length of ' + spec.maxLength + ' characters.';
+    }
+  }
+  return null;
 }
 
 // Build a synthetic Request and URL the underlying handlers can consume.
@@ -9597,6 +9646,13 @@ async function handleMcp(request, env) {
         isError: true,
       });
     }
+    var argError = _validateToolArgs(_toolDefByName(toolName), args);
+    if (argError) {
+      return _mcpJsonRpcResponse(id, {
+        content: [{ type: 'text', text: argError }],
+        isError: true,
+      });
+    }
     try {
       var resp = await _dispatchToolDirectly(toolName, args, request, env);
       var text = await resp.text();
@@ -9609,9 +9665,13 @@ async function handleMcp(request, env) {
       if (meta) result._meta = meta;
       return _mcpJsonRpcResponse(id, result);
     } catch (e) {
-      if (e.message === 'unknown_tool') return _mcpJsonRpcError(id, -32601, 'Unknown tool: ' + toolName);
+      if (e && e.message === 'unknown_tool') return _mcpJsonRpcError(id, -32601, 'Unknown tool: ' + toolName);
+      // Scrub the raw error before it reaches the host LLM: redact any leaked
+      // secret / bearer token, apply the same injection scrub as tool results,
+      // and cap the length. Never hand the model an unsanitized upstream string.
+      var rawErr = e instanceof Error ? (e.message || 'upstream error') : String(e);
       return _mcpJsonRpcResponse(id, {
-        content: [{ type: 'text', text: 'Tool call failed: ' + (e.message || 'upstream error') }],
+        content: [{ type: 'text', text: 'Tool call failed: ' + sanitizeErrorText(rawErr, _mcpSecretsFromEnv(env)) }],
         isError: true,
       });
     }
@@ -9697,8 +9757,8 @@ const LLM_TOOL_DEFINITIONS = [
     auth: 'none',
     tier: 'free',
     parameters: {
-      magnitude: { type: 'string', description: 'Magnitude bucket: significant, 4.5, 2.5, 1.0, all. Default 2.5.' },
-      period:    { type: 'string', description: 'Period bucket: hour, day, week, month. Default day.' }
+      magnitude: { type: 'string', maxLength: 100, description: 'Magnitude bucket: significant, 4.5, 2.5, 1.0, all. Default 2.5.' },
+      period:    { type: 'string', maxLength: 100, description: 'Period bucket: hour, day, week, month. Default day.' }
     }
   },
   {
@@ -9710,11 +9770,11 @@ const LLM_TOOL_DEFINITIONS = [
     auth: 'none',
     tier: 'free',
     parameters: {
-      area:     { type: 'string', description: '2-letter US state code, e.g. CA, NY. Optional.' },
-      event:    { type: 'string', description: 'Exact NWS event name, e.g. "Tornado Warning", "Heat Advisory". Optional.' },
-      severity: { type: 'string', description: 'Extreme | Severe | Moderate | Minor | Unknown. Optional.' },
-      urgency:  { type: 'string', description: 'Immediate | Expected | Future | Past | Unknown. Optional.' },
-      status:   { type: 'string', description: 'Actual | Exercise | System | Test | Draft. Optional.' },
+      area:     { type: 'string', maxLength: 200, description: '2-letter US state code, e.g. CA, NY. Optional.' },
+      event:    { type: 'string', maxLength: 200, description: 'Exact NWS event name, e.g. "Tornado Warning", "Heat Advisory". Optional.' },
+      severity: { type: 'string', maxLength: 100, description: 'Extreme | Severe | Moderate | Minor | Unknown. Optional.' },
+      urgency:  { type: 'string', maxLength: 100, description: 'Immediate | Expected | Future | Past | Unknown. Optional.' },
+      status:   { type: 'string', maxLength: 100, description: 'Actual | Exercise | System | Test | Draft. Optional.' },
       limit:    { type: 'number', description: '1..100, default 50.' }
     }
   },
@@ -9767,7 +9827,7 @@ const LLM_TOOL_DEFINITIONS = [
     auth: 'none',
     tier: 'free',
     parameters: {
-      view: { type: 'string', enum: ['raw', 'summary', 'gaps', 'combined'], description: 'Output shape; default raw' }
+      view: { type: 'string', maxLength: 100, enum: ['raw', 'summary', 'gaps', 'combined'], description: 'Output shape; default raw' }
     }
   },
   {
@@ -9800,8 +9860,8 @@ const LLM_TOOL_DEFINITIONS = [
     tier: 'premium',
     cost_credits: 1,
     parameters: {
-      include: { type: 'string', description: 'Comma-separated subset of sections: btc, fear-greed, earthquakes, hackernews, humans-in-space, predictions. Omit for all sections.' },
-      history: { type: 'string', enum: ['24h'], description: 'When set to 24h, response includes a series.btc_24h hourly array (24 data points).' }
+      include: { type: 'string', maxLength: 500, description: 'Comma-separated subset of sections: btc, fear-greed, earthquakes, hackernews, humans-in-space, predictions. Omit for all sections.' },
+      history: { type: 'string', maxLength: 100, enum: ['24h'], description: 'When set to 24h, response includes a series.btc_24h hourly array (24 data points).' }
     }
   },
   {
@@ -9814,7 +9874,7 @@ const LLM_TOOL_DEFINITIONS = [
     tier: 'premium',
     cost_credits: 2,
     parameters: {
-      history: { type: 'string', enum: ['30d'], description: 'When set to 30d, FRED entries include a series array of 30 daily observations and forex.series is populated.' }
+      history: { type: 'string', maxLength: 100, enum: ['30d'], description: 'When set to 30d, FRED entries include a series array of 30 daily observations and forex.series is populated.' }
     }
   },
   {
@@ -9827,8 +9887,8 @@ const LLM_TOOL_DEFINITIONS = [
     tier: 'premium',
     cost_credits: 2,
     parameters: {
-      coins: { type: 'string', description: 'Comma-separated symbol filter, e.g. btc,eth,sol. Omit to get all top 50.' },
-      history: { type: 'string', enum: ['30d'], description: 'When set to 30d, response includes series.btc_30d with daily OHLCV candles.' }
+      coins: { type: 'string', maxLength: 500, description: 'Comma-separated symbol filter, e.g. btc,eth,sol. Omit to get all top 50.' },
+      history: { type: 'string', maxLength: 100, enum: ['30d'], description: 'When set to 30d, response includes series.btc_30d with daily OHLCV candles.' }
     }
   },
   {
@@ -9863,9 +9923,9 @@ const LLM_TOOL_DEFINITIONS = [
     tier: 'premium',
     cost_credits: 2,
     parameters: {
-      feed: { type: 'string', description: 'feed id, e.g. btc-price' },
-      from: { type: 'string', description: 'lower bound YYYY-MM-DD (optional)' },
-      to: { type: 'string', description: 'upper bound YYYY-MM-DD (optional)' }
+      feed: { type: 'string', maxLength: 200, description: 'feed id, e.g. btc-price' },
+      from: { type: 'string', maxLength: 200, description: 'lower bound YYYY-MM-DD (optional)' },
+      to: { type: 'string', maxLength: 200, description: 'upper bound YYYY-MM-DD (optional)' }
     }
   },
   {
@@ -9944,7 +10004,7 @@ const LLM_TOOL_DEFINITIONS = [
     tier: 'premium',
     cost_credits: 2,
     parameters: {
-      since: { type: 'string', description: 'ISO 8601 timestamp. Returns events newer than this. Defaults to 1 hour ago. Clamped to 1 hour ago if older.' }
+      since: { type: 'string', maxLength: 200, description: 'ISO 8601 timestamp. Returns events newer than this. Defaults to 1 hour ago. Clamped to 1 hour ago if older.' }
     }
   },
   {
@@ -10011,8 +10071,8 @@ const LLM_TOOL_DEFINITIONS = [
     auth: 'none',
     tier: 'free',
     parameters: {
-      tx_hash: { type: 'string', description: 'On-chain Base mainnet USDC transaction hash.' },
-      nonce: { type: 'string', description: 'The memo string returned from tf_payment_buy_credits (optional but recommended).' }
+      tx_hash: { type: 'string', maxLength: 200, description: 'On-chain Base mainnet USDC transaction hash.' },
+      nonce: { type: 'string', maxLength: 200, description: 'The memo string returned from tf_payment_buy_credits (optional but recommended).' }
     }
   },
   {
