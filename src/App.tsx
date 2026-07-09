@@ -3597,6 +3597,7 @@ function App() {
           <a href="https://x.com/terminalfeed" target="_blank" rel="noopener noreferrer" className="footerLink">@terminalfeed</a>
           <span className="bottomBarDivider">&middot;</span>
           <a href="https://tensorfeed.ai" target="_blank" rel="noopener noreferrer" className="footerLink">TensorFeed.ai</a>
+          <a href="https://vr.org/connect" target="_blank" rel="noopener noreferrer" className="footerLink">VR.org MCP</a>
         </div>
         <div className="bottomBarStatus">
           <span className="footerBtc" title="Support the terminal">3GLimw2rSrne3hfrsanjoVxrM2Dwsbmkdy</span>
