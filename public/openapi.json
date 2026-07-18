@@ -2118,6 +2118,15 @@
         "security": []
       }
     },
+    "/api/signals": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Active anomaly signals across all TerminalFeed data feeds",
+        "description": "Cron-evaluated anomaly detection: FAA ground-stop clusters, tsunami escalation, trade-halt waves, reactor outages, volcano code RED, major earthquakes and M5+ surges, VIX spikes, geomagnetic storms, extreme-weather outbreaks, provider outages, and BTC 1h volatility. Each signal carries a severity (notice, elevated, critical), a human label, the dashboard panel it points at, and a first-seen timestamp. An empty list is the normal quiet state. Refreshed every 5 minutes. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Active signals", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
     "/api/harnesses": {
       "get": {
         "tags": [

@@ -118,6 +118,8 @@ import { useTides } from './hooks/useTides';
 import { useVolcanoAlerts } from './hooks/useVolcanoAlerts';
 import { useTradeHalts } from './hooks/useTradeHalts';
 import { useKalshi } from './hooks/useKalshi';
+import { useSignals } from './hooks/useSignals';
+import { SignalsStrip } from './components/SignalsStrip';
 import { useLlmModels } from './hooks/useLlmModels';
 import { useDebtClock } from './hooks/useDebtClock';
 import { DebtTicker } from './components/DebtTicker';
@@ -277,6 +279,20 @@ function App() {
   const volcanoAlerts = useVolcanoAlerts();
   const tradeHalts = useTradeHalts();
   const kalshi = useKalshi();
+  const activeSignals = useSignals();
+
+  // Jump from a signal chip to its panel: reveal if hidden, scroll, flash.
+  const jumpToPanel = useCallback((panelId: string) => {
+    if (!layout.isVisible(panelId)) layout.toggleHidden(panelId);
+    setTimeout(() => {
+      const el = document.querySelector(`.panel[data-panel-id="${panelId}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('panelSignalFlash');
+      setTimeout(() => el.classList.remove('panelSignalFlash'), 2200);
+    }, 80);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout.isVisible, layout.toggleHidden]);
   const llmModels = useLlmModels();
   const debtClock = useDebtClock();
   const faaStatus = useFaaStatus();
@@ -3609,6 +3625,9 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* ── Signals: anomaly chips, invisible on quiet days ── */}
+      <SignalsStrip signals={activeSignals} onJump={jumpToPanel} />
 
       {/* ── What's Happening + World Clocks (combined) ── */}
       <div className="nowSummary">

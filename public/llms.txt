@@ -115,6 +115,7 @@ All free endpoints return JSON, support CORS, and follow a stale-cache-on-failur
 - GET /api/kalshi               Kalshi CFTC-regulated event markets: top open events by 24h volume with leading outcome. Sports parlays filtered. 10min refresh.
 - GET /api/llm-models           OpenRouter catalog: newest LLM arrivals (context, prompt price) + total model count. 3h refresh.
 - GET /api/debt-clock           US Treasury debt to the penny: total, 30d/1y deltas, per-second accrual rate. Daily data, 6h refresh.
+- GET /api/signals              Active anomaly signals across all feeds (ground-stop clusters, tsunami escalation, halt waves, quake surges, VIX/Kp spikes, provider outages, BTC volatility). Empty = quiet. 5min refresh.
 - GET /api/llm-tools            pre-baked OpenAI / Anthropic function-calling tool definitions for every endpoint above. Pass ?format=openai or ?format=anthropic and paste the result directly into your tool-use scaffold. Free.
 
 Full machine-readable contract: https://terminalfeed.io/openapi.json
