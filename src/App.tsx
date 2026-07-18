@@ -287,7 +287,10 @@ function App() {
     setTimeout(() => {
       const el = document.querySelector(`.panel[data-panel-id="${panelId}"]`);
       if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Instant jump, not smooth: content-visibility panels re-render during a
+      // smooth scroll, the target position shifts, and Chrome abandons the
+      // animation entirely. The flash outline does the orientation work.
+      el.scrollIntoView({ behavior: 'auto', block: 'center' });
       el.classList.add('panelSignalFlash');
       setTimeout(() => el.classList.remove('panelSignalFlash'), 2200);
     }, 80);
