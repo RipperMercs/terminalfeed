@@ -5680,12 +5680,23 @@ async function fetchGhTrendingFeed(env) {
   return items;
 }
 
-async function fetchStackOverflowFeed() {
+async function fetchStackOverflowFeed(env) {
   // No `filter=withbody`: bodies are dead weight for the panel and bloat KV.
-  var res = await fetchWithTimeout(
-    'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10',
-    { headers: { Accept: 'application/json' } }, 8000);
-  if (!res.ok) throw new Error('stackexchange ' + res.status);
+  // console.error here, not just a throw: feedWriteToKv swallows fetcher errors
+  // by design (keep-last-good), which also makes them invisible in the tail.
+  // Anonymous quota is 300/day/IP and SE day-bans shared CF egress IPs
+  // (observed July 18 2026: throttle_violation, ~16h remaining). An optional
+  // Stack Apps key (free registration, `wrangler secret put STACKAPPS_KEY`)
+  // lifts quota to 10k/day per key+IP and makes this feed robust.
+  var soUrl = 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10';
+  if (env && env.STACKAPPS_KEY) soUrl += '&key=' + encodeURIComponent(env.STACKAPPS_KEY);
+  var res = await fetchWithTimeout(soUrl, { headers: { Accept: 'application/json' } }, 8000);
+  if (!res.ok) {
+    var bodyPeek = '';
+    try { bodyPeek = (await res.text()).slice(0, 200); } catch (e) { /* best effort */ }
+    console.error('stackexchange upstream ' + res.status + ': ' + bodyPeek);
+    throw new Error('stackexchange ' + res.status);
+  }
   var j = await res.json();
   var items = ((j && j.items) || []).map(function(q) {
     return {
@@ -5702,11 +5713,36 @@ async function fetchStackOverflowFeed() {
   return { items: items, quota_remaining: j.quota_remaining };
 }
 
+// Backup roster source: Open Notify. HTTP-only (browsers cannot fetch it from
+// an HTTPS page, the Worker can) and community-maintained so it occasionally
+// goes stale, but the same { number, people:[{name, craft}] } shape. Backup
+// only; SpaceDevs stays the primary.
+async function fetchAstrosFromOpenNotify() {
+  var res = await fetchWithTimeout('http://api.open-notify.org/astros.json', {}, 8000);
+  if (!res.ok) throw new Error('open-notify HTTP ' + res.status);
+  var d = await res.json();
+  if (!d || d.message !== 'success' || !Array.isArray(d.people)) throw new Error('open-notify bad payload');
+  return {
+    number: d.number || d.people.length,
+    people: d.people.map(function(p) { return { name: p.name, craft: p.craft || 'ISS' }; }),
+  };
+}
+
 async function fetchAstrosFeed() {
-  var d = await fetchAstrosFromSpaceDevs();
+  var d;
+  try {
+    d = await fetchAstrosFromSpaceDevs();
+  } catch (e) {
+    // Log before falling back: feedWriteToKv swallows fetcher errors (keep-last-good).
+    console.error('spacedevs upstream failed: ' + e.message + '; trying open-notify');
+    d = await fetchAstrosFromOpenNotify();
+  }
   // Zero humans in orbit has not been true since 2000; a 200-with-empty-results
   // here is an upstream glitch, and caching it is how the panel showed "0 humans".
-  if (!d || !d.number) throw new Error('spacedevs empty roster');
+  if (!d || !d.number) {
+    console.error('astronaut roster empty from both sources (HTTP 200)');
+    throw new Error('astros empty roster');
+  }
   return { count: d.number, people: d.people };
 }
 
