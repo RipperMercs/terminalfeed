@@ -5710,6 +5710,20 @@ async function fetchAstrosFeed() {
   return { count: d.number, people: d.people };
 }
 
+// Astronaut roster for the briefing composers: prefer the cron-warmed KV record
+// (SpaceDevs throttles 15/hr/IP and Workers egress from shared CF IPs), only
+// falling back to a live fetch when KV has nothing yet. Resolves to the same
+// { number, people } shape as fetchAstrosFromSpaceDevs.
+async function astrosFromKvOrLive(env) {
+  try {
+    var rec = await feedReadFromKv(env, KV_ASTROS);
+    if (rec && rec.data && rec.data.count) {
+      return { number: rec.data.count, people: rec.data.people || [] };
+    }
+  } catch (e) { /* fall through to live */ }
+  return await fetchAstrosFromSpaceDevs();
+}
+
 // GET /api/gh-events — { data: [...] } (+ as_of/age_seconds/stale)
 function handleGhEvents(env) { return handleKvFeed(env, KV_GH_EVENTS, fetchGhEventsFeed, 1800, 60); }
 
@@ -8505,7 +8519,7 @@ function handleAiStats() {
 
 
 // GET /api/briefing
-async function handleBriefing() {
+async function handleBriefing(env) {
   var KEY = 'briefing';
   var cached = getCached(KEY, 60000);
   if (cached) return jsonFreshAuto(cached, 200, 60);
@@ -8515,7 +8529,7 @@ async function handleBriefing() {
     fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),
     fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'),
     fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'),
-    fetchAstrosFromSpaceDevs(),
+    astrosFromKvOrLive(env),
   ]);
 
   var sections = {};
@@ -9589,7 +9603,7 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
   var req = syn.request;
   var url = syn.url;
   switch (toolName) {
-    case 'tf_briefing':            return await handleBriefing();
+    case 'tf_briefing':            return await handleBriefing(env);
     case 'tf_btc_price':           return await handleBtcPrice();
     case 'tf_fear_greed':          return await handleFearGreed();
     case 'tf_crypto_movers':       return await handleCryptoMovers();
@@ -12671,7 +12685,7 @@ async function fetchProBriefing(env, url) {
   add(want('fear-greed'), 'fear_greed', 'AlternativeMe.fng', fetchWithTimeout('https://api.alternative.me/fng/?limit=1'));
   add(want('earthquakes'), 'earthquakes', 'USGS.earthquakes_2_5_day', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'));
   add(want('hackernews'), 'hackernews', 'HackerNews.topstories', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'));
-  add(want('humans-in-space'), 'humans_in_space', 'TheSpaceDevs.astronauts', fetchAstrosFromSpaceDevs());
+  add(want('humans-in-space'), 'humans_in_space', 'TheSpaceDevs.astronauts', astrosFromKvOrLive(env));
   add(want('predictions'), 'predictions', 'Polymarket.gamma', fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false'));
 
   var settled = await Promise.allSettled(fetches.map(function(f) { return f[1]; }));
@@ -16769,7 +16783,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'ipo-calendar':   return await handleIpoCalendar(env);
       case 'xkcd':           return await handleXkcd();
       case 'ai-stats':       return handleAiStats();
-      case 'briefing':       return await handleBriefing();
+      case 'briefing':       return await handleBriefing(env);
       case 'btc-alert':       return await handleBtcAlert(env);
       case 'btc-alert-check': return await handleBtcAlertCheck(request, env);
       case 'gas':            return await handleGas(env);
