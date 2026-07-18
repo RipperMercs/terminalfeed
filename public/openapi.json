@@ -2046,6 +2046,51 @@
         "security": []
       }
     },
+    "/api/trade-halts": {
+      "get": {
+        "tags": ["free"],
+        "summary": "NASDAQ trade halts",
+        "description": "Current NASDAQ trade halts from the official nasdaqtrader.com feed: symbol, issue name, market, reason code (T1 news pending, LUDP volatility, etc.), halt and resumption times. Refreshed every 5 minutes. An empty list is a valid state meaning no active halts. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Active trade halts", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
+    "/api/faa-status": {
+      "get": {
+        "tags": ["free"],
+        "summary": "FAA National Airspace System status",
+        "description": "Ground stops, ground delay programs, airport closures, and arrival/departure delays from the FAA NAS status feed, parsed per airport with reasons. Refreshed every 5 minutes. All-empty is a valid quiet-sky state. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Airspace events", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
+    "/api/tsunami": {
+      "get": {
+        "tags": ["free"],
+        "summary": "NWS tsunami alerts (NTWC + PTWC)",
+        "description": "Latest tsunami messages from both US warning centers with a derived escalation level per entry (info, watch, advisory, warning) and an overall highest level. Refreshed every 5 minutes. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Tsunami alerts", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
+    "/api/reactors": {
+      "get": {
+        "tags": ["free"],
+        "summary": "US NRC power reactor status",
+        "description": "Daily US Nuclear Regulatory Commission power reactor status: fleet totals (units, at full power, reduced, offline) plus per-unit power for reduced and offline reactors. Source file is daily; cached 6 hours. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Reactor fleet status", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
+    "/api/lichess-tv": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Lichess TV featured games",
+        "description": "The current featured live game per Lichess TV channel (top rated, bullet, blitz, rapid, classical, chess960) with player, title, rating, and game URL. 60s cache. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Featured games", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
     "/api/harnesses": {
       "get": {
         "tags": [
