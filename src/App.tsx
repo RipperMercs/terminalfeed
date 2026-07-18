@@ -653,10 +653,16 @@ function App() {
         colH = new Array(numCols).fill(0);
         colItems = Array.from({ length: numCols }, () => []);
       };
+      // The pinned sponsor ad renders at the top of the rightmost column of
+      // the first non-empty segment but is excluded from the greedy flow, so
+      // the model was blind to its ~800px and that column ran systematically
+      // long. Seed its measured height exactly where the renderer places it.
+      let adSeeded = !heights.has(PINNED_AD_ID);
       for (const id of ids) {
         const def = ALL_PANELS.find(p => p.id === id);
         if (def && (def.defaultSpan ?? 1) > 1) { trimSegment(); resetSegment(); continue; } // hero breaks the segment
         if (!heights.has(id)) continue; // not rendered
+        if (!adSeeded) { colH[numCols - 1] += (heights.get(PINNED_AD_ID) as number) + 4; adSeeded = true; }
         let c = 0;
         for (let k = 1; k < numCols; k++) if (colH[k] < colH[c]) c = k;
         next.set(id, c);
