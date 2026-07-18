@@ -1216,6 +1216,7 @@ function handleIndex() {
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
       '/api/llm-tools',
       '/api/trade-halts', '/api/faa-status', '/api/tsunami', '/api/reactors', '/api/lichess-tv',
+      '/api/kalshi', '/api/llm-models', '/api/debt-clock',
     ],
     premium: {
       docs: 'https://terminalfeed.io/developers/agent-payments',
@@ -5998,6 +5999,158 @@ function handleTradeHalts(env) { return handleKvFeed(env, KV_TRADE_HALTS, fetchT
 function handleFaaStatus(env) { return handleKvFeed(env, KV_FAA_STATUS, fetchFaaStatus, 1800, 120); }
 function handleTsunami(env) { return handleKvFeed(env, KV_TSUNAMI, fetchTsunami, 3600, 120); }
 function handleReactors(env) { return handleKvFeed(env, KV_REACTORS, fetchReactors, 172800, 3600); }
+
+// =============================================================================
+// Tier 2 cluster (July 18 2026): Kalshi regulated event odds, OpenRouter model
+// drops, US Treasury debt clock. Same cron-writer + KV-reader pattern.
+// =============================================================================
+
+var KV_KALSHI = 'cache:kalshi:v1';
+var KV_LLM_MODELS = 'cache:llm-models:v1';
+var KV_DEBT_CLOCK = 'cache:debt-clock:v1';
+
+// Kalshi CFTC-regulated event markets. The markets list endpoint is flooded
+// with auto-generated multi-leg sports parlays (KXMVE*), so we crawl the
+// events endpoint instead, skip Sports, rank events by 24h volume, and pick
+// each event's leading outcome. Public API, ~3 pages per refresh.
+async function fetchKalshi() {
+  var events = [];
+  var cursor = '';
+  for (var page = 0; page < 3; page++) {
+    var u = 'https://api.elections.kalshi.com/trade-api/v2/events?limit=200&status=open&with_nested_markets=true' + (cursor ? '&cursor=' + cursor : '');
+    var res = await fetchWithTimeout(u, { headers: { Accept: 'application/json', 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' } }, 10000);
+    if (!res.ok) { console.error('kalshi upstream ' + res.status); throw new Error('kalshi ' + res.status); }
+    var j = await res.json();
+    events = events.concat(j.events || []);
+    cursor = j.cursor || '';
+    if (!cursor) break;
+  }
+  var ranked = events
+    .filter(function(e) { return e && e.category !== 'Sports' && Array.isArray(e.markets) && e.markets.length; })
+    .map(function(e) {
+      var vol = 0, leader = null, leaderPrice = 0;
+      e.markets.forEach(function(m) {
+        vol += parseFloat(m.volume_24h_fp || m.volume_24h || 0) || 0;
+        var p = parseFloat(m.last_price_dollars || 0) || 0;
+        if (p > leaderPrice) { leaderPrice = p; leader = m; }
+      });
+      return {
+        title: (e.title || '').slice(0, 90),
+        category: e.category || '',
+        leader: leader && leader.yes_sub_title ? String(leader.yes_sub_title).slice(0, 40) : '',
+        leader_pct: Math.round(leaderPrice * 100),
+        volume_24h: Math.round(vol),
+      };
+    })
+    .filter(function(e) { return e.volume_24h > 0 && e.leader_pct > 0; })
+    .sort(function(a, b) { return b.volume_24h - a.volume_24h; })
+    .slice(0, 10);
+  if (!ranked.length) { console.error('kalshi: no ranked events parsed'); throw new Error('kalshi empty'); }
+  return { markets: ranked };
+}
+
+// OpenRouter catalog: newest model drops. Their usage rankings have no public
+// endpoint (frontend-internal only), so this tracks the official /models list
+// sorted by release date: new LLM arrivals show up here fast.
+async function fetchLlmModels() {
+  var res = await fetchWithTimeout('https://openrouter.ai/api/v1/models', {
+    headers: { Accept: 'application/json', 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' },
+  }, 10000);
+  if (!res.ok) { console.error('openrouter upstream ' + res.status); throw new Error('openrouter ' + res.status); }
+  var j = await res.json();
+  var models = Array.isArray(j.data) ? j.data : [];
+  if (!models.length) { console.error('openrouter: empty catalog'); throw new Error('openrouter empty'); }
+  var newest = models
+    .filter(function(m) {
+      var p = m.pricing && parseFloat(m.pricing.prompt);
+      return m.id && m.created > 0 && (!isFinite(p) || p >= 0); // drop internal router pseudo-models
+    })
+    .sort(function(a, b) { return (b.created || 0) - (a.created || 0); })
+    .slice(0, 8)
+    .map(function(m) {
+      var promptPerM = m.pricing && isFinite(parseFloat(m.pricing.prompt)) ? parseFloat(m.pricing.prompt) * 1e6 : null;
+      return {
+        id: m.id,
+        created: m.created,
+        context_length: m.context_length || 0,
+        prompt_per_m: promptPerM != null ? Math.round(promptPerM * 100) / 100 : null,
+      };
+    });
+  return { total_models: models.length, newest: newest };
+}
+
+// US Treasury "debt to the penny": latest total plus 30d/1y deltas and a
+// per-second accrual rate (from the 30d window) for a live ticking display.
+// Primary source is TreasuryDirect's NP_WS (reachable from CF egress); the
+// canonical FiscalData API tarpits datacenter IPs (0.4s residential, 10s+
+// timeout from Workers, observed July 18 2026) so it is the backup.
+function _debtYmd(msAgo) {
+  return new Date(Date.now() - msAgo).toISOString().split('T')[0];
+}
+async function _debtRowsFromTreasuryDirect() {
+  var url = 'https://www.treasurydirect.gov/NP_WS/debt/search?startdate=' + _debtYmd(400 * 86400000) + '&enddate=' + _debtYmd(-86400000) + '&format=json';
+  var res = await fetchWithTimeout(url, { headers: { Accept: 'application/json', 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' } }, 10000);
+  if (!res.ok) throw new Error('treasurydirect ' + res.status);
+  var j = await res.json();
+  var entries = (j && Array.isArray(j.entries)) ? j.entries : [];
+  return entries.map(function(e) {
+    // effectiveDate is "July 16, 2026 EDT"; strip the zone for Date.parse.
+    var ms = Date.parse(String(e.effectiveDate || '').replace(/\s+E[DS]T$/, ''));
+    return { ms: ms, total: e.totalDebt, pub: e.publicDebt, gov: e.governmentHoldings };
+  }).filter(function(r) { return isFinite(r.ms) && isFinite(r.total); })
+    .sort(function(a, b) { return b.ms - a.ms; });
+}
+async function _debtRowsFromFiscalData() {
+  var res = await fetchWithTimeout(
+    'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page%5Bsize%5D=280&fields=record_date,tot_pub_debt_out_amt,debt_held_public_amt,intragov_hold_amt',
+    { headers: { Accept: 'application/json', 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' } }, 20000);
+  if (!res.ok) throw new Error('fiscaldata ' + res.status);
+  var j = await res.json();
+  var rows = Array.isArray(j.data) ? j.data : [];
+  return rows.map(function(r) {
+    return {
+      ms: Date.parse(r.record_date + 'T16:00:00Z'),
+      total: parseFloat(r.tot_pub_debt_out_amt),
+      pub: parseFloat(r.debt_held_public_amt),
+      gov: parseFloat(r.intragov_hold_amt),
+    };
+  }).filter(function(r) { return isFinite(r.ms) && isFinite(r.total); });
+}
+async function fetchDebtClock() {
+  var rows;
+  try {
+    rows = await _debtRowsFromTreasuryDirect();
+  } catch (e) {
+    console.error('treasurydirect failed: ' + e.message + '; trying fiscaldata');
+    rows = await _debtRowsFromFiscalData();
+  }
+  if (!rows.length) { console.error('debt-clock: no rows from either source'); throw new Error('debt empty'); }
+  var latest = rows[0];
+  function totalAtLeast(daysBack) {
+    var cutoff = latest.ms - daysBack * 86400000;
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i].ms <= cutoff) return rows[i];
+    }
+    return null;
+  }
+  var d30 = totalAtLeast(30);
+  var d365 = totalAtLeast(365);
+  var perSecond = d30 ? (latest.total - d30.total) / ((latest.ms - d30.ms) / 1000) : 0;
+  return {
+    as_of_date: new Date(latest.ms).toISOString().split('T')[0],
+    as_of_ms: latest.ms,
+    total: latest.total,
+    held_by_public: isFinite(latest.pub) ? latest.pub : null,
+    intragovernmental: isFinite(latest.gov) ? latest.gov : null,
+    delta_30d: d30 ? Math.round(latest.total - d30.total) : null,
+    delta_1y: d365 ? Math.round(latest.total - d365.total) : null,
+    per_second: Math.round(perSecond),
+  };
+}
+
+function handleKalshi(env) { return handleKvFeed(env, KV_KALSHI, fetchKalshi, 3600, 300); }
+function handleLlmModels(env) { return handleKvFeed(env, KV_LLM_MODELS, fetchLlmModels, 86400, 3600); }
+function handleDebtClock(env) { return handleKvFeed(env, KV_DEBT_CLOCK, fetchDebtClock, 259200, 3600); }
 
 // GET /api/lichess-tv — current featured game per channel. Lichess is generous
 // with anonymous reads; classic in-memory cache + stale fallback is enough.
@@ -16480,6 +16633,17 @@ export default {
       ctx.waitUntil((async function() {
         try { await feedWriteIfStale(env, KV_REACTORS, fetchReactors, 21600000); } catch (err) { console.error('reactors warm failed:', err.message); }
       })());
+      // Tier 2 feeds: Kalshi 10m (3-page crawl, be polite), OpenRouter 3h,
+      // Treasury debt 6h (daily file).
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_KALSHI, fetchKalshi, 600000); } catch (err) { console.error('kalshi warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_LLM_MODELS, fetchLlmModels, 10800000); } catch (err) { console.error('llm-models warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_DEBT_CLOCK, fetchDebtClock, 21600000); } catch (err) { console.error('debt-clock warm failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
@@ -17025,6 +17189,9 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'tsunami':        return await handleTsunami(env);
       case 'reactors':       return await handleReactors(env);
       case 'lichess-tv':     return await handleLichessTv();
+      case 'kalshi':         return await handleKalshi(env);
+      case 'llm-models':     return await handleLlmModels(env);
+      case 'debt-clock':     return await handleDebtClock(env);
       case 'this-day':       return await handleThisDay();
       case 'museum-art':     return await handleMuseumArt();
       case 'bluesky':        return await handleBluesky();

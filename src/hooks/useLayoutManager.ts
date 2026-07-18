@@ -117,6 +117,10 @@ export const ALL_PANELS = [
   { id: 'tsunami', label: 'Tsunami Alerts', defaultSpan: 1 },
   { id: 'reactors', label: 'US Reactors', defaultSpan: 1 },
   { id: 'lichess-tv', label: 'Lichess TV', defaultSpan: 1 },
+  // Tier 2 cluster (July 18 2026)
+  { id: 'kalshi', label: 'Kalshi Odds', defaultSpan: 1 },
+  { id: 'llm-models', label: 'Model Drops', defaultSpan: 1 },
+  { id: 'debt-clock', label: 'US Debt Clock', defaultSpan: 1 },
 ] as const;
 
 export type PanelId = typeof ALL_PANELS[number]['id'];
@@ -126,7 +130,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '61'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '62'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {

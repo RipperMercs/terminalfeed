@@ -117,6 +117,10 @@ import { useRivers } from './hooks/useRivers';
 import { useTides } from './hooks/useTides';
 import { useVolcanoAlerts } from './hooks/useVolcanoAlerts';
 import { useTradeHalts } from './hooks/useTradeHalts';
+import { useKalshi } from './hooks/useKalshi';
+import { useLlmModels } from './hooks/useLlmModels';
+import { useDebtClock } from './hooks/useDebtClock';
+import { DebtTicker } from './components/DebtTicker';
 import { useFaaStatus } from './hooks/useFaaStatus';
 import { useTsunami } from './hooks/useTsunami';
 import { useReactors } from './hooks/useReactors';
@@ -272,6 +276,9 @@ function App() {
   const tides = useTides();
   const volcanoAlerts = useVolcanoAlerts();
   const tradeHalts = useTradeHalts();
+  const kalshi = useKalshi();
+  const llmModels = useLlmModels();
+  const debtClock = useDebtClock();
   const faaStatus = useFaaStatus();
   const tsunami = useTsunami();
   const reactors = useReactors();
@@ -472,6 +479,9 @@ function App() {
     if (tides && tides.stations.length > 0) panelHealth.reportData('tides');
     if (volcanoAlerts) panelHealth.reportData('volcano-alerts');
     if (tradeHalts) panelHealth.reportData('trade-halts');
+    if (kalshi) panelHealth.reportData('kalshi');
+    if (llmModels) panelHealth.reportData('llm-models');
+    if (debtClock) panelHealth.reportData('debt-clock');
     if (faaStatus) panelHealth.reportData('faa-status');
     if (tsunami) panelHealth.reportData('tsunami');
     if (reactors) panelHealth.reportData('reactors');
@@ -3421,6 +3431,84 @@ function App() {
           ))}
           <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>featured live games · lichess.org/tv</div>
         </div>
+      )}
+    </>),
+    'kalshi': (<>
+      <PanelHead panelId="kalshi" isStale={panelHealth.isStale('kalshi')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Kalshi</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>REGULATED</span></div>
+      </PanelHead>
+      {!kalshi && <LoadingOrHide label="loading markets..." />}
+      {kalshi && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(kalshi.markets ?? []).slice(0, 8).map((m, i) => (
+            <div key={`km-${i}`} className="newsRow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 2, cursor: 'default' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title ?? ''}</span>
+                <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 700, flexShrink: 0 }}>{m.leader_pct ?? 0}%</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 9, color: 'var(--teal, #5DCAA5)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.leader || 'YES'}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0 }}>{m.category ?? ''} · ${formatCompact(m.volume_24h ?? 0)} 24h</span>
+              </div>
+            </div>
+          ))}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>cftc-regulated event exchange · kalshi.com</div>
+        </div>
+      )}
+    </>),
+    'llm-models': (<>
+      <PanelHead panelId="llm-models" isStale={panelHealth.isStale('llm-models')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Model Drops</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>OPENROUTER</span></div>
+        {llmModels && <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{llmModels.total_models ?? 0} models</span>}
+      </PanelHead>
+      {!llmModels && <LoadingOrHide label="loading models..." />}
+      {llmModels && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(llmModels.newest ?? []).slice(0, 8).map((m) => {
+            const slash = (m.id ?? '').indexOf('/');
+            const org = slash > 0 ? m.id.slice(0, slash) : '';
+            const name = slash > 0 ? m.id.slice(slash + 1) : (m.id ?? '?');
+            const ctx = (m.context_length ?? 0) >= 1000000 ? `${(m.context_length / 1000000).toFixed(0)}M` : (m.context_length ?? 0) >= 1000 ? `${Math.round(m.context_length / 1000)}K` : String(m.context_length ?? 0);
+            return (
+              <a key={m.id} href={`https://openrouter.ai/${m.id}`} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ fontSize: 8, color: 'var(--text-dim)' }}>{org}</div>
+                </div>
+                <span style={{ fontSize: 9, color: 'var(--blue)', flexShrink: 0 }}>{ctx} ctx</span>
+                <span style={{ fontSize: 9, color: 'var(--text-mid)', flexShrink: 0, minWidth: 44, textAlign: 'right' }}>{m.prompt_per_m != null ? `$${m.prompt_per_m}/M` : ''}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{(m.created ?? 0) > 0 ? timeAgo(m.created) : ''}</span>
+              </a>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>newest arrivals · openrouter catalog</div>
+        </div>
+      )}
+    </>),
+    'debt-clock': (<>
+      <PanelHead panelId="debt-clock" isStale={panelHealth.isStale('debt-clock')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">US Debt Clock</span><span className="panelTag" style={{ color: 'var(--gold)', background: 'rgba(249,203,66,0.1)' }}>TREASURY</span></div>
+        {debtClock && <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{debtClock.as_of_date ?? ''}</span>}
+      </PanelHead>
+      {!debtClock && <LoadingOrHide label="loading debt data..." />}
+      {debtClock && (
+        <>
+          <div style={{ padding: '6px 2px 2px' }}>
+            <DebtTicker total={debtClock.total ?? 0} perSecond={debtClock.per_second ?? 0} asOfMs={debtClock.as_of_ms ?? Date.now()} />
+            <div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px', marginTop: 2 }}>TOTAL PUBLIC DEBT OUTSTANDING (LIVE ESTIMATE)</div>
+          </div>
+          <div style={{ display: 'flex', gap: 14, padding: '8px 2px 4px', fontFamily: 'monospace' }}>
+            <div><div style={{ fontSize: 12, fontWeight: 700, color: 'var(--red)' }}>+${formatCompact(Math.abs(debtClock.per_second ?? 0))}/s</div><div style={{ fontSize: 8, color: 'var(--text-dim)' }}>ACCRUAL</div></div>
+            {debtClock.delta_30d != null && <div><div style={{ fontSize: 12, fontWeight: 700, color: (debtClock.delta_30d ?? 0) >= 0 ? 'var(--red)' : 'var(--green)' }}>{(debtClock.delta_30d ?? 0) >= 0 ? '+' : '-'}${formatCompact(Math.abs(debtClock.delta_30d ?? 0))}</div><div style={{ fontSize: 8, color: 'var(--text-dim)' }}>30 DAYS</div></div>}
+            {debtClock.delta_1y != null && <div><div style={{ fontSize: 12, fontWeight: 700, color: (debtClock.delta_1y ?? 0) >= 0 ? 'var(--red)' : 'var(--green)' }}>{(debtClock.delta_1y ?? 0) >= 0 ? '+' : '-'}${formatCompact(Math.abs(debtClock.delta_1y ?? 0))}</div><div style={{ fontSize: 8, color: 'var(--text-dim)' }}>1 YEAR</div></div>}
+          </div>
+          {debtClock.held_by_public != null && debtClock.intragovernmental != null && (
+            <div style={{ fontSize: 9, color: 'var(--text-mid)', padding: '2px 2px 0' }}>
+              public ${formatCompact(debtClock.held_by_public)} · intragov ${formatCompact(debtClock.intragovernmental)}
+            </div>
+          )}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>us treasury, debt to the penny · daily</div>
+        </>
       )}
     </>),
   };
