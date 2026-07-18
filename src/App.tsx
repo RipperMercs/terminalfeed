@@ -603,19 +603,50 @@ function App() {
       // Bounded, deterministic, and only ever touches column tails (the least
       // disruptive panels to relocate).
       const trimSegment = () => {
-        for (let pass = 0; pass < 8; pass++) {
-          let hi = 0, lo = 0;
-          for (let k = 1; k < numCols; k++) { if (colH[k] > colH[hi]) hi = k; if (colH[k] < colH[lo]) lo = k; }
-          const spread = colH[hi] - colH[lo];
-          const tail = colItems[hi][colItems[hi].length - 1];
-          if (!tail || spread <= 0) break;
-          const h = (heights.get(tail) ?? 0) + 4;
-          const moved = colH.map((v, k) => k === hi ? v - h : k === lo ? v + h : v);
-          if (Math.max(...moved) - Math.min(...moved) >= spread) break;
-          colItems[hi].pop();
-          colItems[lo].push(tail);
-          next.set(tail, lo);
-          colH = moved;
+        const spreadOf = (h: number[]) => Math.max(...h) - Math.min(...h);
+        for (let pass = 0; pass < 16; pass++) {
+          let hi = 0;
+          for (let k = 1; k < numCols; k++) if (colH[k] > colH[hi]) hi = k;
+          const spread = spreadOf(colH);
+          const tailHi = colItems[hi][colItems[hi].length - 1];
+          if (!tailHi || spread <= 0) break;
+          const hHi = (heights.get(tailHi) ?? 0) + 4;
+          // Consider moving the tallest column's tail to every other column,
+          // and swapping it with every other column's tail; apply the single
+          // best action. A plain move stalls when the tail is itself huge; a
+          // swap with a short tail still helps there.
+          let best: { spread: number; kind: 'move' | 'swap'; dest: number } | null = null;
+          for (let k = 0; k < numCols; k++) {
+            if (k === hi) continue;
+            const movedH = colH.map((v, i) => i === hi ? v - hHi : i === k ? v + hHi : v);
+            const moveSpread = spreadOf(movedH);
+            if (!best || moveSpread < best.spread) best = { spread: moveSpread, kind: 'move', dest: k };
+            const tailK = colItems[k][colItems[k].length - 1];
+            if (tailK) {
+              const hK = (heights.get(tailK) ?? 0) + 4;
+              const swappedH = colH.map((v, i) => i === hi ? v - hHi + hK : i === k ? v + hHi - hK : v);
+              const swapSpread = spreadOf(swappedH);
+              if (swapSpread < best.spread) best = { spread: swapSpread, kind: 'swap', dest: k };
+            }
+          }
+          if (!best || best.spread >= spread) break;
+          const k = best.dest;
+          if (best.kind === 'move') {
+            colItems[hi].pop();
+            colItems[k].push(tailHi);
+            next.set(tailHi, k);
+            colH = colH.map((v, i) => i === hi ? v - hHi : i === k ? v + hHi : v);
+          } else {
+            const tailK = colItems[k][colItems[k].length - 1];
+            const hK = (heights.get(tailK) ?? 0) + 4;
+            colItems[hi].pop();
+            colItems[k].pop();
+            colItems[k].push(tailHi);
+            colItems[hi].push(tailK);
+            next.set(tailHi, k);
+            next.set(tailK, hi);
+            colH = colH.map((v, i) => i === hi ? v - hHi + hK : i === k ? v + hHi - hK : v);
+          }
         }
       };
       const resetSegment = () => {
