@@ -111,6 +111,12 @@ export const ALL_PANELS = [
 { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
   { id: 'humans-in-space', label: 'Humans In Space', defaultSpan: 1 },
   { id: 'this-day', label: 'This Day In History', defaultSpan: 1 },
+  // Ops & Alerts cluster (July 18 2026)
+  { id: 'trade-halts', label: 'Trade Halts', defaultSpan: 1 },
+  { id: 'faa-status', label: 'Airspace (FAA)', defaultSpan: 1 },
+  { id: 'tsunami', label: 'Tsunami Alerts', defaultSpan: 1 },
+  { id: 'reactors', label: 'US Reactors', defaultSpan: 1 },
+  { id: 'lichess-tv', label: 'Lichess TV', defaultSpan: 1 },
 ] as const;
 
 export type PanelId = typeof ALL_PANELS[number]['id'];
@@ -120,7 +126,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '60'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '61'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {

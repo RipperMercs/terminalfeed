@@ -116,6 +116,11 @@ import { useFireballs } from './hooks/useFireballs';
 import { useRivers } from './hooks/useRivers';
 import { useTides } from './hooks/useTides';
 import { useVolcanoAlerts } from './hooks/useVolcanoAlerts';
+import { useTradeHalts } from './hooks/useTradeHalts';
+import { useFaaStatus } from './hooks/useFaaStatus';
+import { useTsunami } from './hooks/useTsunami';
+import { useReactors } from './hooks/useReactors';
+import { useLichessTv } from './hooks/useLichessTv';
 import { useOutages } from './hooks/useOutages';
 import { useBgp } from './hooks/useBgp';
 import { useSupplyChain } from './hooks/useSupplyChain';
@@ -266,6 +271,11 @@ function App() {
   const rivers = useRivers();
   const tides = useTides();
   const volcanoAlerts = useVolcanoAlerts();
+  const tradeHalts = useTradeHalts();
+  const faaStatus = useFaaStatus();
+  const tsunami = useTsunami();
+  const reactors = useReactors();
+  const lichessTv = useLichessTv();
   const outages = useOutages();
   const bgp = useBgp();
   const supplyChain = useSupplyChain();
@@ -461,6 +471,11 @@ function App() {
     if (rivers && rivers.sites.length > 0) panelHealth.reportData('rivers');
     if (tides && tides.stations.length > 0) panelHealth.reportData('tides');
     if (volcanoAlerts) panelHealth.reportData('volcano-alerts');
+    if (tradeHalts) panelHealth.reportData('trade-halts');
+    if (faaStatus) panelHealth.reportData('faa-status');
+    if (tsunami) panelHealth.reportData('tsunami');
+    if (reactors) panelHealth.reportData('reactors');
+    if (lichessTv) panelHealth.reportData('lichess-tv');
     if (outages) panelHealth.reportData('outages');
     if (bgp && bgp.networks.length > 0) panelHealth.reportData('bgp');
     if (supplyChain && supplyChain.advisories.length > 0) panelHealth.reportData('supply-chain');
@@ -3252,6 +3267,161 @@ function App() {
           <span style={{ color: 'var(--text)' }}>{event.text.length > 100 ? event.text.slice(0, 100) + '...' : event.text}</span>
         </div>
       ))}
+    </>),
+    'trade-halts': (<>
+      <PanelHead panelId="trade-halts" isStale={panelHealth.isStale('trade-halts')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Trade Halts</span><span className="panelTag" style={{ color: 'var(--red)', background: 'rgba(248,113,113,0.1)' }}>NASDAQ</span></div>
+      </PanelHead>
+      {!tradeHalts && <LoadingOrHide label="loading halts..." />}
+      {tradeHalts && ((tradeHalts.halts?.length ?? 0) === 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 4px' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: 'var(--green)' }}>No active trade halts</span>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(tradeHalts.halts ?? []).slice(0, 10).map((h, i) => {
+            const resumed = !!(h.resume_trade_time ?? '');
+            return (
+              <div key={`${h.symbol}-${i}`} className="newsRow" style={{ alignItems: 'center', gap: 8, cursor: 'default' }}>
+                <span style={{ fontSize: 11, color: resumed ? 'var(--text-dim)' : 'var(--gold)', fontWeight: 700, minWidth: 52, flexShrink: 0 }}>{h.symbol ?? '?'}</span>
+                <span style={{ fontSize: 8, color: 'var(--red)', background: 'rgba(248,113,113,0.1)', padding: '1px 5px', borderRadius: 2, flexShrink: 0, fontWeight: 600 }}>{h.reason || '?'}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-mid)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name ?? ''}</span>
+                <span style={{ fontSize: 9, color: resumed ? 'var(--green)' : 'var(--text-dim)', flexShrink: 0 }}>{resumed ? 'resumed' : `halted ${(h.halt_time ?? '').slice(0, 5)}`}</span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>nasdaq trader · reason codes: T1 news pending, LUDP volatility</div>
+        </div>
+      ))}
+    </>),
+    'faa-status': (<>
+      <PanelHead panelId="faa-status" isStale={panelHealth.isStale('faa-status')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Airspace</span><span className="panelTag" style={{ color: 'var(--blue)', background: 'rgba(96,165,250,0.1)' }}>FAA</span></div>
+        {faaStatus && <span style={{ fontSize: 9, color: (faaStatus.total_events ?? 0) > 0 ? 'var(--amber)' : 'var(--green)' }}>{faaStatus.total_events ?? 0} active</span>}
+      </PanelHead>
+      {!faaStatus && <LoadingOrHide label="loading airspace..." />}
+      {faaStatus && ((faaStatus.total_events ?? 0) === 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 4px' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: 'var(--green)' }}>National airspace clear, no programs active</span>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(faaStatus.ground_stops ?? []).slice(0, 6).map((g, i) => (
+            <div key={`gs-${i}`} className="newsRow" style={{ alignItems: 'center', gap: 8, cursor: 'default' }}>
+              <span style={{ fontSize: 8, color: 'var(--red)', background: 'rgba(248,113,113,0.1)', padding: '1px 5px', borderRadius: 2, flexShrink: 0, fontWeight: 700 }}>STOP</span>
+              <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600, minWidth: 34, flexShrink: 0 }}>{g.airport ?? '?'}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-mid)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.reason ?? ''}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', flexShrink: 0 }}>{g.end_time ? `til ${g.end_time}` : ''}</span>
+            </div>
+          ))}
+          {(faaStatus.ground_delays ?? []).slice(0, 6).map((g, i) => (
+            <div key={`gd-${i}`} className="newsRow" style={{ alignItems: 'center', gap: 8, cursor: 'default' }}>
+              <span style={{ fontSize: 8, color: 'var(--amber)', background: 'rgba(239,159,39,0.1)', padding: '1px 5px', borderRadius: 2, flexShrink: 0, fontWeight: 700 }}>DELAY</span>
+              <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600, minWidth: 34, flexShrink: 0 }}>{g.airport ?? '?'}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-mid)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.reason ?? ''}</span>
+              <span style={{ fontSize: 9, color: 'var(--amber)', flexShrink: 0 }}>{g.avg ? `avg ${g.avg}` : ''}</span>
+            </div>
+          ))}
+          {(faaStatus.closures ?? []).slice(0, 4).map((c, i) => (
+            <div key={`cl-${i}`} className="newsRow" style={{ alignItems: 'center', gap: 8, cursor: 'default' }}>
+              <span style={{ fontSize: 8, color: 'var(--red)', background: 'rgba(248,113,113,0.1)', padding: '1px 5px', borderRadius: 2, flexShrink: 0, fontWeight: 700 }}>CLOSED</span>
+              <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600, minWidth: 34, flexShrink: 0 }}>{c.airport ?? '?'}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-mid)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.reason ?? ''}</span>
+            </div>
+          ))}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>faa nas status · ground stops + delay programs</div>
+        </div>
+      ))}
+    </>),
+    'tsunami': (<>
+      <PanelHead panelId="tsunami" isStale={panelHealth.isStale('tsunami')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Tsunami</span><span className="panelTag" style={{ color: 'var(--teal, #5DCAA5)', background: 'rgba(93,202,165,0.1)' }}>NOAA</span></div>
+      </PanelHead>
+      {!tsunami && <LoadingOrHide label="loading alerts..." />}
+      {tsunami && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(tsunami.highest === 'none' || tsunami.highest === 'info') ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 4px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: 'var(--green)' }}>No tsunami threats in effect</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 4px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: tsunami.highest === 'warning' ? 'var(--red)' : 'var(--amber)', flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: tsunami.highest === 'warning' ? 'var(--red)' : 'var(--amber)', fontWeight: 700, textTransform: 'uppercase' }}>{tsunami.highest} in effect</span>
+            </div>
+          )}
+          {(tsunami.alerts ?? []).slice(0, 6).map((a, i) => {
+            const lc: Record<string, string> = { warning: 'var(--red)', advisory: 'var(--amber)', watch: 'var(--blue)', info: 'var(--text-dim)' };
+            const c = lc[a.level] ?? 'var(--text-dim)';
+            const ts = a.time ? Math.floor(Date.parse(a.time) / 1000) : 0;
+            return (
+              <a key={`ts-${i}`} href={a.link || 'https://www.tsunami.gov'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 8, color: c, background: `${'rgba(138,136,128,0.08)'}`, padding: '1px 5px', borderRadius: 2, flexShrink: 0, fontWeight: 600, textTransform: 'uppercase' }}>{a.level ?? 'info'}</span>
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title ?? ''}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0 }}>{a.center ?? ''}</span>
+                <span style={{ fontSize: 8, color: 'var(--text-dim)', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{ts > 0 ? timeAgo(ts) : ''}</span>
+              </a>
+            );
+          })}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>ntwc + ptwc warning centers · tsunami.gov</div>
+        </div>
+      )}
+    </>),
+    'reactors': (<>
+      <PanelHead panelId="reactors" isStale={panelHealth.isStale('reactors')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Reactors</span><span className="panelTag" style={{ color: 'var(--green)', background: 'rgba(74,222,128,0.1)' }}>NRC</span></div>
+        {reactors && <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{reactors.report_date ?? ''}</span>}
+      </PanelHead>
+      {!reactors && <LoadingOrHide label="loading reactors..." />}
+      {reactors && (
+        <>
+          <div style={{ display: 'flex', gap: 12, padding: '4px 2px 8px', fontFamily: 'monospace' }}>
+            <div><div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{reactors.total ?? 0}</div><div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>UNITS</div></div>
+            <div><div style={{ fontSize: 15, fontWeight: 700, color: 'var(--green)' }}>{reactors.at_full_power ?? 0}</div><div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>AT 100%</div></div>
+            <div><div style={{ fontSize: 15, fontWeight: 700, color: 'var(--amber)' }}>{reactors.reduced_count ?? 0}</div><div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>REDUCED</div></div>
+            <div><div style={{ fontSize: 15, fontWeight: 700, color: 'var(--red)' }}>{reactors.offline_count ?? 0}</div><div style={{ fontSize: 8, color: 'var(--text-dim)', letterSpacing: '0.5px' }}>OFFLINE</div></div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {(reactors.offline ?? []).slice(0, 6).map((u, i) => (
+              <div key={`off-${i}`} className="newsRow" style={{ alignItems: 'center', gap: 8, cursor: 'default' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--red)', flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.unit ?? '?'}</span>
+                <span style={{ fontSize: 10, color: 'var(--red)', fontWeight: 700, flexShrink: 0 }}>0%</span>
+              </div>
+            ))}
+            {(reactors.reduced ?? []).slice(0, 6).map((u, i) => (
+              <div key={`red-${i}`} className="newsRow" style={{ alignItems: 'center', gap: 8, cursor: 'default' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--amber)', flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.unit ?? '?'}</span>
+                <div style={{ width: 40, height: 4, background: 'var(--border)', borderRadius: 2, flexShrink: 0, overflow: 'hidden' }}><div style={{ width: `${Math.min(100, Math.max(0, u.power ?? 0))}%`, height: '100%', background: 'var(--amber)' }} /></div>
+                <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600, flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{u.power ?? 0}%</span>
+              </div>
+            ))}
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>us nrc daily power reactor status report</div>
+          </div>
+        </>
+      )}
+    </>),
+    'lichess-tv': (<>
+      <PanelHead panelId="lichess-tv" isStale={panelHealth.isStale('lichess-tv')} layout={layout} getGridCols={getGridCols}>
+        <div className="panelHeaderLeft"><span className="panelTitle">Lichess TV</span><span className="panelTag" style={{ color: 'var(--purple)', background: 'rgba(167,139,250,0.1)' }}>LIVE CHESS</span></div>
+      </PanelHead>
+      {!lichessTv && <LoadingOrHide label="loading games..." />}
+      {lichessTv && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(lichessTv.channels ?? []).slice(0, 6).map((ch) => (
+            <a key={ch.key} href={ch.url || 'https://lichess.org/tv'} target="_blank" rel="noopener noreferrer" className="newsRow" style={{ alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)', minWidth: 58, flexShrink: 0 }}>{ch.label ?? ch.key}</span>
+              <span style={{ fontSize: 11, color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{ch.player ?? '?'}</span>
+              <span style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, flexShrink: 0 }}>{(ch.rating ?? 0) > 0 ? ch.rating : ''}</span>
+            </a>
+          ))}
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontStyle: 'italic', marginTop: 4 }}>featured live games · lichess.org/tv</div>
+        </div>
+      )}
     </>),
   };
 
