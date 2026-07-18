@@ -28,20 +28,28 @@ export function useLlmModels(): LlmModelsData | null {
 
   useEffect(() => {
     mountedRef.current = true;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retried = false;
     const fetch_ = async () => {
       try {
         const res = await fetch(ENDPOINT, { signal: AbortSignal.timeout(8000) });
         if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
         const d: LlmModelsData | undefined = json?.data;
-        if (!d || !Array.isArray(d.newest) || d.newest.length === 0) return;
+        if (!d || !Array.isArray(d.newest) || d.newest.length === 0) {
+          // KV feed still warming: one short retry instead of an empty panel
+          // until the next 30-minute poll.
+          if (!retried && mountedRef.current) { retried = true; retryTimer = setTimeout(fetch_, 20000); }
+          return;
+        }
+        retried = false;
         setData(d);
         setCache(CACHE_KEY, d, 'openrouter');
       } catch (e) { if (import.meta.env.DEV) console.warn('[LlmModels]', e); }
     };
     fetch_();
     const id = setInterval(fetch_, POLL_MS);
-    return () => { mountedRef.current = false; clearInterval(id); };
+    return () => { mountedRef.current = false; clearInterval(id); if (retryTimer) clearTimeout(retryTimer); };
   }, []);
 
   return data;

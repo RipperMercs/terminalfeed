@@ -27,20 +27,28 @@ export function useKalshi(): KalshiData | null {
 
   useEffect(() => {
     mountedRef.current = true;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retried = false;
     const fetch_ = async () => {
       try {
         const res = await fetch(ENDPOINT, { signal: AbortSignal.timeout(8000) });
         if (!res.ok || !mountedRef.current) return;
         const json = await res.json();
         const d: KalshiData | undefined = json?.data;
-        if (!d || !Array.isArray(d.markets) || d.markets.length === 0) return;
+        if (!d || !Array.isArray(d.markets) || d.markets.length === 0) {
+          // KV feed still warming: one short retry instead of an empty panel
+          // until the next poll tick.
+          if (!retried && mountedRef.current) { retried = true; retryTimer = setTimeout(fetch_, 20000); }
+          return;
+        }
+        retried = false;
         setData(d);
         setCache(CACHE_KEY, d, 'kalshi');
       } catch (e) { if (import.meta.env.DEV) console.warn('[Kalshi]', e); }
     };
     fetch_();
     const id = setInterval(fetch_, POLL_MS);
-    return () => { mountedRef.current = false; clearInterval(id); };
+    return () => { mountedRef.current = false; clearInterval(id); if (retryTimer) clearTimeout(retryTimer); };
   }, []);
 
   return data;
