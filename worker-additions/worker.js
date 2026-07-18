@@ -1215,6 +1215,7 @@ function handleIndex() {
       '/api/space-weather', '/api/wildfires', '/api/severe-weather', '/api/funding-rates',
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
       '/api/llm-tools',
+      '/api/trade-halts', '/api/faa-status', '/api/tsunami', '/api/reactors', '/api/lichess-tv',
     ],
     premium: {
       docs: 'https://terminalfeed.io/developers/agent-payments',
@@ -5822,6 +5823,217 @@ async function handleGhTrendingKv(url, env) {
     } catch (e) { /* fall through to the canonical KV feed */ }
   }
   return handleKvFeed(env, KV_GH_TRENDING, fetchGhTrendingFeed, 21600, 300);
+}
+
+
+// =============================================================================
+// Ops & Alerts cluster (July 18 2026): NASDAQ trade halts, FAA airspace status,
+// NWS tsunami alerts, NRC reactor status. Cron-writer + KV-reader. Unlike the
+// rate-limited cluster, EMPTY result sets here are VALID states (no halts, no
+// delays, no alerts): fetchers validate the document shape, not item count.
+// =============================================================================
+
+var KV_TRADE_HALTS = 'cache:trade-halts:v1';
+var KV_FAA_STATUS = 'cache:faa-status:v1';
+var KV_TSUNAMI = 'cache:tsunami:v1';
+var KV_REACTORS = 'cache:reactors:v1';
+
+// Tiny tag helpers for the regex-parsed XML feeds (Workers have no DOMParser).
+function _xmlBlocks(xml, tag) {
+  var re = new RegExp('<' + tag + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + tag + '>', 'g');
+  var out = [], m;
+  while ((m = re.exec(xml)) !== null) out.push(m[1]);
+  return out;
+}
+function _xmlTag(block, tag) {
+  var m = block.match(new RegExp('<' + tag + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + tag + '>'));
+  return m ? m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim() : '';
+}
+
+// NASDAQ trade-halts RSS. Fields live in the ndaq: namespace.
+async function fetchTradeHalts() {
+  var res = await fetchWithTimeout('https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts', {
+    headers: { 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' },
+  }, 8000);
+  if (!res.ok) { console.error('nasdaq halts upstream ' + res.status); throw new Error('nasdaq ' + res.status); }
+  var xml = await res.text();
+  if (xml.indexOf('<rss') === -1) { console.error('nasdaq halts: not RSS'); throw new Error('nasdaq bad payload'); }
+  var halts = _xmlBlocks(xml, 'item').slice(0, 15).map(function(it) {
+    return {
+      symbol: _xmlTag(it, 'ndaq:IssueSymbol'),
+      name: _xmlTag(it, 'ndaq:IssueName').slice(0, 60),
+      market: _xmlTag(it, 'ndaq:Market'),
+      reason: _xmlTag(it, 'ndaq:ReasonCode'),
+      halt_date: _xmlTag(it, 'ndaq:HaltDate'),
+      halt_time: _xmlTag(it, 'ndaq:HaltTime'),
+      resume_date: _xmlTag(it, 'ndaq:ResumptionDate'),
+      resume_trade_time: _xmlTag(it, 'ndaq:ResumptionTradeTime'),
+    };
+  }).filter(function(h) { return h.symbol; });
+  return { halts: halts, count: halts.length };
+}
+
+// FAA National Airspace System status: ground stops, ground delay programs,
+// closures, arrival/departure delays. Empty everywhere is a normal quiet day.
+async function fetchFaaStatus() {
+  var res = await fetchWithTimeout('https://nasstatus.faa.gov/api/airport-status-information', {
+    headers: { Accept: 'application/xml', 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' },
+  }, 8000);
+  if (!res.ok) { console.error('faa upstream ' + res.status); throw new Error('faa ' + res.status); }
+  var xml = await res.text();
+  if (xml.indexOf('AIRPORT_STATUS_INFORMATION') === -1) { console.error('faa: bad payload'); throw new Error('faa bad payload'); }
+  var groundStops = _xmlBlocks(xml, 'Ground_Stop_List').flatMap(function(b) {
+    return _xmlBlocks(b, 'Program').map(function(p) {
+      return { airport: _xmlTag(p, 'ARPT'), end_time: _xmlTag(p, 'End_Time'), reason: _xmlTag(p, 'Reason').slice(0, 80) };
+    });
+  }).slice(0, 10);
+  var groundDelays = _xmlBlocks(xml, 'Ground_Delay_List').flatMap(function(b) {
+    return _xmlBlocks(b, 'Ground_Delay').map(function(p) {
+      return { airport: _xmlTag(p, 'ARPT'), avg: _xmlTag(p, 'Avg'), reason: _xmlTag(p, 'Reason').slice(0, 80) };
+    });
+  }).slice(0, 10);
+  var closures = _xmlBlocks(xml, 'Airport_Closure_List').flatMap(function(b) {
+    return _xmlBlocks(b, 'Airport').map(function(p) {
+      return { airport: _xmlTag(p, 'ARPT'), reason: _xmlTag(p, 'Reason').slice(0, 80), reopen: _xmlTag(p, 'Reopen') };
+    });
+  }).slice(0, 10);
+  var delays = _xmlBlocks(xml, 'Arrival_Departure_Delay_List').flatMap(function(b) {
+    return _xmlBlocks(b, 'Delay').map(function(p) {
+      return {
+        airport: _xmlTag(p, 'ARPT'), reason: _xmlTag(p, 'Reason').slice(0, 80),
+        min: _xmlTag(p, 'Min'), max: _xmlTag(p, 'Max'), trend: _xmlTag(p, 'Trend'),
+      };
+    });
+  }).slice(0, 10);
+  return {
+    updated: _xmlTag(xml, 'Update_Time'),
+    ground_stops: groundStops,
+    ground_delays: groundDelays,
+    closures: closures,
+    delays: delays,
+    total_events: groundStops.length + groundDelays.length + closures.length + delays.length,
+  };
+}
+
+// NWS tsunami alerts from both warning centers: NTWC (PAAQ, US/Canada coasts)
+// and PTWC (PHEB, Pacific basin). Tolerates one center being down.
+async function fetchTsunami() {
+  var centers = [
+    { code: 'NTWC', url: 'https://www.tsunami.gov/events/xml/PAAQAtom.xml' },
+    { code: 'PTWC', url: 'https://www.tsunami.gov/events/xml/PHEBAtom.xml' },
+  ];
+  var settled = await Promise.allSettled(centers.map(function(c) {
+    return fetchWithTimeout(c.url, { headers: { 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' } }, 8000)
+      .then(function(r) { if (!r.ok) throw new Error(c.code + ' ' + r.status); return r.text(); })
+      .then(function(xml) { return { code: c.code, xml: xml }; });
+  }));
+  var alerts = [];
+  var okCount = 0;
+  settled.forEach(function(s) {
+    if (s.status !== 'fulfilled' || s.value.xml.indexOf('<feed') === -1) return;
+    okCount++;
+    _xmlBlocks(s.value.xml, 'entry').slice(0, 8).forEach(function(e) {
+      var title = _xmlTag(e, 'title');
+      if (!title) return;
+      var linkM = e.match(/<link[^>]*href="([^"]+)"/);
+      var level = /warning/i.test(title) ? 'warning'
+        : /advisory/i.test(title) ? 'advisory'
+        : /watch/i.test(title) ? 'watch' : 'info';
+      alerts.push({
+        title: title.slice(0, 120),
+        time: _xmlTag(e, 'updated'),
+        link: linkM ? linkM[1] : 'https://www.tsunami.gov',
+        level: level,
+        center: s.value.code,
+      });
+    });
+  });
+  if (!okCount) { console.error('tsunami: both centers unreachable'); throw new Error('tsunami upstream down'); }
+  alerts.sort(function(a, b) { return (b.time || '').localeCompare(a.time || ''); });
+  alerts = alerts.slice(0, 10);
+  var rank = { warning: 3, advisory: 2, watch: 1, info: 0 };
+  var highest = alerts.reduce(function(acc, a) { return rank[a.level] > rank[acc] ? a.level : acc; }, alerts.length ? 'info' : 'none');
+  return { alerts: alerts, highest: highest, centers_reporting: okCount };
+}
+
+// NRC power reactor status. Daily pipe-delimited file, newest rows first;
+// parse only the most recent report date. ~90 units.
+async function fetchReactors() {
+  var res = await fetchWithTimeout(
+    'https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/powerreactorstatusforlast365days.txt',
+    { headers: { 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' } }, 15000);
+  if (!res.ok) { console.error('nrc upstream ' + res.status); throw new Error('nrc ' + res.status); }
+  var text = await res.text();
+  var lines = text.split(/\r?\n/);
+  var units = [];
+  var reportDate = null;
+  for (var i = 0; i < lines.length; i++) {
+    var parts = lines[i].split('|');
+    if (parts.length < 3 || parts[0].indexOf('/') === -1) continue; // header/blank
+    var d = parts[0].split(' ')[0];
+    if (!reportDate) reportDate = d;
+    if (d !== reportDate) break; // newest-first file: stop at the second date
+    var power = parseInt(parts[2], 10);
+    if (!isFinite(power)) continue;
+    units.push({ unit: parts[1].trim(), power: power });
+  }
+  if (!units.length) { console.error('nrc: no rows parsed'); throw new Error('nrc empty'); }
+  var full = units.filter(function(u) { return u.power === 100; }).length;
+  var offline = units.filter(function(u) { return u.power === 0; });
+  var reduced = units.filter(function(u) { return u.power > 0 && u.power < 100; });
+  reduced.sort(function(a, b) { return a.power - b.power; });
+  return {
+    report_date: reportDate,
+    total: units.length,
+    at_full_power: full,
+    reduced: reduced.slice(0, 12),
+    offline: offline.slice(0, 12),
+    reduced_count: reduced.length,
+    offline_count: offline.length,
+  };
+}
+
+// GET handlers (KV readers, always 200, self-healing)
+function handleTradeHalts(env) { return handleKvFeed(env, KV_TRADE_HALTS, fetchTradeHalts, 1800, 60); }
+function handleFaaStatus(env) { return handleKvFeed(env, KV_FAA_STATUS, fetchFaaStatus, 1800, 120); }
+function handleTsunami(env) { return handleKvFeed(env, KV_TSUNAMI, fetchTsunami, 3600, 120); }
+function handleReactors(env) { return handleKvFeed(env, KV_REACTORS, fetchReactors, 172800, 3600); }
+
+// GET /api/lichess-tv — current featured game per channel. Lichess is generous
+// with anonymous reads; classic in-memory cache + stale fallback is enough.
+async function handleLichessTv() {
+  var KEY = 'lichess-tv';
+  var cached = getCached(KEY, 60000);
+  if (cached) return jsonFreshAuto(cached, 200, 60);
+  try {
+    var res = await fetchWithTimeout('https://lichess.org/api/tv/channels', {
+      headers: { Accept: 'application/json', 'User-Agent': 'TerminalFeed.io (hello@terminalfeed.io)' },
+    }, 8000);
+    if (!res.ok) throw new Error('lichess ' + res.status);
+    var j = await res.json();
+    var WANT = ['best', 'bullet', 'blitz', 'rapid', 'classical', 'chess960'];
+    var LABEL = { best: 'Top Rated', bullet: 'Bullet', blitz: 'Blitz', rapid: 'Rapid', classical: 'Classical', chess960: 'Chess960' };
+    var channels = WANT.map(function(k) {
+      var c = j[k];
+      if (!c || !c.user) return null;
+      return {
+        key: k,
+        label: LABEL[k] || k,
+        player: ((c.user.title ? c.user.title + ' ' : '') + (c.user.name || '?')).slice(0, 30),
+        rating: c.rating || 0,
+        game_id: c.gameId || '',
+        url: c.gameId ? ('https://lichess.org/' + c.gameId) : 'https://lichess.org/tv',
+      };
+    }).filter(Boolean);
+    if (!channels.length) throw new Error('lichess empty');
+    var result = { data: { channels: channels } };
+    setCache(KEY, result);
+    return jsonFreshAuto(result, 200, 60);
+  } catch (e) {
+    var stale = getStale(KEY);
+    if (stale) return jsonFreshAuto(stale, 200, 0);
+    return jsonResponse({ data: { channels: [] } });
+  }
 }
 
 
@@ -16254,6 +16466,20 @@ export default {
       ctx.waitUntil((async function() {
         try { await feedWriteIfStale(env, KV_ASTROS, fetchAstrosFeed, 21600000); } catch (err) { console.error('humans-in-space warm failed:', err.message); }
       })());
+      // Ops & Alerts feeds: halts/FAA/tsunami every tick (time-sensitive),
+      // NRC reactors 6h (daily file).
+      ctx.waitUntil((async function() {
+        try { await feedWriteToKv(env, KV_TRADE_HALTS, fetchTradeHalts); } catch (err) { console.error('trade-halts warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteToKv(env, KV_FAA_STATUS, fetchFaaStatus); } catch (err) { console.error('faa-status warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteToKv(env, KV_TSUNAMI, fetchTsunami); } catch (err) { console.error('tsunami warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_REACTORS, fetchReactors, 21600000); } catch (err) { console.error('reactors warm failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
@@ -16794,6 +17020,11 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'fun-fact':       return await _transparentProxy('fun-fact', 'https://uselessfacts.jsph.pl/random.json?language=en', 600000);
       case 'trending-books': return await _transparentProxy('trending-books', 'https://openlibrary.org/trending/daily.json', 3600000);
       case 'stackoverflow':  return await handleStackOverflow(env);
+      case 'trade-halts':    return await handleTradeHalts(env);
+      case 'faa-status':     return await handleFaaStatus(env);
+      case 'tsunami':        return await handleTsunami(env);
+      case 'reactors':       return await handleReactors(env);
+      case 'lichess-tv':     return await handleLichessTv();
       case 'this-day':       return await handleThisDay();
       case 'museum-art':     return await handleMuseumArt();
       case 'bluesky':        return await handleBluesky();
