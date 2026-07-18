@@ -77,7 +77,6 @@ import { useFooterQuote } from './hooks/useFooterQuote';
 import { useFlightRadar } from './hooks/useFlightRadar';
 import { useTCGMarket } from './hooks/useTCGMarket';
 import { useCloudStatus } from './hooks/useCloudStatus';
-import { OriginalsPanel } from './components/OriginalsPanel';
 import { LoadingOrHide } from './components/LoadingOrHide';
 import { useHuggingFace } from './hooks/useHuggingFace';
 import { useHarnesses } from './hooks/useHarnesses';
@@ -3253,15 +3252,6 @@ function App() {
           <span style={{ color: 'var(--text)' }}>{event.text.length > 100 ? event.text.slice(0, 100) + '...' : event.text}</span>
         </div>
       ))}
-    </>),
-    'originals': (<>
-      <PanelHead panelId="originals" isStale={false} layout={layout} getGridCols={getGridCols}>
-        <div className="panelHeaderLeft">
-          <span className="panelTitle">TF Originals</span>
-          <span className="panelTag" style={{ color: 'var(--amber)' }}>BLOG</span>
-        </div>
-      </PanelHead>
-      <OriginalsPanel />
     </>),
   };
 

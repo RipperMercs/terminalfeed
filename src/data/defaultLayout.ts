@@ -5,7 +5,6 @@ export const DEFAULT_LAYOUT = {
   panelOrder: [
     'weather',
     'news',
-    'originals',
     'tech-news',
     'reddit',
     'producthunt',

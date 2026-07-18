@@ -111,7 +111,6 @@ export const ALL_PANELS = [
 { id: 'daily-paws', label: 'Daily Paws', defaultSpan: 1 },
   { id: 'humans-in-space', label: 'Humans In Space', defaultSpan: 1 },
   { id: 'this-day', label: 'This Day In History', defaultSpan: 1 },
-  { id: 'originals', label: 'TF Originals', defaultSpan: 1 },
 ] as const;
 
 export type PanelId = typeof ALL_PANELS[number]['id'];
@@ -121,7 +120,7 @@ const LS_COLLAPSED = 'tf_collapsed_panels';
 const LS_ORDER = 'tf_panel_order';
 const LS_CUSTOM = 'tf_has_custom_layout';
 const LS_VERSION = 'tf_layout_version';
-const CURRENT_VERSION = '59'; // bump this when panel lineup changes significantly
+const CURRENT_VERSION = '60'; // bump this when panel lineup changes significantly
 
 function loadArray(key: string): string[] {
   try {
