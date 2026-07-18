@@ -596,15 +596,43 @@ function App() {
       const ids = visibleKey ? visibleKey.split('|') : [];
       const next = new Map<string, number>();
       let colH: number[] = new Array(numCols).fill(0);
+      let colItems: string[][] = Array.from({ length: numCols }, () => []);
+      // In-order greedy is order-sensitive: a tall panel landing late can bake
+      // in a big column spread. After each segment, nudge bottom-most panels
+      // from the tallest column to the shortest while that shrinks the spread.
+      // Bounded, deterministic, and only ever touches column tails (the least
+      // disruptive panels to relocate).
+      const trimSegment = () => {
+        for (let pass = 0; pass < 8; pass++) {
+          let hi = 0, lo = 0;
+          for (let k = 1; k < numCols; k++) { if (colH[k] > colH[hi]) hi = k; if (colH[k] < colH[lo]) lo = k; }
+          const spread = colH[hi] - colH[lo];
+          const tail = colItems[hi][colItems[hi].length - 1];
+          if (!tail || spread <= 0) break;
+          const h = (heights.get(tail) ?? 0) + 4;
+          const moved = colH.map((v, k) => k === hi ? v - h : k === lo ? v + h : v);
+          if (Math.max(...moved) - Math.min(...moved) >= spread) break;
+          colItems[hi].pop();
+          colItems[lo].push(tail);
+          next.set(tail, lo);
+          colH = moved;
+        }
+      };
+      const resetSegment = () => {
+        colH = new Array(numCols).fill(0);
+        colItems = Array.from({ length: numCols }, () => []);
+      };
       for (const id of ids) {
         const def = ALL_PANELS.find(p => p.id === id);
-        if (def && (def.defaultSpan ?? 1) > 1) { colH = new Array(numCols).fill(0); continue; } // hero breaks the segment
+        if (def && (def.defaultSpan ?? 1) > 1) { trimSegment(); resetSegment(); continue; } // hero breaks the segment
         if (!heights.has(id)) continue; // not rendered
         let c = 0;
         for (let k = 1; k < numCols; k++) if (colH[k] < colH[c]) c = k;
         next.set(id, c);
+        colItems[c].push(id);
         colH[c] += (heights.get(id) as number) + 4;
       }
+      trimSegment();
       if (prev.size === next.size) {
         let same = true;
         for (const [k, v] of next) { if (prev.get(k) !== v) { same = false; break; } }
