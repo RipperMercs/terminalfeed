@@ -614,7 +614,28 @@ function App() {
     });
     run();
     const t = setTimeout(run, 6500); // resettle once after the staggered feed loads settle
-    return () => clearTimeout(t);
+    // Drift watcher: plenty of feeds finish loading well after the 6.5s
+    // resettle (KV-warming retries land at ~20s, images decode late, live
+    // feeds grow rows for hours), so columns assigned against early heights
+    // drift apart and leave ragged black voids at the page bottom. Re-balance
+    // only when a segment's columns diverge past DRIFT_PX: below that, never
+    // shuffle panels under the user. Re-running on stable heights reproduces
+    // the same assignment and the equality guard returns prev, so this cannot
+    // oscillate; a re-assignment itself changes no panel sizes, so it cannot
+    // re-trigger the watcher.
+    const DRIFT_PX = 600;
+    const drift = setInterval(() => {
+      if (document.hidden) return;
+      let worst = 0;
+      document.querySelectorAll('.grid .gridRow').forEach(row => {
+        const cols = Array.from(row.querySelectorAll(':scope > .gridCol'))
+          .map(c => (c as HTMLElement).getBoundingClientRect().height)
+          .filter(h => h > 0);
+        if (cols.length >= 2) worst = Math.max(worst, Math.max(...cols) - Math.min(...cols));
+      });
+      if (worst > DRIFT_PX) run();
+    }, 15000);
+    return () => { clearTimeout(t); clearInterval(drift); };
   }, [visibleKey, numCols]);
 
   // Panel registry: maps panel IDs to their JSX content
