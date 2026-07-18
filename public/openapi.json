@@ -2091,6 +2091,33 @@
         "security": []
       }
     },
+    "/api/kalshi": {
+      "get": {
+        "tags": ["free"],
+        "summary": "Kalshi regulated event-market odds",
+        "description": "Top open Kalshi events ranked by 24-hour volume with each event's leading outcome and price, from the CFTC-regulated exchange's public API. Sports parlays filtered out. Refreshed every 10 minutes. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Top event markets", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
+    "/api/llm-models": {
+      "get": {
+        "tags": ["free"],
+        "summary": "OpenRouter catalog: newest LLM arrivals",
+        "description": "The newest models on the OpenRouter catalog (id, release timestamp, context window, prompt price per million tokens) plus the total catalog size. Refreshed every 3 hours. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Newest models", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
+    "/api/debt-clock": {
+      "get": {
+        "tags": ["free"],
+        "summary": "US national debt to the penny",
+        "description": "Latest total public debt outstanding from the US Treasury with public/intragovernmental split, 30-day and 1-year deltas, and a per-second accrual rate for live-estimating displays. Daily source data, cached 6 hours. CORS enabled, no auth required.",
+        "responses": { "200": { "description": "Debt snapshot", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "security": []
+      }
+    },
     "/api/harnesses": {
       "get": {
         "tags": [
