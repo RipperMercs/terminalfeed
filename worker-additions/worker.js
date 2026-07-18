@@ -1216,7 +1216,7 @@ function handleIndex() {
       '/api/climate/earthquakes', '/api/climate/weather-alerts',
       '/api/llm-tools',
       '/api/trade-halts', '/api/faa-status', '/api/tsunami', '/api/reactors', '/api/lichess-tv',
-      '/api/kalshi', '/api/llm-models', '/api/debt-clock',
+      '/api/kalshi', '/api/llm-models', '/api/debt-clock', '/api/signals',
     ],
     premium: {
       docs: 'https://terminalfeed.io/developers/agent-payments',
@@ -6151,6 +6151,129 @@ async function fetchDebtClock() {
 function handleKalshi(env) { return handleKvFeed(env, KV_KALSHI, fetchKalshi, 3600, 300); }
 function handleLlmModels(env) { return handleKvFeed(env, KV_LLM_MODELS, fetchLlmModels, 86400, 3600); }
 function handleDebtClock(env) { return handleKvFeed(env, KV_DEBT_CLOCK, fetchDebtClock, 259200, 3600); }
+
+// =============================================================================
+// Signals: automatic anomaly detection across the live feeds (July 18 2026).
+// The */5 cron evaluates per-feed rules against data the Worker already holds
+// (KV records + in-process handler probes) and persists a small list of active
+// signals. The dashboard renders them as a chip strip under the ticker; each
+// signal points at the panel where the story is. Empty list = quiet day.
+// =============================================================================
+
+var KV_SIGNALS = 'cache:signals:v1';
+
+async function _signalProbe(promise) {
+  try { var r = await promise; return await r.json(); } catch (e) { return null; }
+}
+
+// fetcher(env, prior) for the KV feed plumbing: prior carries each signal's
+// first-seen timestamp across ticks so chips do not reset their age.
+async function computeSignalsData(env, prior) {
+  var out = [];
+
+  var kv = await Promise.all([
+    feedReadFromKv(env, KV_FAA_STATUS),
+    feedReadFromKv(env, KV_TSUNAMI),
+    feedReadFromKv(env, KV_TRADE_HALTS),
+    feedReadFromKv(env, KV_REACTORS),
+    feedReadFromKv(env, KV_VOLCANO_ALERTS),
+  ]);
+  var faa = kv[0] && kv[0].data, tsu = kv[1] && kv[1].data, halts = kv[2] && kv[2].data,
+      reactors = kv[3] && kv[3].data, volc = kv[4] && kv[4].data;
+
+  var probes = await Promise.all([
+    _signalProbe(handleEarthquake()),
+    _signalProbe(handleVix(env)),
+    _signalProbe(handleSpaceWeather()),
+    _signalProbe(handleSevereWeather()),
+    _signalProbe(handleServiceStatus()),
+  ]);
+  var eq = probes[0] && probes[0].data, vix = probes[1] && probes[1].data,
+      spaceW = probes[2] && probes[2].data, severe = probes[3] && probes[3].data,
+      services = probes[4] && probes[4].data;
+
+  var btcAlert = null;
+  try { if (env && env.WEBHOOK_SUBS) btcAlert = await env.WEBHOOK_SUBS.get(BTC_ALERT_KV_KEY, 'json'); } catch (e) {}
+
+  var now = Date.now();
+
+  // FAA ground stops: 3+ simultaneous programs is a rough day in the NAS.
+  var gs = (faa && Array.isArray(faa.ground_stops)) ? faa.ground_stops.length : 0;
+  if (gs >= 3) out.push({ id: 'faa-ground-stops', panel: 'faa-status', severity: gs >= 6 ? 'critical' : 'elevated', label: gs + ' airports ground-stopped' });
+
+  // Tsunami escalation.
+  var th = tsu && tsu.highest;
+  if (th === 'watch') out.push({ id: 'tsunami', panel: 'tsunami', severity: 'elevated', label: 'Tsunami watch in effect' });
+  else if (th === 'advisory') out.push({ id: 'tsunami', panel: 'tsunami', severity: 'elevated', label: 'Tsunami advisory in effect' });
+  else if (th === 'warning') out.push({ id: 'tsunami', panel: 'tsunami', severity: 'critical', label: 'TSUNAMI WARNING in effect' });
+
+  // Trade halts: count only still-halted symbols. On weekends every unresumed
+  // Friday halt still shows, so the same count is routine, not breaking: cap
+  // the severity at notice outside of trading days (ET).
+  var activeHalts = (halts && Array.isArray(halts.halts)) ? halts.halts.filter(function(h) { return !h.resume_trade_time; }).length : 0;
+  if (activeHalts >= 5) {
+    var etDay = new Date(now - 4 * 3600000).getUTCDay(); // ET approximation is fine for a weekend gate
+    var isWeekend = etDay === 0 || etDay === 6;
+    out.push({ id: 'trade-halts', panel: 'trade-halts', severity: isWeekend ? 'notice' : (activeHalts >= 10 ? 'critical' : 'elevated'), label: activeHalts + ' stocks halted' });
+  }
+
+  // Reactors offline: 1-2 is routine maintenance; 3+ is notable.
+  var offline = (reactors && reactors.offline_count) || 0;
+  if (offline >= 3) out.push({ id: 'reactors-offline', panel: 'reactors', severity: offline >= 6 ? 'elevated' : 'notice', label: offline + ' reactors offline' });
+
+  // Volcano aviation code RED.
+  var red = (volc && Array.isArray(volc.elevated)) ? volc.elevated.find(function(v) { return v && v.color === 'RED'; }) : null;
+  if (red) out.push({ id: 'volcano-red', panel: 'volcano-alerts', severity: 'critical', label: (red.volcano || 'Volcano') + ' aviation code RED' });
+
+  // Earthquakes: a big one in the last 2h, or an M5+ surge in the last 6h.
+  if (Array.isArray(eq)) {
+    var big = eq.filter(function(q) { return (q.magnitude || 0) >= 6.5 && (now - (q.time || 0)) < 7200000; })
+      .sort(function(a, b) { return (b.magnitude || 0) - (a.magnitude || 0); })[0];
+    if (big) out.push({ id: 'quake-major', panel: 'seismic', severity: big.magnitude >= 7 ? 'critical' : 'elevated', label: 'M' + big.magnitude.toFixed(1) + ' earthquake · ' + String(big.place || '').split(', ').pop() });
+    var m5count = eq.filter(function(q) { return (q.magnitude || 0) >= 5 && (now - (q.time || 0)) < 21600000; }).length;
+    if (m5count >= 5) out.push({ id: 'quake-surge', panel: 'seismic', severity: 'elevated', label: 'Quake surge: ' + m5count + ' M5+ in 6h' });
+  }
+
+  // VIX fear spike.
+  var vixVal = vix && vix.vix && vix.vix.value;
+  if (isFinite(vixVal) && vixVal >= 30) out.push({ id: 'vix-spike', panel: 'vix', severity: vixVal >= 40 ? 'critical' : 'elevated', label: 'VIX at ' + vixVal.toFixed(1) });
+
+  // Geomagnetic storm.
+  var kp = spaceW && spaceW.kp_index;
+  if (isFinite(kp) && kp >= 7) out.push({ id: 'geomagnetic', panel: 'space-weather', severity: kp >= 8 ? 'critical' : 'elevated', label: 'Geomagnetic storm · Kp ' + kp });
+
+  // Extreme weather alert surge (tornado warnings etc are severity Extreme; a
+  // handful is a normal storm day, dozens is an outbreak).
+  var extreme = (severe && severe.counts && severe.counts.Extreme) || 0;
+  if (extreme >= 20) out.push({ id: 'weather-outbreak', panel: 'severe-weather', severity: 'critical', label: extreme + ' extreme weather alerts' });
+  else if (extreme >= 8) out.push({ id: 'weather-outbreak', panel: 'severe-weather', severity: 'elevated', label: extreme + ' extreme weather alerts' });
+
+  // Major provider outages.
+  if (Array.isArray(services)) {
+    var majors = services.filter(function(s) { return s && (s.indicator === 'major' || s.indicator === 'critical'); });
+    if (majors.length === 1) out.push({ id: 'provider-outage', panel: 'dev-status', severity: 'elevated', label: majors[0].name + ' major outage' });
+    else if (majors.length > 1) out.push({ id: 'provider-outage', panel: 'dev-status', severity: 'critical', label: majors.length + ' provider outages' });
+  }
+
+  // BTC volatility: reuse the existing 1h >=3% alert detector's KV record.
+  if (btcAlert && btcAlert.ts && (now - btcAlert.ts) < 3600000 && isFinite(btcAlert.change_pct)) {
+    var pct = btcAlert.change_pct;
+    out.push({ id: 'btc-move', panel: 'bitcoin', severity: Math.abs(pct) >= 6 ? 'critical' : 'elevated', label: 'BTC ' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% in 1h' });
+  }
+
+  // Carry first-seen timestamps so chip ages persist across ticks.
+  var prevMap = {};
+  if (prior && Array.isArray(prior.signals)) prior.signals.forEach(function(s) { prevMap[s.id] = s; });
+  var rank = { critical: 2, elevated: 1, notice: 0 };
+  var signals = out.map(function(s) {
+    return { id: s.id, panel: s.panel, severity: s.severity, label: s.label, since: (prevMap[s.id] && prevMap[s.id].since) || now };
+  }).sort(function(a, b) { return (rank[b.severity] || 0) - (rank[a.severity] || 0) || a.since - b.since; });
+
+  return { signals: signals, count: signals.length };
+}
+
+// GET /api/signals — active anomaly signals. Empty is the normal quiet state.
+function handleSignals(env) { return handleKvFeed(env, KV_SIGNALS, computeSignalsData, 1800, 60); }
 
 // GET /api/lichess-tv — current featured game per channel. Lichess is generous
 // with anonymous reads; classic in-memory cache + stale fallback is enough.
@@ -16644,6 +16767,15 @@ export default {
       ctx.waitUntil((async function() {
         try { await feedWriteIfStale(env, KV_DEBT_CLOCK, fetchDebtClock, 21600000); } catch (err) { console.error('debt-clock warm failed:', err.message); }
       })());
+      // Signals: evaluate anomaly rules every tick, after a small delay so this
+      // tick's feed warms (FAA, tsunami, halts) land in KV first.
+      ctx.waitUntil((async function() {
+        try {
+          await new Promise(function(res) { setTimeout(res, 20000); });
+          var sig = await feedWriteToKv(env, KV_SIGNALS, computeSignalsData);
+          if (sig && sig.data && sig.data.count) console.log('signals:', JSON.stringify(sig.data.signals.map(function(s) { return s.id + ':' + s.severity; })));
+        } catch (err) { console.error('signals compute failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
@@ -17192,6 +17324,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'kalshi':         return await handleKalshi(env);
       case 'llm-models':     return await handleLlmModels(env);
       case 'debt-clock':     return await handleDebtClock(env);
+      case 'signals':        return await handleSignals(env);
       case 'this-day':       return await handleThisDay();
       case 'museum-art':     return await handleMuseumArt();
       case 'bluesky':        return await handleBluesky();
