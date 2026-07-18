@@ -697,7 +697,7 @@ function App() {
       <div>
         {!newsFilter && sisterOriginals.filter((s) => s.source === 'TENSORFEED').map((s, i) => { const sc = 'var(--purple)'; return (
           <a key={`sis-tf-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title="TensorFeed original">
-            <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>TF</span>
+            <span className="newsTag" style={{ color: sc, background: `${sc}15` }}>TF</span>
             <span className="newsTitle">{s.title}</span>
             <span className="newsMeta">{timeAgo(s.time)}</span>
           </a>); })}
@@ -710,7 +710,7 @@ function App() {
           </a>); })}
         {!newsFilter && sisterOriginals.filter((s) => s.source === 'VR.ORG').map((s, i) => { const sc = 'var(--cyan)'; return (
           <a key={`sis-vr-${i}`} href={s.link} target="_blank" rel="noopener noreferrer" className="newsRow" title="VR.org original">
-            <span className="newsTag" style={{ color: sc, background: `${sc}15`, minWidth: 30 }}>VR.ORG</span>
+            <span className="newsTag" style={{ color: sc, background: `${sc}15` }}>VR.ORG</span>
             <span className="newsTitle">{s.title}</span>
             <span className="newsMeta">{timeAgo(s.time)}</span>
           </a>); })}
