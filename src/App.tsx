@@ -3277,6 +3277,8 @@ function App() {
           <a href="/radio" target="_blank" rel="noopener noreferrer" className="liveBriefingLink radioLink">RADIO</a>
           <span className="topNavDivider">|</span>
           <a href="/wifi" target="_blank" rel="noopener noreferrer" className="liveBriefingLink wifiLink">WIFI</a>
+          <span className="topNavDivider">|</span>
+          <a href="/for-devs" target="_blank" rel="noopener noreferrer" className="liveBriefingLink devsLink">DEVS</a>
         </div>
         <div className="topBarRight">
           {!layout.isOrganizing && showLockTip && (

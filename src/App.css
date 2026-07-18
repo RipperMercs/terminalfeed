@@ -147,6 +147,11 @@
   margin-left: 0;
 }
 
+.devsLink {
+  color: #5DCAA5;
+  margin-left: 0;
+}
+
 .liveDot {
   display: inline-block;
   width: 5px;
