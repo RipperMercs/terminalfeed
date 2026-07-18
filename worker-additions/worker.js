@@ -1988,40 +1988,8 @@ function ghHeaders(env) {
   return h;
 }
 
-// GET /api/gh-trending?since=YYYY-MM-DD
-async function handleGhTrending(url, env) {
-  var since = (url.searchParams.get('since') || '').match(/^\d{4}-\d{2}-\d{2}$/)
-    ? url.searchParams.get('since')
-    : new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-  var KEY = 'gh-trending-' + since;
-  var cached = getCached(KEY, 300000);
-  if (cached) return jsonFreshAuto(cached, 200, 300);
-  try {
-    var res = await fetchWithTimeout(
-      'https://api.github.com/search/repositories?q=created:>' + since + '&sort=stars&order=desc&per_page=10',
-      { headers: ghHeaders(env) }
-    );
-    if (!res.ok) throw new Error('gh ' + res.status);
-    var data = await res.json();
-    var items = (data.items || []).map(function(r) {
-      return {
-        name: r.name,
-        fullName: r.full_name,
-        description: r.description || '',
-        language: r.language || '',
-        stars: r.stargazers_count || 0,
-        url: r.html_url,
-      };
-    });
-    var result = { data: items };
-    setCache(KEY, result);
-    return jsonFreshAuto(result, 200, 300);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 0);
-    return jsonResponse({ data: [] });
-  }
-}
+// /api/gh-trending moved to the rate-limited-upstream KV cluster; see
+// handleGhTrendingKv further down.
 
 // GET /api/hf-trending
 // Trending HuggingFace models, sorted by likes in last 7 days. No API key required.
@@ -3634,36 +3602,8 @@ async function handleFundingRates() {
   return jsonFreshAuto(result, 200, 60);
 }
 
-// GET /api/gh-events
-async function handleGhEvents(env) {
-  var KEY = 'gh-events';
-  var cached = getCached(KEY, 30000);
-  if (cached) return jsonFreshAuto(cached, 200, 30);
-  try {
-    var res = await fetchWithTimeout(
-      'https://api.github.com/events?per_page=20',
-      { headers: ghHeaders(env) }
-    );
-    if (!res.ok) throw new Error('gh ' + res.status);
-    var data = await res.json();
-    var items = Array.isArray(data) ? data.slice(0, 20).map(function(e) {
-      return {
-        id: e.id,
-        type: e.type,
-        actor: (e.actor && e.actor.login) || 'unknown',
-        repo: (e.repo && e.repo.name) || '',
-        created_at: e.created_at || '',
-      };
-    }) : [];
-    var result = { data: items };
-    setCache(KEY, result);
-    return jsonFreshAuto(result, 200, 30);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 0);
-    return jsonResponse({ data: [] });
-  }
-}
+// /api/gh-events moved to the rate-limited-upstream KV cluster; see
+// handleGhEvents further down.
 
 // Shared: fetch HN story list by kind, hydrate items. Clamped 1..50.
 async function fetchHnStories(listUrl, limit) {
@@ -4256,23 +4196,8 @@ async function fetchAstrosFromSpaceDevs() {
   };
 }
 
-// GET /api/humans-in-space
-async function handleHumansInSpace() {
-  var KEY = 'humans-in-space';
-  var cached = getCached(KEY, 3600000);
-  if (cached) return jsonFreshAuto(cached, 200, 3600);
-
-  try {
-    var d = await fetchAstrosFromSpaceDevs();
-    var data = { data: { count: d.number, people: d.people } };
-    setCache(KEY, data);
-    return jsonFreshAuto(data, 200, 3600);
-  } catch (e) {
-    var stale = getStale(KEY);
-    if (stale) return jsonFreshAuto(stale, 200, 0);
-    return jsonResponse({ data: { count: 0, people: [] } });
-  }
-}
+// /api/humans-in-space moved to the rate-limited-upstream KV cluster; see
+// handleHumansInSpace further down.
 
 // GET /api/aviation — OpenSky live air-traffic stats, computed server-side. The
 // raw states array is multi-MB and OpenSky CORS-blocks browsers, so the worker
@@ -5324,6 +5249,17 @@ var KV_AI_CVES = 'cache:ai-stack-cves:v1';
 var AI_CVES_UPSTREAM  = 'https://tensorfeed.ai/api/preview/ai-cves/ai-stack-cves';
 var AI_CVES_FULL_FEED = 'https://tensorfeed.ai/api/premium/ai-cves/ai-stack-cves';
 
+// Rate-limited-upstream cluster (July 18 2026 audit): GitHub events/trending,
+// StackExchange hot questions, SpaceDevs astronauts. All four were dark because
+// their upstreams throttle by IP and Workers egress from shared Cloudflare IPs,
+// so per-isolate memory caching still fanned out enough upstream calls to stay
+// permanently rate-limited (and the handlers failed closed to empty payloads).
+// Cron is now the single writer; failures keep the prior KV record intact.
+var KV_GH_EVENTS = 'cache:gh-events:v1';
+var KV_GH_TRENDING = 'cache:gh-trending:v1';
+var KV_STACKOVERFLOW = 'cache:stackoverflow:v1';
+var KV_ASTROS = 'cache:humans-in-space:v1';
+
 // Reader: per-isolate memory lookaside, then a single KV read. Never throws.
 async function feedReadFromKv(env, kvKey) {
   var now = Date.now();
@@ -5684,6 +5620,158 @@ async function handleAiStackCves(env) {
     full_feed: d.full_feed,
     source: d.source,
   }, 200, 600);
+}
+
+
+// =============================================================================
+// Rate-limited-upstream cluster: GitHub events/trending, StackExchange hot,
+// SpaceDevs astronauts. Cron-writer + KV-reader; fetchers THROW on failure or
+// on an empty-but-200 upstream so a bad tick never clobbers last-good data.
+// =============================================================================
+
+// GitHub fetch with 401-token fallback: if the stored GITHUB_TOKEN has expired
+// or been revoked, retry once anonymously (60/hr/IP, so the cron's single call
+// per interval may still land) instead of failing outright.
+async function ghFetchJson(env, url) {
+  var res = await fetchWithTimeout(url, { headers: ghHeaders(env) });
+  if (res.status === 401 && env && env.GITHUB_TOKEN) {
+    console.error('github: GITHUB_TOKEN rejected (401), retrying anonymously. Rotate the token.');
+    var anon = ghHeaders(null);
+    res = await fetchWithTimeout(url, { headers: anon });
+  }
+  if (!res.ok) throw new Error('gh ' + res.status);
+  return await res.json();
+}
+
+async function fetchGhEventsFeed(env) {
+  var data = await ghFetchJson(env, 'https://api.github.com/events?per_page=20');
+  var items = (Array.isArray(data) ? data : []).slice(0, 20).map(function(e) {
+    return {
+      id: e.id,
+      type: e.type,
+      actor: (e.actor && e.actor.login) || 'unknown',
+      repo: (e.repo && e.repo.name) || '',
+      created_at: e.created_at || '',
+    };
+  });
+  if (!items.length) throw new Error('gh events empty');
+  return items;
+}
+
+function ghTrendingDefaultSince() {
+  return new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+}
+
+async function fetchGhTrendingFeed(env) {
+  var since = ghTrendingDefaultSince();
+  var data = await ghFetchJson(env,
+    'https://api.github.com/search/repositories?q=created:>' + since + '&sort=stars&order=desc&per_page=10');
+  var items = ((data && data.items) || []).map(function(r) {
+    return {
+      name: r.name,
+      fullName: r.full_name,
+      description: r.description || '',
+      language: r.language || '',
+      stars: r.stargazers_count || 0,
+      url: r.html_url,
+    };
+  });
+  if (!items.length) throw new Error('gh trending empty');
+  return items;
+}
+
+async function fetchStackOverflowFeed() {
+  // No `filter=withbody`: bodies are dead weight for the panel and bloat KV.
+  var res = await fetchWithTimeout(
+    'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10',
+    { headers: { Accept: 'application/json' } }, 8000);
+  if (!res.ok) throw new Error('stackexchange ' + res.status);
+  var j = await res.json();
+  var items = ((j && j.items) || []).map(function(q) {
+    return {
+      question_id: q.question_id,
+      title: q.title,
+      view_count: q.view_count || 0,
+      answer_count: q.answer_count || 0,
+      score: q.score || 0,
+      link: q.link,
+      tags: (q.tags || []).slice(0, 5),
+    };
+  });
+  if (!items.length) throw new Error('stackexchange empty (quota?)');
+  return { items: items, quota_remaining: j.quota_remaining };
+}
+
+async function fetchAstrosFeed() {
+  var d = await fetchAstrosFromSpaceDevs();
+  // Zero humans in orbit has not been true since 2000; a 200-with-empty-results
+  // here is an upstream glitch, and caching it is how the panel showed "0 humans".
+  if (!d || !d.number) throw new Error('spacedevs empty roster');
+  return { count: d.number, people: d.people };
+}
+
+// GET /api/gh-events — { data: [...] } (+ as_of/age_seconds/stale)
+function handleGhEvents(env) { return handleKvFeed(env, KV_GH_EVENTS, fetchGhEventsFeed, 1800, 60); }
+
+// GET /api/humans-in-space — { data: { count, people } } (+ freshness fields)
+function handleHumansInSpace(env) { return handleKvFeed(env, KV_ASTROS, fetchAstrosFeed, 86400, 300); }
+
+// GET /api/stackoverflow — StackExchange-shaped { items: [...] } so the existing
+// frontend parse keeps working; freshness fields added alongside.
+async function handleStackOverflow(env) {
+  var rec = await feedReadFromKv(env, KV_STACKOVERFLOW);
+  if (!rec) {
+    if (_kvFeedInflight[KV_STACKOVERFLOW]) {
+      try { rec = await _kvFeedInflight[KV_STACKOVERFLOW]; } catch (e) { rec = null; }
+    } else {
+      _kvFeedInflight[KV_STACKOVERFLOW] = feedWriteToKv(env, KV_STACKOVERFLOW, fetchStackOverflowFeed);
+      try { rec = await _kvFeedInflight[KV_STACKOVERFLOW]; } catch (e) { rec = null; }
+      finally { _kvFeedInflight[KV_STACKOVERFLOW] = null; }
+    }
+  }
+  if (!rec || !rec.data || !Array.isArray(rec.data.items)) {
+    // items:null (not []) so the frontend's `if (!json.items) return` keeps its
+    // last-good localStorage cache instead of overwriting it with nothing.
+    return jsonResponse({ items: null, as_of: null, age_seconds: null, stale: true, warming: true }, 200, 30);
+  }
+  var ageS = Math.max(0, Math.round((Date.now() - rec.as_of) / 1000));
+  return jsonResponse({
+    items: rec.data.items,
+    as_of: new Date(rec.as_of).toISOString(),
+    age_seconds: ageS,
+    stale: ageS > 7200,
+  }, 200, 60);
+}
+
+// GET /api/gh-trending?since=YYYY-MM-DD — canonical 7-day window serves from KV.
+// A custom `since` still tries a live GitHub fetch (per-isolate cached), but the
+// failure fallback is now the canonical KV feed instead of an empty array.
+async function handleGhTrendingKv(url, env) {
+  var param = url.searchParams.get('since') || '';
+  var since = /^\d{4}-\d{2}-\d{2}$/.test(param) ? param : ghTrendingDefaultSince();
+  if (since !== ghTrendingDefaultSince()) {
+    var KEY = 'gh-trending-' + since;
+    var cached = getCached(KEY, 300000);
+    if (cached) return jsonFreshAuto(cached, 200, 300);
+    try {
+      var data = await ghFetchJson(env,
+        'https://api.github.com/search/repositories?q=created:>' + since + '&sort=stars&order=desc&per_page=10');
+      var items = ((data && data.items) || []).map(function(r) {
+        return {
+          name: r.name,
+          fullName: r.full_name,
+          description: r.description || '',
+          language: r.language || '',
+          stars: r.stargazers_count || 0,
+          url: r.html_url,
+        };
+      });
+      var result = { data: items };
+      setCache(KEY, result);
+      return jsonFreshAuto(result, 200, 300);
+    } catch (e) { /* fall through to the canonical KV feed */ }
+  }
+  return handleKvFeed(env, KV_GH_TRENDING, fetchGhTrendingFeed, 21600, 300);
 }
 
 
@@ -16100,6 +16188,22 @@ export default {
         try { await feedWriteIfStale(env, KV_AI_CVES, fetchAiStackCves, 10800000); }
         catch (err) { console.error('ai-stack-cves warm failed:', err.message); }
       })());
+      // Rate-limited-upstream feeds (July 18 2026 audit). Cadences sized to each
+      // upstream's per-IP quota from shared CF egress: GitHub events every tick
+      // (token-authed, 5000/hr), trending 3h (weekly window), StackExchange 30m
+      // (300/day/IP anon), SpaceDevs 6h (15/hr/IP anon, crew changes ~monthly).
+      ctx.waitUntil((async function() {
+        try { await feedWriteToKv(env, KV_GH_EVENTS, fetchGhEventsFeed); } catch (err) { console.error('gh-events warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_GH_TRENDING, fetchGhTrendingFeed, 10800000); } catch (err) { console.error('gh-trending warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_STACKOVERFLOW, fetchStackOverflowFeed, 1800000); } catch (err) { console.error('stackoverflow warm failed:', err.message); }
+      })());
+      ctx.waitUntil((async function() {
+        try { await feedWriteIfStale(env, KV_ASTROS, fetchAstrosFeed, 21600000); } catch (err) { console.error('humans-in-space warm failed:', err.message); }
+      })());
       // Feed staleness monitor: probe feeds, persist roll-up, alert on new degradation.
       ctx.waitUntil((async function() {
         try {
@@ -16577,8 +16681,8 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'rss':            return await handleRss(url);
       case 'sports-scoreboard': return await handleSportsScoreboard(url);
       case 'sports-summary':    return await handleSportsSummary(url);
-      case 'gh-trending':    return await handleGhTrending(url, env);
-      case 'github-trending':return await handleGhTrending(url, env);
+      case 'gh-trending':    return await handleGhTrendingKv(url, env);
+      case 'github-trending':return await handleGhTrendingKv(url, env);
       case 'npm-trends':     return await handleNpmTrends();
       case 'cve':              return await handleCve();
       case 'arxiv':            return await handleArxiv();
@@ -16629,7 +16733,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'claude-status':  return await handleClaudeStatus();
       case 'cyber-threats':  return await handleCyberThreats(env);
       case 'forex':          return await handleForex();
-      case 'humans-in-space':return await handleHumansInSpace();
+      case 'humans-in-space':return await handleHumansInSpace(env);
       case 'aviation':       return await handleAviation(env);
       case 'iss-position':   return await handleIssPosition();
       case 'quote':          return await handleQuote();
@@ -16639,7 +16743,7 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'dev-joke':       return await _transparentProxy('dev-joke', 'https://v2.jokeapi.dev/joke/Programming?type=single&blacklistFlags=nsfw,racist,sexist,explicit', 600000);
       case 'fun-fact':       return await _transparentProxy('fun-fact', 'https://uselessfacts.jsph.pl/random.json?language=en', 600000);
       case 'trending-books': return await _transparentProxy('trending-books', 'https://openlibrary.org/trending/daily.json', 3600000);
-      case 'stackoverflow':  return await _transparentProxy('stackoverflow', 'https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=10&filter=withbody', 300000);
+      case 'stackoverflow':  return await handleStackOverflow(env);
       case 'this-day':       return await handleThisDay();
       case 'museum-art':     return await handleMuseumArt();
       case 'bluesky':        return await handleBluesky();
