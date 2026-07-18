@@ -6187,10 +6187,14 @@ async function computeSignalsData(env, prior) {
     _signalProbe(handleSpaceWeather()),
     _signalProbe(handleSevereWeather()),
     _signalProbe(handleServiceStatus()),
+    _signalProbe(handleDisasterAlerts()),
+    _signalProbe(handleNhcStorms()),
+    _signalProbe(handleWildfires(env)),
   ]);
   var eq = probes[0] && probes[0].data, vix = probes[1] && probes[1].data,
       spaceW = probes[2] && probes[2].data, severe = probes[3] && probes[3].data,
-      services = probes[4] && probes[4].data;
+      services = probes[4] && probes[4].data, gdacs = probes[5] && probes[5].data,
+      nhc = probes[6] && probes[6].data, fires = probes[7] && probes[7].data;
 
   var btcAlert = null;
   try { if (env && env.WEBHOOK_SUBS) btcAlert = await env.WEBHOOK_SUBS.get(BTC_ALERT_KV_KEY, 'json'); } catch (e) {}
@@ -6253,6 +6257,37 @@ async function computeSignalsData(env, prior) {
     var majors = services.filter(function(s) { return s && (s.indicator === 'major' || s.indicator === 'critical'); });
     if (majors.length === 1) out.push({ id: 'provider-outage', panel: 'dev-status', severity: 'elevated', label: majors[0].name + ' major outage' });
     else if (majors.length > 1) out.push({ id: 'provider-outage', panel: 'dev-status', severity: 'critical', label: majors.length + ' provider outages' });
+  }
+
+  // GDACS humanitarian alerts: Red is a major disaster event; Orange is
+  // significant. Green background noise stays quiet.
+  if (Array.isArray(gdacs)) {
+    var redEv = gdacs.find(function(a) { return a && a.alert_level === 'Red'; });
+    var orange = gdacs.filter(function(a) { return a && a.alert_level === 'Orange'; });
+    if (redEv) out.push({ id: 'gdacs-red', panel: 'disasters', severity: 'critical', label: 'GDACS red: ' + String(redEv.name || 'major disaster').slice(0, 44) });
+    else if (orange.length >= 2) out.push({ id: 'gdacs-orange', panel: 'disasters', severity: 'elevated', label: orange.length + ' orange disaster alerts' });
+    else if (orange.length === 1) out.push({ id: 'gdacs-orange', panel: 'disasters', severity: 'elevated', label: 'GDACS orange: ' + String(orange[0].name || 'disaster').slice(0, 40) });
+  }
+
+  // NHC tropical systems: hurricanes signal, major hurricanes scream; a crowded
+  // basin (3+ active systems) is notable even without a hurricane.
+  if (nhc && Array.isArray(nhc.active)) {
+    var strongest = nhc.active.slice().sort(function(a, b) { return (b.intensity_mph || 0) - (a.intensity_mph || 0); })[0];
+    var mph = strongest ? (strongest.intensity_mph || 0) : 0;
+    if (mph >= 111) out.push({ id: 'nhc-storm', panel: 'nhc-storms', severity: 'critical', label: 'Major hurricane ' + (strongest.name || '?') + ' · ' + mph + ' mph' });
+    else if (mph >= 74) out.push({ id: 'nhc-storm', panel: 'nhc-storms', severity: 'elevated', label: 'Hurricane ' + (strongest.name || '?') + ' · ' + mph + ' mph' });
+    else if (nhc.active.length >= 3) out.push({ id: 'nhc-storm', panel: 'nhc-storms', severity: 'notice', label: nhc.active.length + ' active tropical systems' });
+  }
+
+  // Wildfires: FIRMS runs tens of thousands of detections on a NORMAL day
+  // (24k observed on a quiet July Saturday), so the rules key on an extreme
+  // single fire (radiative power) or a truly exceptional global detection count.
+  if (fires) {
+    var topFire = Array.isArray(fires.top) ? fires.top[0] : null;
+    var frp = topFire ? (topFire.frp_mw || 0) : 0;
+    if (frp >= 10000) out.push({ id: 'wildfire-mega', panel: 'wildfires', severity: 'critical', label: 'Extreme fire: ' + Math.round(frp).toLocaleString() + ' MW FRP' + (topFire.approx_state ? ' · ' + topFire.approx_state : '') });
+    else if (frp >= 5000) out.push({ id: 'wildfire-mega', panel: 'wildfires', severity: 'elevated', label: 'Intense fire: ' + Math.round(frp).toLocaleString() + ' MW FRP' + (topFire.approx_state ? ' · ' + topFire.approx_state : '') });
+    if ((fires.total_24h || 0) >= 80000) out.push({ id: 'wildfire-surge', panel: 'wildfires', severity: 'elevated', label: (fires.total_24h).toLocaleString() + ' fire detections in 24h' });
   }
 
   // BTC volatility: reuse the existing 1h >=3% alert detector's KV record.
