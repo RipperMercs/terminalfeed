@@ -10977,7 +10977,7 @@ function proCreditsFor(path) {
 // STRICT_PREMIUM_PATHS) are strict premium and 402 anonymous callers; all other
 // /api/pro/* paths grant a small daily free-trial quota per IP before a 402.
 var PRO_CATALOG_META = {
-  '/api/pro/briefing':           { category: 'agent', returns: 'One-call world snapshot (earthquakes, HN, ISS, launches, predictions).', params: [{ name: 'include', required: false, description: 'comma-separated sources to include' }] },
+  '/api/pro/briefing':           { category: 'agent', returns: 'One-call world snapshot (earthquakes, HN, ISS, predictions).', params: [{ name: 'include', required: false, description: 'comma-separated sources to include' }] },
   '/api/pro/macro':              { category: 'macro', returns: 'FRED + Frankfurter macro rollup (rates, CPI, unemployment, GDP, forex).', params: [{ name: 'history', required: false, description: 'set to 30d for a 30-point history series' }] },
   '/api/pro/world-deltas':       { category: 'agent', returns: 'Polling feed of world events newer than ?since.', params: [{ name: 'since', required: false, description: 'ISO timestamp; events newer than this' }] },
   '/api/pro/agent-context':      { category: 'agent', returns: 'Curated paste-ready system_prompt of current world state.', params: [] },

@@ -17,7 +17,7 @@
 
 // Wave 0: TerminalFeed's morning brief. The agent-on-boot call. Highest leverage.
 const PILOT_BRIEFING = {
-  description: 'Agent morning brief. One paid call composes Bitcoin spot + 24h volume, the Crypto Fear & Greed Index, the latest USGS earthquake summary, top-story counts from Hacker News, current ISS crew, and the highest-volume Polymarket prediction markets. The endpoint an agent calls on boot to get the day\'s context in one network round trip.',
+  description: 'Agent morning brief. One paid call composes the latest USGS earthquake summary, top-story counts from Hacker News, current ISS crew, and the highest-volume Polymarket prediction markets. The endpoint an agent calls on boot to get the day\'s context in one network round trip.',
   extension: {
     bazaar: {
       info: {
@@ -25,8 +25,7 @@ const PILOT_BRIEFING = {
           type: 'http',
           method: 'GET',
           queryParams: {
-            include: 'btc,fear-greed,earthquakes,hackernews,humans-in-space,predictions',
-            history: '24h',
+            include: 'earthquakes,hackernews,humans-in-space,predictions',
           },
         },
         output: {
@@ -36,14 +35,6 @@ const PILOT_BRIEFING = {
             endpoint: '/api/pro/briefing',
             generated_at: '2026-05-14T12:00:00.000Z',
             sections: {
-              btc: {
-                price_usd: 77407.12,
-                change_24h_percent: 1.83,
-                volume_24h: 38215000000,
-                high_24h: 78240.5,
-                low_24h: 76012.4,
-              },
-              fear_greed: { value: 62, label: 'Greed' },
               earthquakes: {
                 count: 14,
                 latest: { magnitude: 4.7, place: '65 km SE of some-locality', time: 1747224000000 },
@@ -56,12 +47,6 @@ const PILOT_BRIEFING = {
                   { question: 'Will event X happen by date Y?', volume_24hr: 412300.5 },
                 ],
               },
-            },
-            series: {
-              btc_24h: [
-                { ts: 1747137600000, price: 76800.1 },
-                { ts: 1747141200000, price: 76950.4 },
-              ],
             },
             _meta: {
               generated_at: '2026-05-14T12:00:00.000Z',
