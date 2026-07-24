@@ -20,7 +20,6 @@ Usage:
     print(tf.free_btc_price())
     print(tf.free_briefing())
     print(tf.pro_catalog())      # what the premium tier sells, with prices
-    print(tf.regime_preview())   # free taste of the market-regime verdict
 
     # Premium tier ($1 USDC = 50 credits, no KYC):
     # 1) Buy credits
@@ -33,8 +32,7 @@ Usage:
 
     # 3) Call any premium endpoint
     macro = tf.macro(history="30d")
-    crypto = tf.crypto_deep(coins=["btc", "eth", "sol"])
-    briefing = tf.briefing(include=["btc", "predictions"], history="24h")
+    briefing = tf.briefing(include=["predictions"])
     print("credits remaining:", tf.balance()["credits"])
 
 Bearer tokens are cross-redeemable with TensorFeed (pip install
@@ -137,31 +135,9 @@ class TerminalFeed:
             params["history"] = history
         return self._get("/api/pro/macro", auth=True, params=params)
 
-    def crypto_deep(
-        self,
-        coins: Iterable[str] | None = None,
-        history: str | None = None,
-    ) -> dict[str, Any]:
-        """GET /api/pro/crypto-deep (2 credits)."""
-        params: dict[str, str] = {}
-        if coins:
-            params["coins"] = ",".join(coins)
-        if history:
-            params["history"] = history
-        return self._get("/api/pro/crypto-deep", auth=True, params=params)
-
-    def regime(self) -> dict[str, Any]:
-        """GET /api/pro/regime (2 credits).
-
-        Full market-regime verdict: the label plus the ranked drivers with
-        weights and contributions, all raw inputs, and an Ed25519-signed receipt.
-        Use regime_preview() for a free, no-auth taste of the label first.
-        """
-        return self._get("/api/pro/regime", auth=True)
-
-    def anomalies(self) -> dict[str, Any]:
-        """GET /api/pro/anomalies (2 credits)."""
-        return self._get("/api/pro/anomalies", auth=True)
+    # crypto_deep(), regime(), and anomalies() were removed 2026-07-23; the
+    # /api/pro/crypto-deep, /api/pro/regime, and /api/pro/anomalies endpoints
+    # they wrapped were retired for market-data licensing compliance.
 
     def feed_reliability(self) -> dict[str, Any]:
         """GET /api/pro/feed-reliability (2 credits).
@@ -200,14 +176,8 @@ class TerminalFeed:
     def free_btc_price(self) -> dict[str, Any]:
         return self._get("/api/btc-price", auth=False)
 
-    def regime_preview(self) -> dict[str, Any]:
-        """GET /api/preview/regime (free, no auth, 10/IP/day).
-
-        Zero-setup preview of the paid regime() verdict: the single regime label,
-        the dominant driver, and a one-line why. The full ranked drivers, all raw
-        inputs, and the signed receipt are regime() (2 credits).
-        """
-        return self._get("/api/preview/regime", auth=False)
+    # regime_preview() was removed 2026-07-23 with the /api/preview/regime
+    # endpoint (retired for market-data licensing compliance).
 
     def pro_catalog(self) -> dict[str, Any]:
         """GET /api/meta/pro (free, no auth).

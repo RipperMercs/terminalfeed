@@ -34,13 +34,9 @@
       "target": [
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/briefing", "httpMethod": "GET", "contentType": "application/json" },
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/macro", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/crypto-deep", "httpMethod": "GET", "contentType": "application/json" },
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/agent-context", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/sentiment", "httpMethod": "GET", "contentType": "application/json" },
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/world-deltas", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/correlation-matrix", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/whales", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/exchange-flows", "httpMethod": "GET", "contentType": "application/json" }
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/correlation-matrix", "httpMethod": "GET", "contentType": "application/json" }
       ]
     }
   }
@@ -64,17 +60,13 @@
     "url": "https://terminalfeed.io/api/for-agents",
     "provider": { "@type": "Organization", "name": "TerminalFeed", "url": "https://terminalfeed.io" },
     "serviceType": "Composed real-time data API for autonomous AI agents",
-    "description": "Pay-per-call USDC-payable HTTP API with nine composed endpoints covering crypto, macro, on-chain flows, sentiment, prediction markets, and world events.",
+    "description": "Pay-per-call USDC-payable HTTP API with composed endpoints covering macro, forex, prediction markets, developer activity, and world events, sourced from public and government data.",
     "serviceOutput": [
       { "@type": "Thing", "name": "Composed world briefing", "url": "https://terminalfeed.io/api/pro/briefing" },
       { "@type": "Thing", "name": "Composed macro snapshot", "url": "https://terminalfeed.io/api/pro/macro" },
-      { "@type": "Thing", "name": "Deep crypto snapshot", "url": "https://terminalfeed.io/api/pro/crypto-deep" },
       { "@type": "Thing", "name": "Curated agent context with paste-ready system prompt", "url": "https://terminalfeed.io/api/pro/agent-context" },
-      { "@type": "Thing", "name": "Composite market sentiment", "url": "https://terminalfeed.io/api/pro/sentiment" },
       { "@type": "Thing", "name": "World-deltas event stream", "url": "https://terminalfeed.io/api/pro/world-deltas" },
-      { "@type": "Thing", "name": "Cross-asset correlation matrix", "url": "https://terminalfeed.io/api/pro/correlation-matrix" },
-      { "@type": "Thing", "name": "Whale on-chain transactions", "url": "https://terminalfeed.io/api/pro/whales" },
-      { "@type": "Thing", "name": "ETH exchange-flow tracker", "url": "https://terminalfeed.io/api/pro/exchange-flows" }
+      { "@type": "Thing", "name": "Macro correlation matrix", "url": "https://terminalfeed.io/api/pro/correlation-matrix" }
     ]
   }
   </script>
@@ -135,19 +127,15 @@
     <tr><td>Reconcile schemas across 15 different upstream response shapes</td><td>One schema per endpoint. Documented in /openapi.json with type unions.</td></tr>
   </table>
 
-  <h2>The 9 Premium Endpoints</h2>
+  <h2>Premium Endpoints</h2>
 
   <table>
     <tr><th>Endpoint</th><th>Cost</th><th>Composes</th></tr>
-    <tr><td>/api/pro/briefing</td><td>1 cr / $0.02</td><td>BTC + Fear &amp; Greed + earthquakes + HN + Polymarket + ISS</td></tr>
-    <tr><td>/api/pro/macro</td><td>2 cr / $0.04</td><td>FRED (5 series) + forex (4 USD pairs) + commodities + indices + VIX</td></tr>
-    <tr><td>/api/pro/crypto-deep</td><td>2 cr / $0.04</td><td>top 50 coins + Binance top 20 + mempool.space + Etherscan gas</td></tr>
-    <tr><td>/api/pro/agent-context</td><td>2 cr / $0.04</td><td>13 sources + paste-ready ~350-token system_prompt for LLM context</td></tr>
-    <tr><td>/api/pro/sentiment</td><td>2 cr / $0.04</td><td>F&amp;G + VIX + trending tickers (HN/Reddit/news) + Polymarket signals</td></tr>
+    <tr><td>/api/pro/briefing</td><td>1 cr / $0.02</td><td>earthquakes + HN + Polymarket + launches + ISS</td></tr>
+    <tr><td>/api/pro/macro</td><td>2 cr / $0.04</td><td>FRED (5 series) + forex (4 USD pairs) + oil/nat-gas</td></tr>
+    <tr><td>/api/pro/agent-context</td><td>2 cr / $0.04</td><td>Fed rate + forex + HN + quakes + launches + Polymarket + status, paste-ready system_prompt</td></tr>
     <tr><td>/api/pro/world-deltas</td><td>2 cr / $0.04</td><td>time-sorted event stream: quakes + HN + Polymarket + launches</td></tr>
-    <tr><td>/api/pro/correlation-matrix</td><td>2 cr / $0.04</td><td>30-day Pearson correlations across 10 assets</td></tr>
-    <tr><td>/api/pro/whales</td><td>2 cr / $0.04</td><td>BTC mempool &gt;=10 BTC + ETH last 3 blocks &gt;=100 ETH</td></tr>
-    <tr><td>/api/pro/exchange-flows</td><td>2 cr / $0.04</td><td>ETH net inflow/outflow against 7 CEX hot wallets</td></tr>
+    <tr><td>/api/pro/correlation-matrix</td><td>2 cr / $0.04</td><td>30-day Pearson correlations across FRED macro series (rates, USD index, oil)</td></tr>
   </table>
 
   <p>Full schemas, request parameters, response shapes, and 402 reason codes documented in <a href="/openapi.json"><span class="inline-code">/openapi.json</span></a> (OpenAPI 3.1.0). Pre-baked OpenAI and Anthropic function-calling tool definitions at <a href="/api/llm-tools?format=anthropic"><span class="inline-code">/api/llm-tools</span></a> (free).</p>

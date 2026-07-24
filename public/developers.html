@@ -81,7 +81,7 @@
   <div class="premium-banner">
     <div class="pb-icon">&gt;_</div>
     <div class="pb-text">
-      <strong>Need composed multi-source payloads?</strong> The premium tier (USDC on Base) ships <span class="inline-code">/api/pro/briefing</span>, <span class="inline-code">/api/pro/macro</span>, and <span class="inline-code">/api/pro/crypto-deep</span> with bearer-token auth. $1 USDC = 50 calls. Credits are cross-redeemable on tensorfeed.ai. <a href="/developers/agent-payments">Read the agent-payments docs →</a>
+      <strong>Need composed multi-source payloads?</strong> The premium tier (USDC on Base) ships <span class="inline-code">/api/pro/briefing</span>, <span class="inline-code">/api/pro/macro</span>, and <span class="inline-code">/api/pro/agent-context</span> with bearer-token auth. $1 USDC = 50 calls. Credits are cross-redeemable on tensorfeed.ai. <a href="/developers/agent-payments">Read the agent-payments docs →</a>
     </div>
   </div>
 
@@ -509,9 +509,8 @@ curl "https://terminalfeed.io/api/weather?lat=34.0&amp;lon=-118.2"</code></pre>
 
   <table>
     <tr><th>Endpoint</th><th>Cost</th><th>What it composes</th></tr>
-    <tr><td>/api/pro/briefing</td><td>1 credit</td><td>BTC + Fear &amp; Greed + earthquakes + HN + ISS + Polymarket. Optional <span class="inline-code">?include=</span> filter, <span class="inline-code">?history=24h</span>.</td></tr>
-    <tr><td>/api/pro/macro</td><td>2 credits</td><td>FRED (7 series) + forex (4 USD pairs) + commodities (gold, oil, nat gas) + indices (SPY, DIA, QQQ, VIX). <span class="inline-code">?history=30d</span>.</td></tr>
-    <tr><td>/api/pro/crypto-deep</td><td>2 credits</td><td>Top 50 coins + Binance top 20 + mempool.space network + Etherscan gas. <span class="inline-code">?coins=</span> filter, <span class="inline-code">?history=30d</span>.</td></tr>
+    <tr><td>/api/pro/briefing</td><td>1 credit</td><td>Earthquakes + HN + ISS + Polymarket. Optional <span class="inline-code">?include=</span> filter.</td></tr>
+    <tr><td>/api/pro/macro</td><td>2 credits</td><td>FRED economic series + forex (4 USD pairs) + commodities (oil, nat gas) via FRED/Frankfurter. <span class="inline-code">?history=30d</span>.</td></tr>
   </table>
 
   <p>Pricing: $1 USDC on Base mainnet = 50 credits. No subscription, no monthly minimum, no expiry. All credit purchases are final and non-refundable; credits never expire so unused balance always remains spendable. Credits and bearer tokens are cross-redeemable on tensorfeed.ai (one purchase, both data sources). Full quick-start, wallet, and license details: <a href="/developers/agent-payments">→ /developers/agent-payments</a>.</p>

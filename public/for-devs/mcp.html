@@ -150,17 +150,11 @@ Content-Type: application/json</pre>
       <div class="section-sub">12 paid endpoints, $0.02 per credit</div>
       <p class="lede">Composed, normalized, multi-source data. Each endpoint has a deterministic credit cost.</p>
       <div>
-        <div class="endpoint-row"><span class="path">tf_premium_briefing</span><span class="desc">Composed BTC + Fear and Greed + earthquakes + HN + ISS + predictions</span><span class="cost">1 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_macro</span><span class="desc">FRED + Finnhub + Frankfurter rollup, history supported</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_crypto_deep</span><span class="desc">Per-coin deep dive across CoinGecko + on-chain network stats</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_briefing</span><span class="desc">Composed earthquakes + HN + ISS crew + prediction markets</span><span class="cost">1 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_macro</span><span class="desc">FRED + Frankfurter rollup, history supported</span><span class="cost">2 CR</span></div>
         <div class="endpoint-row"><span class="path">tf_premium_agent_context</span><span class="desc">Curated paste-ready system prompt of current world state</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_sentiment</span><span class="desc">Crypto F and G plus trending symbols with sentiment scoring</span><span class="cost">2 CR</span></div>
         <div class="endpoint-row"><span class="path">tf_premium_world_deltas</span><span class="desc">Polling endpoint, events newer than ?since=ISO timestamp</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_correlation_matrix</span><span class="desc">Computed correlations across 10 historical series</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_whales</span><span class="desc">Large BTC, ETH, Solana transactions with attribution</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_exchange_flows</span><span class="desc">19-wallet labeled list of exchange-controlled addresses</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_defi_tvl</span><span class="desc">Top-50 DeFi protocols + chain rollups, normalized</span><span class="cost">2 CR</span></div>
-        <div class="endpoint-row"><span class="path">tf_premium_stablecoin_flows</span><span class="desc">Top-20 stablecoins with 1d, 7d, 30d deltas + bias</span><span class="cost">2 CR</span></div>
+        <div class="endpoint-row"><span class="path">tf_premium_correlation_matrix</span><span class="desc">Computed correlations across FRED macro series</span><span class="cost">2 CR</span></div>
         <div class="endpoint-row"><span class="path">tf_premium_github_velocity</span><span class="desc">GitHub trending repos with computed velocity score</span><span class="cost">2 CR</span></div>
       </div>
     </section>
@@ -168,13 +162,13 @@ Content-Type: application/json</pre>
     <section class="block">
       <h2>&gt;_ Sister Server: TensorFeed AI Ecosystem</h2>
       <div class="section-sub">Federated credit pool &middot; Same bearer token works on both</div>
-      <p class="lede"><strong>TerminalFeed and TensorFeed are sister MCP servers with a shared credit pool.</strong> If you buy credits with USDC on Base on either site, the bearer token authenticates against both. TerminalFeed handles real-time world data (BTC, markets, earthquakes, news, prediction markets); TensorFeed handles the AI ecosystem (model pricing, status, latency probes, AI news, smart routing, cost projection). Most agents that want real-time context end up wanting both.</p>
+      <p class="lede"><strong>TerminalFeed and TensorFeed are sister MCP servers with a shared credit pool.</strong> If you buy credits with USDC on Base on either site, the bearer token authenticates against both. TerminalFeed handles real-time world data (earthquakes, prediction markets, space, infrastructure status, developer activity); TensorFeed handles the AI ecosystem (model pricing, status, latency probes, AI news, smart routing, cost projection). Most agents that want real-time context end up wanting both.</p>
       <p class="lede">Quick comparison of what each server adds to your agent:</p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 24px;">
         <div style="background:#111114;border:1px solid #1E1E24;border-radius:6px;padding:14px 16px;">
           <div style="font-size:11px;color:#4ADE80;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">TerminalFeed (this site)</div>
-          <div style="font-size:12px;color:#D4D2CB;line-height:1.6;">Real-time world data: BTC + crypto, stocks, prediction markets, earthquakes, weather, status pages, GitHub trending, HuggingFace, Solana, world events. 30 tools.</div>
+          <div style="font-size:12px;color:#D4D2CB;line-height:1.6;">Real-time world data: prediction markets, earthquakes, weather, climate alerts, status pages, GitHub trending, HuggingFace, Solana network, world events. 27 tools.</div>
         </div>
         <div style="background:#111114;border:1px solid #1E1E24;border-radius:6px;padding:14px 16px;">
           <div style="font-size:11px;color:#A78BFA;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">TensorFeed (sister)</div>

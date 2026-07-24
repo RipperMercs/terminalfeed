@@ -3,7 +3,7 @@
 > TerminalFeed is a free real-time dashboard aggregating 35+ live data feeds.
 > This file helps AI agents understand what data is available.
 
-> Free Premium Trial: 100 Calls Per IP Per Day. Every IP address gets up to 100 free /api/pro/* premium API calls per 24-hour rolling window. No authentication, no signup, no wallet, no credit card required. Just call the endpoint without an Authorization header and the trial counter increments automatically. Self-service status: GET https://terminalfeed.io/api/free-tier/status (no auth, does not consume a slot). After the cap is reached the canonical x402 V2 402 challenge fires with `free_trial.status` set to "exhausted" and `resets_at` populated. Applies to every TerminalFeed premium endpoint (briefing, macro, crypto-deep, sentiment, world-deltas, agent-context, correlation-matrix, whales, exchange-flows, defi-tvl, stablecoin-flows, github-velocity). Free-trial responses are still AFTA receipt-signed; the receipt records `no_charge_reason: free_trial`.
+> Free Premium Trial: 100 Calls Per IP Per Day. Every IP address gets up to 100 free /api/pro/* premium API calls per 24-hour rolling window. No authentication, no signup, no wallet, no credit card required. Just call the endpoint without an Authorization header and the trial counter increments automatically. Self-service status: GET https://terminalfeed.io/api/free-tier/status (no auth, does not consume a slot). After the cap is reached the canonical x402 V2 402 challenge fires with `free_trial.status` set to "exhausted" and `resets_at` populated. Applies to every TerminalFeed premium endpoint (briefing, macro, world-deltas, agent-context, correlation-matrix, github-velocity). Free-trial responses are still AFTA receipt-signed; the receipt records `no_charge_reason: free_trial`.
 
 > Agent Fair-Trade Agreement (AFTA): TerminalFeed is agent fair-trade certified.
 > Code-enforced no-charge guarantees on 5xx, breaker, schema fail, and stale data.
@@ -26,7 +26,7 @@ Machine-readable manifests:
 - Plugin manifest (OpenAI plugin format): https://terminalfeed.io/.well-known/ai-plugin.json
 - Capability manifest: https://terminalfeed.io/agents.txt
 - Function-calling tool defs: https://terminalfeed.io/api/llm-tools?format=anthropic
-- MCP server (JSON-RPC over HTTP): https://terminalfeed.io/api/mcp (30 tools native; pass Authorization: Bearer tf_live_<64-char-hex> for premium)
+- MCP server (JSON-RPC over HTTP): https://terminalfeed.io/api/mcp (27 tools native; pass Authorization: Bearer tf_live_<64-char-hex> for premium)
 
 Canonical landing pages for agent-builders:
 - https://terminalfeed.io/api/for-agents (overview, why-not-DIY, quick start)
@@ -140,24 +140,16 @@ Payment flow:
 Premium endpoints (price per call at $1 USDC = 50 credits):
 
   Endpoint              Credits  Approx USD  Composes
-  /api/pro/briefing     1        $0.02       BTC + Fear&Greed + quakes + HN + ISS + Polymarket
-  /api/pro/macro        2        $0.04       FRED (5 series) + forex + commodities + indices + VIX
-  /api/pro/crypto-deep  2        $0.04       top 50 + Binance top 20 + mempool.space + Etherscan gas
-  /api/pro/sentiment    2        $0.04       Fear&Greed + VIX + trending tickers (HN + Reddit) + Polymarket signals
+  /api/pro/briefing     1        $0.02       quakes + HN + ISS + launches + Polymarket
+  /api/pro/macro        2        $0.04       FRED economic series + forex (Frankfurter) + oil/nat-gas (FRED)
   /api/pro/world-deltas 2        $0.04       Time-sorted event stream: earthquakes + HN front-page + Polymarket + launches
-  /api/pro/agent-context 2       $0.04       Curated world-state snapshot for LLMs + paste-ready system_prompt (~350 tokens)
-  /api/pro/defi-tvl     2        $0.04       Top 50 DeFi protocols by TVL with movers + category breakdown (DefiLlama)
-  /api/pro/stablecoin-flows 2    $0.04       Net stablecoin circulation changes (USDT, USDC, DAI, etc.) over 24h/7d/30d
+  /api/pro/agent-context 2       $0.04       Curated world-state snapshot for LLMs + paste-ready system_prompt
   /api/pro/github-velocity 2     $0.04       Trending GitHub repos (7d), AI/ML share, language mix (GitHub Search API)
-  /api/pro/correlation-matrix 2  $0.04       30-day Pearson correlations across BTC, ETH, SOL, AVAX, LINK, gold, treasuries, USD, oil
-  /api/pro/whales       2        $0.04       Large on-chain BTC (>=10 BTC) and ETH (>=100 ETH) transactions in real time
-  /api/pro/exchange-flows 2      $0.04       ETH net flow to major exchanges (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin)
+  /api/pro/correlation-matrix 2  $0.04       30-day Pearson correlations across FRED macro series (10Y, 2Y, USD index, oil)
 
 Optional query params:
-  /api/pro/briefing     ?include=btc,fear-greed,predictions   ?history=24h
+  /api/pro/briefing     ?include=earthquakes,hackernews,humans-in-space,launches,predictions
   /api/pro/macro        ?history=30d
-  /api/pro/crypto-deep  ?coins=btc,eth,sol                    ?history=30d
-  /api/pro/sentiment    no params; returns top 15 trending tickers automatically
   /api/pro/world-deltas ?since=2026-04-27T22:00:00Z           defaults to 1h ago, clamped to 1h horizon
   /api/pro/agent-context no params; returns structured context + system_prompt string
 

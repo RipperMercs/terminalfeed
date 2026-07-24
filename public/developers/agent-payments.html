@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Premium API for AI Agents: USDC Micropayments | TerminalFeed</title>
-  <meta name="description" content="TerminalFeed Premium API for AI agents. Pay in USDC on Base, get aggregated real-time data: macro, crypto-deep, briefing. Bearer token auth. No subscription. Credits work on tensorfeed.ai too.">
+  <meta name="description" content="TerminalFeed Premium API for AI agents. Pay in USDC on Base, get aggregated real-time data: macro, briefing, agent context. Bearer token auth. No subscription. Credits work on tensorfeed.ai too.">
   <link rel="canonical" href="https://terminalfeed.io/developers/agent-payments">
   <meta property="og:title" content="Premium API for AI Agents: USDC Micropayments | TerminalFeed">
   <meta property="og:description" content="Pay in USDC on Base. Get aggregated real-time data via three premium endpoints. Cross-redeemable on TensorFeed.">
@@ -18,7 +18,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "TerminalFeed Premium API for AI Agents",
-    "description": "Pay-as-you-go premium API tier for autonomous agents. USDC micropayments on Base mainnet. Three composite endpoints: briefing, macro, crypto-deep.",
+    "description": "Pay-as-you-go premium API tier for autonomous agents. USDC micropayments on Base mainnet. Composite endpoints including briefing, macro, agent context, world deltas, and correlation matrix.",
     "author": { "@type": "Organization", "name": "TerminalFeed" },
     "publisher": {
       "@type": "Organization",
@@ -48,7 +48,7 @@
       {
         "@type": "Product",
         "name": "TerminalFeed Premium Briefing API",
-        "description": "Composed world-state snapshot for AI agents. Aggregates BTC ticker, Fear and Greed Index, recent earthquakes, top Hacker News story count, ISS crew, and live Polymarket prediction markets. One bearer-authenticated HTTP call.",
+        "description": "Composed world-state snapshot for AI agents. Aggregates recent earthquakes, top Hacker News story count, ISS crew, upcoming space launches, and live Polymarket prediction markets. One bearer-authenticated HTTP call.",
         "category": "AI Agent Data API",
         "brand": { "@type": "Brand", "name": "TerminalFeed" },
         "url": "https://terminalfeed.io/api/pro/briefing",
@@ -91,53 +91,10 @@
       {
         "@type": "Product",
         "name": "TerminalFeed Premium Macro API",
-        "description": "Composed macroeconomic snapshot for AI agents. Aggregates FRED economic series (Fed funds rate, CPI, unemployment, GDP, 10-year treasury), USD-base forex (EUR, JPY, GBP, CHF), commodities (gold via PAXG, WTI oil, natural gas), and US market context (SPY, DIA, QQQ, VIX). Optional 30-day historical series.",
+        "description": "Composed macroeconomic snapshot for AI agents. Aggregates FRED economic series (Fed funds rate, CPI, unemployment, GDP, 10-year treasury), USD-base forex (EUR, JPY, GBP, CHF) from Frankfurter, and commodities (WTI oil, natural gas) from FRED. Optional 30-day historical series. All sources are public/gov or ECB reference rates.",
         "category": "AI Agent Data API",
         "brand": { "@type": "Brand", "name": "TerminalFeed" },
         "url": "https://terminalfeed.io/api/pro/macro",
-        "image": "https://terminalfeed.io/og-image.png",
-        "offers": {
-          "@type": "Offer",
-          "price": "0.04",
-          "priceCurrency": "USD",
-          "availability": "https://schema.org/InStock",
-          "url": "https://terminalfeed.io/developers/agent-payments",
-          "priceSpecification": {
-            "@type": "UnitPriceSpecification",
-            "price": "0.04",
-            "priceCurrency": "USD",
-            "unitText": "API call",
-            "billingDuration": "PT0S",
-            "billingIncrement": 1
-          },
-          "acceptedPaymentMethod": {
-            "@type": "PaymentMethod",
-            "name": "USDC on Base mainnet"
-          },
-          "shippingDetails": {
-            "@type": "OfferShippingDetails",
-            "shippingRate": { "@type": "MonetaryAmount", "value": "0.00", "currency": "USD" },
-            "shippingDestination": { "@type": "DefinedRegion", "geoTargetName": "Worldwide" },
-            "deliveryTime": {
-              "@type": "ShippingDeliveryTime",
-              "handlingTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" },
-              "transitTime": { "@type": "QuantitativeValue", "minValue": 0, "maxValue": 0, "unitCode": "DAY" }
-            }
-          },
-          "hasMerchantReturnPolicy": {
-            "@type": "MerchantReturnPolicy",
-            "applicableCountry": "US",
-            "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
-          }
-        }
-      },
-      {
-        "@type": "Product",
-        "name": "TerminalFeed Premium Crypto Deep API",
-        "description": "Composed crypto snapshot for AI agents. Aggregates top 50 coins by market cap with 1h/24h/7d change, Binance live ticker for top 20 USDT pairs, Bitcoin network statistics from mempool.space (block height, fees, hashrate, mempool size), and Ethereum gas oracle from Etherscan. Optional 30-day BTC OHLCV.",
-        "category": "AI Agent Data API",
-        "brand": { "@type": "Brand", "name": "TerminalFeed" },
-        "url": "https://terminalfeed.io/api/pro/crypto-deep",
         "image": "https://terminalfeed.io/og-image.png",
         "offers": {
           "@type": "Offer",
@@ -213,14 +170,10 @@
       "@type": "ConsumeAction",
       "target": [
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/macro", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/crypto-deep", "httpMethod": "GET", "contentType": "application/json" },
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/briefing", "httpMethod": "GET", "contentType": "application/json" },
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/agent-context", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/sentiment", "httpMethod": "GET", "contentType": "application/json" },
         { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/world-deltas", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/correlation-matrix", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/whales", "httpMethod": "GET", "contentType": "application/json" },
-        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/exchange-flows", "httpMethod": "GET", "contentType": "application/json" }
+        { "@type": "EntryPoint", "urlTemplate": "https://terminalfeed.io/api/pro/correlation-matrix", "httpMethod": "GET", "contentType": "application/json" }
       ]
     }
   }
@@ -266,7 +219,7 @@
         "@type": "HowToStep",
         "position": 4,
         "name": "Call any premium endpoint",
-        "text": "Send GET /api/pro/macro (or briefing or crypto-deep) with header Authorization: Bearer tf_live_<64-char-hex>. Each successful response includes an X-Credits-Remaining header so you can monitor usage. Credits are also redeemable on tensorfeed.ai.",
+        "text": "Send GET /api/pro/macro (or briefing) with header Authorization: Bearer tf_live_<64-char-hex>. Each successful response includes an X-Credits-Remaining header so you can monitor usage. Credits are also redeemable on tensorfeed.ai.",
         "url": "https://terminalfeed.io/developers/agent-payments#endpoints"
       }
     ]
@@ -473,7 +426,7 @@
       <span class="path">/api/pro/briefing</span>
       <span class="cost">1 credit</span>
     </div>
-    <p>One-call world briefing composed from BTC ticker, Fear &amp; Greed index, recent earthquakes, top Hacker News story count, ISS crew, and live Polymarket prediction markets sorted by 24h volume.</p>
+    <p>One-call world briefing composed from recent earthquakes, top Hacker News story count, ISS crew, upcoming space launches, and live Polymarket prediction markets sorted by 24h volume.</p>
     <p><strong>Optional params:</strong> <span class="inline-code">?include=btc,fear-greed,predictions</span> filters which sections appear. <span class="inline-code">?history=24h</span> adds an hourly BTC price series.</p>
   </div>
 
@@ -483,28 +436,8 @@
       <span class="path">/api/pro/macro</span>
       <span class="cost">2 credits</span>
     </div>
-    <p>Macro snapshot: FRED economic indicators (Fed funds rate, CPI, unemployment, GDP growth, 10-year treasury), forex rates from Frankfurter (EUR, JPY, GBP, CHF against USD), commodities (gold via PAXG, WTI oil, Henry Hub natural gas), and US market context from Finnhub (SPY, DIA, QQQ, VIX).</p>
+    <p>Macro snapshot: FRED economic indicators (Fed funds rate, CPI, unemployment, GDP growth, 10-year treasury), forex rates from Frankfurter (EUR, JPY, GBP, CHF against USD), and commodities (WTI oil, Henry Hub natural gas) from FRED. All sources are public/gov (FRED) or ECB reference rates (Frankfurter).</p>
     <p><strong>Optional params:</strong> <span class="inline-code">?history=30d</span> adds 30 daily observations for FRED series and a daily forex time-series.</p>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method">GET</span>
-      <span class="path">/api/pro/crypto-deep</span>
-      <span class="cost">2 credits</span>
-    </div>
-    <p>Deep crypto snapshot: top 50 coins by market cap (with 1h/24h/7d change), Binance live ticker for the top 20 USDT pairs by volume, Bitcoin network statistics from mempool.space (block height, fees, hashrate, mempool size), and Ethereum gas oracle from Etherscan.</p>
-    <p><strong>Optional params:</strong> <span class="inline-code">?coins=btc,eth,sol</span> filters the top-50 list. <span class="inline-code">?history=30d</span> adds 30 daily BTC OHLCV candles.</p>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method">GET</span>
-      <span class="path">/api/pro/sentiment</span>
-      <span class="cost">2 credits</span>
-    </div>
-    <p>Composite market sentiment for trading and research agents. Aggregates the Crypto Fear and Greed Index, VIX volatility, top 15 trending ticker mentions across Hacker News top 30 + Reddit r/CryptoCurrency / r/wallstreetbets / r/stocks hot posts with per-headline keyword-based sentiment scoring, and Polymarket-implied probabilities for top markets. Each ticker entry includes mention_count_24h, sources breakdown, sentiment_score (-1 to +1), sentiment_label, and 3 sample headlines with URLs. Notes field documents the scoring methodology so agents can calibrate trust.</p>
-    <p><strong>Methodology:</strong> sentiment scores derive from regex pattern matching against curated positive/negative word lists. Crude but signal-bearing. Treat as one input to a broader analysis, not as a high-frequency trading edge. Cached at 5min.</p>
   </div>
 
   <div class="endpoint">
@@ -524,15 +457,15 @@
       <span class="path">/api/pro/agent-context</span>
       <span class="cost">2 credits</span>
     </div>
-    <p><strong>The "always start here" call.</strong> Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear and Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic).</p>
-    <p><strong>The killer feature:</strong> returns BOTH a structured JSON <span class="inline-code">context</span> object for parsers AND a pre-formatted <span class="inline-code">system_prompt</span> string (~350 tokens) the agent pastes verbatim into its LLM context window. Saves the agent from making 13 separate calls AND from writing the formatter.</p>
+    <p><strong>The "always start here" call.</strong> Composes multiple public/gov upstream sources into a curated world-state snapshot: Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic).</p>
+    <p><strong>The killer feature:</strong> returns BOTH a structured JSON <span class="inline-code">context</span> object for parsers AND a pre-formatted <span class="inline-code">system_prompt</span> string the agent pastes verbatim into its LLM context window. Saves the agent from making many separate calls AND from writing the formatter.</p>
     <pre><code>ctx = tf.get("/api/pro/agent-context")
 client.messages.create(
     model="claude-opus-4-7",
     system=ctx["system_prompt"],   # paste-ready
     messages=[{"role": "user", "content": "..."}]
 )</code></pre>
-    <p><strong>What you can't easily build yourself:</strong> the data is free elsewhere; the curation (which 13 things matter, how to compress them into a coherent narrative) is what an agent pays for.</p>
+    <p><strong>What you can't easily build yourself:</strong> the data is free elsewhere; the curation (which signals matter, how to compress them into a coherent narrative) is what an agent pays for.</p>
   </div>
 
   <div class="endpoint">
@@ -541,53 +474,9 @@ client.messages.create(
       <span class="path">/api/pro/correlation-matrix</span>
       <span class="cost">2 credits</span>
     </div>
-    <p>Pre-computed 30-day cross-asset Pearson correlation matrix on daily simple returns. Up to 10 assets across 4 classes: crypto (BTC, ETH, SOL, AVAX, LINK via Coinbase candles), commodity (gold via PAXG-USD on Coinbase, WTI oil via FRED), rates (10Y and 2Y treasury yields via FRED), and fx (trade-weighted USD index via FRED).</p>
+    <p>Pre-computed 30-day macro Pearson correlation matrix on daily simple returns. Four FRED series (US gov, public domain) across three classes: commodity (WTI oil), rates (10Y and 2Y treasury yields), and fx (trade-weighted USD index).</p>
     <p>Returns both a <span class="inline-code">pairs</span> array (sorted by absolute r descending, with relationship and direction labels) and an NxN <span class="inline-code">matrix</span> object for direct lookup like <span class="inline-code">m.matrix.BTC.ETH</span>.</p>
-    <p><strong>Why this exists:</strong> a portfolio agent today has to fetch 10 historical price series, normalize them to daily returns, and run a covariance computation per cycle. This endpoint precomputes it server-side. Cached 30 minutes since correlations move slowly within a day.</p>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method">GET</span>
-      <span class="path">/api/pro/whales</span>
-      <span class="cost">2 credits</span>
-    </div>
-    <p>Near-real-time tracker for large on-chain transactions on Bitcoin and Ethereum. BTC: scans mempool.space recent mempool (last 10 unconfirmed) for outputs &ge;10 BTC. ETH: scans the last 3 confirmed blocks via publicnode.com JSON-RPC (~1,900 transactions, ~36 seconds of history) for transfers &ge;100 ETH.</p>
-    <p>Each whale entry includes tx hash, value in native and USD units, from/to addresses (ETH), block number, and explorer URL. <span class="inline-code">aggregate</span> field gives a quick whale_count and total_usd for cycle-by-cycle change detection.</p>
-    <p><strong>Why this exists:</strong> trading bots watching for institutional flow signals (exchange in/outflows, treasury moves, OTC settlements) need a tight feed without burning their own RPC quota. This endpoint absorbs the mempool.space and publicnode.com upstream cost. Live test caught a 600 ETH ($1.37M) whale on first try.</p>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method">GET</span>
-      <span class="path">/api/pro/exchange-flows</span>
-      <span class="cost">2 credits</span>
-    </div>
-    <p>ETH net inflow/outflow against a hardcoded list of 19 well-known exchange hot wallets across 7 exchanges (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin). Scans the last 3 confirmed blocks and tags transfers >=5 ETH as inflow (user &rarr; exchange, often selling intent), outflow (exchange &rarr; user, often HODL withdrawal), or inter_exchange.</p>
-    <p>Aggregates per-exchange and globally with USD-equivalents and a bias label (<span class="inline-code">inflow_dominant</span> / <span class="inline-code">outflow_dominant</span> / <span class="inline-code">balanced</span>). Live test detected a 46.74 ETH ($107K) Binance outflow on first try.</p>
-    <p><strong>Why this exists:</strong> sustained large net inflow to exchanges historically precedes selling pressure; sustained outflow precedes accumulation rallies. Trading agents pay close attention to this signal. ETH only in v1; BTC requires a labeled-address dataset.</p>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method">GET</span>
-      <span class="path">/api/pro/defi-tvl</span>
-      <span class="cost">2 credits</span>
-    </div>
-    <p>Composed DeFi total-value-locked snapshot for crypto research and trading agents. Top 50 protocols by TVL (each with 1h/24h/7d change, category, chain, market cap, FDV), top 15 chains by TVL, by-category aggregates, and biggest gainers and losers over both 24h and 7d windows.</p>
-    <p><strong>Source:</strong> DefiLlama free public API (defillama.com). We absorb the upstream call (~3MB payload) and cache aggressively for 30 minutes since TVL changes slowly.</p>
-    <p><strong>Why this exists:</strong> a crypto research agent monitoring DeFi concentration today has to fetch /protocols and /v2/chains separately, normalize categories, compute movers client-side. This endpoint composes all of that. Live test surfaced $441B aggregate TVL with Binance CEX at $154B and Sky Lending up 5.79% 24h.</p>
-  </div>
-
-  <div class="endpoint">
-    <div class="endpoint-header">
-      <span class="method">GET</span>
-      <span class="path">/api/pro/stablecoin-flows</span>
-      <span class="cost">2 credits</span>
-    </div>
-    <p>Net stablecoin circulation changes for crypto traders. Top 20 stablecoins by circulating supply, each with 24h / 7d / 30d net change in USD and percent, top chains breakdown, peg type, and current price. Aggregate includes total circulating, net inflow/outflow over 24h and 7d, growing-vs-shrinking count, and a bias label (<span class="inline-code">growing</span> / <span class="inline-code">shrinking</span> / <span class="inline-code">balanced</span>).</p>
-    <p><strong>Source:</strong> DefiLlama stablecoins API (stablecoins.llama.fi). Free public API; no key required.</p>
-    <p><strong>Why this exists:</strong> sustained stablecoin minting historically precedes crypto buying pressure (more dollars on-chain = more potential bids). Sustained burning precedes selling. Trading agents pair this with /api/pro/exchange-flows for the on-chain settlement side. Live test surfaced $319.71B aggregate float across 183 tracked stablecoins with +$320M net 24h growth, USDT at $189.68B and USDC at $77.69B.</p>
+    <p><strong>Why this exists:</strong> a portfolio agent today has to fetch several historical macro series, normalize them to daily returns, and run a covariance computation per cycle. This endpoint precomputes it server-side. Cached 30 minutes since correlations move slowly within a day.</p>
   </div>
 
   <div class="endpoint">
@@ -598,7 +487,7 @@ client.messages.create(
     </div>
     <p>Composed GitHub developer-attention snapshot for dev-tool agents, AI/ML researchers, and infrastructure-tracking agents. Top 30 repos created in the last 7 days sorted by stars (with stars-per-day, language, topics, license, owner type, AI/ML focus flag), top 15 AI/ML-focused active repos (topic:llm with commits in last 30 days), language and topic aggregates, and the AI/ML share-of-trending percentage.</p>
     <p><strong>Source:</strong> GitHub Search API. Free without auth (60 req/hour); we cache 30 minutes so even unauthenticated upstream is well under rate limit. Optional <span class="inline-code">GITHUB_TOKEN</span> Worker secret bumps to 5000 req/hour.</p>
-    <p><strong>Why this exists:</strong> tracks where developer attention is concentrating right now. Live test showed <strong>50% of trending-7d repos are AI/ML focused</strong>, with Python dominating (11 of 30 repos, ~7K stars). Pair with <span class="inline-code">/api/pro/sentiment</span> for a complete "what is the dev community talking about" view.</p>
+    <p><strong>Why this exists:</strong> tracks where developer attention is concentrating right now. Live test showed <strong>50% of trending-7d repos are AI/ML focused</strong>, with Python dominating (11 of 30 repos, ~7K stars).</p>
   </div>
 
   <h2>Pricing</h2>
@@ -609,7 +498,7 @@ client.messages.create(
     <tr><td>Chain</td><td>Base mainnet</td></tr>
     <tr><td>Briefing</td><td>1 credit per call</td></tr>
     <tr><td>Macro</td><td>2 credits per call</td></tr>
-    <tr><td>Crypto-deep</td><td>2 credits per call</td></tr>
+    <tr><td>Agent context</td><td>2 credits per call</td></tr>
     <tr><td>Subscription</td><td>None. Pay only for what you call.</td></tr>
     <tr><td>Expiry</td><td>None. Credits never expire.</td></tr>
     <tr><td>Bulk discount</td><td>Not available in v1. Larger purchases coming.</td></tr>
@@ -768,8 +657,7 @@ quote = tf.buy_credits(amount_usd=1.00)            # $1 = 50 credits
 tf.confirm_payment(tx_hash="0x...", nonce=quote["memo"])
 
 print(tf.macro(history="30d"))                     # 2 credits
-print(tf.crypto_deep(coins=["btc", "eth"]))        # 2 credits
-print(tf.briefing(include=["btc", "predictions"])) # 1 credit
+print(tf.briefing(include=["predictions"]))        # 1 credit
 print("balance:", tf.balance())</code></pre>
 
   <p>Prefer vendoring over a dependency? The same module is one copy-paste file at <a href="https://github.com/RipperMercs/terminalfeed/blob/master/sdk-python/terminalfeed.py" rel="external"><span class="inline-code">sdk-python/terminalfeed.py</span></a>.</p>
@@ -791,7 +679,7 @@ print("balance:", tf.balance())</code></pre>
   <p>No. Premium responses are licensed for inference and reasoning use only. They are not licensed for use as training data, fine-tuning input, model distillation, or redistribution as a dataset. Free tier endpoints retain their existing permissive license. Full clauses live in <a href="/terms#premium">Terms section 17</a>.</p>
 
   <h3>What happens if an upstream source fails after my credit was charged?</h3>
-  <p>Credits are decremented before the upstream fetch begins (the atomic-charge property). If one or more upstream sources fail, the response still returns a 200 with whatever data we successfully composed, and the credit still counts. The credit pays for the routing decision and the aggregation work, not a guaranteed upstream success. We cache aggressively (60 seconds for briefing and crypto-deep, 5 minutes for macro), so successive calls within the cache window cost no additional fetches.</p>
+  <p>Credits are decremented before the upstream fetch begins (the atomic-charge property). If one or more upstream sources fail, the response still returns a 200 with whatever data we successfully composed, and the credit still counts. The credit pays for the routing decision and the aggregation work, not a guaranteed upstream success. We cache aggressively (60 seconds for briefing, 5 minutes for macro), so successive calls within the cache window cost no additional fetches.</p>
 
   <h3>How do I rotate a compromised bearer token?</h3>
   <p>Bearer tokens are first-class credentials. If yours leaks, treat it as lost: buy a new pack to mint a new token, then stop using the old one. The compromised token will continue to spend its remaining balance until depleted. Email <a href="mailto:support@terminalfeed.io">support@terminalfeed.io</a> with the affected token if you suspect theft and want it deactivated faster.</p>

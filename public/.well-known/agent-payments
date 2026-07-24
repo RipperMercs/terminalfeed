@@ -29,7 +29,6 @@
   "endpoints": [
     { "path": "/api/pro/briefing", "method": "GET", "cost_credits": 1, "auth": "bearer" },
     { "path": "/api/pro/macro", "method": "GET", "cost_credits": 2, "auth": "bearer" },
-    { "path": "/api/pro/crypto-deep", "method": "GET", "cost_credits": 2, "auth": "bearer" },
     { "path": "/api/payment/info", "method": "GET", "cost_credits": 0, "auth": "none" },
     { "path": "/api/payment/buy-credits", "method": "POST", "cost_credits": 0, "auth": "none" },
     { "path": "/api/payment/confirm", "method": "POST", "cost_credits": 0, "auth": "none" },

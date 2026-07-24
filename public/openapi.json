@@ -406,7 +406,7 @@
           },
           "endpoint": {
             "type": "string",
-            "example": "/api/pro/crypto-deep"
+            "example": "/api/pro/macro"
           },
           "generated_at": {
             "type": "string",
@@ -735,7 +735,7 @@
           },
           "endpoint": {
             "type": "string",
-            "example": "/api/pro/sentiment"
+            "example": "/api/pro/macro"
           },
           "generated_at": {
             "type": "string",
@@ -2411,103 +2411,6 @@
         }
       }
     },
-    "/api/pro/crypto-deep": {
-      "get": {
-        "tags": [
-          "pro"
-        ],
-        "summary": "Premium crypto deep snapshot: top 50 + Binance + on-chain + gas (2 credits)",
-        "description": "Composes 7 upstream sources: top 50 coins by market cap with 1h/24h/7d change, Binance top 20 USDT pairs by volume with high/low/trade-count, Bitcoin network stats from mempool.space (block height, fee tiers, hashrate, mempool size), and Etherscan gas oracle. Optional 30-day BTC OHLCV.",
-        "security": [
-          {
-            "agentBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "coins",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Comma-separated symbol filter, e.g. btc,eth,sol"
-          },
-          {
-            "name": "history",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "30d"
-              ]
-            },
-            "description": "When set, response includes series.btc_30d."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Composed crypto-deep snapshot.",
-            "headers": {
-              "X-Credits-Remaining": {
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "Cache-Control": {
-                "schema": {
-                  "type": "string",
-                  "example": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CryptoDeepPro"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/PremiumPaymentRequired"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "curl",
-            "label": "curl",
-            "source": "curl \"https://terminalfeed.io/api/pro/crypto-deep?coins=btc,eth,sol\" \\\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
-          },
-          {
-            "lang": "Python",
-            "label": "Python (requests)",
-            "source": "import requests\nres = requests.get(\n    \"https://terminalfeed.io/api/pro/crypto-deep\",\n    params={\"coins\": \"btc,eth,sol\"},\n    headers={\"Authorization\": \"Bearer tf_live_<64-char-hex>\"},\n    timeout=15,\n)\nd = res.json()\nfor coin in d[\"coins_top50\"]:\n    print(coin[\"symbol\"], coin[\"price_usd\"], coin[\"change_24h_percent\"])\nprint(\"BTC block height:\", d[\"network_btc\"][\"block_height\"])"
-          },
-          {
-            "lang": "JavaScript",
-            "label": "JavaScript (fetch)",
-            "source": "const url = new URL(\"https://terminalfeed.io/api/pro/crypto-deep\");\nurl.searchParams.set(\"coins\", \"btc,eth,sol\");\nconst res = await fetch(url, { headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" } });\nconst d = await res.json();\nfor (const c of d.coins_top50) console.log(c.symbol, c.price_usd);"
-          }
-        ],
-        "x-pricing-credits": 2,
-        "x-pricing-usd": 0.04,
-        "x-composes-sources": 7,
-        "x-license": "inference-only",
-        "x-payment-required": true,
-        "x-payment-info": {
-          "protocols": [
-            {
-              "x402": {}
-            }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.04"
-          }
-        }
-      }
-    },
     "/api/payment/info": {
       "get": {
         "tags": [
@@ -2762,82 +2665,6 @@
         "security": []
       }
     },
-    "/api/pro/sentiment": {
-      "get": {
-        "tags": [
-          "pro"
-        ],
-        "summary": "Premium composite market sentiment (2 credits)",
-        "description": "Composite market sentiment for AI trading and research agents. Aggregates Crypto Fear and Greed Index, VIX volatility (when Finnhub key has access), trending ticker mentions across Hacker News top 30 + Reddit hot posts (r/CryptoCurrency, r/wallstreetbets, r/stocks) with per-headline keyword-based sentiment scoring, and Polymarket-implied probabilities for top markets. Output includes per-ticker mention_count_24h, sentiment_score (-1 to +1), sentiment_label, and sample headlines with URLs. Notes field documents the scoring methodology (keyword-based, crude but signal-bearing) so agents can calibrate trust appropriately. 2 credits ($0.04). Bearer auth required. Cached at 5min.",
-        "security": [
-          {
-            "agentBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Composite sentiment snapshot.",
-            "headers": {
-              "X-Credits-Remaining": {
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "Cache-Control": {
-                "schema": {
-                  "type": "string",
-                  "example": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SentimentPro"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/PremiumPaymentRequired"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "curl",
-            "label": "curl",
-            "source": "curl https://terminalfeed.io/api/pro/sentiment \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
-          },
-          {
-            "lang": "Python",
-            "label": "Python (requests)",
-            "source": "import requests\nres = requests.get(\n    \"https://terminalfeed.io/api/pro/sentiment\",\n    headers={\"Authorization\": \"Bearer tf_live_<64-char-hex>\"},\n    timeout=15,\n)\ndata = res.json()\nprint(\"Crypto F&G:\", data[\"market_indices\"][\"crypto_fear_greed\"])\nfor t in data[\"trending\"][:5]:\n    print(t[\"symbol\"], t[\"sentiment_label\"], t[\"mention_count_24h\"], \"mentions\")"
-          },
-          {
-            "lang": "JavaScript",
-            "label": "JavaScript (fetch)",
-            "source": "const res = await fetch(\"https://terminalfeed.io/api/pro/sentiment\", {\n  headers: { Authorization: \"Bearer tf_live_<64-char-hex>\" },\n});\nconst data = await res.json();\nfor (const t of data.trending.slice(0, 5)) {\n  console.log(t.symbol, t.sentiment_label, t.mention_count_24h);\n}"
-          }
-        ],
-        "x-pricing-credits": 2,
-        "x-pricing-usd": 0.04,
-        "x-composes-sources": 7,
-        "x-license": "inference-only",
-        "x-payment-required": true,
-        "x-payment-info": {
-          "protocols": [
-            {
-              "x402": {}
-            }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.04"
-          }
-        }
-      }
-    },
     "/api/pro/world-deltas": {
       "get": {
         "tags": [
@@ -2931,7 +2758,7 @@
           "pro"
         ],
         "summary": "Curated 'always start here' world-state with paste-ready system_prompt (2 credits)",
-        "description": "The 'always start here' premium call for autonomous agents. Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear & Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by 24h volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context window. Saves the agent from making 13 separate calls and writing a formatter. The curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04). 5-min cache. Bearer auth required.",
+        "description": "The 'always start here' premium call for autonomous agents. Composes upstream sources into a curated world-state snapshot: Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top 3 Polymarket markets by 24h volume, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context window. Saves the agent from making a dozen separate calls and writing a formatter. The curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04). 5-min cache. Bearer auth required.",
         "security": [
           {
             "agentBearer": []
@@ -3055,146 +2882,6 @@
         "x-pricing-credits": 2,
         "x-pricing-usd": 0.04,
         "x-composes-sources": 10,
-        "x-license": "inference-only",
-        "x-payment-required": true,
-        "x-payment-info": {
-          "protocols": [
-            {
-              "x402": {}
-            }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.04"
-          }
-        }
-      }
-    },
-    "/api/pro/whales": {
-      "get": {
-        "tags": [
-          "pro"
-        ],
-        "summary": "Premium large on-chain transaction tracker (2 credits)",
-        "description": "Tracks whale-sized BTC and ETH transactions in near real time. BTC: scans mempool.space recent mempool (last 10 unconfirmed) for outputs >=10 BTC. ETH: scans the last 3 confirmed blocks (~36s of history, ~1900 transactions) via publicnode.com JSON-RPC for transfers >=100 ETH. Each whale entry tagged with USD-equivalent at current BTC/ETH spot, tx hash, addresses (ETH only), and explorer URL. Useful for trading bots watching for institutional flow signals: large exchange in/outflows, treasury moves, OTC settlements. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.",
-        "security": [
-          {
-            "agentBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Whale activity snapshot.",
-            "headers": {
-              "X-Credits-Remaining": {
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WhalesPro"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/PremiumPaymentRequired"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "curl",
-            "label": "curl",
-            "source": "curl https://terminalfeed.io/api/pro/whales \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
-          },
-          {
-            "lang": "Python",
-            "label": "Python",
-            "source": "import requests\nw = requests.get(\n    \"https://terminalfeed.io/api/pro/whales\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n    timeout=15,\n).json()\nfor eth in w[\"eth_whales_latest_block\"]:\n    print(f\"{eth['value_eth']} ETH ~ ${eth['value_usd']:,}\")"
-          },
-          {
-            "lang": "JavaScript",
-            "label": "JavaScript",
-            "source": "const w = await fetch(\"https://terminalfeed.io/api/pro/whales\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nfor (const tx of w.eth_whales_latest_block) {\n  console.log(`${tx.value_eth} ETH = $${tx.value_usd}`);\n}"
-          }
-        ],
-        "x-pricing-credits": 2,
-        "x-pricing-usd": 0.04,
-        "x-composes-sources": 4,
-        "x-license": "inference-only",
-        "x-payment-required": true,
-        "x-payment-info": {
-          "protocols": [
-            {
-              "x402": {}
-            }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.04"
-          }
-        }
-      }
-    },
-    "/api/pro/exchange-flows": {
-      "get": {
-        "tags": [
-          "pro"
-        ],
-        "summary": "Premium ETH exchange flow tracker (2 credits)",
-        "description": "Tracks ETH transfers in/out of major centralized exchange hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin) across the last 3 confirmed blocks. Each transfer tagged as inflow (user -> exchange), outflow (exchange -> user), or inter_exchange. Per-exchange and aggregate net flows surfaced with USD-equivalents and a bias label. 5 ETH minimum threshold. Useful for trading bots watching for regime shifts. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.",
-        "security": [
-          {
-            "agentBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Exchange flow snapshot.",
-            "headers": {
-              "X-Credits-Remaining": {
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExchangeFlowsPro"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/PremiumPaymentRequired"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "curl",
-            "label": "curl",
-            "source": "curl https://terminalfeed.io/api/pro/exchange-flows \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
-          },
-          {
-            "lang": "Python",
-            "label": "Python",
-            "source": "import requests\nf = requests.get(\n    \"https://terminalfeed.io/api/pro/exchange-flows\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n    timeout=15,\n).json()\nprint(f\"Net flow: {f['aggregate']['net_flow_eth']} ETH ({f['aggregate']['bias']})\")\nfor ex in f['flows_by_exchange']:\n    print(f\"  {ex['exchange']}: net {ex['net_eth']} ETH\")"
-          },
-          {
-            "lang": "JavaScript",
-            "label": "JavaScript",
-            "source": "const f = await fetch(\"https://terminalfeed.io/api/pro/exchange-flows\", {\n  headers: { Authorization: `Bearer ${TOKEN}` },\n}).then(r => r.json());\nconsole.log(\"Bias:\", f.aggregate.bias, \"Net:\", f.aggregate.net_flow_eth, \"ETH\");"
-          }
-        ],
-        "x-pricing-credits": 2,
-        "x-pricing-usd": 0.04,
-        "x-composes-sources": 3,
         "x-license": "inference-only",
         "x-payment-required": true,
         "x-payment-info": {
@@ -3346,14 +3033,10 @@
                   "endpoint": {
                     "type": "string",
                     "enum": [
-                      "sentiment",
                       "briefing",
-                      "exchange-flows",
                       "agent-context",
                       "world-deltas",
                       "macro",
-                      "crypto-deep",
-                      "whales",
                       "correlation-matrix"
                     ],
                     "description": "Premium endpoint slug to monitor"
@@ -3469,146 +3152,6 @@
         },
         "x-pricing-credits": 0,
         "x-pricing-usd": 0
-      }
-    },
-    "/api/pro/defi-tvl": {
-      "get": {
-        "tags": [
-          "pro"
-        ],
-        "summary": "Composed DeFi TVL snapshot via DefiLlama (2 credits)",
-        "description": "Top 50 DeFi protocols by total value locked, top 15 chains, by-category aggregates, and biggest gainers/losers over 24h and 7d. Each protocol entry includes 1h/24h/7d change %, category, chain, market cap, and FDV. Source: DefiLlama free public API. 30-min cache.",
-        "security": [
-          {
-            "agentBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "DeFi TVL snapshot.",
-            "headers": {
-              "X-Credits-Remaining": {
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/PremiumPaymentRequired"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "curl",
-            "label": "curl",
-            "source": "curl https://terminalfeed.io/api/pro/defi-tvl \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
-          },
-          {
-            "lang": "Python",
-            "label": "Python",
-            "source": "import requests\nd = requests.get(\n    \"https://terminalfeed.io/api/pro/defi-tvl\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n).json()\nfor p in d['top_protocols'][:10]:\n    print(p['name'], p['tvl_usd'], p['change_1d_percent'])"
-          },
-          {
-            "lang": "JavaScript",
-            "label": "JavaScript",
-            "source": "const d = await fetch(\"https://terminalfeed.io/api/pro/defi-tvl\", {\n  headers: { Authorization: `Bearer ${TOKEN}` }\n}).then(r => r.json());\nconsole.log(\"Top category:\", d.by_category[0]);"
-          }
-        ],
-        "x-pricing-credits": 2,
-        "x-pricing-usd": 0.04,
-        "x-composes-sources": 2,
-        "x-license": "inference-only",
-        "x-payment-required": true,
-        "x-payment-info": {
-          "protocols": [
-            {
-              "x402": {}
-            }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.04"
-          }
-        }
-      }
-    },
-    "/api/pro/stablecoin-flows": {
-      "get": {
-        "tags": [
-          "pro"
-        ],
-        "summary": "Stablecoin net flows snapshot via DefiLlama (2 credits)",
-        "description": "Top 20 stablecoins by circulating supply with 24h/7d/30d net change in USD and percent. Aggregate net flow across all 180+ tracked stablecoins, biggest growers and shrinkers, bias label (growing/shrinking/balanced). Source: DefiLlama stablecoins API. 1-hour cache.",
-        "security": [
-          {
-            "agentBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Stablecoin flows snapshot.",
-            "headers": {
-              "X-Credits-Remaining": {
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/PremiumPaymentRequired"
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "curl",
-            "label": "curl",
-            "source": "curl https://terminalfeed.io/api/pro/stablecoin-flows \\n  -H \"Authorization: Bearer tf_live_<64-char-hex>\""
-          },
-          {
-            "lang": "Python",
-            "label": "Python",
-            "source": "import requests\nd = requests.get(\n    \"https://terminalfeed.io/api/pro/stablecoin-flows\",\n    headers={\"Authorization\": f\"Bearer {TOKEN}\"},\n).json()\nprint(\"Net 24h:\", d['aggregate']['net_change_24h_usd'], d['aggregate']['bias_24h'])"
-          },
-          {
-            "lang": "JavaScript",
-            "label": "JavaScript",
-            "source": "const d = await fetch(\"https://terminalfeed.io/api/pro/stablecoin-flows\", {\n  headers: { Authorization: `Bearer ${TOKEN}` }\n}).then(r => r.json());\nconsole.log(\"USDT:\", d.stablecoins[0]);"
-          }
-        ],
-        "x-pricing-credits": 2,
-        "x-pricing-usd": 0.04,
-        "x-composes-sources": 1,
-        "x-license": "inference-only",
-        "x-payment-required": true,
-        "x-payment-info": {
-          "protocols": [
-            {
-              "x402": {}
-            }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USD",
-            "amount": "0.04"
-          }
-        }
       }
     },
     "/api/pro/github-velocity": {

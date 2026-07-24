@@ -110,8 +110,7 @@
   <table>
     <tr><th>Endpoint</th><th>Cost</th><th>Composes</th></tr>
     <tr><td>/api/pro/briefing</td><td>$0.02</td><td>BTC + Fear&amp;Greed + earthquakes + HN + Polymarket prediction markets</td></tr>
-    <tr><td>/api/pro/macro</td><td>$0.04</td><td>Fed rate + CPI + unemployment + GDP + 10Y treasury + forex (EUR/JPY/GBP/CHF) + commodities (gold, oil, nat gas) + indices (SPY/DIA/QQQ/VIX)</td></tr>
-    <tr><td>/api/pro/crypto-deep</td><td>$0.04</td><td>top 50 coins (1h/24h/7d change) + Binance top 20 USDT pairs + mempool.space network stats + Etherscan gas oracle</td></tr>
+    <tr><td>/api/pro/macro</td><td>$0.04</td><td>Fed rate + CPI + unemployment + GDP + 10Y treasury + forex (EUR/JPY/GBP/CHF) + commodities (oil, nat gas) via FRED/Frankfurter</td></tr>
   </table>
 
   <p>Each endpoint absorbs the upstream cost, key management, and rate limits. You bring one bearer token, get one schema, handle one set of failure modes. If an upstream is degraded, we serve stale cache rather than 5xx, so your bot never gets surprised by a `null` quote in the middle of a decision.</p>
@@ -129,16 +128,15 @@ HEADERS  = {"Authorization": f"Bearer {TF_TOKEN}"}
 def fetch_decision_context():
     """One decision cycle. Costs 4 credits = $0.08 at $1 USDC = 50 credits."""
     macro = requests.get(f"{TF_BASE}/api/pro/macro", headers=HEADERS, timeout=10).json()
-    crypto = requests.get(f"{TF_BASE}/api/pro/crypto-deep?coins=btc,eth", headers=HEADERS, timeout=10).json()
-    return {"macro": macro, "crypto": crypto}
+    context = requests.get(f"{TF_BASE}/api/pro/agent-context", headers=HEADERS, timeout=10).json()
+    return {"macro": macro, "context": context}
 
 def strategy(ctx):
-    btc = ctx["crypto"]["coins_top50"][0]
     fed_rate = ctx["macro"]["economic"]["fed_rate"]["value"]
-    vix = ctx["macro"]["markets"]["vix"]["price"]
+    ten_year = ctx["macro"]["economic"]["treasury_10y"]["value"]
     # Your trading logic here. This is just an illustrative skeleton.
-    if btc["change_24h_percent"] &lt; -5 and vix &gt; 25:
-        return {"action": "buy", "size_usd": 100}
+    if fed_rate is not None and ten_year is not None and ten_year - fed_rate &lt; 0:
+        return {"action": "risk_off", "size_usd": 0}
     return {"action": "hold"}
 
 def loop():

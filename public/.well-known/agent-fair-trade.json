@@ -28,7 +28,7 @@
     },
     {
       "id": "empty_result",
-      "description": "A valid but empty result on a pure-compute endpoint (world-deltas with no new events since ?since, or anomalies with nothing above threshold) is not charged. The response still returns the empty answer with a signed receipt carrying no_charge_reason: \"empty_result\", so an agent polling for changes is never billed for nothing new.",
+      "description": "A valid but empty result on a pure-compute endpoint (world-deltas with no new events since ?since) is not charged. The response still returns the empty answer with a signed receipt carrying no_charge_reason: \"empty_result\", so an agent polling for changes is never billed for nothing new.",
       "code": "aftaPremiumResponse __no_charge handling in worker-additions/worker.js",
       "verifiable_via": "Call /api/pro/world-deltas?since=<current ISO time> (no new events) and inspect the receipt. The event appears at /api/payment/no-charge-stats."
     },
@@ -115,7 +115,7 @@
     "screening": "Chainalysis public sanctions API on every credit purchase via the shared TensorFeed payment Worker. Geo-IP block on /api/payment/buy-credits for CU/IR/KP/SY. See https://terminalfeed.io/terms#premium Section 17.9."
   },
   "built_with_claude": {
-    "statement": "TerminalFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed: the premium /api/pro/* endpoints (briefing, macro, crypto-deep, agent-context, sentiment, world-deltas, correlation-matrix, whales, exchange-flows, defi-tvl, stablecoin-flows, github-velocity), the cross-Worker AFTA rail to TensorFeed (validate + commit handshake), the Ed25519 receipt signing pipeline, the per-endpoint freshness SLA registry, the in-memory cache + stale-cache fallback pattern across 30+ free endpoints, the X bot, and the live world-briefing composer.",
+    "statement": "TerminalFeed was designed by Ripper in collaboration with Claude (Anthropic). Specific systems Claude designed: the premium /api/pro/* endpoints (briefing, macro, agent-context, world-deltas, correlation-matrix, github-velocity), the cross-Worker AFTA rail to TensorFeed (validate + commit handshake), the Ed25519 receipt signing pipeline, the per-endpoint freshness SLA registry, the in-memory cache + stale-cache fallback pattern across 30+ free endpoints, the X bot, and the live world-briefing composer.",
     "verifiable_via": "git log on https://github.com/RipperMercs/terminalfeed shows the build trail."
   },
   "adoption": {

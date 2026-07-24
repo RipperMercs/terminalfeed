@@ -101,7 +101,7 @@
   <span class="badge badge-amber">OPENAI / ANTHROPIC / GEMINI</span>
   <span class="badge badge-purple">NO SIGNUP</span>
 
-  <p>This page gives you ready-to-use function-calling definitions for every TerminalFeed endpoint. Free-tier tools (24 of 27) require no auth. The three premium tools (<span class="inline-code">tf_pro_briefing</span>, <span class="inline-code">tf_pro_macro</span>, <span class="inline-code">tf_pro_crypto_deep</span>) accept a bearer token funded with USDC on Base. See <a href="/developers/agent-payments">/developers/agent-payments</a> for the auth flow.</p>
+  <p>This page gives you ready-to-use function-calling definitions for every TerminalFeed endpoint. Most tools are free-tier and require no auth. The premium tools (<span class="inline-code">tf_pro_briefing</span>, <span class="inline-code">tf_pro_macro</span>) accept a bearer token funded with USDC on Base. See <a href="/developers/agent-payments">/developers/agent-payments</a> for the auth flow.</p>
 
   <div class="callout">
     <strong>The catalog is live.</strong> The authoritative source is <a href="https://terminalfeed.io/api/llm-tools">/api/llm-tools</a>, which returns the full set in OpenAI format, Anthropic format, and a raw schema-agnostic listing. Fetch it once on agent boot and you stay current as new tools land. The snippets below are pre-rendered subsets of the same catalog.
@@ -223,7 +223,7 @@ const rawCatalog     = catalog.raw;</code></pre>
     "type": "function",
     "function": {
       "name": "tf_pro_briefing",
-      "description": "PREMIUM. Composed world-state briefing: BTC + Fear &amp; Greed + earthquakes + Hacker News + ISS + Polymarket. Optional ?include= filter and ?history=24h. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_&lt;64-char-hex&gt;.",
+      "description": "PREMIUM. Composed world-state briefing: earthquakes + Hacker News + ISS + Polymarket. Optional ?include= filter. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_&lt;64-char-hex&gt;.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -241,20 +241,6 @@ const rawCatalog     = catalog.raw;</code></pre>
       "parameters": {
         "type": "object",
         "properties": {
-          "history": { "type": "string", "description": "Set to \"30d\" to include 30-day historical series. Optional." }
-        }
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "tf_pro_crypto_deep",
-      "description": "PREMIUM. Deep crypto snapshot: top 50 coins + Binance top 20 + mempool.space network + Etherscan gas. Optional ?coins= filter and ?history=30d. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_&lt;64-char-hex&gt;.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "coins": { "type": "string", "description": "Comma-separated symbols to filter, e.g. \"BTC,ETH,SOL\". Optional." },
           "history": { "type": "string", "description": "Set to \"30d\" to include 30-day historical series. Optional." }
         }
       }
@@ -302,8 +288,6 @@ TF_TOOL_MAP = {
     "tf_ai_stats":            ("GET",  "/api/ai-stats",         False),
     "tf_pro_briefing":        ("GET",  "/api/pro/briefing",     True),
     "tf_pro_macro":           ("GET",  "/api/pro/macro",        True),
-    "tf_pro_crypto_deep":     ("GET",  "/api/pro/crypto-deep",  True),
-    "tf_pro_sentiment":       ("GET",  "/api/pro/sentiment",    True),
     "tf_payment_buy_credits": ("POST", "/api/payment/buy-credits", False),
     "tf_payment_confirm":     ("POST", "/api/payment/confirm",  False),
     "tf_payment_balance":     ("GET",  "/api/payment/balance",  True),
@@ -360,8 +344,6 @@ const TF_TOOL_MAP = {
   tf_ai_stats:            { method: "GET",  path: "/api/ai-stats",        needsBearer: false },
   tf_pro_briefing:        { method: "GET",  path: "/api/pro/briefing",    needsBearer: true  },
   tf_pro_macro:           { method: "GET",  path: "/api/pro/macro",       needsBearer: true  },
-  tf_pro_crypto_deep:     { method: "GET",  path: "/api/pro/crypto-deep", needsBearer: true  },
-  tf_pro_sentiment:       { method: "GET",  path: "/api/pro/sentiment",   needsBearer: true  },
   tf_payment_buy_credits: { method: "POST", path: "/api/payment/buy-credits", needsBearer: false },
   tf_payment_confirm:     { method: "POST", path: "/api/payment/confirm", needsBearer: false },
   tf_payment_balance:     { method: "GET",  path: "/api/payment/balance", needsBearer: true  },
@@ -495,8 +477,6 @@ for block in resp.content:
     <tr><td>tf_ai_stats</td><td>/api/ai-stats</td><td>none</td><td>free</td></tr>
     <tr><td>tf_pro_briefing</td><td>/api/pro/briefing</td><td>bearer</td><td>1 credit ($0.02)</td></tr>
     <tr><td>tf_pro_macro</td><td>/api/pro/macro</td><td>bearer</td><td>2 credits ($0.04)</td></tr>
-    <tr><td>tf_pro_crypto_deep</td><td>/api/pro/crypto-deep</td><td>bearer</td><td>2 credits ($0.04)</td></tr>
-    <tr><td>tf_pro_sentiment</td><td>/api/pro/sentiment</td><td>bearer</td><td>2 credits ($0.04)</td></tr>
     <tr><td>tf_payment_buy_credits</td><td>/api/payment/buy-credits</td><td>none</td><td>free</td></tr>
     <tr><td>tf_payment_confirm</td><td>/api/payment/confirm</td><td>none</td><td>free</td></tr>
     <tr><td>tf_payment_balance</td><td>/api/payment/balance</td><td>bearer</td><td>free</td></tr>

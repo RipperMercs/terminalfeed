@@ -100,35 +100,6 @@
         "credits": 2,
         "category": "macro-finance"
       }
-    },
-    {
-      "resource": {
-        "url": "https://terminalfeed.io/api/pro/crypto-deep",
-        "description": "Deep crypto signal feed for agents: on-chain flow analytics, stablecoin issuance, exchange reserves, and protocol-level events curated for agent consumption. Two credits per call.",
-        "mimeType": "application/json"
-      },
-      "type": "http",
-      "method": "GET",
-      "x402Version": 2,
-      "accepts": [
-        {
-          "scheme": "exact",
-          "network": "eip155:8453",
-          "amount": "40000",
-          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          "payTo": "0x549c82e6bfc54bdae9a2073744cbc2af5d1fc6d1",
-          "maxTimeoutSeconds": 60,
-          "extra": {
-            "name": "USD Coin",
-            "version": "2"
-          }
-        }
-      ],
-      "metadata": {
-        "name": "Pro Crypto Deep Feed",
-        "credits": 2,
-        "category": "crypto-onchain"
-      }
     }
   ]
 }
