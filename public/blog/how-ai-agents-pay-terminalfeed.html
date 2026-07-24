@@ -240,21 +240,17 @@
 
       <table>
         <tr><th>Endpoint</th><th>Cost</th><th>What it returns</th></tr>
-        <tr><td>/api/pro/briefing</td><td>1 cr</td><td>BTC + Fear and Greed + earthquakes + HN + ISS + predictions, composed</td></tr>
-        <tr><td>/api/pro/macro</td><td>2 cr</td><td>FRED + Finnhub + Frankfurter rollup, history supported</td></tr>
-        <tr><td>/api/pro/crypto-deep</td><td>2 cr</td><td>Per-coin deep dive with on-chain network stats</td></tr>
+        <tr><td>/api/pro/briefing</td><td>1 cr</td><td>Earthquakes + HN + ISS + prediction markets, composed</td></tr>
+        <tr><td>/api/pro/macro</td><td>2 cr</td><td>FRED + Frankfurter rollup, history supported</td></tr>
         <tr><td>/api/pro/agent-context</td><td>2 cr</td><td>Curated paste-ready system prompt of current world state</td></tr>
-        <tr><td>/api/pro/sentiment</td><td>2 cr</td><td>Crypto F and G plus trending symbols with sentiment scoring</td></tr>
         <tr><td>/api/pro/world-deltas</td><td>2 cr</td><td>Polling endpoint, events newer than ?since=ISO timestamp</td></tr>
-        <tr><td>/api/pro/correlation-matrix</td><td>2 cr</td><td>Computed correlations across 10 historical series</td></tr>
-        <tr><td>/api/pro/whales</td><td>2 cr</td><td>Large BTC, ETH, Solana transactions with attribution</td></tr>
-        <tr><td>/api/pro/exchange-flows</td><td>2 cr</td><td>19-wallet labeled list of exchange-controlled addresses</td></tr>
-        <tr><td>/api/pro/defi-tvl</td><td>2 cr</td><td>Top-50 DeFi protocols and chain rollups, normalized</td></tr>
-        <tr><td>/api/pro/stablecoin-flows</td><td>2 cr</td><td>Top-20 stablecoins with 1d, 7d, 30d deltas and aggregate bias</td></tr>
+        <tr><td>/api/pro/correlation-matrix</td><td>2 cr</td><td>Computed correlations across FRED macro series</td></tr>
         <tr><td>/api/pro/github-velocity</td><td>2 cr</td><td>GitHub trending repos with computed velocity score</td></tr>
+        <tr><td>/api/pro/feed-reliability</td><td>2 cr</td><td>Signed reliability breakdown for every monitored feed</td></tr>
+        <tr><td>/api/pro/feed-reliability/history</td><td>2 cr</td><td>Daily reliability time-series for one feed</td></tr>
       </table>
 
-      <p>Pricing: <strong>1 credit = $0.02</strong>. So a typical 2-credit call costs four cents. A research agent that hits ten different premium endpoints to assemble context for a single task spends about twenty cents. A market-watching agent that polls <code>/api/pro/world-deltas</code> every minute for an entire day costs about $30. You can fund the budget once and let the agent run.</p>
+      <p>Pricing: <strong>1 credit = $0.02</strong>. So a typical 2-credit call costs four cents. A research agent that hits every premium endpoint to assemble context for a single task spends about twenty cents. A market-watching agent that polls <code>/api/pro/world-deltas</code> every minute for an entire day costs about $30. You can fund the budget once and let the agent run.</p>
 
       <h2>Step 1: Check the payment surface</h2>
 
