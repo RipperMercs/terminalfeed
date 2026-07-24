@@ -1230,18 +1230,10 @@ function handleIndex() {
       endpoints: [
         { path: '/api/pro/briefing', cost_credits: 1 },
         { path: '/api/pro/macro', cost_credits: 2 },
-        { path: '/api/pro/crypto-deep', cost_credits: 2 },
-        { path: '/api/pro/sentiment', cost_credits: 2 },
         { path: '/api/pro/world-deltas', cost_credits: 2 },
         { path: '/api/pro/agent-context', cost_credits: 2 },
         { path: '/api/pro/correlation-matrix', cost_credits: 2 },
-        { path: '/api/pro/whales', cost_credits: 2 },
-        { path: '/api/pro/exchange-flows', cost_credits: 2 },
-        { path: '/api/pro/defi-tvl', cost_credits: 2 },
-        { path: '/api/pro/stablecoin-flows', cost_credits: 2 },
         { path: '/api/pro/github-velocity', cost_credits: 2 },
-        { path: '/api/pro/regime', cost_credits: 2 },
-        { path: '/api/pro/anomalies', cost_credits: 2 },
       ],
       cross_site: 'Credits work on tensorfeed.ai too. Same wallet, same chain, shared credit pool. Path structure matches /api/payment/* on both domains so SDK code is portable.',
     },
@@ -9470,15 +9462,9 @@ var WEBHOOK_DELIVERY_TIMEOUT_MS = 8000;
 var WEBHOOK_ALLOWED_ENDPOINTS = {
   'briefing': 'tf_premium_briefing',
   'macro': 'tf_premium_macro',
-  'crypto-deep': 'tf_premium_crypto_deep',
   'agent-context': 'tf_premium_agent_context',
-  'sentiment': 'tf_premium_sentiment',
   'world-deltas': 'tf_premium_world_deltas',
   'correlation-matrix': 'tf_premium_correlation_matrix',
-  'whales': 'tf_premium_whales',
-  'exchange-flows': 'tf_premium_exchange_flows',
-  'regime': 'tf_premium_regime',
-  'anomalies': 'tf_premium_anomalies',
 };
 
 // Parse a host as an IPv4 literal in any encoding inet_aton accepts: dotted
@@ -9967,15 +9953,9 @@ async function _fetchEndpointDataForWebhook(env, endpointSlug) {
   switch (endpointSlug) {
     case 'briefing':            return await fetchProBriefing(env, fakeUrl);
     case 'macro':               return await fetchProMacro(env, fakeUrl);
-    case 'crypto-deep':         return await fetchProCryptoDeep(env, fakeUrl);
     case 'agent-context':       return await fetchProAgentContext(env, fakeUrl);
-    case 'sentiment':           return await fetchProSentiment(env, fakeUrl);
     case 'world-deltas':        return await fetchProWorldDeltas(env, fakeUrl);
     case 'correlation-matrix':  return await fetchProCorrelationMatrix(env, fakeUrl);
-    case 'whales':              return await fetchProWhales(env, fakeUrl);
-    case 'exchange-flows':      return await fetchProExchangeFlows(env, fakeUrl);
-    case 'regime':              return await fetchProRegime(env, fakeUrl);
-    case 'anomalies':           return await fetchProAnomalies(env, fakeUrl);
     default: throw new Error('unknown_endpoint');
   }
 }
@@ -9985,7 +9965,7 @@ async function _fetchEndpointDataForWebhook(env, endpointSlug) {
 // MCP server (Model Context Protocol over HTTP/JSON-RPC 2.0)
 // =============================================================================
 //
-// Exposes the 9 premium endpoints + payment endpoints as native MCP tools an
+// Exposes the premium endpoints + payment endpoints as native MCP tools an
 // agent can call from Claude Desktop, Claude Code, or any client using
 // @modelcontextprotocol/sdk. The TerminalFeed bearer token doubles as the
 // MCP auth credential: clients that need to call /api/pro/* tools pass the
@@ -10004,7 +9984,11 @@ var MCP_SERVER_INFO = {
   // tool descriptions for the Bazaar pilot (tf_premium_briefing).
   // 1.1.1 = error-path hardening (scrubbed tool errors) + schema-level
   // maxLength caps on all free-text tool parameters.
-  version: '1.1.1',
+  // 1.2.0 = removed all crypto/stock-sourced tools (crypto-deep, whales,
+  // exchange-flows, defi-tvl, stablecoin-flows, sentiment, regime, anomalies)
+  // and stripped crypto/stock legs from briefing/macro/correlation-matrix/
+  // agent-context for market-data licensing compliance (2026-07-23).
+  version: '1.2.0',
 };
 
 function _toolToMCP(def) {
@@ -10107,21 +10091,12 @@ function _syntheticRequestForTool(toolName, args, originalRequest) {
     case 'tf_ai_stack_cves':       path = '/api/ai-stack-cves'; break;
     case 'tf_premium_briefing':    path = '/api/pro/briefing'; break;
     case 'tf_premium_macro':       path = '/api/pro/macro'; break;
-    case 'tf_premium_crypto_deep': path = '/api/pro/crypto-deep'; break;
     case 'tf_premium_agent_context':      path = '/api/pro/agent-context'; break;
-    case 'tf_premium_sentiment':          path = '/api/pro/sentiment'; break;
     case 'tf_premium_world_deltas':       path = '/api/pro/world-deltas'; break;
     case 'tf_premium_correlation_matrix': path = '/api/pro/correlation-matrix'; break;
-    case 'tf_premium_whales':             path = '/api/pro/whales'; break;
-    case 'tf_premium_exchange_flows':     path = '/api/pro/exchange-flows'; break;
-    case 'tf_premium_defi_tvl':           path = '/api/pro/defi-tvl'; break;
-    case 'tf_premium_stablecoin_flows':   path = '/api/pro/stablecoin-flows'; break;
     case 'tf_premium_github_velocity':    path = '/api/pro/github-velocity'; break;
     case 'tf_premium_feed_reliability':         path = '/api/pro/feed-reliability'; break;
     case 'tf_premium_feed_reliability_history': path = '/api/pro/feed-reliability/history'; break;
-    case 'tf_preview_regime':             path = '/api/preview/regime'; break;
-    case 'tf_premium_regime':             path = '/api/pro/regime'; break;
-    case 'tf_premium_anomalies':          path = '/api/pro/anomalies'; break;
     case 'tf_payment_buy_credits':        path = '/api/payment/buy-credits'; method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_confirm':            path = '/api/payment/confirm';     method = 'POST'; body = JSON.stringify(args); break;
     case 'tf_payment_balance':            path = '/api/payment/balance'; break;
@@ -10179,21 +10154,12 @@ async function _dispatchToolDirectly(toolName, args, originalRequest, env) {
     case 'tf_ai_stack_cves':       return await handleAiStackCves(env);
     case 'tf_premium_briefing':    return await handleProBriefing(req, env, url);
     case 'tf_premium_macro':       return await handleProMacro(req, env, url);
-    case 'tf_premium_crypto_deep': return await handleProCryptoDeep(req, env, url);
     case 'tf_premium_agent_context':      return await handleProAgentContext(req, env, url);
-    case 'tf_premium_sentiment':          return await handleProSentiment(req, env, url);
     case 'tf_premium_world_deltas':       return await handleProWorldDeltas(req, env, url);
     case 'tf_premium_correlation_matrix': return await handleProCorrelationMatrix(req, env, url);
-    case 'tf_premium_whales':             return await handleProWhales(req, env, url);
-    case 'tf_premium_exchange_flows':     return await handleProExchangeFlows(req, env, url);
-    case 'tf_premium_defi_tvl':           return await handleProDefiTvl(req, env, url);
-    case 'tf_premium_stablecoin_flows':   return await handleProStablecoinFlows(req, env, url);
     case 'tf_premium_github_velocity':    return await handleProGithubVelocity(req, env, url);
     case 'tf_premium_feed_reliability':         return await handleProFeedReliability(req, env, url);
     case 'tf_premium_feed_reliability_history': return await handleProFeedReliabilityHistory(req, env, url);
-    case 'tf_preview_regime':             return await handlePreviewRegime(req, env, url);
-    case 'tf_premium_regime':             return await handleProRegime(req, env, url);
-    case 'tf_premium_anomalies':          return await handleProAnomalies(req, env, url);
     case 'tf_payment_buy_credits':        return await handleBuyCredits(req, env);
     case 'tf_payment_confirm':            return await handleConfirmPayment(req, env);
     case 'tf_payment_balance':            return await handleBalance(req, env);
@@ -10276,7 +10242,7 @@ async function handleMcp(request, env) {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: { tools: {} },
       serverInfo: MCP_SERVER_INFO,
-      instructions: 'TerminalFeed exposes 9 premium real-time data endpoints (crypto, macro, on-chain, sentiment, etc.) plus 9 free endpoints. Premium tools require a bearer token (tf_live_<64-char-hex>). Buy credits with USDC on Base via tf_payment_buy_credits + tf_payment_confirm. Tokens are cross-redeemable on tensorfeed.ai.',
+      instructions: 'TerminalFeed exposes premium composed data endpoints (macro, agent context, world deltas, correlation matrix, GitHub velocity, feed reliability) plus a set of free real-time endpoints. Premium tools require a bearer token (tf_live_<64-char-hex>). Buy credits with USDC on Base via tf_payment_buy_credits + tf_payment_confirm. Tokens are cross-redeemable on tensorfeed.ai.',
     });
   }
 
@@ -10514,21 +10480,20 @@ const LLM_TOOL_DEFINITIONS = [
   {
     name: 'tf_premium_briefing',
     short_description: 'Composed world briefing including prediction markets (1 credit, $0.02). Strict premium.',
-    description: 'Premium version of tf_briefing. Adds Polymarket prediction markets to the standard briefing payload, supports section filtering via ?include=, and supports ?history=24h for hourly BTC chart. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Use when the agent needs prediction-market context or recent BTC trajectory in addition to the basic snapshot. Strict premium, no free trial. Free basic version (without predictions or history series) available at tf_briefing (no auth required).',
+    description: 'Premium version of tf_briefing. Adds Polymarket prediction markets to the standard briefing payload and supports section filtering via ?include=. Covers earthquakes, Hacker News, humans in space, space launches, and prediction markets. Costs 1 credit ($0.02 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Use when the agent needs prediction-market context in addition to the basic snapshot. Strict premium, no free trial. Free basic version (without predictions) available at tf_briefing (no auth required). Note: crypto legs (BTC price, Fear and Greed) were removed 2026-07-23 for market-data licensing compliance.',
     url: 'https://terminalfeed.io/api/pro/briefing',
     method: 'GET',
     auth: 'bearer',
     tier: 'premium',
     cost_credits: 1,
     parameters: {
-      include: { type: 'string', maxLength: 500, description: 'Comma-separated subset of sections: btc, fear-greed, earthquakes, hackernews, humans-in-space, predictions. Omit for all sections.' },
-      history: { type: 'string', maxLength: 100, enum: ['24h'], description: 'When set to 24h, response includes a series.btc_24h hourly array (24 data points).' }
+      include: { type: 'string', maxLength: 500, description: 'Comma-separated subset of sections: earthquakes, hackernews, humans-in-space, launches, predictions. Omit for all sections.' }
     }
   },
   {
     name: 'tf_premium_macro',
-    short_description: 'Composed macro snapshot: FRED + forex + commodities + indices (2 credits).',
-    description: 'Premium composed macroeconomic snapshot in one HTTP call. Includes 7 FRED economic series (Fed rate, CPI, unemployment, GDP growth, 10-year treasury), 4 USD-base forex pairs (EUR, JPY, GBP, CHF), gold via PAXG/Kraken, US market context (SPY, DIA, QQQ, VIX), and oil/natural gas via FRED. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Optional ?history=30d adds 30-day historical series. Use this instead of calling 14 different upstream APIs separately.',
+    short_description: 'Composed macro snapshot: FRED economic series + forex + oil/nat-gas (2 credits).',
+    description: 'Premium composed macroeconomic snapshot in one HTTP call. Includes FRED economic series (Fed rate, CPI, unemployment, GDP growth, 10-year treasury), 4 USD-base forex pairs (EUR, JPY, GBP, CHF) via Frankfurter, and oil/natural gas via FRED. All sources are public/gov (FRED, US government, public domain) or ECB reference rates (Frankfurter). Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Optional ?history=30d adds 30-day historical series. Note: US equity indices (SPY/DIA/QQQ), VIX, and gold were removed 2026-07-23 (Finnhub/Kraken are not licensed for commercial redistribution).',
     url: 'https://terminalfeed.io/api/pro/macro',
     method: 'GET',
     auth: 'bearer',
@@ -10536,20 +10501,6 @@ const LLM_TOOL_DEFINITIONS = [
     cost_credits: 2,
     parameters: {
       history: { type: 'string', maxLength: 100, enum: ['30d'], description: 'When set to 30d, FRED entries include a series array of 30 daily observations and forex.series is populated.' }
-    }
-  },
-  {
-    name: 'tf_premium_crypto_deep',
-    short_description: 'Top 50 coins + Binance + on-chain BTC + ETH gas (2 credits).',
-    description: 'Premium deep crypto snapshot. Includes top 50 coins by market cap with 1h/24h/7d change, Binance live ticker for top 20 USDT pairs by volume, Bitcoin network statistics from mempool.space (block height, fee tiers, hashrate, mempool size), and Ethereum gas oracle from Etherscan. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. Optional ?coins= filter and ?history=30d for daily BTC OHLCV. Use this instead of calling CoinGecko + Binance + mempool.space + Etherscan separately.',
-    url: 'https://terminalfeed.io/api/pro/crypto-deep',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {
-      coins: { type: 'string', maxLength: 500, description: 'Comma-separated symbol filter, e.g. btc,eth,sol. Omit to get all top 50.' },
-      history: { type: 'string', maxLength: 100, enum: ['30d'], description: 'When set to 30d, response includes series.btc_30d with daily OHLCV candles.' }
     }
   },
   {
@@ -10590,53 +10541,9 @@ const LLM_TOOL_DEFINITIONS = [
     }
   },
   {
-    name: 'tf_premium_stablecoin_flows',
-    short_description: 'Net circulation changes for top stablecoins (USDT, USDC, DAI, etc.) over 24h/7d/30d (2 credits).',
-    description: 'Composed stablecoin flow snapshot for crypto traders. Returns top 20 stablecoins by circulating supply, each with 24h/7d/30d net change in USD and percent, top chains breakdown, peg type, and current price. Aggregate includes total circulating, net inflow/outflow over 24h and 7d, growing-vs-shrinking count, and a bias label (growing / shrinking / balanced). Source: DefiLlama stablecoins API. Trading agents use stablecoin growth as a leading indicator for crypto buying power. Costs 2 credits ($0.04 USDC). 1-hour cache. Bearer auth required.',
-    url: 'https://terminalfeed.io/api/pro/stablecoin-flows',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
-  },
-  {
-    name: 'tf_premium_defi_tvl',
-    short_description: 'Top 50 DeFi protocols by TVL with movers and category breakdown (2 credits).',
-    description: 'Composed DeFi total-value-locked snapshot for crypto research and trading agents. Returns top 50 protocols by TVL (each with 1h/24h/7d change, category, chain, market cap, FDV), top 15 chains by TVL, by-category aggregate, and biggest gainers/losers over 24h and 7d windows. Source: DefiLlama free public API. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
-    url: 'https://terminalfeed.io/api/pro/defi-tvl',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
-  },
-  {
-    name: 'tf_premium_exchange_flows',
-    short_description: 'ETH net inflow/outflow to major CEX hot wallets, last 3 blocks (2 credits).',
-    description: 'Tracks ETH transfers in/out of major centralized exchange hot wallets (Binance, Coinbase, OKX, Kraken, Bybit, Crypto.com, KuCoin) in the last 3 blocks. Each transfer tagged as inflow (user -> exchange, often precedes selling), outflow (exchange -> user, often HODL withdrawal), or inter_exchange. Aggregated per-exchange and globally with net_eth, net_usd, and bias label (inflow_dominant / outflow_dominant / balanced). Threshold 5 ETH minimum (~$11K at $2300/ETH) to filter retail noise. Useful for trading bots detecting regime shifts: sustained large net inflow signals selling pressure ahead, sustained outflow signals accumulation. Pair with tf_premium_whales for context. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required. v1 covers ETH only; BTC requires a labeled-address dataset.',
-    url: 'https://terminalfeed.io/api/pro/exchange-flows',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
-  },
-  {
-    name: 'tf_premium_whales',
-    short_description: 'Large on-chain BTC and ETH transactions in real time (2 credits).',
-    description: 'Tracks whale-sized on-chain transactions on Bitcoin and Ethereum. BTC: scans the last 30 unconfirmed mempool transactions via mempool.space and surfaces any with output >=50 BTC; tagged with USD-equivalent at current BTC spot. ETH: scans the latest confirmed block via Etherscan eth_getBlockByNumber and surfaces transfers >=100 ETH; tagged with USD-equivalent at current ETH spot. Each whale entry includes tx_hash, value in native and USD units, from/to addresses (ETH only), and explorer URL. Useful for trading bots watching for institutional flow signals (large exchange in/outflows, treasury moves, OTC settlements). Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.',
-    url: 'https://terminalfeed.io/api/pro/whales',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
-  },
-  {
     name: 'tf_premium_correlation_matrix',
-    short_description: '30-day Pearson correlation matrix across BTC, ETH, SOL, SPY, QQQ, GLD (2 credits).',
-    description: 'Pre-computed cross-asset correlation matrix for AI trading and portfolio agents. Returns 30-day Pearson correlations on daily simple returns for 6 assets: BTC, ETH, SOL (Coinbase candles), and SPY, QQQ, GLD (Stooq.com CSVs). Output includes both a pairs array (sorted by absolute r descending) and an NxN matrix object for easy lookup. Each pair tagged with relationship strength (negligible / weak / moderate / strong) and direction (positive / negative). Saves the agent from fetching 6 historical price series and running the covariance math. Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required.',
+    short_description: '30-day Pearson correlation matrix across FRED macro series: rates, USD index, oil (2 credits).',
+    description: 'Pre-computed macro correlation matrix for AI trading and portfolio agents. Returns 30-day Pearson correlations on daily simple returns for 4 FRED series (US gov, public domain): 10Y treasury yield, 2Y treasury yield, trade-weighted USD index, and WTI crude oil. Output includes both a pairs array (sorted by absolute r descending) and an NxN matrix object for easy lookup. Each pair tagged with relationship strength (negligible / weak / moderate / strong) and direction (positive / negative). Costs 2 credits ($0.04 USDC). 30-min cache. Bearer auth required. Note: crypto and equity legs were removed 2026-07-23 for market-data licensing compliance.',
     url: 'https://terminalfeed.io/api/pro/correlation-matrix',
     method: 'GET',
     auth: 'bearer',
@@ -10647,7 +10554,7 @@ const LLM_TOOL_DEFINITIONS = [
   {
     name: 'tf_premium_agent_context',
     short_description: 'Curated "everything an LLM should know right now" with paste-ready system_prompt (2 credits).',
-    description: 'The "always start here" premium call for autonomous agents. Composes 13 upstream sources into a curated world-state snapshot: BTC ticker, Fear and Greed, VIX, Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top Polymarket markets, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string (~350 tokens) the agent pastes verbatim into its LLM context. Saves the agent from making 13 separate calls and writing a formatter. Curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required.',
+    description: 'The "always start here" premium call for autonomous agents. Composes multiple public/gov upstream sources into a curated world-state snapshot: Fed funds rate, USD-base forex (EUR/JPY/GBP/CHF), HN front page top 5, significant earthquakes 24h, upcoming space launches, top Polymarket markets, and infrastructure status (GitHub, Cloudflare, OpenAI, Anthropic). Returns BOTH a structured JSON `context` object for parsers AND a pre-formatted `system_prompt` string the agent pastes verbatim into its LLM context. Saves the agent from making many separate calls and writing a formatter. Curation choice (which signals matter, how to compress them) is the moat. Costs 2 credits ($0.04 USDC). 5-min cache. Bearer auth required. Note: crypto (BTC, Fear and Greed) and VIX legs were removed 2026-07-23 for market-data licensing compliance.',
     url: 'https://terminalfeed.io/api/pro/agent-context',
     method: 'GET',
     auth: 'bearer',
@@ -10667,49 +10574,6 @@ const LLM_TOOL_DEFINITIONS = [
     parameters: {
       since: { type: 'string', maxLength: 200, description: 'ISO 8601 timestamp. Returns events newer than this. Defaults to 1 hour ago. Clamped to 1 hour ago if older.' }
     }
-  },
-  {
-    name: 'tf_premium_sentiment',
-    short_description: 'Composite market sentiment: Fear & Greed + VIX + trending tickers (2 credits).',
-    description: 'Premium composite sentiment snapshot. Aggregates Crypto Fear and Greed Index (alternative.me), VIX volatility index (Finnhub), trending ticker mentions across Hacker News top 30 + Reddit r/CryptoCurrency / r/wallstreetbets / r/stocks hot posts with per-headline keyword-based sentiment scoring, and top Polymarket prediction-market signals. Output includes per-ticker mention_count_24h, sentiment_score (-1 to +1), sentiment_label, and sample headlines. Use to gauge market mood before a trading or research decision. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>. The notes field documents that scoring is keyword-based (crude but signal-bearing), not LLM-derived; treat as one input to a broader analysis.',
-    url: 'https://terminalfeed.io/api/pro/sentiment',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
-  },
-  {
-    name: 'tf_preview_regime',
-    short_description: 'Free preview of the market-regime verdict: top label + dominant driver + why (no auth, no credits).',
-    description: 'Free, zero-setup preview of the paid tf_premium_regime verdict. Returns the single regime label (risk_on / risk_off / transition / stress), the risk_score, the confidence, the one dominant driver, and a one-line why. Rate-limited to 10/IP/day and unsigned. Versus this preview, the paid tf_premium_regime (GET /api/pro/regime, 2 credits) adds the full ranked drivers with weights and contributions, all raw inputs (VIX + 30d z-score, 10y trend, BTC dominance, Fear and Greed), an Ed25519-signed receipt, and no rate limit. No auth required. Statistical heuristic, not investment advice.',
-    url: 'https://terminalfeed.io/api/preview/regime',
-    method: 'GET',
-    auth: 'none',
-    tier: 'free',
-    parameters: {}
-  },
-  {
-    name: 'tf_premium_regime',
-    short_description: 'Cross-asset market regime: risk_on / risk_off / transition / stress with rationale (2 credits).',
-    description: 'Premium regime classifier. Blends crypto Fear & Greed (alternative.me), VIX (FRED VIXCLS), 24h total crypto market-cap change (CoinLore), and the 10y treasury-yield trend (FRED DGS10) into a labeled regime (risk_on, risk_off, transition, or stress), a risk_score in [-1..+1], a 0-1 confidence, and a per-input drivers[] breakdown showing each signal value, weight, and contribution. A stress override fires when VIX>30 or (Fear&Greed<15 and 24h market cap <-3%). Versus the free preview (tf_preview_regime / GET /api/preview/regime) it adds the full ranked drivers, all raw inputs, a signed receipt, and no rate limit. The documented, versioned weighting is the value; the upstreams are free. Statistical heuristic, not investment advice. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
-    url: 'https://terminalfeed.io/api/pro/regime',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
-  },
-  {
-    name: 'tf_premium_anomalies',
-    short_description: 'Ranked cross-feed statistical anomaly stream: vol, rates, sentiment, crypto, seismic (2 credits).',
-    description: 'Premium anomaly screen. Surfaces statistical outliers across feeds in one ranked list: z-score outliers (|z|>2) over a trailing 30 daily-observation window for VIX (FRED VIXCLS) and the 10y treasury yield (FRED DGS10), plus threshold flags for extreme crypto Fear & Greed (<=20 or >=80), large 24h crypto market-cap moves (>5%), and elevated M4.5+ earthquake counts (>=8 in 24h, USGS). Each anomaly carries type, signal, value, baseline, z_score where applicable, severity, and a description. Distinct from world-deltas (a raw time-sorted event log with no statistical filtering): this answers "is anything statistically unusual right now". A screen, not a prediction. Costs 2 credits ($0.04 USDC). Requires Authorization: Bearer tf_live_<64-char-hex>.',
-    url: 'https://terminalfeed.io/api/pro/anomalies',
-    method: 'GET',
-    auth: 'bearer',
-    tier: 'premium',
-    cost_credits: 2,
-    parameters: {}
   },
   {
     name: 'tf_payment_buy_credits',
@@ -11056,22 +10920,12 @@ function aftaReceiptStatus(env) {
 var AFTA_ENDPOINT_FRESHNESS = {
   '/api/pro/briefing':           { maxAgeSeconds: 5 * 60 },
   '/api/pro/macro':              { maxAgeSeconds: 30 * 60 },
-  '/api/pro/crypto-deep':        { maxAgeSeconds: 5 * 60 },
   '/api/pro/agent-context':      { maxAgeSeconds: 10 * 60 },
-  '/api/pro/sentiment':          { maxAgeSeconds: 10 * 60 },
   '/api/pro/world-deltas':       { maxAgeSeconds: 5 * 60 },
   // correlation-matrix is a heavy compute over a 30-day window; the answer
   // changes slowly. A 1h SLA matches the 30-min server cache plus headroom.
   '/api/pro/correlation-matrix': { maxAgeSeconds: 60 * 60 },
-  '/api/pro/whales':             { maxAgeSeconds: 10 * 60 },
-  '/api/pro/exchange-flows':     { maxAgeSeconds: 10 * 60 },
-  // defi-tvl + stablecoin-flows roll up multi-window deltas; 2h covers the
-  // server cache (30m for tvl, 1h for stablecoins) plus rollover slack.
-  '/api/pro/defi-tvl':           { maxAgeSeconds: 2 * 60 * 60 },
-  '/api/pro/stablecoin-flows':   { maxAgeSeconds: 2 * 60 * 60 },
   '/api/pro/github-velocity':    { maxAgeSeconds: 60 * 60 },
-  '/api/pro/regime':             { maxAgeSeconds: 5 * 60 },
-  '/api/pro/anomalies':          { maxAgeSeconds: 5 * 60 },
   // The reliability breakdown reflects the feed-health monitor, which refreshes
   // every 5 min; a 48h SLA no-charges only if the monitor itself has stalled.
   // The /history endpoint is intentionally absent here (NULL_SLA: immutable past
@@ -11081,19 +10935,11 @@ var AFTA_ENDPOINT_FRESHNESS = {
 
 var AFTA_FRESHNESS_REASONS = {
   '/api/pro/briefing':           'composed live snapshot; capture window is the underlying minute-scale upstreams',
-  '/api/pro/macro':              'macro indicators (FRED, Finnhub, Frankfurter) update on multi-minute cadence',
-  '/api/pro/crypto-deep':        'live crypto + on-chain rollup; minute-scale cadence',
+  '/api/pro/macro':              'macro indicators (FRED, Frankfurter) update on multi-minute cadence',
   '/api/pro/agent-context':      'composed system-prompt of current world state; 5-10 min freshness',
-  '/api/pro/sentiment':          'live sentiment over trending crypto symbols',
   '/api/pro/world-deltas':       'rolling 1h bucket of world events; polling endpoint',
   '/api/pro/correlation-matrix': '30-day correlation series; recomputes hourly',
-  '/api/pro/whales':             'large transaction stream across BTC/ETH/SOL',
-  '/api/pro/exchange-flows':     'labeled-wallet flow ledger; minute-scale',
-  '/api/pro/defi-tvl':           'top-50 DeFi protocols + chain rollups; ~30 min upstream cadence',
-  '/api/pro/stablecoin-flows':   'top-20 stablecoins multi-window deltas; hourly upstream',
   '/api/pro/github-velocity':    'GitHub trending + computed velocity; hourly cadence',
-  '/api/pro/regime':             'composed regime signal over Fear&Greed + VIX + crypto mcap + 10y yield; 5-min freshness',
-  '/api/pro/anomalies':          'z-score + threshold screen over FRED, crypto, and seismic feeds; 5-min freshness',
 };
 
 function aftaResolveSLA(path) {
@@ -11112,17 +10958,9 @@ function aftaResolveSLA(path) {
 var PRO_ENDPOINT_CREDITS = {
   '/api/pro/briefing': 1,
   '/api/pro/macro': 2,
-  '/api/pro/crypto-deep': 2,
-  '/api/pro/regime': 2,
-  '/api/pro/anomalies': 2,
-  '/api/pro/sentiment': 2,
   '/api/pro/world-deltas': 2,
   '/api/pro/agent-context': 2,
   '/api/pro/correlation-matrix': 2,
-  '/api/pro/whales': 2,
-  '/api/pro/exchange-flows': 2,
-  '/api/pro/defi-tvl': 2,
-  '/api/pro/stablecoin-flows': 2,
   '/api/pro/github-velocity': 2,
   '/api/pro/feed-reliability': 2,
   '/api/pro/feed-reliability/history': 2,
@@ -11139,19 +10977,11 @@ function proCreditsFor(path) {
 // STRICT_PREMIUM_PATHS) are strict premium and 402 anonymous callers; all other
 // /api/pro/* paths grant a small daily free-trial quota per IP before a 402.
 var PRO_CATALOG_META = {
-  '/api/pro/briefing':           { category: 'agent', returns: 'One-call world snapshot (BTC, Fear & Greed, earthquakes, HN, ISS, predictions).', params: [{ name: 'include', required: false, description: 'comma-separated sources to include' }, { name: 'history', required: false, description: "set to 24h for a history series" }] },
-  '/api/pro/macro':              { category: 'macro', returns: 'FRED + Finnhub + Frankfurter macro rollup.', params: [{ name: 'history', required: false, description: 'set to 30d for a 30-point history series' }] },
-  '/api/pro/crypto-deep':        { category: 'crypto', returns: 'Per-coin deep dive across CoinGecko + on-chain network stats.', params: [{ name: 'coins', required: false, description: 'comma-separated symbols' }, { name: 'history', required: false, description: 'set to 30d for a history series' }] },
-  '/api/pro/regime':             { category: 'market', returns: 'Composite risk-on/off/transition/stress regime verdict with weighted drivers.', params: [], free_sibling: '/api/preview/regime' },
-  '/api/pro/anomalies':          { category: 'market', returns: 'Ranked cross-feed statistical outlier screen (z-score + thresholds).', params: [] },
-  '/api/pro/sentiment':          { category: 'market', returns: 'Crypto Fear & Greed + trending symbols with regex sentiment scoring.', params: [] },
+  '/api/pro/briefing':           { category: 'agent', returns: 'One-call world snapshot (earthquakes, HN, ISS, launches, predictions).', params: [{ name: 'include', required: false, description: 'comma-separated sources to include' }] },
+  '/api/pro/macro':              { category: 'macro', returns: 'FRED + Frankfurter macro rollup (rates, CPI, unemployment, GDP, forex).', params: [{ name: 'history', required: false, description: 'set to 30d for a 30-point history series' }] },
   '/api/pro/world-deltas':       { category: 'agent', returns: 'Polling feed of world events newer than ?since.', params: [{ name: 'since', required: false, description: 'ISO timestamp; events newer than this' }] },
   '/api/pro/agent-context':      { category: 'agent', returns: 'Curated paste-ready system_prompt of current world state.', params: [] },
-  '/api/pro/correlation-matrix': { category: 'market', returns: 'Computed correlations across 10 historical series.', params: [] },
-  '/api/pro/whales':             { category: 'onchain', returns: 'Large BTC/ETH/Solana transactions with attribution.', params: [] },
-  '/api/pro/exchange-flows':     { category: 'onchain', returns: 'Labeled-wallet exchange-controlled addresses + flows.', params: [] },
-  '/api/pro/defi-tvl':           { category: 'onchain', returns: 'Top-50 DeFi protocols + chain rollups, normalized.', params: [] },
-  '/api/pro/stablecoin-flows':   { category: 'onchain', returns: 'Top-20 stablecoins with 1d/7d/30d deltas + aggregate bias.', params: [] },
+  '/api/pro/correlation-matrix': { category: 'macro', returns: 'Computed correlations across FRED macro series (rates, USD index, oil).', params: [] },
   '/api/pro/github-velocity':    { category: 'dev', returns: 'GitHub trending repos with a computed velocity score.', params: [] },
   '/api/pro/feed-reliability':   { category: 'infra', returns: 'Signed full reliability breakdown for every monitored feed (composite + subscores + trust).', params: [], free_sibling: '/api/feed-reliability' },
   '/api/pro/feed-reliability/history': { category: 'infra', returns: 'Daily reliability time-series for one feed.', params: [{ name: 'feed', required: true, description: 'feed id, e.g. btc-price' }, { name: 'from', required: false, description: 'YYYY-MM-DD lower bound' }, { name: 'to', required: false, description: 'YYYY-MM-DD upper bound' }] },
@@ -11672,23 +11502,14 @@ var TF_PRO_NEXT_CALL = 2;
 
 var SUGGESTION_MAP = {
   '/api/pro/briefing': [
-    { path: '/api/pro/macro', why: 'Same composed pattern, deeper macro view: FRED + Finnhub + Frankfurter rollup with optional ?history=30d for 30-day series.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/macro', why: 'Same composed pattern, deeper macro view: FRED + Frankfurter rollup with optional ?history=30d for 30-day series.', credits: TF_PRO_NEXT_CALL },
     { path: '/api/pro/world-deltas', why: 'Polling endpoint, only the events newer than your last call. Pair with this briefing for incremental world-state tracking.', credits: TF_PRO_NEXT_CALL, defaultParams: { since: new Date(Date.now() - 5 * 60 * 1000).toISOString() } },
     { path: '/api/pro/agent-context', why: 'Composed paste-ready system_prompt of the current world state. Drop into an LLM call as system context.', credits: TF_PRO_NEXT_CALL },
   ],
   '/api/pro/macro': [
-    { path: '/api/pro/correlation-matrix', why: '30-day correlations across the 10 historical series feeding this macro view (incl. fed rate, CPI, treasury 10y, gold, oil).', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/sentiment', why: 'Cross-check macro signals against crypto sentiment (F&G + trending symbol sentiment scoring).', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/correlation-matrix', why: '30-day correlations across the macro series feeding this view (treasury 10y, treasury 2y, USD index, WTI oil).', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/agent-context', why: 'Composed paste-ready system_prompt of the current world state, macro included. Drop into an LLM call as system context.', credits: TF_PRO_NEXT_CALL },
     { path: '/api/economic-data', why: 'Free FRED rollup (Fed rate, CPI, unemployment) for spot checks without the premium history series.', credits: TF_FREE_NEXT_CALL },
-  ],
-  '/api/pro/crypto-deep': [
-    { path: '/api/pro/whales', why: 'Large BTC/ETH/Solana transactions with wallet attribution. Pair with the price action surfaced here.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/exchange-flows', why: 'Labeled-wallet exchange flow ledger. Real bias signal vs. just price movement.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/sentiment', why: 'Sentiment scoring over trending crypto symbols. Useful when this deep-dive shows divergence between price and on-chain.', credits: TF_PRO_NEXT_CALL },
-  ],
-  '/api/pro/sentiment': [
-    { path: '/api/pro/world-deltas', why: 'See whether sentiment shift maps to a fresh event (markets / disasters / launches).', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/crypto-deep', why: 'Drill into any symbol scored here with per-coin on-chain depth.', credits: TF_PRO_NEXT_CALL },
   ],
   '/api/pro/world-deltas': [
     { path: '/api/pro/briefing', why: 'Full composed snapshot if your "since" cursor missed too many events to reconstruct.', credits: TF_PRO_NEXT_CALL },
@@ -11700,27 +11521,11 @@ var SUGGESTION_MAP = {
   ],
   '/api/pro/correlation-matrix': [
     { path: '/api/pro/macro', why: 'The macro indicators that compose the correlation series. Drill into any single series here.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/crypto-deep', why: 'Per-coin price + on-chain depth for any crypto pair surfacing in the matrix.', credits: TF_PRO_NEXT_CALL },
-  ],
-  '/api/pro/whales': [
-    { path: '/api/pro/exchange-flows', why: 'Labeled-wallet flows. Cross-reference whale transactions against known exchange addresses.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/crypto-deep', why: 'Per-coin context (price action, on-chain network stats) for the assets these whales moved.', credits: TF_PRO_NEXT_CALL },
-  ],
-  '/api/pro/exchange-flows': [
-    { path: '/api/pro/whales', why: 'Large transactions stream. Pair with the labeled-wallet flows here for full directional bias.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/stablecoin-flows', why: 'Top-20 stablecoins with 1d/7d/30d deltas. Stablecoin inflows to exchanges are a leading indicator of crypto-buying.', credits: TF_PRO_NEXT_CALL },
-  ],
-  '/api/pro/defi-tvl': [
-    { path: '/api/pro/stablecoin-flows', why: 'Where the capital that funds DeFi TVL is parked. Useful upstream signal for TVL deltas.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/exchange-flows', why: 'Exchange flows ledger. Cross-check whether DeFi TVL drops correlate with off-chain liquidation flows.', credits: TF_PRO_NEXT_CALL },
-  ],
-  '/api/pro/stablecoin-flows': [
-    { path: '/api/pro/defi-tvl', why: 'DeFi TVL rollup. Stablecoin minting + on-chain bias here predicts where TVL lands.', credits: TF_PRO_NEXT_CALL },
-    { path: '/api/pro/exchange-flows', why: 'Labeled-wallet flows. Often the route stablecoins take before they show up as DeFi capital.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/economic-data', why: 'Free FRED rollup (Fed rate, CPI, unemployment) behind the series in this matrix.', credits: TF_FREE_NEXT_CALL },
   ],
   '/api/pro/github-velocity': [
     { path: '/api/gh-trending', why: 'Free GitHub trending feed for spot checks without the velocity scoring.', credits: TF_FREE_NEXT_CALL },
-    { path: '/api/pro/sentiment', why: 'Cross-check whether high-velocity projects are also gathering crypto-market sentiment.', credits: TF_PRO_NEXT_CALL },
+    { path: '/api/pro/world-deltas', why: 'Polling feed of world events newer than your cursor. Context for why a repo spiked.', credits: TF_PRO_NEXT_CALL },
   ],
 };
 
@@ -13225,7 +13030,6 @@ async function handlePremium(request, env, url, endpointPath, costCredits, fetch
 async function fetchProBriefing(env, url) {
   var includeParam = url.searchParams.get('include') || '';
   var include = includeParam ? includeParam.split(',').map(function(s) { return s.trim(); }) : null;
-  var wantHistory = url.searchParams.get('history') === '24h';
 
   function want(name) { return !include || include.indexOf(name) !== -1; }
 
@@ -13240,8 +13044,9 @@ async function fetchProBriefing(env, url) {
     sourceMeta.push({ name: name, start: Date.now() });
   }
 
-  add(want('btc'), 'btc', 'Binance.BTCUSDT', fetchBtcStats()); // resilient BTC; resolves to a parsed object, not a Response
-  add(want('fear-greed'), 'fear_greed', 'AlternativeMe.fng', fetchWithTimeout('https://api.alternative.me/fng/?limit=1'));
+  // BTC (Binance/Coinlore/Kraken) and Fear & Greed (alternative.me) legs removed
+  // 2026-07-23 for market-data licensing compliance. Remaining sources are
+  // public/gov (USGS) or permissively licensed (HN, TheSpaceDevs, Polymarket).
   add(want('earthquakes'), 'earthquakes', 'USGS.earthquakes_2_5_day', fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'));
   add(want('hackernews'), 'hackernews', 'HackerNews.topstories', fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json'));
   add(want('humans-in-space'), 'humans_in_space', 'TheSpaceDevs.astronauts', astrosFromKvOrLive(env));
@@ -13264,27 +13069,8 @@ async function fetchProBriefing(env, url) {
         };
         continue;
       }
-      if (key === 'btc') {
-        // fetchBtcStats resolves to a parsed object (not a Response).
-        var bp = r.value;
-        if (bp && bp.price > 0) {
-          sections.btc = {
-            price_usd: bp.price,
-            change_24h_percent: bp.change_24h || 0,
-            volume_24h: bp.volume_24h || 0,
-            high_24h: bp.high_24h || 0,
-            low_24h: bp.low_24h || 0,
-          };
-        }
-        continue;
-      }
       var d = await r.value.json();
-      if (key === 'fear_greed' && d && d.data && d.data[0]) {
-        sections.fear_greed = {
-          value: parseInt(d.data[0].value) || 0,
-          label: d.data[0].value_classification || '',
-        };
-      } else if (key === 'earthquakes') {
+      if (key === 'earthquakes') {
         var feats = (d && d.features) || [];
         sections.earthquakes = {
           count: feats.length,
@@ -13329,24 +13115,6 @@ async function fetchProBriefing(env, url) {
   // are fail-soft (allSettled + swallowed per-source catch), so the fetcher never
   // throws and the 5xx no-charge cannot cover this; the handler must declare it.
   if (Object.keys(sections).length === 0) out.__no_charge = 'empty_result';
-
-  if (wantHistory) {
-    var historyStart = Date.now();
-    sourceMeta.push({ name: 'CoinbaseExchange.BTCUSD_candles_3600', start: historyStart });
-    try {
-      var ch = await fetchWithTimeout('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600', {}, 6000);
-      var candles = await ch.json();
-      out.series = {
-        btc_24h: (Array.isArray(candles) ? candles : []).slice(0, 24).reverse().map(function(k) {
-          return { ts: k[0] * 1000, price: parseFloat(k[4]) || 0 };
-        }),
-      };
-      settled.push({ status: 'fulfilled', value: ch });
-    } catch (e) {
-      out.series = { btc_24h: [] };
-      settled.push({ status: 'rejected', reason: e });
-    }
-  }
 
   // Build _meta.sources from parallel arrays
   out._meta = {
@@ -13442,53 +13210,21 @@ async function fetchProMacro(env, url) {
       })()
     : Promise.resolve(null);
 
-  // Gold via Kraken PAXGUSD (proxies XAU)
-  var goldFetch = fetchWithTimeout('https://api.kraken.com/0/public/Ticker?pair=PAXGUSD', {}, 6000)
-    .then(function(res) { return res.json(); })
-    .catch(function() { return null; });
-
-  // Markets via Finnhub: SPY, DIA, QQQ, ^VIX
-  var stockSymbols = ['SPY', 'DIA', 'QQQ'];
-  var stockFetches = (env && env.FINNHUB_API_KEY) ? stockSymbols.map(function(sym) {
-    return fetchWithTimeout(
-      'https://finnhub.io/api/v1/quote?symbol=' + sym + '&token=' + env.FINNHUB_API_KEY,
-      {}, 6000
-    ).then(function(res) { return res.json(); })
-     .then(function(d) { return [sym, { price: d.c || 0, change: d.d || 0, change_percent: d.dp || 0 }]; })
-     .catch(function() { return [sym, null]; });
-  }) : [];
-  var vixFetch = (env && env.FINNHUB_API_KEY)
-    ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
-        .then(function(res) { return res.json(); })
-        .then(function(d) { return d && d.c ? { price: d.c, change: d.d || 0, change_percent: d.dp || 0, source: 'finnhub:^VIX' } : null; })
-        .catch(function() { return null; })
-    : Promise.resolve(null);
-  // Fallback for VIX via FRED VIXCLS (daily close)
-  var vixFallbackFetch = (env && env.FRED_API_KEY)
-    ? _fetchFredDailyValues(env, 'VIXCLS', 1).then(function(arr) {
-        if (arr && arr.length > 0) return { price: arr[arr.length - 1], source: 'fred:VIXCLS', freshness: 'previous_day_close' };
-        return null;
-      }).catch(function() { return null; })
-    : Promise.resolve(null);
+  // Gold (Kraken PAXG), US equity indices + VIX (Finnhub) removed 2026-07-23 for
+  // market-data licensing compliance. Macro rollup is now FRED (US gov, public
+  // domain) + Frankfurter (ECB reference rates) only. WTI oil and natural gas
+  // still come through the FRED bundle above and populate commodities.
 
   var _macroStart = Date.now();
   var sourceMeta = [
     { name: 'FRED.daily_series_bundle', start: _macroStart },
     { name: 'Frankfurter.forex_latest', start: _macroStart },
-    { name: 'Kraken.PAXG_USD', start: _macroStart },
-    { name: 'Finnhub.us_indices_bundle', start: _macroStart },
-    { name: 'Finnhub.VIX', start: _macroStart },
     { name: 'Frankfurter.forex_history', start: _macroStart },
-    { name: 'FRED.VIXCLS_fallback', start: _macroStart },
   ];
   var all = await Promise.allSettled([
     Promise.all(fredFetches),
     forexLatest,
-    goldFetch,
-    Promise.all(stockFetches),
-    vixFetch,
     forexHistory,
-    vixFallbackFetch,
   ]);
 
   var econ = {};
@@ -13504,14 +13240,7 @@ async function fetchProMacro(env, url) {
     forex.date = all[1].value.date || '';
   }
 
-  var commodities = { gold: null, silver: null, oil: null, nat_gas: null };
-  if (all[2].status === 'fulfilled' && all[2].value && all[2].value.result) {
-    var paxgEntries = Object.values(all[2].value.result);
-    var paxg = paxgEntries[0];
-    if (paxg && paxg.c && paxg.c[0]) {
-      commodities.gold = { price_usd: parseFloat(paxg.c[0]) || 0, source: 'paxg/kraken' };
-    }
-  }
+  var commodities = { silver: null, oil: null, nat_gas: null };
   if (econ.oil_wti) {
     commodities.oil = { price_usd: econ.oil_wti.value, date: econ.oil_wti.date, source: econ.oil_wti.source };
     if (econ.oil_wti.series) commodities.oil.series = econ.oil_wti.series;
@@ -13523,19 +13252,6 @@ async function fetchProMacro(env, url) {
   delete econ.oil_wti;
   delete econ.nat_gas;
 
-  var markets = {};
-  if (all[3].status === 'fulfilled') {
-    all[3].value.forEach(function(entry) {
-      if (entry && entry[1]) markets[entry[0].toLowerCase()] = entry[1];
-    });
-  }
-  if (all[4].status === 'fulfilled' && all[4].value) {
-    markets.vix = all[4].value;
-  } else if (all[6] && all[6].status === 'fulfilled' && all[6].value) {
-    // Fallback to FRED VIXCLS (previous-day close) when Finnhub VIX unavailable
-    markets.vix = all[6].value;
-  }
-
   var out = {
     source: 'terminalfeed-pro',
     endpoint: '/api/pro/macro',
@@ -13543,15 +13259,15 @@ async function fetchProMacro(env, url) {
     economic: econ,
     forex: forex,
     commodities: commodities,
-    markets: markets,
     notes: {
       usd_index: 'DXY not published by Frankfurter. Compose locally from EUR/JPY/GBP/CHF rates if needed.',
-      silver: 'Silver omitted in v1 (no free upstream source available without an additional key). Will add if a stable free source surfaces.',
+      silver: 'Silver omitted (no permissively-licensed free upstream source). Will add if a stable public/gov source surfaces.',
+      equities_and_vix: 'US equity indices (SPY/DIA/QQQ) and VIX removed 2026-07-23; their source (Finnhub) is not licensed for commercial redistribution. Gold (Kraken PAXG) removed for the same reason.',
       cadence: 'FRED series cadence varies (daily/weekly/monthly). Use the date field on each entry for staleness.',
     },
   };
 
-  if (wantHistory && all[5].status === 'fulfilled' && all[5].value && all[5].value.rates) {
+  if (wantHistory && all[2].status === 'fulfilled' && all[2].value && all[2].value.rates) {
     var fxRates = all[5].value.rates;
     var fxSeries = {};
     forexPairs.forEach(function(p) { fxSeries[p] = []; });
@@ -13569,321 +13285,15 @@ async function fetchProMacro(env, url) {
   // empty rollup rather than bill 2 credits for an all-null macro snapshot.
   var macroHasData = Object.keys(econ).some(function(k) { return econ[k] && econ[k].value != null; })
     || (forex && forex.rates && Object.keys(forex.rates).length > 0)
-    || ['gold', 'silver', 'oil', 'nat_gas'].some(function(k) { return commodities[k] != null; })
-    || Object.keys(markets).length > 0;
+    || ['silver', 'oil', 'nat_gas'].some(function(k) { return commodities[k] != null; });
   if (!macroHasData) out.__no_charge = 'empty_result';
   out._meta = _premiumMeta('/api/pro/macro', _buildSourcesMeta(all, sourceMeta));
   return out;
 }
 
-// ----- Sentiment scoring helpers (used by /api/pro/sentiment) -----
-
-const SENTIMENT_TICKERS = [
-  // Crypto (top 12 by relevance for sentiment chatter)
-  { symbol: 'BTC', cls: 'crypto', patterns: [/\bBTC\b/i, /\bBitcoin\b/i] },
-  { symbol: 'ETH', cls: 'crypto', patterns: [/\bETH\b/i, /\bEthereum\b/i, /\bEther\b/i] },
-  { symbol: 'SOL', cls: 'crypto', patterns: [/\bSOL\b/i, /\bSolana\b/i] },
-  { symbol: 'BNB', cls: 'crypto', patterns: [/\bBNB\b/i] },
-  { symbol: 'XRP', cls: 'crypto', patterns: [/\bXRP\b/i, /\bRipple\b/i] },
-  { symbol: 'ADA', cls: 'crypto', patterns: [/\bADA\b/i, /\bCardano\b/i] },
-  { symbol: 'DOGE', cls: 'crypto', patterns: [/\bDOGE\b/i, /\bDogecoin\b/i] },
-  { symbol: 'DOT', cls: 'crypto', patterns: [/\bDOT\b/i, /\bPolkadot\b/i] },
-  { symbol: 'LINK', cls: 'crypto', patterns: [/\bLINK\b/i, /\bChainlink\b/i] },
-  { symbol: 'AVAX', cls: 'crypto', patterns: [/\bAVAX\b/i, /\bAvalanche\b/i] },
-  { symbol: 'MATIC', cls: 'crypto', patterns: [/\bMATIC\b/i, /\bPolygon\b/i, /\bPOL\b/i] },
-  { symbol: 'NEAR', cls: 'crypto', patterns: [/\bNEAR\b/i] },
-  // US equities and ETFs
-  { symbol: 'SPY', cls: 'equity', patterns: [/\bSPY\b/, /\bS&P\s?500\b/i] },
-  { symbol: 'QQQ', cls: 'equity', patterns: [/\bQQQ\b/, /\bNasdaq\b/i] },
-  { symbol: 'NVDA', cls: 'equity', patterns: [/\bNVDA\b/, /\bNvidia\b/i] },
-  { symbol: 'AAPL', cls: 'equity', patterns: [/\bAAPL\b/, /\bApple\b/i] },
-  { symbol: 'MSFT', cls: 'equity', patterns: [/\bMSFT\b/, /\bMicrosoft\b/i] },
-  { symbol: 'GOOGL', cls: 'equity', patterns: [/\bGOOGL?\b/, /\bAlphabet\b/i, /\bGoogle\b/i] },
-  { symbol: 'AMZN', cls: 'equity', patterns: [/\bAMZN\b/, /\bAmazon\b/i] },
-  { symbol: 'META', cls: 'equity', patterns: [/\bMETA\b/, /\bFacebook\b/i] },
-  { symbol: 'TSLA', cls: 'equity', patterns: [/\bTSLA\b/, /\bTesla\b/i] },
-  { symbol: 'AMD', cls: 'equity', patterns: [/\bAMD\b/] },
-  // Crypto-adjacent equities
-  { symbol: 'COIN', cls: 'crypto-equity', patterns: [/\bCOIN\b/, /\bCoinbase\b/i] },
-  { symbol: 'MSTR', cls: 'crypto-equity', patterns: [/\bMSTR\b/, /\bMicroStrategy\b/i, /\bStrategy\b/] },
-  { symbol: 'MARA', cls: 'crypto-equity', patterns: [/\bMARA\b/, /\bMarathon\b/i] },
-  { symbol: 'RIOT', cls: 'crypto-equity', patterns: [/\bRIOT\b/, /\bRiot\s+Platforms\b/i] },
-];
-
-const POSITIVE_WORD_RE = /\b(surge|surges|surged|rally|rallies|rallied|bullish|moon|mooning|breakout|rebound|rebounds|rebounded|soar|soars|soared|climb|climbs|climbed|gain|gains|gained|jump|jumps|jumped|rise|rises|risen|rose|spike|spikes|spiked|ATH|all[\s-]?time[\s-]?high|beat|beats|beats?\s+expectations|strong|outperform|upgrade|upgraded|approved|approval|adopt|adopts|inflows|buying|long|buy|buys|bought|pump|pumping|pumped)\b/gi;
-
-const NEGATIVE_WORD_RE = /\b(crash|crashes|crashed|dump|dumps|dumped|bear|bearish|rekt|rug|rug[\s-]?pull|sell|sells|sold|short|shorts|shorted|decline|declines|declined|drop|drops|dropped|tank|tanks|tanked|plunge|plunges|plunged|fall|falls|fell|sink|sinks|sank|slide|slides|slid|miss|misses|missed|weak|underperform|downgrade|downgraded|lawsuit|sued|fraud|scam|hack|hacked|exploit|exploited|outflows|panic|fear|fears|concern|concerns|warning|warns)\b/gi;
-
-function _scoreHeadline(text) {
-  if (!text) return { score: 0, pos: 0, neg: 0 };
-  var pos = (text.match(POSITIVE_WORD_RE) || []).length;
-  var neg = (text.match(NEGATIVE_WORD_RE) || []).length;
-  if (pos + neg === 0) return { score: 0, pos: 0, neg: 0 };
-  return { score: (pos - neg) / (pos + neg), pos: pos, neg: neg };
-}
-
-function _findTickers(text) {
-  if (!text) return [];
-  var hits = [];
-  for (var i = 0; i < SENTIMENT_TICKERS.length; i++) {
-    var t = SENTIMENT_TICKERS[i];
-    for (var j = 0; j < t.patterns.length; j++) {
-      if (t.patterns[j].test(text)) {
-        hits.push(t.symbol);
-        break;
-      }
-    }
-  }
-  return hits;
-}
-
-function _labelScore(s) {
-  if (s > 0.3) return 'positive';
-  if (s > 0.1) return 'moderately_positive';
-  if (s > -0.1) return 'neutral';
-  if (s > -0.3) return 'moderately_negative';
-  return 'negative';
-}
-
-function _vixLabel(v) {
-  if (v == null || isNaN(v)) return 'unknown';
-  if (v < 15) return 'low_volatility';
-  if (v < 25) return 'normal';
-  if (v < 40) return 'elevated';
-  return 'high_volatility';
-}
-
-// ----- Exchange flows: net ETH movement in/out of major CEX hot wallets -----
-//
-// Net inflow to exchanges historically correlates with selling pressure.
-// Net outflow correlates with accumulation. Bots watching for regime shifts
-// pay close attention to this signal. We hardcode a small list of well-known,
-// publicly-documented exchange hot wallets and scan recent blocks for
-// transfers touching them.
-//
-// We keep BTC out of this v1 because BTC exchange address tagging requires a
-// labeled-address dataset (CryptoQuant, Arkham) that we don't have for free.
-// ETH is feasible because hot wallets are a small set of well-known addresses.
-
-var ETH_EXCHANGE_ADDRESSES = {
-  // All addresses lowercase for case-insensitive comparison. Documentation:
-  // https://etherscan.io/accounts/label/exchange and individual exchange disclosures.
-  '0x28c6c06298d514db089934071355e5743bf21d60': 'Binance',
-  '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be': 'Binance',
-  '0xdfd5293d8e347dfe59e90efd55b2956a1343963d': 'Binance',
-  '0x56eddb7aa87536c09ccc2793473599fd21a8b17f': 'Binance',
-  '0x9696f59e4d72e237be84ffd425dcad154bf96976': 'Binance',
-  '0x71660c4005ba85c37ccec55d0c4493e66fe775d3': 'Coinbase',
-  '0x503828976d22510aad0201ac7ec88293211d23da': 'Coinbase',
-  '0xddfabcdc4d8ffc6d5beaf154f18b778f892a0740': 'Coinbase',
-  '0x3cd751e6b0078be393132286c442345e5dc49699': 'Coinbase',
-  '0x5041ed759dd4afc3a72b8192c143f72f4724081a': 'OKX',
-  '0xa7efae728d2936e78bda97dc267687568dd593f3': 'OKX',
-  '0x2910543af39aba0cd09dbb2d50200b3e800a63d2': 'Kraken',
-  '0xe853c56864a2ebe4576a807d26fdc4a0ada63919': 'Kraken',
-  '0xf89d7b9c864f589bbf53a82105107622b35eaa40': 'Bybit',
-  '0xa929022c9107643515f5c777ce9a910f0d1e490c': 'Bybit',
-  '0x46340b20830761efd32832a74d7169b29feb9758': 'Crypto.com',
-  '0x6262998ced04146fa42253a5c0af90ca02dfd2a3': 'Crypto.com',
-  '0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec': 'KuCoin',
-  '0x2b5634c42055806a59e9107ed44d43c426e58258': 'KuCoin',
-};
-
-var ETH_FLOW_WEI_THRESHOLD = 5n * 1000000000000000000n;  // 5 ETH (~$11K at $2,300/ETH)
-
-async function fetchProExchangeFlows(env, url) {
-  // Spot price for USD-tagging. Resilient (Binance -> Coinbase -> Coinlore ->
-  // Kraken), shaped as { price } so the consumer (firstResults[0].value.price)
-  // is unchanged.
-  var ethPriceFetch = fetchSpotUsd('ETH').then(function(p) { return { price: p }; });
-
-  // Latest block number
-  var blockNumFetch = fetchWithTimeout(
-    'https://ethereum-rpc.publicnode.com',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
-    },
-    6000
-  ).then(function(r) { return r.json(); }).catch(function() { return null; });
-
-  var _xfStart = Date.now();
-  var sourceMeta = [
-    { name: 'Binance.ETHUSDT_price', start: _xfStart },
-    { name: 'PublicNode.eth_blockNumber', start: _xfStart },
-  ];
-  var firstResults = await Promise.allSettled([ethPriceFetch, blockNumFetch]);
-
-  var ethPriceUsd = 0;
-  if (firstResults[0].status === 'fulfilled' && firstResults[0].value && firstResults[0].value.price) {
-    ethPriceUsd = parseFloat(firstResults[0].value.price) || 0;
-  }
-
-  var latestNum = null;
-  if (firstResults[1].status === 'fulfilled' && firstResults[1].value && firstResults[1].value.result) {
-    try { latestNum = parseInt(firstResults[1].value.result, 16); } catch (e) {}
-  }
-
-  var blocksScanned = [];
-  var transfers = [];
-  var _ethBlocksStart = Date.now();
-  var _ethBlocksLatency = 0;
-  var _ethBlocksReason = null;
-  if (latestNum) {
-    var blockNums = [latestNum, latestNum - 1, latestNum - 2];
-    var blockFetches = blockNums.map(function(n) {
-      return fetchWithTimeout(
-        'https://ethereum-rpc.publicnode.com',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getBlockByNumber', params: ['0x' + n.toString(16), true], id: 1 }),
-        },
-        10000
-      ).then(function(r) { return r.json(); }).catch(function() { return null; });
-    });
-    var blockResults = await Promise.allSettled(blockFetches);
-    _ethBlocksLatency = Date.now() - _ethBlocksStart;
-    blockResults.forEach(function(br) {
-      if (br.status !== 'fulfilled' || !br.value || !br.value.result) return;
-      var blk = br.value.result;
-      var blockNumber = blk.number ? parseInt(blk.number, 16) : null;
-      var blockTime = blk.timestamp ? new Date(parseInt(blk.timestamp, 16) * 1000).toISOString() : null;
-      var txs = Array.isArray(blk.transactions) ? blk.transactions : [];
-      blocksScanned.push({ number: blockNumber, time: blockTime, tx_count: txs.length });
-      txs.forEach(function(tx) {
-        if (!tx || typeof tx.value !== 'string' || !tx.from || !tx.to) return;
-        // Receipt sign would crash on tx_hash:undefined; skip rows without it.
-        if (typeof tx.hash !== 'string' || !tx.hash) return;
-        var fromLower = tx.from.toLowerCase();
-        var toLower = tx.to.toLowerCase();
-        var fromExch = ETH_EXCHANGE_ADDRESSES[fromLower];
-        var toExch = ETH_EXCHANGE_ADDRESSES[toLower];
-        if (!fromExch && !toExch) return;
-        var wei = _hexToBigInt(tx.value);
-        if (wei < ETH_FLOW_WEI_THRESHOLD) return;
-        var ethAmount = _weiToEth(wei);
-        var direction, exchange, counterparty;
-        if (toExch && !fromExch) {
-          direction = 'inflow';   // user -> exchange (often selling intent)
-          exchange = toExch;
-          counterparty = tx.from;
-        } else if (fromExch && !toExch) {
-          direction = 'outflow';  // exchange -> user (often withdrawal/HODLing)
-          exchange = fromExch;
-          counterparty = tx.to;
-        } else {
-          // exchange -> exchange (rebalance / internal)
-          direction = 'inter_exchange';
-          exchange = fromExch + ' -> ' + toExch;
-          counterparty = tx.to;
-        }
-        transfers.push({
-          tx_hash: tx.hash,
-          direction: direction,
-          exchange: exchange,
-          counterparty: counterparty,
-          value_eth: ethAmount,
-          value_usd: ethPriceUsd > 0 ? Math.round(ethAmount * ethPriceUsd) : null,
-          block_number: blockNumber,
-          block_time: blockTime,
-          explorer_url: 'https://etherscan.io/tx/' + tx.hash,
-        });
-      });
-    });
-    if (blocksScanned.length === 0) _ethBlocksReason = 'no_blocks_returned';
-  } else {
-    _ethBlocksReason = 'no_latest_block_number';
-  }
-  var ethBlocksSourceMeta = {
-    name: 'PublicNode.eth_getBlockByNumber_x3',
-    status: blocksScanned.length > 0 ? 'live' : 'error',
-    fetched_at: new Date(_ethBlocksStart).toISOString(),
-    latency_ms: _ethBlocksLatency,
-  };
-  if (_ethBlocksReason) ethBlocksSourceMeta.reason = _ethBlocksReason;
-
-  // Aggregate per exchange
-  var byExchange = {};
-  transfers.forEach(function(t) {
-    if (t.direction === 'inter_exchange') return;  // skip from per-exchange aggregates
-    var name = t.exchange;
-    if (!byExchange[name]) {
-      byExchange[name] = {
-        exchange: name,
-        inflow_eth: 0,
-        outflow_eth: 0,
-        inflow_count: 0,
-        outflow_count: 0,
-        net_eth: 0,
-      };
-    }
-    if (t.direction === 'inflow') {
-      byExchange[name].inflow_eth += t.value_eth;
-      byExchange[name].inflow_count += 1;
-    } else if (t.direction === 'outflow') {
-      byExchange[name].outflow_eth += t.value_eth;
-      byExchange[name].outflow_count += 1;
-    }
-  });
-  Object.keys(byExchange).forEach(function(k) {
-    byExchange[k].inflow_eth = parseFloat(byExchange[k].inflow_eth.toFixed(4));
-    byExchange[k].outflow_eth = parseFloat(byExchange[k].outflow_eth.toFixed(4));
-    byExchange[k].net_eth = parseFloat((byExchange[k].inflow_eth - byExchange[k].outflow_eth).toFixed(4));
-    if (ethPriceUsd > 0) {
-      byExchange[k].inflow_usd = Math.round(byExchange[k].inflow_eth * ethPriceUsd);
-      byExchange[k].outflow_usd = Math.round(byExchange[k].outflow_eth * ethPriceUsd);
-      byExchange[k].net_usd = Math.round(byExchange[k].net_eth * ethPriceUsd);
-    }
-  });
-
-  // Top 10 transfers by USD value
-  transfers.sort(function(a, b) { return (b.value_usd || 0) - (a.value_usd || 0); });
-
-  var totalInflow = transfers.filter(function(t) { return t.direction === 'inflow'; }).reduce(function(s, t) { return s + t.value_eth; }, 0);
-  var totalOutflow = transfers.filter(function(t) { return t.direction === 'outflow'; }).reduce(function(s, t) { return s + t.value_eth; }, 0);
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/exchange-flows',
-    generated_at: new Date().toISOString(),
-    spot_eth_usd: ethPriceUsd || null,
-    blocks_scanned: blocksScanned,
-    flows_by_exchange: Object.values(byExchange).sort(function(a, b) { return Math.abs(b.net_eth) - Math.abs(a.net_eth); }),
-    recent_transfers: transfers.slice(0, 15),
-    aggregate: {
-      transfer_count: transfers.length,
-      total_inflow_eth: parseFloat(totalInflow.toFixed(4)),
-      total_outflow_eth: parseFloat(totalOutflow.toFixed(4)),
-      net_flow_eth: parseFloat((totalInflow - totalOutflow).toFixed(4)),
-      total_inflow_usd: ethPriceUsd > 0 ? Math.round(totalInflow * ethPriceUsd) : null,
-      total_outflow_usd: ethPriceUsd > 0 ? Math.round(totalOutflow * ethPriceUsd) : null,
-      net_flow_usd: ethPriceUsd > 0 ? Math.round((totalInflow - totalOutflow) * ethPriceUsd) : null,
-      bias: (function() {
-        var net = totalInflow - totalOutflow;
-        if (Math.abs(net) < 100) return 'balanced';
-        return net > 0 ? 'inflow_dominant' : 'outflow_dominant';
-      })(),
-    },
-    threshold: { min_eth: 5, rationale: 'Filters retail-scale moves; surfaces meaningful flow.' },
-    exchanges_tracked: Array.from(new Set(Object.values(ETH_EXCHANGE_ADDRESSES))).sort(),
-    notes: {
-      asset: 'ETH only in v1. BTC exchange flow tracking requires a labeled-address dataset that is not available for free; can be added in v2 via CryptoQuant or Arkham integration.',
-      addresses_source: 'Hardcoded list of publicly-documented exchange hot wallets (Etherscan labels, exchange disclosures). Coverage is intentionally narrow and will be wrong for unlabeled wallets; treat absence of an exchange as "no flow detected on tracked addresses" not "no flow occurred".',
-      direction_meaning: 'inflow = funds moving TO an exchange (often precedes selling). outflow = funds moving FROM an exchange to a user wallet (often HODL withdrawal). inter_exchange = both ends are exchanges (rebalance / arbitrage).',
-      use_case: 'Trading bots watching for regime shifts. Sustained large net inflow can precede price drops; sustained large net outflow can precede price rallies. Pair with /api/pro/whales for context.',
-      cache_ttl: '5 minutes.',
-    },
-    _meta: _premiumMeta('/api/pro/exchange-flows', _buildSourcesMeta(firstResults, sourceMeta).concat([ethBlocksSourceMeta])),
-  };
-  // Valid-but-empty: no tracked-exchange transfers >= 5 ETH in the scanned
-  // blocks. This is the common case in a quiet window, so no-charge it rather
-  // than bill for an empty flow list. (Propagated from TensorFeed money-path
-  // audit 2026-06-04, empty_result class.)
-  if (transfers.length === 0) out.__no_charge = 'empty_result';
-  return out;
-}
+// Sentiment scoring helpers (SENTIMENT_TICKERS, word regexes, _scoreHeadline,
+// _findTickers, _labelScore, _vixLabel) were removed 2026-07-23 along with the
+// /api/pro/sentiment endpoint they served (crypto/equity market data).
 
 
 // ----- GitHub velocity: trending repos, language mix, AI/ML focus -----
@@ -14021,7 +13431,7 @@ async function fetchProGithubVelocity(env, url) {
     notes: {
       source_attribution: 'GitHub Search API. Free without auth (60 req/hr); higher limits with GITHUB_TOKEN Worker secret.',
       cache_ttl: '30 minutes. Trending velocity is a 7d window; the cache TTL is sized to keep upstream traffic well under rate limits.',
-      use_case: 'Dev-tool agents, AI/ML researchers, and infrastructure-tracking agents watching where developer attention is concentrating. Pair the AI/ML focus signal with /api/pro/sentiment for a complete "what is the dev community talking about" view.',
+      use_case: 'Dev-tool agents, AI/ML researchers, and infrastructure-tracking agents watching where developer attention is concentrating. Pair the AI/ML focus signal with /api/pro/world-deltas for a complete "what changed and what is the dev community talking about" view.',
       methodology: 'Trending = repos created in the last 7 days sorted by stars descending. AI/ML active = repos tagged topic:llm with commits in the last 30 days, sorted by stars. is_ai_ml flag on each trending repo uses regex over name + description + topics.',
       caveat: 'GitHub Search API only returns top 1000 results regardless of pagination. Repos created without traction in the first 7 days are filtered out by sort order; stars-per-day is best-effort.',
     },
@@ -14042,159 +13452,6 @@ async function fetchProGithubVelocity(env, url) {
 // per coin and aggregate. Crypto traders use stablecoin growth/contraction as a
 // leading indicator for buying power coming into / leaving the crypto ecosystem.
 
-async function fetchProStablecoinFlows(env, url) {
-  var _scStart = Date.now();
-  var res = await fetchWithTimeout('https://stablecoins.llama.fi/stablecoins?includePrices=true', {}, 10000)
-    .catch(function(err) { return { __error: err }; });
-  var _scLatency = Date.now() - _scStart;
-  if (!res || res.__error || !res.ok) {
-    var failReason = (res && res.__error && res.__error.message)
-      ? String(res.__error.message).slice(0, 100)
-      : (res && res.status ? 'http_' + res.status : 'unknown');
-    return {
-      source: 'terminalfeed-pro',
-      endpoint: '/api/pro/stablecoin-flows',
-      generated_at: new Date().toISOString(),
-      error: 'upstream_unavailable',
-      // DefiLlama unreachable: valid request, no data. No-charge (advertised
-      // empty_result guarantee). Stripped before the signed body reaches the
-      // wire. (Propagated from TensorFeed money-path audit 2026-06-04.)
-      __no_charge: 'empty_result',
-      stablecoins: [],
-      aggregate: null,
-      notes: { source_attribution: 'DefiLlama stablecoins API', cache_ttl: '1 hour' },
-      _meta: _premiumMeta('/api/pro/stablecoin-flows', [{
-        name: 'DefiLlama.stablecoins',
-        status: 'error',
-        fetched_at: new Date(_scStart).toISOString(),
-        latency_ms: _scLatency,
-        reason: failReason,
-      }]),
-    };
-  }
-
-  var raw = await res.json();
-  var assets = (raw && raw.peggedAssets) || [];
-
-  function _val(obj) {
-    if (!obj) return 0;
-    if (typeof obj === 'number') return obj;
-    return obj.peggedUSD || obj.peggedEUR || obj.peggedSGD || 0;
-  }
-
-  var stablecoins = assets
-    .map(function(a) {
-      var current = _val(a.circulating);
-      var prevDay = _val(a.circulatingPrevDay);
-      var prevWeek = _val(a.circulatingPrevWeek);
-      var prevMonth = _val(a.circulatingPrevMonth);
-      var change1dUsd = current - prevDay;
-      var change7dUsd = current - prevWeek;
-      var change30dUsd = current - prevMonth;
-      var change1dPct = prevDay > 0 ? (change1dUsd / prevDay) * 100 : null;
-      var change7dPct = prevWeek > 0 ? (change7dUsd / prevWeek) * 100 : null;
-      var change30dPct = prevMonth > 0 ? (change30dUsd / prevMonth) * 100 : null;
-
-      var chainsObj = a.chainCirculating || {};
-      var topChains = Object.keys(chainsObj)
-        .map(function(c) {
-          var cur = _val(chainsObj[c] && chainsObj[c].current);
-          return { chain: c, circulating_usd: Math.round(cur) };
-        })
-        .filter(function(c) { return c.circulating_usd > 0; })
-        .sort(function(a2, b2) { return b2.circulating_usd - a2.circulating_usd; })
-        .slice(0, 5);
-
-      return {
-        symbol: a.symbol || null,
-        name: a.name || null,
-        peg_type: a.pegType || null,
-        peg_mechanism: a.pegMechanism || null,
-        price_usd: typeof a.price === 'number' ? a.price : null,
-        circulating_usd: Math.round(current),
-        change_1d_usd: Math.round(change1dUsd),
-        change_1d_percent: change1dPct != null ? parseFloat(change1dPct.toFixed(4)) : null,
-        change_7d_usd: Math.round(change7dUsd),
-        change_7d_percent: change7dPct != null ? parseFloat(change7dPct.toFixed(4)) : null,
-        change_30d_usd: Math.round(change30dUsd),
-        change_30d_percent: change30dPct != null ? parseFloat(change30dPct.toFixed(4)) : null,
-        chains_count: Array.isArray(a.chains) ? a.chains.length : 0,
-        top_chains: topChains,
-        url: a.gecko_id ? 'https://defillama.com/stablecoin/' + a.gecko_id : null,
-      };
-    })
-    .filter(function(s) { return s.circulating_usd > 1000000; })  // drop dust (under $1M circulating)
-    .sort(function(a, b) { return b.circulating_usd - a.circulating_usd; });
-
-  var top20 = stablecoins.slice(0, 20);
-
-  var totalCirculating = stablecoins.reduce(function(s, c) { return s + c.circulating_usd; }, 0);
-  var totalChange1d = stablecoins.reduce(function(s, c) { return s + c.change_1d_usd; }, 0);
-  var totalChange7d = stablecoins.reduce(function(s, c) { return s + c.change_7d_usd; }, 0);
-  var growingCount = stablecoins.filter(function(c) { return c.change_1d_usd > 0; }).length;
-  var shrinkingCount = stablecoins.filter(function(c) { return c.change_1d_usd < 0; }).length;
-
-  function _movers(field, direction, limit) {
-    return stablecoins
-      .filter(function(c) { return typeof c[field] === 'number' && c.circulating_usd > 100000000; })  // require >$100M to filter noise
-      .sort(function(a, b) { return direction === 'up' ? (b[field] - a[field]) : (a[field] - b[field]); })
-      .slice(0, limit || 5)
-      .map(function(c) {
-        var movKey = field;
-        var pctKey = field.replace('_usd', '_percent');
-        return {
-          symbol: c.symbol,
-          name: c.name,
-          circulating_usd: c.circulating_usd,
-          change_usd: c[movKey],
-          change_percent: c[pctKey],
-        };
-      });
-  }
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/stablecoin-flows',
-    generated_at: new Date().toISOString(),
-    stablecoins: top20,
-    aggregate: {
-      tracked_count: stablecoins.length,
-      total_circulating_usd: Math.round(totalCirculating),
-      net_change_24h_usd: Math.round(totalChange1d),
-      net_change_24h_percent: totalCirculating > 0 ? parseFloat(((totalChange1d / (totalCirculating - totalChange1d)) * 100).toFixed(4)) : null,
-      net_change_7d_usd: Math.round(totalChange7d),
-      net_change_7d_percent: totalCirculating > 0 ? parseFloat(((totalChange7d / (totalCirculating - totalChange7d)) * 100).toFixed(4)) : null,
-      growing_count_24h: growingCount,
-      shrinking_count_24h: shrinkingCount,
-      bias_24h: (function() {
-        if (Math.abs(totalChange1d) < 100000000) return 'balanced';
-        return totalChange1d > 0 ? 'growing' : 'shrinking';
-      })(),
-    },
-    biggest_growers_24h: _movers('change_1d_usd', 'up', 5),
-    biggest_shrinkers_24h: _movers('change_1d_usd', 'down', 5),
-    biggest_growers_7d: _movers('change_7d_usd', 'up', 5),
-    biggest_shrinkers_7d: _movers('change_7d_usd', 'down', 5),
-    notes: {
-      source_attribution: 'DefiLlama stablecoins API (stablecoins.llama.fi). Free public API; no key required.',
-      cache_ttl: '1 hour. DefiLlama updates stablecoin metrics daily.',
-      use_case: 'Crypto traders use net stablecoin growth as a leading indicator. Sustained net inflows of stablecoins to exchanges historically precede crypto buying. Pair with /api/pro/exchange-flows for the on-chain side.',
-      caveat: 'Numbers are reported circulating supply, not on-chain liquid supply. Some stablecoins (FDUSD, BUSD legacy) have wind-down dynamics that show up as large negative 7d changes; not all are bearish signals.',
-      filter_threshold: 'Stablecoins under $1M circulating are filtered out as noise. Movers require >$100M circulating to surface.',
-    },
-    _meta: _premiumMeta('/api/pro/stablecoin-flows', [{
-      name: 'DefiLlama.stablecoins',
-      status: 'live',
-      fetched_at: new Date(_scStart).toISOString(),
-      latency_ms: _scLatency,
-    }]),
-  };
-  // Valid-but-empty: DefiLlama responded but yielded no stablecoins over the
-  // dust threshold. No-charge rather than bill for an empty list. (Propagated
-  // from TensorFeed money-path audit 2026-06-04, empty_result class.)
-  if (stablecoins.length === 0) out.__no_charge = 'empty_result';
-  return out;
-}
 
 
 // ----- DeFi TVL: top protocols and chains via DefiLlama -----
@@ -14204,359 +13461,19 @@ async function fetchProStablecoinFlows(env, url) {
 // chain-level rollups. We absorb the upstream fetch (it's a ~3MB payload),
 // filter to top 50, and surface category + biggest-movers aggregates.
 
-async function fetchProDefiTvl(env, url) {
-  var _tvlStart = Date.now();
-  var sourceMeta = [
-    { name: 'DefiLlama.protocols', start: _tvlStart },
-    { name: 'DefiLlama.chains', start: _tvlStart },
-  ];
-  var sources = await Promise.allSettled([
-    fetchWithTimeout('https://api.llama.fi/protocols', {}, 12000),
-    fetchWithTimeout('https://api.llama.fi/v2/chains', {}, 8000),
-  ]);
-
-  var protocols = [];
-  if (sources[0].status === 'fulfilled' && sources[0].value) {
-    try {
-      var allProtocols = await sources[0].value.json();
-      if (Array.isArray(allProtocols)) {
-        protocols = allProtocols
-          .filter(function(p) { return p && typeof p.tvl === 'number' && p.tvl > 0; })
-          .sort(function(a, b) { return b.tvl - a.tvl; })
-          .slice(0, 50)
-          .map(function(p) {
-            return {
-              name: p.name || null,
-              symbol: p.symbol || null,
-              category: p.category || null,
-              chain: p.chain || null,
-              chains: Array.isArray(p.chains) ? p.chains.slice(0, 10) : null,
-              tvl_usd: p.tvl,
-              change_1h_percent: typeof p.change_1h === 'number' ? p.change_1h : null,
-              change_1d_percent: typeof p.change_1d === 'number' ? p.change_1d : null,
-              change_7d_percent: typeof p.change_7d === 'number' ? p.change_7d : null,
-              market_cap_usd: typeof p.mcap === 'number' ? p.mcap : null,
-              fully_diluted_valuation_usd: typeof p.fdv === 'number' ? p.fdv : null,
-              url: p.slug ? 'https://defillama.com/protocol/' + p.slug : (p.url || null),
-            };
-          });
-      }
-    } catch (e) {}
-  }
-
-  var chains = [];
-  if (sources[1].status === 'fulfilled' && sources[1].value) {
-    try {
-      var allChains = await sources[1].value.json();
-      if (Array.isArray(allChains)) {
-        chains = allChains
-          .filter(function(c) { return c && typeof c.tvl === 'number'; })
-          .sort(function(a, b) { return (b.tvl || 0) - (a.tvl || 0); })
-          .slice(0, 15)
-          .map(function(c) {
-            return {
-              name: c.name || null,
-              chain_id: c.chainId != null ? c.chainId : null,
-              token_symbol: c.tokenSymbol || null,
-              tvl_usd: c.tvl || 0,
-              gecko_id: c.gecko_id || null,
-            };
-          });
-      }
-    } catch (e) {}
-  }
-
-  var totalTvl = protocols.reduce(function(s, p) { return s + (p.tvl_usd || 0); }, 0);
-
-  var byCategory = {};
-  protocols.forEach(function(p) {
-    var cat = p.category || 'Uncategorized';
-    if (!byCategory[cat]) byCategory[cat] = { count: 0, tvl_usd: 0 };
-    byCategory[cat].count += 1;
-    byCategory[cat].tvl_usd += p.tvl_usd || 0;
-  });
-  // Round category TVLs and sort by tvl_usd descending
-  var byCategorySorted = Object.keys(byCategory).map(function(k) {
-    return { category: k, count: byCategory[k].count, tvl_usd: Math.round(byCategory[k].tvl_usd) };
-  }).sort(function(a, b) { return b.tvl_usd - a.tvl_usd; });
-
-  function _movers(field, direction) {
-    return protocols
-      .filter(function(p) { return typeof p[field] === 'number'; })
-      .sort(function(a, b) { return direction === 'up' ? (b[field] - a[field]) : (a[field] - b[field]); })
-      .slice(0, 5)
-      .map(function(p) {
-        return { name: p.name, category: p.category, change_percent: p[field], tvl_usd: p.tvl_usd };
-      });
-  }
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/defi-tvl',
-    generated_at: new Date().toISOString(),
-    top_protocols: protocols,
-    top_chains: chains,
-    by_category: byCategorySorted,
-    biggest_gainers_24h: _movers('change_1d_percent', 'up'),
-    biggest_losers_24h: _movers('change_1d_percent', 'down'),
-    biggest_gainers_7d: _movers('change_7d_percent', 'up'),
-    biggest_losers_7d: _movers('change_7d_percent', 'down'),
-    aggregate: {
-      top_50_total_tvl_usd: Math.round(totalTvl),
-      protocol_count: protocols.length,
-      chain_count: chains.length,
-      category_count: byCategorySorted.length,
-    },
-    notes: {
-      source_attribution: 'DefiLlama (defillama.com). Free public API; no key required. We absorb the upstream call.',
-      cache_ttl: '30 minutes. TVL changes slowly.',
-      use_case: 'Crypto research and trading agents. Identify protocol-level concentration, biggest movers, and chain-level dominance shifts in one call.',
-      caveat: 'TVL excludes native staking on most chains. DefiLlama categorizes protocols subjectively; some may appear in unexpected categories. Numbers are best-effort and can revise as DefiLlama backfills.',
-    },
-    _meta: _premiumMeta('/api/pro/defi-tvl', _buildSourcesMeta(sources, sourceMeta)),
-  };
-  // Valid-but-empty: top_protocols is the advertised primary payload, and
-  // by_category, all four movers, and the aggregate totals derive solely from it.
-  // No-charge whenever protocols is empty (e.g. the heavier /protocols upstream
-  // timed out while /v2/chains succeeded), not only when BOTH upstreams are empty.
-  // (Propagated from TensorFeed money-path audit 2026-06-04 + 2026-06-22, empty_result class.)
-  if (protocols.length === 0) out.__no_charge = 'empty_result';
-  return out;
-}
 
 
-// ----- Whales: large on-chain BTC and ETH transactions -----
+// Whale helpers (BTC_WHALE_SATS_THRESHOLD, ETH_WHALE_WEI_THRESHOLD,
+// _hexToBigInt, _weiToEth) were removed 2026-07-23 with the /api/pro/whales and
+// /api/pro/exchange-flows endpoints they served (on-chain crypto data).
+
+
+// ----- Correlation matrix: 30d daily-return correlations across FRED macro series -----
 //
-// For BTC: pull mempool.space recent mempool transactions (free, public API)
-// and filter for outputs >= 50 BTC. These are unconfirmed but already
-// broadcast, so an agent watching for institutional flow gets near-real-time
-// signal. Sats threshold: 50 * 100M = 5,000,000,000.
-//
-// For ETH: pull the latest block from Etherscan via eth_getBlockByNumber
-// (uses our existing key) and filter for transactions >= 100 ETH. Confirmed.
-//
-// Both feeds are tagged with USD-equivalent computed from current BTC and ETH
-// spot prices fetched alongside.
-
-var BTC_WHALE_SATS_THRESHOLD = 10 * 100000000;  // 10 BTC (institutional-scale, more frequent than 50)
-var ETH_WHALE_WEI_THRESHOLD = 100n * 1000000000000000000n;  // 100 ETH
-
-function _hexToBigInt(hex) {
-  if (!hex || typeof hex !== 'string') return 0n;
-  try {
-    return BigInt(hex);
-  } catch (e) {
-    return 0n;
-  }
-}
-
-function _weiToEth(wei) {
-  if (typeof wei === 'bigint') {
-    var w = Number(wei) / 1e18;
-    return parseFloat(w.toFixed(6));
-  }
-  return 0;
-}
-
-async function fetchProWhales(env, url) {
-  // Resilient spot prices (Binance -> Coinbase -> Coinlore -> Kraken), shaped as
-  // { price } so the consumers (firstResults[n].value.price) are unchanged.
-  var btcPriceFetch = fetchSpotUsd('BTC').then(function(p) { return { price: p }; });
-  var ethPriceFetch = fetchSpotUsd('ETH').then(function(p) { return { price: p }; });
-
-  // BTC: mempool.space recent mempool txs (last 10 by default)
-  var btcMempoolFetch = fetchWithTimeout('https://mempool.space/api/mempool/recent', {}, 6000)
-    .then(function(r) { return r.json(); })
-    .catch(function() { return null; });
-
-  // ETH: publicnode.com JSON-RPC, no auth required. Scan the last 3 blocks
-  // (~36 seconds of history) to catch whale activity even when the latest
-  // block is light. Single RPC also fetches blockNumber so we know what to
-  // walk back from.
-  var ethLatestNumberFetch = fetchWithTimeout(
-    'https://ethereum-rpc.publicnode.com',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
-    },
-    6000
-  ).then(function(r) { return r.json(); }).catch(function() { return null; });
-
-  var _whalesStart = Date.now();
-  var sourceMeta = [
-    { name: 'Binance.BTCUSDT_price', start: _whalesStart },
-    { name: 'Binance.ETHUSDT_price', start: _whalesStart },
-    { name: 'Mempool.recent_unconfirmed', start: _whalesStart },
-    { name: 'PublicNode.eth_blockNumber', start: _whalesStart },
-  ];
-  var firstResults = await Promise.allSettled([btcPriceFetch, ethPriceFetch, btcMempoolFetch, ethLatestNumberFetch]);
-
-  var btcPriceUsd = 0;
-  if (firstResults[0].status === 'fulfilled' && firstResults[0].value && firstResults[0].value.price) {
-    btcPriceUsd = parseFloat(firstResults[0].value.price) || 0;
-  }
-  var ethPriceUsd = 0;
-  if (firstResults[1].status === 'fulfilled' && firstResults[1].value && firstResults[1].value.price) {
-    ethPriceUsd = parseFloat(firstResults[1].value.price) || 0;
-  }
-
-  // Now fetch the last 3 ETH blocks in parallel
-  var latestNum = null;
-  if (firstResults[3].status === 'fulfilled' && firstResults[3].value && firstResults[3].value.result) {
-    try { latestNum = parseInt(firstResults[3].value.result, 16); } catch (e) {}
-  }
-  var ethBlocks = [];
-  var _ethBlocksStart = Date.now();
-  var _ethBlocksLatency = 0;
-  var _ethBlocksReason = null;
-  if (latestNum) {
-    var blockNums = [latestNum, latestNum - 1, latestNum - 2];
-    var blockFetches = blockNums.map(function(n) {
-      return fetchWithTimeout(
-        'https://ethereum-rpc.publicnode.com',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getBlockByNumber', params: ['0x' + n.toString(16), true], id: 1 }),
-        },
-        10000
-      ).then(function(r) { return r.json(); }).catch(function() { return null; });
-    });
-    var blockResults = await Promise.allSettled(blockFetches);
-    _ethBlocksLatency = Date.now() - _ethBlocksStart;
-    blockResults.forEach(function(br) {
-      if (br.status === 'fulfilled' && br.value && br.value.result) {
-        ethBlocks.push(br.value.result);
-      }
-    });
-    if (ethBlocks.length === 0) _ethBlocksReason = 'no_blocks_returned';
-  } else {
-    _ethBlocksReason = 'no_latest_block_number';
-  }
-  var ethBlocksSourceMeta = {
-    name: 'PublicNode.eth_getBlockByNumber_x3',
-    status: ethBlocks.length > 0 ? 'live' : 'error',
-    fetched_at: new Date(_ethBlocksStart).toISOString(),
-    latency_ms: _ethBlocksLatency,
-  };
-  if (_ethBlocksReason) ethBlocksSourceMeta.reason = _ethBlocksReason;
-  var results = firstResults;  // alias for the BTC processing below
-
-  // Process BTC mempool whales
-  var btcWhales = [];
-  if (results[2].status === 'fulfilled' && Array.isArray(results[2].value)) {
-    var mp = results[2].value;
-    mp.forEach(function(tx) {
-      if (!tx || typeof tx.value !== 'number') return;
-      if (tx.value < BTC_WHALE_SATS_THRESHOLD) return;
-      // Skip txs without a usable txid — without one, the explorer_url
-      // would be 'https://mempool.space/tx/undefined' AND tx_hash itself
-      // would be undefined (canonicalJSON would throw at receipt sign).
-      if (typeof tx.txid !== 'string' || !tx.txid) return;
-      var btcAmount = tx.value / 100000000;
-      btcWhales.push({
-        tx_hash: tx.txid,
-        value_btc: parseFloat(btcAmount.toFixed(8)),
-        value_usd: btcPriceUsd > 0 ? Math.round(btcAmount * btcPriceUsd) : null,
-        fee_sats: tx.fee || 0,
-        vsize: tx.vsize || 0,
-        first_seen: tx.time ? new Date(tx.time * 1000).toISOString() : null,
-        confirmed: false,
-        explorer_url: 'https://mempool.space/tx/' + tx.txid,
-      });
-    });
-    btcWhales.sort(function(a, b) { return b.value_btc - a.value_btc; });
-  }
-
-  // Process ETH whales across the last 3 blocks
-  var ethWhales = [];
-  var blocksScanned = [];
-  ethBlocks.forEach(function(blk) {
-    var blockNumber = blk.number ? parseInt(blk.number, 16) : null;
-    var blockTime = blk.timestamp ? new Date(parseInt(blk.timestamp, 16) * 1000).toISOString() : null;
-    blocksScanned.push({ number: blockNumber, time: blockTime, tx_count: Array.isArray(blk.transactions) ? blk.transactions.length : 0 });
-    var txs = Array.isArray(blk.transactions) ? blk.transactions : [];
-    txs.forEach(function(tx) {
-      if (!tx || typeof tx.value !== 'string') return;
-      // Skip txs missing the hash/from/to fields. Without them the
-      // signed receipt body would carry undefined values (canonicalJSON
-      // refuses) and the explorer_url would render as '/tx/undefined'.
-      if (typeof tx.hash !== 'string' || !tx.hash) return;
-      var wei = _hexToBigInt(tx.value);
-      if (wei < ETH_WHALE_WEI_THRESHOLD) return;
-      var ethAmount = _weiToEth(wei);
-      ethWhales.push({
-        tx_hash: tx.hash,
-        from: tx.from || null,
-        to: tx.to || null,
-        value_eth: ethAmount,
-        value_usd: ethPriceUsd > 0 ? Math.round(ethAmount * ethPriceUsd) : null,
-        block_number: blockNumber,
-        block_time: blockTime,
-        confirmed: true,
-        explorer_url: 'https://etherscan.io/tx/' + tx.hash,
-      });
-    });
-  });
-  ethWhales.sort(function(a, b) { return b.value_eth - a.value_eth; });
-  var ethBlockNumber = blocksScanned[0] ? blocksScanned[0].number : null;
-  var ethBlockTime = blocksScanned[0] ? blocksScanned[0].time : null;
-
-  // Aggregate stats
-  var btcTotalUsd = btcWhales.reduce(function(s, w) { return s + (w.value_usd || 0); }, 0);
-  var ethTotalUsd = ethWhales.reduce(function(s, w) { return s + (w.value_usd || 0); }, 0);
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/whales',
-    generated_at: new Date().toISOString(),
-    spot_prices: {
-      btc_usd: btcPriceUsd || null,
-      eth_usd: ethPriceUsd || null,
-    },
-    btc_whales_unconfirmed: btcWhales,
-    eth_whales_latest_block: ethWhales,
-    eth_block: {
-      number: ethBlockNumber,
-      time: ethBlockTime,
-    },
-    eth_blocks_scanned: blocksScanned,
-    aggregate: {
-      btc_whale_count: btcWhales.length,
-      btc_whale_total_usd: btcTotalUsd || null,
-      eth_whale_count: ethWhales.length,
-      eth_whale_total_usd: ethTotalUsd || null,
-    },
-    thresholds: {
-      btc_min_btc: 10,
-      eth_min_eth: 100,
-      rationale: 'Thresholds chosen to surface institutional-scale flow without firehosing retail movements. BTC at 10 (lower because mempool.space recent endpoint only returns 10 unconfirmed txs at a time).',
-    },
-    notes: {
-      btc_source: 'mempool.space /api/mempool/recent (last 10 unconfirmed transactions). Updates within seconds of broadcast.',
-      eth_source: 'publicnode.com Ethereum JSON-RPC. Scans the last 3 blocks (~36 seconds of history) via eth_getBlockByNumber to catch whale activity even when the latest single block is light. Free public endpoint, no auth.',
-      use_case: 'Trading bots watching for institutional flow signals. Large outflows from exchanges often precede price movements; large inflows often presage selling pressure. Consult a labeled-address service (Arkham, Nansen) to correlate from/to addresses with known entities.',
-      caveat: 'BTC mempool transactions can be replaced (RBF) or dropped before confirmation. ETH txs in the latest block could still be reorged within 1-2 blocks. Treat as signal, not certainty.',
-      cache_ttl: '5 minutes. Whale transactions are not high-frequency events; tighter polling does not surface more signal.',
-    },
-    _meta: _premiumMeta('/api/pro/whales', _buildSourcesMeta(firstResults, sourceMeta).concat([ethBlocksSourceMeta])),
-  };
-  // Valid-but-empty: no whale-scale transactions in the mempool snapshot or the
-  // last three ETH blocks. This is the normal state during a quiet on-chain
-  // window, so no-charge it; an agent polling for flow signal is not billed for
-  // zero whales. (Propagated from TensorFeed money-path audit 2026-06-04,
-  // empty_result class.)
-  if (btcWhales.length === 0 && ethWhales.length === 0) out.__no_charge = 'empty_result';
-  return out;
-}
-
-
-// ----- Correlation matrix: cross-asset 30d daily-return correlations -----
-//
-// Saves an agent from fetching 6 historical price series and running the
-// covariance math themselves. Uses Coinbase candles for crypto (free, no key)
-// and Stooq.com CSVs for ETFs (free, no key) so the upstream cost is zero.
+// Saves an agent from fetching several historical macro series and running the
+// covariance math themselves. Uses FRED daily observations (US gov, public
+// domain, free) only; crypto (Coinbase) and equity (Stooq) legs were removed
+// 2026-07-23 for market-data licensing compliance.
 
 function _pearson(xs, ys) {
   if (!xs || !ys) return null;
@@ -14587,45 +13504,9 @@ function _toReturns(closes) {
   return rs;
 }
 
-function _parseStooqCsv(text) {
-  // Stooq returns: Date,Open,High,Low,Close,Volume
-  if (!text || typeof text !== 'string') return [];
-  var lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  var rows = [];
-  for (var i = 1; i < lines.length; i++) {
-    var parts = lines[i].split(',');
-    if (parts.length < 5) continue;
-    var close = parseFloat(parts[4]);
-    if (!isFinite(close)) continue;
-    rows.push({ date: parts[0], close: close });
-  }
-  return rows;
-}
-
-async function _fetchCoinbaseDailyCloses(product, days) {
-  // Coinbase candles: granularity=86400 returns daily OHLCV, newest first
-  // Format: [time, low, high, open, close, volume]
-  try {
-    var endSec = Math.floor(Date.now() / 1000);
-    var startSec = endSec - days * 86400;
-    var startISO = new Date(startSec * 1000).toISOString();
-    var endISO = new Date(endSec * 1000).toISOString();
-    var resp = await fetchWithTimeout(
-      'https://api.exchange.coinbase.com/products/' + product +
-      '/candles?granularity=86400&start=' + startISO + '&end=' + endISO,
-      {}, 8000
-    );
-    if (!resp.ok) return [];
-    var data = await resp.json();
-    if (!Array.isArray(data)) return [];
-    // Sort ascending by time and return closes
-    data.sort(function(a, b) { return a[0] - b[0]; });
-    return data.map(function(k) { return parseFloat(k[4]); }).filter(function(v) { return isFinite(v) && v > 0; });
-  } catch (e) {
-    return [];
-  }
-}
+// _parseStooqCsv and _fetchCoinbaseDailyCloses were removed 2026-07-23; they fed
+// the crypto/equity legs of the correlation matrix (Coinbase + Stooq), which are
+// no longer sourced. FRED daily values below remain the sole macro source.
 
 async function _fetchFredDailyValues(env, seriesId, days) {
   if (!env || !env.FRED_API_KEY) return [];
@@ -14654,13 +13535,10 @@ async function _fetchFredDailyValues(env, seriesId, days) {
 }
 
 async function fetchProCorrelationMatrix(env, url) {
+  // Macro-only correlation universe. Crypto and equity legs were removed for
+  // market-data licensing compliance (2026-07-23); every series here is FRED
+  // (US gov, public domain, free to redistribute).
   var assets = [
-    { symbol: 'BTC',          asset_class: 'crypto',     source_name: 'Coinbase.BTC_USD_candles_30d',  fetcher: function() { return _fetchCoinbaseDailyCloses('BTC-USD', 30); } },
-    { symbol: 'ETH',          asset_class: 'crypto',     source_name: 'Coinbase.ETH_USD_candles_30d',  fetcher: function() { return _fetchCoinbaseDailyCloses('ETH-USD', 30); } },
-    { symbol: 'SOL',          asset_class: 'crypto',     source_name: 'Coinbase.SOL_USD_candles_30d',  fetcher: function() { return _fetchCoinbaseDailyCloses('SOL-USD', 30); } },
-    { symbol: 'AVAX',         asset_class: 'crypto',     source_name: 'Coinbase.AVAX_USD_candles_30d', fetcher: function() { return _fetchCoinbaseDailyCloses('AVAX-USD', 30); } },
-    { symbol: 'LINK',         asset_class: 'crypto',     source_name: 'Coinbase.LINK_USD_candles_30d', fetcher: function() { return _fetchCoinbaseDailyCloses('LINK-USD', 30); } },
-    { symbol: 'GOLD_PAXG',    asset_class: 'commodity',  source_name: 'Coinbase.PAXG_USD_candles_30d', fetcher: function() { return _fetchCoinbaseDailyCloses('PAXG-USD', 30); } },
     { symbol: 'TREASURY_10Y', asset_class: 'rates',      source_name: 'FRED.DGS10_30d',                fetcher: function() { return _fetchFredDailyValues(env, 'DGS10', 30); } },
     { symbol: 'TREASURY_2Y',  asset_class: 'rates',      source_name: 'FRED.DGS2_30d',                 fetcher: function() { return _fetchFredDailyValues(env, 'DGS2', 30); } },
     { symbol: 'USD_INDEX',    asset_class: 'fx',         source_name: 'FRED.DTWEXBGS_30d',             fetcher: function() { return _fetchFredDailyValues(env, 'DTWEXBGS', 30); } },
@@ -14743,17 +13621,17 @@ async function fetchProCorrelationMatrix(env, url) {
       data_availability: dataAvailability,
     },
     notes: {
-      use_case: 'Use to size positions, build hedges, or detect regime shifts. A high BTC-SPY correlation, for example, signals "risk-on" coupling; a sharp drop in correlation often precedes a regime change.',
+      use_case: 'Use to size positions, build hedges, or detect regime shifts across macro drivers. A tightening 10Y-vs-USD-index coupling, for example, signals a rates-led regime; a sharp drop in correlation often precedes a regime change.',
       methodology: 'Daily simple returns r_t = (P_t - P_{t-1}) / P_{t-1}. Pearson r computed on overlapping observations only. Minimum 10 observations to report a pair.',
-      sources: 'Crypto (BTC, ETH, SOL) from Coinbase Exchange daily candles. Rates (10Y, 2Y treasury), USD trade-weighted index, gold (London PM fix), and WTI oil from FRED. No Finnhub quota burned.',
-      asset_universe: 'Ten assets across four classes: crypto (BTC, ETH, SOL, AVAX, LINK), commodities (gold via PAXG-USD, WTI oil), rates (10Y treasury yield, 2Y treasury yield), and fx (trade-weighted USD index). The PAXG-USD pair on Coinbase tracks gold spot via tokenized gold and is reliable without FRED. The four FRED-sourced macro series (treasuries, USD index, oil) populate when FRED_API_KEY is set on the Worker. Equity ETFs (SPY, QQQ) deliberately excluded in v1 because reliable free historical sources require API keys; macro correlations (crypto vs rates, crypto vs USD) are arguably more valuable to trading agents than crypto vs SPY anyway.',
+      sources: 'All series from FRED (US gov, public domain): 10Y and 2Y treasury yields, trade-weighted USD index, and WTI crude oil. No crypto or equity legs (removed 2026-07-23 for market-data licensing compliance).',
+      asset_universe: 'Four macro series across three classes: rates (10Y treasury yield, 2Y treasury yield), fx (trade-weighted USD index), and commodities (WTI crude oil). All FRED-sourced; they populate when FRED_API_KEY is set on the Worker.',
       caveat: 'Pearson assumes linear relationships and stationary distributions. For tail-risk analysis, supplement with rank correlation or copula-based methods. Correlations can flip sign in stress regimes.',
       cache_ttl: '30 minutes. Daily-return correlations move slowly within a day.',
     },
     _meta: _premiumMeta('/api/pro/correlation-matrix', sourcesMeta),
   };
   // Valid-but-empty: fewer than two assets returned enough observations to
-  // compute a single correlation pair (total upstream outage of Coinbase + FRED).
+  // compute a single correlation pair (total upstream outage of FRED).
   // No-charge rather than bill for an empty matrix. (Propagated from TensorFeed
   // money-path audit 2026-06-04, empty_result class.)
   if (pairs.length === 0) out.__no_charge = 'empty_result';
@@ -14802,9 +13680,6 @@ async function fetchProAgentContext(env, url) {
 
   var _ctxStart = Date.now();
   var sourceMeta = [
-    { name: 'Binance.BTCUSDT', start: _ctxStart },
-    { name: 'AlternativeMe.fng', start: _ctxStart },
-    { name: 'Finnhub.VIX', start: _ctxStart },
     { name: 'FRED.FEDFUNDS', start: _ctxStart },
     { name: 'Frankfurter.forex_usd_base', start: _ctxStart },
     { name: 'HackerNews.front_page', start: _ctxStart },
@@ -14816,78 +13691,39 @@ async function fetchProAgentContext(env, url) {
     { name: 'OpenAIStatus.summary', start: _ctxStart },
     { name: 'AnthropicStatus.summary', start: _ctxStart },
   ];
+  // Crypto (BTC, Fear & Greed) and VIX (Finnhub) legs removed 2026-07-23 for
+  // market-data licensing compliance. Remaining sources are all public/gov or
+  // permissively licensed (FRED, Frankfurter/ECB, USGS, TheSpaceDevs, HN,
+  // Polymarket, public status pages).
   var sources = await Promise.allSettled([
-    fetchBtcStats(),  // 0 — resilient BTC (Binance -> Coinlore -> Kraken); parsed object, not a Response
-    fetchWithTimeout('https://api.alternative.me/fng/?limit=1'),                              // 1
-    (env && env.FINNHUB_API_KEY)
-      ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
-      : Promise.resolve(null),                                                                // 2
     (env && env.FRED_API_KEY)
       ? fetchWithTimeout('https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&sort_order=desc&limit=1&api_key=' + env.FRED_API_KEY + '&file_type=json', {}, 6000)
-      : Promise.resolve(null),                                                                // 3
-    fetchWithTimeout('https://api.frankfurter.app/latest?from=USD&to=EUR,JPY,GBP,CHF'),       // 4
-    fetchWithTimeout('https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=5'),   // 5
-    fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_day.geojson'),  // 6
-    fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=3&mode=list', {}, 8000),     // 7
-    fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=5&active=true&closed=false&order=volume24hr&ascending=false'),  // 8
-    fetchWithTimeout('https://www.githubstatus.com/api/v2/status.json'),                      // 9
-    fetchWithTimeout('https://www.cloudflarestatus.com/api/v2/status.json'),                  // 10
-    fetchWithTimeout('https://status.openai.com/api/v2/status.json'),                         // 11
-    fetchWithTimeout('https://status.anthropic.com/api/v2/status.json'),                      // 12
+      : Promise.resolve(null),                                                                // 0
+    fetchWithTimeout('https://api.frankfurter.app/latest?from=USD&to=EUR,JPY,GBP,CHF'),       // 1
+    fetchWithTimeout('https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=5'),   // 2
+    fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_day.geojson'),  // 3
+    fetchWithTimeout('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=3&mode=list', {}, 8000),     // 4
+    fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=5&active=true&closed=false&order=volume24hr&ascending=false'),  // 5
+    fetchWithTimeout('https://www.githubstatus.com/api/v2/status.json'),                      // 6
+    fetchWithTimeout('https://www.cloudflarestatus.com/api/v2/status.json'),                  // 7
+    fetchWithTimeout('https://status.openai.com/api/v2/status.json'),                         // 8
+    fetchWithTimeout('https://status.anthropic.com/api/v2/status.json'),                      // 9
   ]);
 
   // ---- Parse each source independently ----
-  var btc = null;
-  if (sources[0].status === 'fulfilled' && sources[0].value && sources[0].value.price > 0) {
-    // fetchBtcStats resolves to a parsed object (not a Response).
-    var b = sources[0].value;
-    btc = {
-      price_usd: b.price,
-      change_24h_percent: b.change_24h || 0,
-      volume_24h: b.volume_24h || 0,
-    };
-  }
-
-  var fearGreed = null;
-  if (sources[1].status === 'fulfilled' && sources[1].value) {
-    try {
-      var fg = await sources[1].value.json();
-      if (fg && fg.data && fg.data[0]) {
-        fearGreed = { value: parseInt(fg.data[0].value) || 0, label: fg.data[0].value_classification || '' };
-      }
-    } catch (e) {}
-  }
-
-  var vix = null;
-  if (sources[2].status === 'fulfilled' && sources[2].value) {
-    try {
-      var v = await sources[2].value.json();
-      if (v && v.c) vix = { value: parseFloat(v.c), change_percent: parseFloat(v.dp) || 0, source: 'finnhub:^VIX', freshness: 'real-time' };
-    } catch (e) {}
-  }
-  // Fallback to FRED VIXCLS (daily close) when Finnhub doesn't return VIX
-  if (!vix && env && env.FRED_API_KEY) {
-    try {
-      var fredVix = await _fetchFredDailyValues(env, 'VIXCLS', 1);
-      if (fredVix && fredVix.length > 0) {
-        vix = { value: fredVix[fredVix.length - 1], change_percent: null, source: 'fred:VIXCLS', freshness: 'previous_day_close' };
-      }
-    } catch (e) {}
-  }
-
   var fedRate = null;
-  if (sources[3].status === 'fulfilled' && sources[3].value) {
+  if (sources[0].status === 'fulfilled' && sources[0].value) {
     try {
-      var fr = await sources[3].value.json();
+      var fr = await sources[0].value.json();
       var obs = fr && fr.observations && fr.observations[0];
       if (obs && obs.value !== '.') fedRate = { value: parseFloat(obs.value), as_of: obs.date };
     } catch (e) {}
   }
 
   var forex = {};
-  if (sources[4].status === 'fulfilled' && sources[4].value) {
+  if (sources[1].status === 'fulfilled' && sources[1].value) {
     try {
-      var fx = await sources[4].value.json();
+      var fx = await sources[1].value.json();
       if (fx && fx.rates) {
         forex = fx.rates;
         forex.date = fx.date;
@@ -14896,7 +13732,7 @@ async function fetchProAgentContext(env, url) {
   }
 
   var hnTop = [];
-  if (sources[5].status === 'fulfilled' && sources[5].value) {
+  if (sources[2].status === 'fulfilled' && sources[2].value) {
     try {
       var hn = await sources[5].value.json();
       hnTop = ((hn && hn.hits) || []).slice(0, 5).map(function(h) {
@@ -14911,7 +13747,7 @@ async function fetchProAgentContext(env, url) {
   }
 
   var significantQuakes = [];
-  if (sources[6].status === 'fulfilled' && sources[6].value) {
+  if (sources[3].status === 'fulfilled' && sources[3].value) {
     try {
       var qs = await sources[6].value.json();
       var feats = (qs && qs.features) || [];
@@ -14931,7 +13767,7 @@ async function fetchProAgentContext(env, url) {
   }
 
   var upcomingLaunches = [];
-  if (sources[7].status === 'fulfilled' && sources[7].value) {
+  if (sources[4].status === 'fulfilled' && sources[4].value) {
     try {
       var ll = await sources[7].value.json();
       upcomingLaunches = ((ll && ll.results) || []).slice(0, 3).map(function(L) {
@@ -14950,7 +13786,7 @@ async function fetchProAgentContext(env, url) {
   }
 
   var predictionMarkets = [];
-  if (sources[8].status === 'fulfilled' && sources[8].value) {
+  if (sources[5].status === 'fulfilled' && sources[5].value) {
     try {
       var pm = await sources[8].value.json();
       if (Array.isArray(pm)) {
@@ -14968,8 +13804,8 @@ async function fetchProAgentContext(env, url) {
 
   // Infrastructure status
   var infra = { github: 'unknown', cloudflare: 'unknown', openai: 'unknown', anthropic: 'unknown' };
-  var infraIndex = { 9: 'github', 10: 'cloudflare', 11: 'openai', 12: 'anthropic' };
-  for (var i = 9; i <= 12; i++) {
+  var infraIndex = { 6: 'github', 7: 'cloudflare', 8: 'openai', 9: 'anthropic' };
+  for (var i = 6; i <= 9; i++) {
     if (sources[i].status === 'fulfilled' && sources[i].value) {
       try {
         var s = await sources[i].value.json();
@@ -14987,19 +13823,8 @@ async function fetchProAgentContext(env, url) {
   lines.push('Current world state as of ' + nowISO + ' (UTC).');
   lines.push('');
 
-  // Markets
-  lines.push('# Markets');
-  if (btc) {
-    lines.push('BTC: $' + _formatNumber(btc.price_usd, 0) + ' (' + (btc.change_24h_percent >= 0 ? '+' : '') + _formatNumber(btc.change_24h_percent, 2) + '% 24h)');
-  }
-  if (fearGreed) {
-    lines.push('Crypto Fear & Greed: ' + fearGreed.value + '/100 (' + fearGreed.label + ')');
-  }
-  if (vix) {
-    lines.push('VIX: ' + _formatNumber(vix.value, 2) + ' (' + (vix.change_percent >= 0 ? '+' : '') + _formatNumber(vix.change_percent, 2) + '% 24h)');
-  } else {
-    lines.push('VIX: data unavailable');
-  }
+  // Macro
+  lines.push('# Macro');
   if (fedRate) {
     lines.push('Fed funds rate: ' + _formatNumber(fedRate.value, 2) + '% (as of ' + fedRate.as_of + ')');
   }
@@ -15061,10 +13886,7 @@ async function fetchProAgentContext(env, url) {
     generated_at: nowISO,
     context: {
       datetime: { iso: nowISO, unix_ms: nowMs, human_readable_utc: nowHuman },
-      markets: {
-        btc: btc,
-        crypto_fear_greed: fearGreed,
-        vix: vix,
+      macro: {
         fed_funds_rate: fedRate,
         forex_usd_base: forex,
       },
@@ -15083,17 +13905,17 @@ async function fetchProAgentContext(env, url) {
     system_prompt: systemPrompt,
     notes: {
       intended_use: 'Paste system_prompt verbatim into your LLM context window at the start of a session. The structured `context` object is for programmatic parsing.',
-      curation: 'Sources, signals, and formatting are deliberately curated. We pick which 13 things matter; you save the integration and formatting work.',
-      freshness: '5 minute cache. For tighter freshness on a specific signal, call /api/pro/macro or /api/pro/sentiment directly.',
+      curation: 'Sources, signals, and formatting are deliberately curated. We pick which signals matter; you save the integration and formatting work.',
+      freshness: '5 minute cache. For tighter freshness on macro signals, call /api/pro/macro directly.',
       approx_token_count_system_prompt: approxTokens,
-      composition: 'BTC ticker (Binance), Fear & Greed (alternative.me), VIX (Finnhub), Fed funds rate (FRED), forex EUR/JPY/GBP/CHF (Frankfurter), HN front page top 5 (Algolia), significant earthquakes 24h (USGS), upcoming launches (TheSpaceDevs), top 3 Polymarket markets by volume, status of GitHub + Cloudflare + OpenAI + Anthropic.',
+      composition: 'Fed funds rate (FRED), forex EUR/JPY/GBP/CHF (Frankfurter), HN front page top 5 (Algolia), significant earthquakes 24h (USGS), upcoming launches (TheSpaceDevs), top 3 Polymarket markets by volume, status of GitHub + Cloudflare + OpenAI + Anthropic. Crypto (BTC, Fear & Greed) and VIX legs were removed 2026-07-23 for market-data licensing compliance.',
     },
     _meta: _premiumMeta('/api/pro/agent-context', _buildSourcesMeta(sources, sourceMeta)),
   };
-  // Every one of the 13 upstreams dropped out (broad outage / cold cache):
-  // system_prompt collapses to static boilerplate and context is all-null. No
-  // real-world data to sell, so no-charge it. Mirrors the world-deltas guard.
-  var anySignal = !!(btc || fearGreed || vix || fedRate
+  // Every upstream dropped out (broad outage / cold cache): system_prompt
+  // collapses to static boilerplate and context is all-null. No real-world data
+  // to sell, so no-charge it. Mirrors the world-deltas guard.
+  var anySignal = !!(fedRate
     || (forex && Object.keys(forex).some(function(k) { return k !== 'date'; }))
     || hnTop.length || significantQuakes.length || upcomingLaunches.length || predictionMarkets.length
     || ['github', 'cloudflare', 'openai', 'anthropic'].some(function(k) { return infra[k] !== 'unknown'; }));
@@ -15331,375 +14153,6 @@ async function fetchProWorldDeltas(env, url) {
 }
 
 
-async function fetchProSentiment(env, url) {
-  // Parallel-fetch every signal source; never fail the whole call on one source.
-  var _sentStart = Date.now();
-  var sourceMeta = [
-    { name: 'AlternativeMe.fng', start: _sentStart },
-    { name: 'Finnhub.VIX', start: _sentStart },
-    { name: 'HackerNews.topstories', start: _sentStart },
-    { name: 'Reddit.r_CryptoCurrency_hot', start: _sentStart },
-    { name: 'Reddit.r_wallstreetbets_hot', start: _sentStart },
-    { name: 'Reddit.r_stocks_hot', start: _sentStart },
-    { name: 'Polymarket.gamma_top_volume', start: _sentStart },
-  ];
-  var sources = await Promise.allSettled([
-    fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
-    (env && env.FINNHUB_API_KEY)
-      ? fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent('^VIX') + '&token=' + env.FINNHUB_API_KEY, {}, 6000)
-      : Promise.resolve(null),
-    fetchWithTimeout('https://hacker-news.firebaseio.com/v0/topstories.json', {}, 6000),
-    fetchWithTimeout('https://www.reddit.com/r/CryptoCurrency/hot.json?limit=30', { headers: { 'User-Agent': 'terminalfeed.io/1.0' } }, 6000),
-    fetchWithTimeout('https://www.reddit.com/r/wallstreetbets/hot.json?limit=30', { headers: { 'User-Agent': 'terminalfeed.io/1.0' } }, 6000),
-    fetchWithTimeout('https://www.reddit.com/r/stocks/hot.json?limit=25', { headers: { 'User-Agent': 'terminalfeed.io/1.0' } }, 6000),
-    fetchWithTimeout('https://gamma-api.polymarket.com/markets?limit=10&active=true&closed=false&order=volume24hr&ascending=false', {}, 6000),
-  ]);
-
-  // 1) Crypto Fear & Greed
-  var cryptoFG = null;
-  if (sources[0].status === 'fulfilled' && sources[0].value) {
-    try {
-      var fg = await sources[0].value.json();
-      if (fg && fg.data && fg.data[0]) {
-        cryptoFG = {
-          value: parseInt(fg.data[0].value) || 0,
-          label: fg.data[0].value_classification || '',
-          source: 'alternative.me',
-        };
-      }
-    } catch (e) {}
-  }
-
-  // 2) VIX (US equities fear gauge)
-  var vix = null;
-  if (sources[1].status === 'fulfilled' && sources[1].value) {
-    try {
-      var v = await sources[1].value.json();
-      if (v && v.c) {
-        vix = {
-          value: parseFloat(v.c),
-          change_percent: parseFloat(v.dp) || 0,
-          label: _vixLabel(parseFloat(v.c)),
-          source: 'finnhub:^VIX',
-        };
-      }
-    } catch (e) {}
-  }
-
-  // 3) Collect headlines from HN top 30 + Reddit hot posts.
-  var headlines = [];
-
-  if (sources[2].status === 'fulfilled' && sources[2].value) {
-    try {
-      var ids = await sources[2].value.json();
-      if (Array.isArray(ids)) {
-        var top30 = ids.slice(0, 30);
-        var items = await Promise.allSettled(
-          top30.map(function(id) {
-            return fetchWithTimeout('https://hacker-news.firebaseio.com/v0/item/' + id + '.json', {}, 4000)
-              .then(function(r) { return r.json(); });
-          })
-        );
-        items.forEach(function(it) {
-          if (it.status === 'fulfilled' && it.value && it.value.title) {
-            var rawTitle = it.value.title;
-            // Run ticker detection / scoring on raw text (the regex names are
-            // legitimate signal). Only the user-visible title is sanitized.
-            var t = _findTickers(rawTitle);
-            if (t.length > 0) {
-              headlines.push({
-                title: sanitizeForLLM(rawTitle),
-                url: 'https://news.ycombinator.com/item?id=' + it.value.id,
-                source: 'hn',
-                tickers: t,
-                score: _scoreHeadline(rawTitle),
-              });
-            }
-          }
-        });
-      }
-    } catch (e) {}
-  }
-
-  // Reddit hot posts across three subs
-  for (var ri = 3; ri <= 5; ri++) {
-    if (sources[ri].status === 'fulfilled' && sources[ri].value) {
-      try {
-        var rd = await sources[ri].value.json();
-        var children = (rd && rd.data && rd.data.children) || [];
-        children.forEach(function(c) {
-          var post = c && c.data;
-          if (!post || !post.title) return;
-          var rawTitle = post.title;
-          var t = _findTickers(rawTitle);
-          if (t.length > 0) {
-            headlines.push({
-              title: sanitizeForLLM(rawTitle),
-              url: post.permalink ? 'https://www.reddit.com' + post.permalink : null,
-              source: 'reddit:' + (post.subreddit || ''),
-              tickers: t,
-              score: _scoreHeadline(rawTitle),
-            });
-          }
-        });
-      } catch (e) {}
-    }
-  }
-
-  // 4) Aggregate per-ticker
-  var byTicker = {};
-  headlines.forEach(function(h) {
-    h.tickers.forEach(function(sym) {
-      if (!byTicker[sym]) byTicker[sym] = { items: [], sources: {} };
-      byTicker[sym].items.push(h);
-      var src = h.source.split(':')[0];
-      byTicker[sym].sources[src] = (byTicker[sym].sources[src] || 0) + 1;
-    });
-  });
-
-  var trending = SENTIMENT_TICKERS
-    .map(function(t) {
-      var bucket = byTicker[t.symbol];
-      if (!bucket || bucket.items.length === 0) return null;
-      var totalScore = bucket.items.reduce(function(s, h) { return s + h.score.score; }, 0);
-      var avg = totalScore / bucket.items.length;
-      var samples = bucket.items
-        .slice()
-        .sort(function(a, b) { return Math.abs(b.score.score) - Math.abs(a.score.score); })
-        .slice(0, 3)
-        .map(function(h) {
-          return {
-            title: h.title,
-            url: h.url,
-            source: h.source,
-            sentiment_signal: h.score.score > 0.1 ? '+' : (h.score.score < -0.1 ? '-' : 'neutral'),
-          };
-        });
-      return {
-        symbol: t.symbol,
-        asset_class: t.cls,
-        mention_count_24h: bucket.items.length,
-        sources: bucket.sources,
-        sentiment_score: parseFloat(avg.toFixed(3)),
-        sentiment_label: _labelScore(avg),
-        sample_headlines: samples,
-      };
-    })
-    .filter(Boolean)
-    .sort(function(a, b) { return b.mention_count_24h - a.mention_count_24h; })
-    .slice(0, 15);
-
-  // 5) Polymarket signals
-  var predictionMarkets = [];
-  if (sources[6].status === 'fulfilled' && sources[6].value) {
-    try {
-      var pm = await sources[6].value.json();
-      if (Array.isArray(pm)) {
-        predictionMarkets = pm.slice(0, 5).map(function(m) {
-          // Sanitize + null-coerce so a Polymarket market lacking the
-          // `question` field doesn't write undefined into the signed
-          // receipt body (canonicalJSON throws on undefined).
-          return {
-            question: sanitizeForLLM(m.question) || null,
-            yes_probability: m.lastTradePrice != null ? parseFloat(m.lastTradePrice) : null,
-            volume_24h: parseFloat(m.volume24hr) || 0,
-            url: m.slug ? 'https://polymarket.com/event/' + m.slug : null,
-          };
-        });
-      }
-    } catch (e) {}
-  }
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/sentiment',
-    generated_at: new Date().toISOString(),
-    market_indices: {
-      crypto_fear_greed: cryptoFG,
-      stocks_vix: vix,
-    },
-    trending: trending,
-    prediction_markets_signals: predictionMarkets,
-    sample_size: {
-      headlines_scanned: headlines.length,
-      tickers_with_mentions: trending.length,
-    },
-    notes: {
-      scoring: 'Per-headline sentiment derived from regex pattern matching against curated positive/negative word lists. Range -1.0 to +1.0. Crude but signal-bearing; treat as one input to a broader analysis, not as a high-frequency trading edge.',
-      mention_sources: 'Hacker News top 30 + Reddit /r/CryptoCurrency, /r/wallstreetbets, /r/stocks (hot posts).',
-      freshness: '5 minute cache. Tickers refreshed each cache miss.',
-      fear_greed_source: 'alternative.me (crypto-wide).',
-      vix_source: 'Finnhub ^VIX (US equities fear gauge).',
-      labels: 'sentiment_label is a coarse bucket: negative <= -0.3 < moderately_negative <= -0.1 < neutral <= 0.1 < moderately_positive <= 0.3 < positive.',
-    },
-    _meta: _premiumMeta('/api/pro/sentiment', _buildSourcesMeta(sources, sourceMeta)),
-  };
-  // No signal at all: both indices null, no trending tickers, no prediction
-  // markets. No-charge the empty sentiment read, mirroring the sibling guards.
-  if (!cryptoFG && !vix && trending.length === 0 && predictionMarkets.length === 0) {
-    out.__no_charge = 'empty_result';
-  }
-  return out;
-}
-
-
-async function fetchProCryptoDeep(env, url) {
-  var coinsParam = url.searchParams.get('coins') || '';
-  var coinFilter = coinsParam ? coinsParam.toLowerCase().split(',').map(function(s) { return s.trim(); }).filter(Boolean) : null;
-  var wantHistory = url.searchParams.get('history') === '30d';
-
-  // CoinGecko top 50 via CoinLore upstream (same pattern as /api/coingecko/markets)
-  var topFetch = fetchWithTimeout('https://api.coinlore.net/api/tickers/?limit=50', {}, 6000)
-    .then(function(res) { return res.json(); })
-    .catch(function() { return null; });
-
-  // Binance live ticker for top 20 USDT pairs by 24h volume
-  var binanceFetch = fetchWithTimeout('https://data-api.binance.vision/api/v3/ticker/24hr', {}, 6000)
-    .then(function(res) { return res.json(); })
-    .catch(function() { return null; });
-
-  // mempool.space network stats
-  var mempoolFetches = Promise.allSettled([
-    fetchWithTimeout('https://mempool.space/api/blocks/tip/height', {}, 6000).then(function(r) { return r.text(); }),
-    fetchWithTimeout('https://mempool.space/api/v1/fees/recommended', {}, 6000).then(function(r) { return r.json(); }),
-    fetchWithTimeout('https://mempool.space/api/v1/mining/hashrate/3d', {}, 6000).then(function(r) { return r.json(); }),
-    fetchWithTimeout('https://mempool.space/api/mempool', {}, 6000).then(function(r) { return r.json(); }),
-  ]);
-
-  // Etherscan gas
-  var gasFetch = fetchWithTimeout(
-    'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=' + ((env && env.ETHERSCAN_API_KEY) || ''),
-    {}, 6000
-  ).then(function(r) { return r.json(); }).catch(function() { return null; });
-
-  // 30d BTC daily candles (Coinbase Exchange, no key)
-  var historyFetch = wantHistory
-    ? fetchWithTimeout('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=86400', {}, 6000)
-        .then(function(r) { return r.json(); }).catch(function() { return null; })
-    : Promise.resolve(null);
-
-  var _cdStart = Date.now();
-  var sourceMeta = [
-    { name: 'CoinLore.tickers_top50', start: _cdStart },
-    { name: 'Binance.ticker_24hr_all', start: _cdStart },
-    { name: 'Mempool.network_bundle', start: _cdStart },
-    { name: 'Etherscan.gas_oracle', start: _cdStart },
-    { name: 'Coinbase.BTC_USD_candles_30d', start: _cdStart },
-  ];
-  var all = await Promise.allSettled([topFetch, binanceFetch, mempoolFetches, gasFetch, historyFetch]);
-
-  var topCoins = [];
-  if (all[0].status === 'fulfilled' && all[0].value && Array.isArray(all[0].value.data)) {
-    topCoins = all[0].value.data.map(function(c) {
-      return {
-        symbol: (c.symbol || '').toUpperCase(),
-        name: c.name,
-        price_usd: parseFloat(c.price_usd) || 0,
-        change_24h_percent: parseFloat(c.percent_change_24h) || 0,
-        change_1h_percent: parseFloat(c.percent_change_1h) || 0,
-        change_7d_percent: parseFloat(c.percent_change_7d) || 0,
-        market_cap: parseFloat(c.market_cap_usd) || 0,
-        volume_24h: parseFloat(c.volume24) || 0,
-        rank: parseInt(c.rank) || 0,
-      };
-    });
-    if (coinFilter) {
-      topCoins = topCoins.filter(function(c) { return coinFilter.indexOf(c.symbol.toLowerCase()) !== -1; });
-    }
-  }
-
-  var binanceTickers = [];
-  if (all[1].status === 'fulfilled' && Array.isArray(all[1].value)) {
-    binanceTickers = all[1].value
-      .filter(function(t) { return t.symbol && t.symbol.endsWith('USDT'); })
-      .map(function(t) {
-        return {
-          pair: t.symbol,
-          price: parseFloat(t.lastPrice) || 0,
-          change_24h_percent: parseFloat(t.priceChangePercent) || 0,
-          volume_24h: parseFloat(t.quoteVolume) || 0,
-          high_24h: parseFloat(t.highPrice) || 0,
-          low_24h: parseFloat(t.lowPrice) || 0,
-          trades_24h: parseInt(t.count) || 0,
-        };
-      })
-      .sort(function(a, b) { return b.volume_24h - a.volume_24h; })
-      .slice(0, 20);
-  }
-
-  var network = {};
-  if (all[2].status === 'fulfilled') {
-    var mp = all[2].value;
-    if (mp[0] && mp[0].status === 'fulfilled') {
-      var ht = parseInt(mp[0].value);
-      if (!isNaN(ht)) network.block_height = ht;
-    }
-    if (mp[1] && mp[1].status === 'fulfilled' && mp[1].value) {
-      network.fees_sat_per_vb = {
-        fastest: typeof mp[1].value.fastestFee === 'number' ? mp[1].value.fastestFee : null,
-        half_hour: typeof mp[1].value.halfHourFee === 'number' ? mp[1].value.halfHourFee : null,
-        hour: typeof mp[1].value.hourFee === 'number' ? mp[1].value.hourFee : null,
-        economy: typeof mp[1].value.economyFee === 'number' ? mp[1].value.economyFee : null,
-        minimum: typeof mp[1].value.minimumFee === 'number' ? mp[1].value.minimumFee : null,
-      };
-    }
-    if (mp[2] && mp[2].status === 'fulfilled' && mp[2].value) {
-      var hr = parseFloat(mp[2].value.currentHashrate || 0);
-      var diff = parseFloat(mp[2].value.currentDifficulty || 0);
-      network.hashrate = {
-        current_eh_s: hr ? hr / 1e18 : 0,
-        current_difficulty: diff,
-      };
-    }
-    if (mp[3] && mp[3].status === 'fulfilled' && mp[3].value) {
-      network.mempool = {
-        count: mp[3].value.count || 0,
-        vsize: mp[3].value.vsize || 0,
-        total_fee_sat: mp[3].value.total_fee || 0,
-      };
-    }
-  }
-
-  var gas = null;
-  if (all[3].status === 'fulfilled' && all[3].value && all[3].value.result) {
-    gas = {
-      low_gwei: parseInt(all[3].value.result.SafeGasPrice) || 0,
-      standard_gwei: parseInt(all[3].value.result.ProposeGasPrice) || 0,
-      fast_gwei: parseInt(all[3].value.result.FastGasPrice) || 0,
-      base_fee_gwei: parseFloat(all[3].value.result.suggestBaseFee) || 0,
-      last_block: parseInt(all[3].value.result.LastBlock) || 0,
-    };
-  }
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/crypto-deep',
-    generated_at: new Date().toISOString(),
-    coins_top50: topCoins,
-    binance_top20_usdt: binanceTickers,
-    network_btc: network,
-    eth_gas: gas,
-  };
-
-  if (wantHistory && all[4].status === 'fulfilled' && Array.isArray(all[4].value)) {
-    out.series = {
-      btc_30d: all[4].value.slice(0, 30).reverse().map(function(k) {
-        return { ts: k[0] * 1000, low: parseFloat(k[1]) || 0, high: parseFloat(k[2]) || 0, open: parseFloat(k[3]) || 0, close: parseFloat(k[4]) || 0, volume: parseFloat(k[5]) || 0 };
-      }),
-    };
-  }
-
-  // All upstreams failed (empty primary payload), or a coins= filter matched no
-  // tracked coin (the per-coin deep dive is the product the agent paid for):
-  // no-charge it, mirroring the sibling empty_result guards.
-  if (topCoins.length === 0 && binanceTickers.length === 0 && Object.keys(network).length === 0 && gas == null) {
-    out.__no_charge = 'empty_result';
-  } else if (coinFilter && topCoins.length === 0) {
-    out.__no_charge = 'empty_result';
-  }
-  out._meta = _premiumMeta('/api/pro/crypto-deep', _buildSourcesMeta(all, sourceMeta));
-  return out;
-}
 
 
 // --- Premium handlers (caller-facing) ---
@@ -15760,326 +14213,12 @@ async function handleProMacro(request, env, url) {
   });
 }
 
-async function handleProCryptoDeep(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/crypto-deep', 2, async function(env2, url2) {
-    var KEY = 'pro:crypto-deep:' + (url2.searchParams.get('coins') || '*') + ':' + (url2.searchParams.get('history') || '');
-    return await cacheLookupOrFetch(KEY, 60000, function() { return fetchProCryptoDeep(env2, url2); });
-  });
-}
 
-// --- Derived-signal helpers shared by /api/pro/regime and /api/pro/anomalies ---
-function _proRound(x) { return (x == null || !isFinite(x)) ? null : Math.round(x * 100) / 100; }
-function _proClamp(x, lo, hi) { return x < lo ? lo : (x > hi ? hi : x); }
-// Trailing-window stats over an ascending series of daily values. Returns null
-// if there is not enough data to be meaningful.
-function _proSeriesStats(arr) {
-  if (!arr || arr.length < 5) return null;
-  var n = arr.length, sum = 0;
-  for (var i = 0; i < n; i++) sum += arr[i];
-  var mean = sum / n, varAcc = 0;
-  for (var j = 0; j < n; j++) { var d = arr[j] - mean; varAcc += d * d; }
-  var sd = Math.sqrt(varAcc / n);
-  var latest = arr[n - 1];
-  return { mean: mean, sd: sd, latest: latest, z: sd > 0 ? (latest - mean) / sd : 0, n: n };
-}
+// Derived-signal helpers (_proRound, _proClamp, _proSeriesStats, _regimeWhy) and
+// the /api/pro/regime + /api/pro/anomalies + /api/preview/regime endpoints they
+// served were removed 2026-07-23 (crypto Fear & Greed + crypto market-cap were
+// their core signals; market-data licensing compliance).
 
-// /api/pro/regime — cross-asset market regime classification with rationale.
-// Composes signals the worker already knows how to fetch (crypto Fear & Greed,
-// FRED VIXCLS, FRED DGS10, total crypto market-cap 24h change, BTC dominance)
-// into a labeled regime + a documented, versioned weighting. The weighting IS
-// the product; the upstreams are free. Fail-open: any missing signal drops out
-// of the blend and the weights renormalize over what is available.
-async function fetchProRegime(env, url) {
-  var t0 = Date.now();
-  var sourceMeta = [
-    { name: 'AlternativeMe.fng', start: t0 },
-    { name: 'CoinLore.global', start: t0 },
-  ];
-  var settled = await Promise.allSettled([
-    fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
-    fetchWithTimeout('https://api.coinlore.net/api/global/', {}, 6000),
-  ]);
-  var vixSeries = await _fetchFredDailyValues(env, 'VIXCLS', 30);
-  var dgs10Series = await _fetchFredDailyValues(env, 'DGS10', 30);
-
-  // Crypto Fear & Greed (0-100)
-  var fng = null;
-  if (settled[0].status === 'fulfilled' && settled[0].value) {
-    try { var d = await settled[0].value.json(); if (d && d.data && d.data[0]) { var fv = parseInt(d.data[0].value, 10); if (isFinite(fv)) fng = fv; } } catch (e) {}
-  }
-  // Total crypto market cap 24h change % + BTC dominance
-  var mcapChange = null, btcDom = null;
-  if (settled[1].status === 'fulfilled' && settled[1].value) {
-    try {
-      var g = await settled[1].value.json();
-      var gg = (Array.isArray(g) && g[0]) || {};
-      var mc = parseFloat(gg.mcap_change); if (isFinite(mc)) mcapChange = mc;
-      var bd = parseFloat(gg.btc_d); if (isFinite(bd)) btcDom = bd;
-    } catch (e) {}
-  }
-  var vixStats = _proSeriesStats(vixSeries);
-  var vixLatest = vixStats ? vixStats.latest : (vixSeries.length ? vixSeries[vixSeries.length - 1] : null);
-  var dgs10Latest = dgs10Series.length ? dgs10Series[dgs10Series.length - 1] : null;
-  var dgs10Trend = null;
-  if (dgs10Series.length >= 5) {
-    var recent = dgs10Series.slice(-5);
-    var delta = recent[recent.length - 1] - recent[0];
-    dgs10Trend = delta > 0.03 ? 'rising' : (delta < -0.03 ? 'falling' : 'flat');
-  }
-
-  // Each contribution is in [-1 (risk-off) .. +1 (risk-on)]. Weights renormalize
-  // over whichever signals are present this call.
-  var drivers = [], weighted = 0, totalWeight = 0;
-  if (fng != null) {
-    var c1 = _proClamp((fng - 50) / 50, -1, 1), w1 = 0.30;
-    drivers.push({ signal: 'crypto_fear_greed', value: fng, weight: w1, contribution: _proRound(c1), direction: c1 >= 0 ? 'risk_on' : 'risk_off' });
-    weighted += w1 * c1; totalWeight += w1;
-  }
-  if (vixLatest != null) {
-    var vc = vixLatest < 15 ? 1 : (vixLatest < 20 ? 0.4 : (vixLatest < 25 ? -0.3 : (vixLatest < 30 ? -0.7 : -1))), w2 = 0.30;
-    drivers.push({ signal: 'vix', value: _proRound(vixLatest), label: _vixLabel(vixLatest), weight: w2, contribution: vc, direction: vc >= 0 ? 'risk_on' : 'risk_off' });
-    weighted += w2 * vc; totalWeight += w2;
-  }
-  if (mcapChange != null) {
-    var c3 = _proClamp(mcapChange / 5, -1, 1), w3 = 0.25;
-    drivers.push({ signal: 'crypto_mcap_change_24h_pct', value: _proRound(mcapChange), weight: w3, contribution: _proRound(c3), direction: c3 >= 0 ? 'risk_on' : 'risk_off' });
-    weighted += w3 * c3; totalWeight += w3;
-  }
-  if (dgs10Trend) {
-    var tc = dgs10Trend === 'rising' ? -0.5 : (dgs10Trend === 'falling' ? 0.5 : 0), w4 = 0.15;
-    drivers.push({ signal: 'treasury_10y_trend', value: dgs10Latest, trend: dgs10Trend, weight: w4, contribution: tc, direction: tc >= 0 ? 'risk_on' : 'risk_off' });
-    weighted += w4 * tc; totalWeight += w4;
-  }
-  var score = totalWeight > 0 ? weighted / totalWeight : 0;
-
-  var regime, confidence;
-  var vixStress = vixLatest != null && vixLatest > 30;
-  var crisisCombo = fng != null && fng < 15 && mcapChange != null && mcapChange < -3;
-  if (vixStress || crisisCombo) {
-    regime = 'stress';
-    confidence = vixLatest != null ? _proClamp((vixLatest - 25) / 15, 0.4, 1) : 0.6;
-  } else if (score > 0.35) {
-    regime = 'risk_on'; confidence = _proClamp(Math.abs(score), 0.3, 1);
-  } else if (score < -0.35) {
-    regime = 'risk_off'; confidence = _proClamp(Math.abs(score), 0.3, 1);
-  } else {
-    regime = 'transition'; confidence = _proClamp(1 - Math.abs(score), 0.3, 0.7);
-  }
-
-  var regimeOut = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/regime',
-    generated_at: new Date().toISOString(),
-    regime: regime,
-    risk_score: _proRound(score),
-    confidence: _proRound(confidence),
-    drivers: drivers,
-    inputs: {
-      crypto_fear_greed: fng,
-      vix: vixLatest != null ? _proRound(vixLatest) : null,
-      vix_zscore_30d: vixStats ? _proRound(vixStats.z) : null,
-      treasury_10y: dgs10Latest,
-      treasury_10y_trend: dgs10Trend,
-      crypto_mcap_change_24h_pct: mcapChange != null ? _proRound(mcapChange) : null,
-      btc_dominance_pct: btcDom != null ? _proRound(btcDom) : null,
-    },
-    method: {
-      version: '1.0',
-      scale: 'risk_score in [-1 risk-off .. +1 risk-on]',
-      description: 'Weighted blend of crypto Fear & Greed (0.30), a VIX threshold map (0.30), 24h total crypto market-cap change (0.25), and the 10y treasury-yield trend (0.15), renormalized over the signals available this call. Stress overrides the blend when VIX>30 or (Fear&Greed<15 and 24h market cap <-3%). Statistical heuristic, not investment advice.',
-    },
-    _meta: _premiumMeta('/api/pro/regime', _buildSourcesMeta(settled, sourceMeta).concat([
-      { name: 'FRED.VIXCLS', status: vixSeries.length ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
-      { name: 'FRED.DGS10', status: dgs10Series.length ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
-    ])),
-  };
-  // All input signals dropped out (every driver absent): the regime is computed
-  // from zero real inputs (a fail-open transition verdict), so no-charge it.
-  // Mirrors the fetchProAnomalies empty_result guard.
-  if (drivers.length === 0) regimeOut.__no_charge = 'empty_result';
-  return regimeOut;
-}
-
-// === Premium decision wedge: free preview of the paid regime verdict ===
-// A zero-setup, no-auth taste of /api/pro/regime: the single top label, the one
-// dominant driver, and a one-line why, rate-limited and unsigned. The full ranked
-// drivers, all raw inputs, and the Ed25519-signed receipt are the paid tier. The
-// response names the paid upgrade so an agent can decide to spend.
-
-function _regimeWhy(regime, dominant) {
-  var base = {
-    risk_on: 'Risk-on: markets are leaning into risk.',
-    risk_off: 'Risk-off: markets are de-risking.',
-    transition: 'Transition: mixed signals, no clear risk regime.',
-    stress: 'Stress: acute risk-off conditions, volatility is elevated.',
-  }[regime] || ('Regime: ' + regime + '.');
-  if (dominant && dominant.signal) {
-    var name = {
-      crypto_fear_greed: 'crypto Fear and Greed',
-      vix: 'the VIX',
-      crypto_mcap_change_24h_pct: '24h crypto market-cap change',
-      treasury_10y_trend: 'the 10y treasury-yield trend',
-    }[dominant.signal] || dominant.signal;
-    base += ' Dominant signal: ' + name + (dominant.value != null ? ' (' + dominant.value + ')' : '') + '.';
-  }
-  return base;
-}
-
-async function handlePreviewRegime(request, env, url, ctx) {
-  if (request.method !== 'GET') return jsonResponse({ error: 'GET only' }, 405);
-  // Zero-auth preview, rate-limited per IP so it cannot be used as a free regime
-  // feed. The paid /api/pro/regime has no such cap.
-  var clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
-  var rl = await checkRateLimit(env, 'preview', clientIp, 10, 86400, ctx);
-  if (!rl.allowed) return rateLimit429(rl);
-
-  var full;
-  try {
-    full = await cacheLookupOrFetch('pro:regime', 300000, function() { return fetchProRegime(env, url); });
-  } catch (e) {
-    return jsonResponse({ error: 'upstream_error', message: 'Could not compute the regime preview right now; retry shortly.' }, 503);
-  }
-
-  var drivers = Array.isArray(full.drivers) ? full.drivers : [];
-  var dominant = null, dominantMag = -1;
-  for (var i = 0; i < drivers.length; i++) {
-    var d = drivers[i];
-    var w = (typeof d.weight === 'number') ? d.weight : 0;
-    var c = (typeof d.contribution === 'number') ? d.contribution : 0;
-    var mag = Math.abs(w * c);
-    if (mag > dominantMag) { dominantMag = mag; dominant = d; }
-  }
-  var dominantOut = dominant ? { signal: dominant.signal || null, value: (dominant.value != null ? dominant.value : null), direction: dominant.direction || null } : null;
-
-  return jsonResponse({
-    source: 'terminalfeed-preview',
-    endpoint: '/api/preview/regime',
-    generated_at: new Date().toISOString(),
-    regime: full.regime,
-    risk_score: full.risk_score,
-    confidence: full.confidence,
-    dominant_driver: dominantOut,
-    why: _regimeWhy(full.regime, dominant),
-    upgrade: {
-      endpoint: '/api/pro/regime',
-      credits: proCreditsFor('/api/pro/regime'),
-      adds: 'Full ranked drivers with weights and contributions, all raw inputs (VIX + 30d z-score, 10y trend, BTC dominance, Fear and Greed), and an Ed25519-signed receipt. No rate limit.',
-      free_sibling_of: '/api/pro/regime',
-      docs: 'https://terminalfeed.io/developers/agent-payments',
-      catalog: 'https://terminalfeed.io/api/meta/pro',
-    },
-    notice: 'Free preview, rate-limited and unsigned. Statistical heuristic, not investment advice.',
-  }, 200, 60);
-}
-
-// /api/pro/anomalies — ranked cross-feed statistical outlier stream. z-score
-// outliers (|z|>2) over a trailing 30 daily-observation window for FRED series,
-// plus threshold flags for extreme sentiment, large 24h crypto moves, and
-// elevated M4.5+ earthquake counts. A screen, not a prediction. Fail-open.
-async function fetchProAnomalies(env, url) {
-  var t0 = Date.now();
-  var sourceMeta = [
-    { name: 'AlternativeMe.fng', start: t0 },
-    { name: 'CoinLore.global', start: t0 },
-    { name: 'USGS.m45_day', start: t0 },
-  ];
-  var settled = await Promise.allSettled([
-    fetchWithTimeout('https://api.alternative.me/fng/?limit=1', {}, 6000),
-    fetchWithTimeout('https://api.coinlore.net/api/global/', {}, 6000),
-    fetchWithTimeout('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson', {}, 6000),
-  ]);
-  var vixStats = _proSeriesStats(await _fetchFredDailyValues(env, 'VIXCLS', 30));
-  var dgs10Stats = _proSeriesStats(await _fetchFredDailyValues(env, 'DGS10', 30));
-
-  var fng = null;
-  if (settled[0].status === 'fulfilled' && settled[0].value) {
-    try { var d = await settled[0].value.json(); if (d && d.data && d.data[0]) { var fv = parseInt(d.data[0].value, 10); if (isFinite(fv)) fng = fv; } } catch (e) {}
-  }
-  var mcapChange = null;
-  if (settled[1].status === 'fulfilled' && settled[1].value) {
-    try { var g = await settled[1].value.json(); var gg = (Array.isArray(g) && g[0]) || {}; var mc = parseFloat(gg.mcap_change); if (isFinite(mc)) mcapChange = mc; } catch (e) {}
-  }
-  var quakeCount = null;
-  if (settled[2].status === 'fulfilled' && settled[2].value) {
-    try { var q = await settled[2].value.json(); if (q && Array.isArray(q.features)) quakeCount = q.features.length; } catch (e) {}
-  }
-
-  var anomalies = [];
-  function sev(magnitude, mid, high) { return magnitude >= high ? 'high' : (magnitude >= mid ? 'medium' : 'low'); }
-
-  if (vixStats && Math.abs(vixStats.z) > 2) {
-    anomalies.push({ type: 'volatility', signal: 'VIXCLS', value: _proRound(vixStats.latest), baseline_mean: _proRound(vixStats.mean), z_score: _proRound(vixStats.z), severity: sev(Math.abs(vixStats.z), 2, 3), description: 'VIX is ' + (vixStats.z > 0 ? 'far above' : 'far below') + ' its trailing 30-day mean.' });
-  }
-  if (dgs10Stats && Math.abs(dgs10Stats.z) > 2) {
-    anomalies.push({ type: 'rates', signal: 'DGS10', value: _proRound(dgs10Stats.latest), baseline_mean: _proRound(dgs10Stats.mean), z_score: _proRound(dgs10Stats.z), severity: sev(Math.abs(dgs10Stats.z), 2, 3), description: 'The 10y treasury yield is ' + (dgs10Stats.z > 0 ? 'far above' : 'far below') + ' its trailing 30-day mean.' });
-  }
-  if (fng != null && (fng <= 20 || fng >= 80)) {
-    anomalies.push({ type: 'sentiment', signal: 'crypto_fear_greed', value: fng, z_score: null, severity: (fng <= 10 || fng >= 90) ? 'high' : 'medium', description: fng <= 20 ? 'Crypto sentiment at extreme fear.' : 'Crypto sentiment at extreme greed.' });
-  }
-  if (mcapChange != null && Math.abs(mcapChange) > 5) {
-    anomalies.push({ type: 'crypto', signal: 'crypto_mcap_change_24h', value: _proRound(mcapChange), z_score: null, severity: Math.abs(mcapChange) >= 10 ? 'high' : 'medium', description: 'Total crypto market cap moved ' + _proRound(mcapChange) + '% in 24h.' });
-  }
-  if (quakeCount != null && quakeCount >= 8) {
-    anomalies.push({ type: 'seismic', signal: 'usgs_m4.5_24h', value: quakeCount, z_score: null, severity: quakeCount >= 15 ? 'high' : 'medium', description: quakeCount + ' magnitude-4.5+ earthquakes in the last 24h (elevated).' });
-  }
-
-  var sevRank = { high: 3, medium: 2, low: 1 };
-  anomalies.sort(function(a, b) {
-    var s = (sevRank[b.severity] || 0) - (sevRank[a.severity] || 0);
-    if (s !== 0) return s;
-    return Math.abs(b.z_score || 0) - Math.abs(a.z_score || 0);
-  });
-
-  var out = {
-    source: 'terminalfeed-pro',
-    endpoint: '/api/pro/anomalies',
-    generated_at: new Date().toISOString(),
-    anomaly_count: anomalies.length,
-    anomalies: anomalies,
-    scanned: ['VIXCLS(FRED)', 'DGS10(FRED)', 'crypto_fear_greed', 'crypto_mcap_change_24h', 'USGS_M4.5+_24h'],
-    observed: {
-      vix_zscore_30d: vixStats ? _proRound(vixStats.z) : null,
-      treasury_10y_zscore_30d: dgs10Stats ? _proRound(dgs10Stats.z) : null,
-      crypto_fear_greed: fng,
-      crypto_mcap_change_24h_pct: mcapChange != null ? _proRound(mcapChange) : null,
-      earthquakes_m45_24h: quakeCount,
-    },
-    method: {
-      version: '1.0',
-      description: 'z-score outliers (|z|>2) over a trailing 30 daily-observation window for FRED series (VIXCLS, DGS10), plus threshold flags for extreme Fear & Greed (<=20 or >=80), large 24h crypto market-cap moves (>5%), and elevated M4.5+ earthquake counts (>=8/24h). A statistical screen, not a prediction.',
-    },
-    _meta: _premiumMeta('/api/pro/anomalies', _buildSourcesMeta(settled, sourceMeta).concat([
-      { name: 'FRED.VIXCLS', status: vixStats ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
-      { name: 'FRED.DGS10', status: dgs10Stats ? 'live' : 'null', fetched_at: new Date(t0).toISOString(), latency_ms: Date.now() - t0 },
-    ])),
-  };
-  // Valid-but-empty screen: nothing crossed a threshold. The observed readings
-  // still ship; no-charge so repeated calm-market polls are free rather than
-  // billing for a zero-anomaly result. (Hardening audit 2026-06-01, empty_result.)
-  if (anomalies.length === 0) out.__no_charge = 'empty_result';
-  return out;
-}
-
-async function handleProRegime(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/regime', 2, async function(env2, url2) {
-    var KEY = 'pro:regime';
-    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProRegime(env2, url2); });
-  });
-}
-
-async function handleProAnomalies(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/anomalies', 2, async function(env2, url2) {
-    var KEY = 'pro:anomalies';
-    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProAnomalies(env2, url2); });
-  });
-}
-
-async function handleProSentiment(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/sentiment', 2, async function(env2, url2) {
-    var KEY = 'pro:sentiment';
-    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProSentiment(env2, url2); });
-  });
-}
 
 async function handleProWorldDeltas(request, env, url) {
   // Cache strategy lives inside fetchProWorldDeltas (it caches the rolling 1h
@@ -16104,33 +14243,6 @@ async function handleProCorrelationMatrix(request, env, url) {
   });
 }
 
-async function handleProWhales(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/whales', 2, async function(env2, url2) {
-    var KEY = 'pro:whales';
-    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProWhales(env2, url2); });
-  });
-}
-
-async function handleProExchangeFlows(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/exchange-flows', 2, async function(env2, url2) {
-    var KEY = 'pro:exchange-flows';
-    return await cacheLookupOrFetch(KEY, 300000, function() { return fetchProExchangeFlows(env2, url2); });
-  });
-}
-
-async function handleProDefiTvl(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/defi-tvl', 2, async function(env2, url2) {
-    var KEY = 'pro:defi-tvl';
-    return await cacheLookupOrFetch(KEY, 1800000, function() { return fetchProDefiTvl(env2, url2); });
-  });
-}
-
-async function handleProStablecoinFlows(request, env, url) {
-  return handlePremium(request, env, url, '/api/pro/stablecoin-flows', 2, async function(env2, url2) {
-    var KEY = 'pro:stablecoin-flows';
-    return await cacheLookupOrFetch(KEY, 3600000, function() { return fetchProStablecoinFlows(env2, url2); });
-  });
-}
 
 async function handleProGithubVelocity(request, env, url) {
   return handlePremium(request, env, url, '/api/pro/github-velocity', 2, async function(env2, url2) {
@@ -17401,8 +15513,6 @@ async function dispatchRoute(request, env, url, path, ctx) {
       case 'for-agents':     return await proxyInternalPage('for-agents');
       case 'usdc-payable':   return await proxyInternalPage('usdc-payable');
 
-      // Premium decision wedge: free no-auth preview of a paid verdict.
-      case 'preview/regime':  return await handlePreviewRegime(request, env, url, ctx);
       // Machine-readable catalog of every payable endpoint (free, no auth).
       case 'meta/pro':        return await handleMetaPro(request);
       // Operator-raised global breaking-alert banner (public cached read).
@@ -17415,17 +15525,9 @@ async function dispatchRoute(request, env, url, path, ctx) {
       // inline path is fully retired.
       case 'pro/briefing-afta': return await handleProBriefingAfta(request, env, url);
       case 'pro/macro':       return await handleProMacro(request, env, url);
-      case 'pro/crypto-deep': return await handleProCryptoDeep(request, env, url);
-      case 'pro/sentiment':   return await handleProSentiment(request, env, url);
-      case 'pro/regime':      return await handleProRegime(request, env, url);
-      case 'pro/anomalies':   return await handleProAnomalies(request, env, url);
       case 'pro/world-deltas': return await handleProWorldDeltas(request, env, url);
       case 'pro/agent-context': return await handleProAgentContext(request, env, url);
       case 'pro/correlation-matrix': return await handleProCorrelationMatrix(request, env, url);
-      case 'pro/whales': return await handleProWhales(request, env, url);
-      case 'pro/exchange-flows': return await handleProExchangeFlows(request, env, url);
-      case 'pro/defi-tvl':       return await handleProDefiTvl(request, env, url);
-      case 'pro/stablecoin-flows': return await handleProStablecoinFlows(request, env, url);
       case 'pro/github-velocity': return await handleProGithubVelocity(request, env, url);
       case 'pro/feed-reliability': return await handleProFeedReliability(request, env, url);
       case 'pro/feed-reliability/history': return await handleProFeedReliabilityHistory(request, env, url);
