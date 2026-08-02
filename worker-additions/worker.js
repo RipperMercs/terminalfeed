@@ -2152,19 +2152,19 @@ const HARNESS_DATA = {
 // client bundle) so it carries a catalog-driven freshness flag like the harness
 // board, and so a sister site could federate it later.
 var AI_LEADERBOARD = {
-  generatedAt: '2026-06-17',
-  note: 'Curated from public Chatbot Arena / LMSYS ELO ratings, kept on one internal scale (cross-source aggregators disagree on absolute ELO; the mid-June snapshot clustered the frontier within roughly 55 points, the tightest spread on record). Mid-June 2026: Claude Fable 5 (released 2026-06) debuts at the top of the frontier cohort and also leads TensorFeed\'s intelligence index (TFII 87.4, ahead of Opus 4.8 at 86.6), with the newest entries (GPT-5.6, Gemini 3.2 Pro, Claude Mythos 5) folded in.',
+  generatedAt: '2026-08-02',
+  note: 'Copied from the Arena (formerly LMSYS Chatbot Arena) TEXT leaderboard at arena.ai/leaderboard, overall column, August 1 2026 vote cutoff. Single source by design: earlier snapshots blended several aggregators that disagree on absolute ELO, so scores moved for reasons unrelated to the models. Read this as a tier, not a ranking: the top ten sit inside a 23 point band and the published confidence intervals (plus or minus 4 to 9) overlap across nearly every adjacent pair. This is the TEXT arena, which scores blind human preference on open ended chat, not agentic or coding ability, which is why Claude Opus 5 (released 2026-07-24) lands mid table here while leading the benchmarks it was built for; see the harness board for the agentic-coding view. Both published Opus 5 variants are listed because the board rates them separately. OpenAI holds no top ten text entry in this cutoff (GPT-5.6 Sol sits at 13) and Claude Opus 4.8 drops out at 14 with no published score; that is the source\'s result, not an omission.',
   models: [
-    { rank: 1,  name: 'Claude Fable 5',            company: 'Anthropic', elo: 1564 },
-    { rank: 2,  name: 'Claude Opus 4.8 Thinking',  company: 'Anthropic', elo: 1561 },
-    { rank: 3,  name: 'GPT-5.6 Pro',               company: 'OpenAI',    elo: 1556 },
-    { rank: 4,  name: 'Claude Opus 4.8',           company: 'Anthropic', elo: 1548 },
-    { rank: 5,  name: 'Gemini 3.2 Pro',            company: 'Google',    elo: 1544 },
-    { rank: 6,  name: 'GPT-5.5 High',              company: 'OpenAI',    elo: 1539 },
-    { rank: 7,  name: 'Claude Mythos 5',           company: 'Anthropic', elo: 1533 },
-    { rank: 8,  name: 'Gemini 3.1 Pro',            company: 'Google',    elo: 1528 },
-    { rank: 9,  name: 'Grok 4.3',                  company: 'xAI',       elo: 1519 },
-    { rank: 10, name: 'GPT-5.5',                   company: 'OpenAI',    elo: 1512 },
+    { rank: 1,  name: 'Claude Fable 5',            company: 'Anthropic', elo: 1509 },
+    { rank: 2,  name: 'Claude Opus 4.6 Thinking',  company: 'Anthropic', elo: 1505 },
+    { rank: 3,  name: 'Claude Opus 4.7 Thinking',  company: 'Anthropic', elo: 1502 },
+    { rank: 4,  name: 'Claude Opus 4.6',           company: 'Anthropic', elo: 1497 },
+    { rank: 5,  name: 'Claude Opus 4.7',           company: 'Anthropic', elo: 1492 },
+    { rank: 6,  name: 'Claude Opus 5 (High)',      company: 'Anthropic', elo: 1492 },
+    { rank: 7,  name: 'Claude Opus 5 (Max)',       company: 'Anthropic', elo: 1490 },
+    { rank: 8,  name: 'Muse Spark 1.1',            company: 'Meta',      elo: 1490 },
+    { rank: 9,  name: 'Muse Spark',                company: 'Meta',      elo: 1488 },
+    { rank: 10, name: 'Gemini 3 Pro',              company: 'Google',    elo: 1486 },
   ],
 };
 
