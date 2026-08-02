@@ -1414,6 +1414,11 @@ var STOCK_SYMBOLS = ['SPY', 'QQQ', 'DIA', 'IWM', 'NVDA', 'AAPL', 'MSFT', 'GOOGL'
 var STOCKS_KV_KEY = 'cache:stocks:v1';        // KV key holding the symbol -> quote map
 var STOCK_LOOKASIDE_MS = 25000;               // memory lookaside window before a KV re-read
 var STOCK_STALE_MS = 12 * 60 * 1000;          // flag a quote stale past 12 min (2+ missed cron ticks)
+// Share of symbols that must be stale before the FEED is called stale. This is
+// the only feed with an independent timestamp per item, so a max() over symbols
+// let one throttled ticker out of 31 mark the whole feed degraded. See
+// computeStocksFeedRollup and scripts/test-stocks-rollup.js.
+export var STOCKS_FEED_STALE_RATIO = 0.25;
 var STOCK_SYNC_MIN_INTERVAL_MS = 60000;       // min gap between on-demand (non-cron) sync attempts
 
 var _stockStore = null;        // { map: { symbol -> quote }, fetchedAt } — per-isolate lookaside of the KV map
@@ -1541,6 +1546,43 @@ async function syncStocksToKv(env, force, gentle) {
   try { return await _stockSyncInflight; } catch (e) { return null; }
 }
 
+// Feed-level freshness rollup for /api/stocks.
+//
+// `ts` stays the OLDEST symbol, so the age we advertise is never fresher than
+// the worst thing in the payload. `stale` is deliberately NOT derived from that
+// oldest symbol: this endpoint carries one timestamp per symbol, and a single
+// ticker the free tier throttled is not a degraded feed. It trips on a quorum
+// instead, so a genuine upstream failure (which ages every symbol together)
+// still reports stale while one straggler does not.
+//
+// Per-symbol `stale` flags are untouched by this: callers still see exactly
+// which tickers lag, and the panel still dims them.
+export function computeStocksFeedRollup(stocks, nowMs) {
+  var now = isFinite(nowMs) ? nowMs : Date.now();
+  var list = Array.isArray(stocks) ? stocks.filter(Boolean) : [];
+  var total = list.length;
+  // No data never reports fresh.
+  if (!total) return { ts: now, stale: true, stale_count: 0, total: 0 };
+
+  var oldest = now;
+  var staleCount = 0;
+  for (var i = 0; i < total; i++) {
+    var asOf = Date.parse(list[i].as_of);
+    // An entry with no usable timestamp cannot be claimed as fresh, but must
+    // not drag `oldest` to NaN either.
+    if (!isFinite(asOf)) { staleCount++; continue; }
+    if (asOf < oldest) oldest = asOf;
+    if ((now - asOf) > STOCK_STALE_MS) staleCount++;
+  }
+
+  return {
+    ts: oldest,
+    stale: staleCount >= Math.ceil(total * STOCKS_FEED_STALE_RATIO),
+    stale_count: staleCount,
+    total: total,
+  };
+}
+
 // GET /api/stocks
 async function handleStocks(env, url) {
   var requested = null;
@@ -1598,12 +1640,10 @@ async function handleStocks(env, url) {
   }
 
   var now = Date.now();
-  var oldestTs = now;
   var stocks = symbols.map(function(s) {
     var qq = store[s];
     if (!qq) return null;
     var asOf = qq.asOf || now;
-    if (asOf < oldestTs) oldestTs = asOf;
     var ageSec = Math.max(0, Math.round((now - asOf) / 1000));
     return {
       symbol: qq.symbol,
@@ -1619,11 +1659,19 @@ async function handleStocks(env, url) {
     };
   }).filter(Boolean);
 
-  // Drive jsonFreshAuto's X-TF-* headers off the oldest symbol we are returning.
-  // Set synchronously here with no await before jsonFreshAuto (race-free, same
-  // pattern as getCached/setCache).
-  _lastCacheMeta = { ts: oldestTs, stale: (now - oldestTs) > STOCK_STALE_MS };
-  return jsonFreshAuto({ data: stocks, ts: now }, 200, 30);
+  // Drive jsonFreshAuto's X-TF-* headers off the rollup: age from the oldest
+  // symbol, staleness from a quorum. Set synchronously here with no await before
+  // jsonFreshAuto (race-free, same pattern as getCached/setCache).
+  var rollup = computeStocksFeedRollup(stocks, now);
+  _lastCacheMeta = { ts: rollup.ts, stale: rollup.stale };
+  // Counts are published so the quorum is auditable rather than implicit: a
+  // caller can see that N of M symbols lag even when the feed reads ok.
+  return jsonFreshAuto({
+    data: stocks,
+    ts: now,
+    stale_count: rollup.stale_count,
+    total: rollup.total,
+  }, 200, 30);
 }
 
 
