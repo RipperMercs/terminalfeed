@@ -1,6 +1,11 @@
 // UAP Sightings, curated from NUFORC recent reports
 // Update periodically from nuforc.org/webreports/ndxevent.html
-// Last updated: 2026-06-22
+// Last updated: 2026-07-27
+// Source: NUFORC "Index by DATE POSTED" batches p260725 and p260726
+// (nuforc.org/ndx/?id=post). Every entry below is a real filed report; the
+// date is the reported EVENT date, not the posting date, so the range runs
+// a few weeks behind the posting batch. Durations are taken verbatim from
+// each report's Duration field and lightly normalized for display only.
 
 export interface UAPSighting {
   date: string;
@@ -13,84 +18,84 @@ export interface UAPSighting {
 
 export const uapSightings: UAPSighting[] = [
   {
-    date: '2026-06-21',
-    city: 'Haverhill',
-    state: 'MA',
-    shape: 'Sphere',
-    duration: '5 minutes',
-    summary: 'Two anglers near a pond watched a glowing red sphere rise over a mountaintop and hold position, echoing the pond orb reports highlighted in the latest Pentagon UAP file release.',
-  },
-  {
-    date: '2026-06-20',
-    city: 'Concord',
-    state: 'NH',
-    shape: 'Orb',
-    duration: '8 minutes',
-    summary: 'Witnesses described an orange mother orb that appeared above a ridgeline and spawned two to four smaller red orbs before they blinked out, matching the Northeast cluster pattern in the newly declassified files.',
-  },
-  {
-    date: '2026-06-19',
-    city: 'Salt Lake City',
-    state: 'UT',
-    shape: 'Disk',
-    duration: '4 minutes',
-    summary: 'A bright white disk hovered over the valley in clear daylight, holding steady for several minutes before climbing vertically out of sight.',
-  },
-  {
-    date: '2026-06-19',
-    city: 'Erie',
-    state: 'PA',
+    date: '2026-07-19',
+    city: 'Monroe',
+    state: 'MI',
     shape: 'Cigar',
-    duration: '7 minutes',
-    summary: 'A long featureless cigar shaped object reflected sunlight as it tracked east over Lake Erie with no wings, sound, or contrail.',
+    duration: 'Approximately 3 minutes',
+    summary: 'A witness filming a small aircraft departing Custer airport caught a light gold object with a rounded nose and tapering tail tracking south southwest below the plane, which NUFORC flags as possible space junk.',
   },
   {
-    date: '2026-06-18',
-    city: 'Portland',
-    state: 'ME',
+    date: '2026-07-18',
+    city: 'Fort Duchesne',
+    state: 'UT',
     shape: 'Orb',
-    duration: '6 minutes',
-    summary: 'A loose line of red orbs drifted over the harbor at dusk, holding rough formation before fading one by one into the night sky.',
+    duration: '10 minutes',
+    summary: 'Four campers at the UFO Valley site next to Skinwalker Ranch watched an orb streak off the Mesa, hover behind their tent, then vanish and reappear in an erratic pattern along the tree line.',
   },
   {
-    date: '2026-06-18',
-    city: 'Tucson',
-    state: 'AZ',
-    shape: 'Triangle',
-    duration: '4 minutes',
-    summary: 'A silent dark triangle with three dim corner lights drifted slowly south across a clear desert sky before accelerating out of view.',
-  },
-  {
-    date: '2026-06-17',
-    city: 'Boulder',
-    state: 'CO',
+    date: '2026-07-18',
+    city: 'Kaiser',
+    state: 'MO',
     shape: 'Light',
-    duration: '9 minutes',
-    summary: 'A single bright point of light made several sharp right angle turns over the foothills, far faster than any aircraft the witness recognized.',
+    duration: '1 hour 20 minutes',
+    summary: 'A family of six at a lake condo watched three solid white lights hold perfectly still near the moon for roughly 40 minutes with no drift at full zoom, before the group descended lower and closer.',
   },
   {
-    date: '2026-06-16',
-    city: 'Sarasota',
-    state: 'FL',
-    shape: 'Disk',
-    duration: '5 minutes',
-    summary: 'A metallic disk tilted on edge and hovered over the coast, catching the late afternoon light before climbing rapidly into cloud.',
+    date: '2026-07-18',
+    city: 'Nags Head',
+    state: 'NC',
+    shape: 'Cigar',
+    duration: 'Not specified',
+    summary: 'Two observers watching from a beachfront room reported a 20 to 30 foot cigar shaped object moving north to south just under the ocean surface near the pier, leaving no wake and no prop wash.',
   },
   {
-    date: '2026-06-16',
-    city: 'Chattanooga',
+    date: '2026-07-18',
+    city: 'Fall Branch',
     state: 'TN',
-    shape: 'Triangle',
-    duration: '8 minutes',
-    summary: 'A large triangular craft passed low and silently over a ridge, blotting out stars as it moved with a steady, deliberate glide.',
+    shape: 'Light',
+    duration: '1 minute',
+    summary: 'A witness monitoring late night severe weather saw a motionless red star like point hanging inside the storm cell before it disappeared in a bright red flash timed to a lightning strike.',
   },
   {
-    date: '2026-06-15',
-    city: 'Lincoln',
-    state: 'NE',
-    shape: 'Orb',
-    duration: '7 minutes',
-    summary: 'A lone amber orb hovered over open farmland, pulsing slowly in brightness before drifting toward the horizon and out of sight.',
+    date: '2026-07-17',
+    city: 'Seal Beach',
+    state: 'CA',
+    shape: 'Sphere',
+    duration: '2 to 3 minutes',
+    summary: 'A freeway driver noticed cars swerving and stopping around them, looked up, and reported a large round gray object that appeared to darken itself out of view before reappearing twice in new positions.',
+  },
+  {
+    date: '2026-07-14',
+    city: 'Wellington',
+    state: 'CO',
+    shape: 'Triangle',
+    duration: '8 seconds',
+    summary: 'An observer who logs flight time with drones and model aircraft described a silent dark triangle the apparent size of an airliner zig zagging rapidly to the southwest at high altitude.',
+  },
+  {
+    date: '2026-07-13',
+    city: 'Mount Prospect',
+    state: 'IL',
+    shape: 'Triangle',
+    duration: '3 to 5 minutes',
+    summary: 'A witness near O Hare reported two translucent triangles rotating around each other that turned opaque white, were joined by a third craft in rigid formation, then merged and vanished in silence.',
+  },
+  {
+    date: '2026-07-07',
+    city: 'Murphysboro',
+    state: 'IL',
+    shape: 'Sphere',
+    duration: '1 minute 25 seconds',
+    summary: 'Two people watching the sky at sunset reported a pair of metallic silver spheres glowing blue and white with a visible wave pattern, closing to an estimated 500 feet.',
+  },
+  {
+    date: '2026-06-28',
+    city: 'Wanaque',
+    state: 'NJ',
+    shape: 'Disk',
+    duration: 'Under 1 minute',
+    summary: 'Two observers resting in a rowboat watched a dark disk descend, accelerate from a dead stop to a blur, and pass into a gap in the clouds that appeared black rather than open sky.',
   },
 ];
 
