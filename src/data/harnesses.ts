@@ -2,7 +2,7 @@
 // Snapshot of public benchmark data. Last refreshed manually. Do not invent numbers.
 // Each result links to the upstream report; we aggregate, not re-run.
 //
-// Updated: 2026-06-01
+// Updated: 2026-08-01
 // Sources:
 //   - SWE-bench Verified (princeton-nlp.github.io/SWE-bench)
 //   - Terminal-Bench (terminal-bench.org)
@@ -51,9 +51,9 @@ export interface HarnessDataset {
 }
 
 export const HARNESS_DATA: HarnessDataset = {
-  generatedAt: '2026-06-17',
+  generatedAt: '2026-08-01',
   schemaVersion: 1,
-  note: 'Snapshot of public agentic-coding leaderboards. Each row is the score the harness vendor (or an independent third party) reported on the upstream benchmark; we do not re-run. Refreshed manually as upstream leaderboards update. Claude Code rows lead with Claude Fable 5 (released 2026-06, Anthropic flagship) as a provisional entry that carries the Opus 4.8 baseline until an independent Fable 5 harness run is published; TensorFeed\'s intelligence index puts Fable 5 marginally ahead of Opus 4.8 (TFII 87.4 vs 86.6). Third-party harness rows show the most recent model each vendor has publicly benchmarked, so some still reflect 4.7-era models until those vendors re-run. Same model on different harnesses scores differently because the harness owns context curation, tool design, retry policy, and verifier integration.',
+  note: 'Snapshot of public agentic-coding leaderboards. Each row is the score the harness vendor (or an independent third party) reported on the upstream benchmark; we do not re-run. Refreshed manually as upstream leaderboards update. Two Terminal-Bench columns are published because 2.1 is a harder revision of 2.0 and the two are not comparable; read them separately. Claude Code rows lead with Claude Opus 5 (released 2026-07-24) as a provisional entry carrying the Opus 4.8 single-attempt baseline, because no independent single-attempt run has been published for it and the upstream Terminal-Bench 2.1 board had not run it as of 2026-07-11. Vendor headline figures sit in the per-row notes and are deliberately not promoted into the score column, since they use best-of-n scaffolds this board does not measure. Third-party harness rows show the most recent model each vendor has publicly benchmarked, so some still reflect earlier models until those vendors re-run. Same model on different harnesses scores differently because the harness owns context curation, tool design, retry policy, and verifier integration.',
   benchmarks: [
     {
       id: 'swe_bench_verified',
@@ -63,6 +63,7 @@ export const HARNESS_DATA: HarnessDataset = {
       sourceUrl: 'https://www.swebench.com/',
       caveat: 'Python-only. Requires the harness to run code, read repo context, and pass a test suite. Vendors self-report; the leaderboard accepts independent submissions.',
       results: [
+        { id: 'claude-code:opus-5',       harness: 'Claude Code',  model: 'Claude Opus 5',            score: 79.4, reportedAt: '2026-07-24', sourceUrl: 'https://www.anthropic.com/', notes: 'Opus 5 (released 2026-07-24), Anthropic flagship. Provisional: carries the Opus 4.8 single-attempt baseline pending an independent single-attempt run. Anthropic headline is 96.0% on a best scaffold, which is not this column basis; aggregators split between 96.0 and 97.0.' },
         { id: 'claude-code:fable-5',      harness: 'Claude Code',  model: 'Claude Fable 5',           score: 79.4, reportedAt: '2026-06-17', sourceUrl: 'https://www.anthropic.com/', notes: 'Fable 5 (released 2026-06), Anthropic flagship. Provisional: carries the Opus 4.8 single-attempt baseline pending an independent Fable 5 run. TensorFeed intelligence index puts Fable 5 marginally ahead of Opus 4.8 (TFII 87.4 vs 86.6).' },
         { id: 'claude-code:opus-4.8',     harness: 'Claude Code',  model: 'Claude Opus 4.8 Thinking', score: 79.4, reportedAt: '2026-05-28', sourceUrl: 'https://www.anthropic.com/news/claude-opus-4-8', notes: 'Opus 4.8 (released 2026-05-28). Single-attempt default scaffold; provisional, carries the 4.7 baseline pending an independent single-attempt re-run. Anthropic headline best-scaffold figure is 88.6% (4.7 was 87.6%).' },
         { id: 'cursor:opus-4.7',          harness: 'Cursor',       model: 'Claude Opus 4.7 Thinking', score: 76.1, reportedAt: '2026-04-18', sourceUrl: 'https://www.swebench.com/', notes: 'Cursor Agent, single-attempt' },
@@ -89,6 +90,7 @@ export const HARNESS_DATA: HarnessDataset = {
       sourceUrl: 'https://www.terminal-bench.org/',
       caveat: 'Heavily harness-dependent. Same model can score 10-20 points apart between Claude Code vs Aider vs OpenHands purely from scaffold quality.',
       results: [
+        { id: 'claude-code:opus-5',       harness: 'Claude Code', model: 'Claude Opus 5',            score: 58.2, reportedAt: '2026-07-24', sourceUrl: 'https://www.terminal-bench.org/', notes: 'Opus 5; provisional, carries the Opus 4.8 baseline. Upstream has not run Opus 5 on 2.0, and the 2.1 board had not run it either as of July 11. Third-party 2.1 runs put it between 84.6% (Vals AI) and 89.1% (CodingFleet) on the harder version.' },
         { id: 'claude-code:fable-5',      harness: 'Claude Code', model: 'Claude Fable 5',           score: 58.2, reportedAt: '2026-06-17', sourceUrl: 'https://www.terminal-bench.org/', notes: 'Fable 5; provisional, carries the Opus 4.8 baseline pending an independent Fable 5 run.' },
         { id: 'claude-code:opus-4.8',     harness: 'Claude Code', model: 'Claude Opus 4.8 Thinking', score: 58.2, reportedAt: '2026-05-28', sourceUrl: 'https://www.terminal-bench.org/', notes: 'Opus 4.8; provisional, carries the 4.7 baseline. On the newer Terminal-Bench 2.1, Anthropic reports 74.6% and GPT-5.5 leads at 78.2%.' },
         { id: 'cursor:opus-4.7',          harness: 'Cursor',      model: 'Claude Opus 4.7 Thinking', score: 51.8, reportedAt: '2026-04-20', sourceUrl: 'https://www.terminal-bench.org/' },
@@ -99,6 +101,26 @@ export const HARNESS_DATA: HarnessDataset = {
         { id: 'cursor:gpt-5.4',           harness: 'Cursor',      model: 'GPT-5.4 High',             score: 41.7, reportedAt: '2026-04-20', sourceUrl: 'https://www.terminal-bench.org/' },
         { id: 'aider:opus-4.7',           harness: 'Aider',       model: 'Claude Opus 4.7 Thinking', score: 38.5, reportedAt: '2026-04-12', sourceUrl: 'https://www.terminal-bench.org/' },
         { id: 'swe-agent:opus-4.7',       harness: 'SWE-Agent',   model: 'Claude Opus 4.7 Thinking', score: 35.1, reportedAt: '2026-04-08', sourceUrl: 'https://www.terminal-bench.org/' },
+      ],
+    },
+    {
+      id: 'terminal_bench_2_1',
+      name: 'Terminal-Bench 2.1',
+      description: 'The current revision of the Terminal-Bench shell-task suite. Same format as 2.0 with revised and repaired tasks. The upstream board reports harness plus model pairs with a confidence interval on each run.',
+      unit: '% completed',
+      sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1',
+      caveat: 'Not comparable to the Terminal-Bench 2.0 column above. 2.1 is the harder revision, so a 2.1 score and a 2.0 score for the same pair are different measurements and must not be read as a jump. Kept as its own column for that reason. As of the July 11 2026 board the upstream maintainers had not run Claude Opus 5 or GPT-5.6 Sol; third-party evaluators report numbers for both, but those are separate harnesses and are not mixed in here.',
+      results: [
+        { id: 'claude-code:fable-5',        harness: 'Claude Code',   model: 'Claude Fable 5',   score: 83.8, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.2.' },
+        { id: 'codex-cli:gpt-5.5',          harness: 'Codex CLI',     model: 'GPT-5.5',          score: 83.1, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.1.' },
+        { id: 'terminus-2:fable-5',         harness: 'Terminus 2',    model: 'Claude Fable 5',   score: 80.4, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.2.' },
+        { id: 'cursor:grok-4.5',            harness: 'Cursor',        model: 'Grok 4.5',         score: 79.3, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Cursor CLI on the upstream board, plus or minus 1.5.' },
+        { id: 'claude-code:opus-4.8',       harness: 'Claude Code',   model: 'Claude Opus 4.8',  score: 78.9, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.3.' },
+        { id: 'codex-cli:gpt-5.6-terra',    harness: 'Codex CLI',     model: 'GPT-5.6 Terra',    score: 78.4, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.3.' },
+        { id: 'terminus-2:gpt-5.5',         harness: 'Terminus 2',    model: 'GPT-5.5',          score: 78.0, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.2.' },
+        { id: 'mini-swe-agent:muse-spark',  harness: 'mini-SWE-agent', model: 'Muse Spark 1.1',  score: 76.2, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.2.' },
+        { id: 'codex-cli:gpt-5.6-luna',     harness: 'Codex CLI',     model: 'GPT-5.6 Luna',     score: 75.7, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.3.' },
+        { id: 'claude-code:sonnet-5',       harness: 'Claude Code',   model: 'Claude Sonnet 5',  score: 74.6, reportedAt: '2026-07-11', sourceUrl: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1', notes: 'Upstream board, plus or minus 1.6.' },
       ],
     },
     {
@@ -128,6 +150,7 @@ export const HARNESS_DATA: HarnessDataset = {
       sourceUrl: 'https://metr.org/',
       caveat: 'Not all model/harness pairs are evaluated. METR publishes selected runs only. Time horizon doubles roughly every 7 months across the frontier.',
       results: [
+        { id: 'claude-code:opus-5',    harness: 'Claude Code', model: 'Claude Opus 5',            score: 220, reportedAt: '2026-07-24', sourceUrl: 'https://metr.org/', notes: '~3.7 hour 50% horizon; Opus 5, provisional, carries the Opus 4.8 baseline pending a METR Opus 5 run.' },
         { id: 'claude-code:fable-5',   harness: 'Claude Code', model: 'Claude Fable 5',           score: 220, reportedAt: '2026-06-17', sourceUrl: 'https://metr.org/', notes: '~3.7 hour 50% horizon; Fable 5, provisional, carries the Opus 4.8 baseline pending a METR Fable 5 run.' },
         { id: 'claude-code:opus-4.8',  harness: 'Claude Code', model: 'Claude Opus 4.8 Thinking', score: 220, reportedAt: '2026-05-28', sourceUrl: 'https://metr.org/', notes: '~3.7 hour 50% horizon; Opus 4.8, provisional, carries the 4.7 baseline pending a METR 4.8 run.' },
         { id: 'codex-cli:gpt-5.4',     harness: 'Codex CLI',   model: 'GPT-5.4 High',             score: 195, reportedAt: '2026-04-10', sourceUrl: 'https://metr.org/' },
